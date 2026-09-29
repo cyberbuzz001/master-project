@@ -1,0 +1,75 @@
+# Root .gitignore for TradeGrow Unified Platform
+
+# Secrets & Environment variables
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.cert
+
+# Node / JavaScript dependencies
+node_modules/
+*/node_modules/
+*/*/node_modules/
+*/*/*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# PHP / Composer dependencies (Expert advisory backend)
+vendor/
+*/vendor/
+*/*/vendor/
+.phpunit.result.cache
+
+# Build outputs
+.next/
+*/.next/
+*/*/.next/
+dist/
+build/
+*/dist/
+*/build/
+*/*/dist/
+*/*/build/
+*.tsbuildinfo
+
+# Python artifacts
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Databases & local persistent state
+*.sqlite
+*.sqlite3
+*.db
+*.rdb
+dump.rdb
+data/*.db
+data/*.sqlite
+
+# Logs & Runtime telemetry
+logs/
+*/logs/
+*.log
+
+# IDE & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# AI / IDE internal artifacts
+.gemini/
+.agents/
+scratch/
