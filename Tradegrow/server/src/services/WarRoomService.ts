@@ -404,7 +404,7 @@ export class WarRoomService {
 
     if (actResult.activated) {
       // Send milestone celebration via WhatsApp if user phone exists
-      queryOne<{ phone?: string }>(`SELECT phone FROM users WHERE id = $1`, [userId])
+      queryOne<{ phone?: string }>(`SELECT phone_number as phone FROM users WHERE id = $1`, [userId])
         .then((u) => {
           if (u?.phone) {
             WhatsAppAutomationService.getInstance()
@@ -482,7 +482,7 @@ export class WarRoomService {
         (SELECT COUNT(*) FROM warroom.leads WHERE is_deleted = FALSE) as total_leads,
         (SELECT COUNT(*) FROM warroom.kyc_applications WHERE status = 'IN_PROGRESS') as kyc_started,
         (SELECT COUNT(*) FROM warroom.kyc_applications WHERE status = 'COMPLETED') as kyc_completed,
-        (SELECT COUNT(*) FROM core.users WHERE status = 'ACTIVE') as approved_accounts`
+        (SELECT COUNT(*) FROM users WHERE status = 'ACTIVE') as approved_accounts`
     );
 
     // 5. Economics & Spend
