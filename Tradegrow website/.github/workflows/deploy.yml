@@ -23,10 +23,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # No leading slash: Git Bash on Windows rewrites a leading "/" into a drive path,
-  # so the builder accepts the bare form and normalises it.
-  BASE_PATH: webtradegrow
-  SITE_URL: https://cyberbuzz001.github.io
+  # Custom domain for the Trust website.
+  # When set, the build emits a CNAME file and uses root-absolute links.
+  CNAME: trust.tradegrowx.in
+  SITE_URL: https://trust.tradegrowx.in
 
 jobs:
   build:
@@ -41,6 +41,11 @@ jobs:
 
       - name: Build site — fails on any prohibited marketing claim
         run: node build/build.js
+        env:
+          # Root-domain mode for custom domain (no BASE_PATH needed)
+          BASE_PATH: ''
+          CNAME: trust.tradegrowx.in
+          SITE_URL: https://trust.tradegrowx.in
 
       - name: Check internal links
         run: node build/check-links.js
@@ -58,6 +63,7 @@ jobs:
           echo "files:   $(find dist -type f | wc -l)" >> "$GITHUB_STEP_SUMMARY"
           echo "size:    $(du -sh dist | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
           echo "pending: $(grep -roh 'class=\"pending\"' dist --include='*.html' | wc -l) unverified values rendered" >> "$GITHUB_STEP_SUMMARY"
+          echo "domain:  trust.tradegrowx.in" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Configure Pages
