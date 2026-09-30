@@ -53,7 +53,6 @@ const nextConfig: NextConfig = {
       { source: "/about-us", destination: "/about", permanent: true },
       { source: "/testimonials-and-portfolio", destination: "/testimonials", permanent: true },
       { source: "/policy", destination: "/legal/refund-policy", permanent: true },
-      { source: "/disclaimer", destination: "/legal/disclaimer", permanent: true },
       ...retiredTemplatePages.map((slug) => ({ source: `/${slug}`, destination: "/", permanent: true })),
     ];
   },
