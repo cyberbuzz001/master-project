@@ -27,6 +27,7 @@ import { LiveChat } from './admin/LiveChat';
 import { NotificationSoundAdmin } from './admin/NotificationSoundAdmin';
 import { EmailAdmin } from './admin/EmailAdmin';
 import { WarRoomDashboard } from './admin/WarRoomDashboard';
+import { StaffDeskSwitcher } from './admin/StaffDeskSwitcher';
 import { QrCode as QrCodeIcon, ShieldCheck, Landmark, Volume2, Mail, Target } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -273,6 +274,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ token, theme, onToggleTh
               <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-[var(--gain)] animate-pulse' : 'bg-[var(--text-tertiary)]'}`} />
               <span>{isLive ? 'Live' : 'Connecting…'}</span>
             </div>
+            <StaffDeskSwitcher token={token} />
             <AdminNotificationBell token={token} />
             <button
               onClick={() => setShowShortcuts(true)}
