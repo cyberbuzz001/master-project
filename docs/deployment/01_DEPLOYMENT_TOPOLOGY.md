@@ -101,7 +101,7 @@ services:
 
   advisory-portal:
     build:
-      context: ./Expert advisory/frontend
+      context: ./expert-advisory/frontend
       dockerfile: Dockerfile
     container_name: tradegrow_advisory_web
     restart: unless-stopped
