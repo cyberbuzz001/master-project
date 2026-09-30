@@ -1,0 +1,536 @@
+openapi: 3.1.0
+info:
+  title: Expert Stocks Consultancy Platform API
+  version: 1.0.0-phase1
+  description: |
+    Phase 1 surface: public website, authentication (session + TOTP 2FA), self-service security,
+    admin command center (users, roles, teams, audit, regulatory profile, policies, settings),
+    employee workspace and client portal.
+
+    **Authentication.** First-party browser clients use Sanctum SPA sessions on the same origin:
+    `GET /sanctum/csrf-cookie`, then send `X-XSRF-TOKEN` on mutating requests. Roles flagged
+    `requires_2fa` must enroll TOTP and pass a challenge before `/admin`, `/employee` or `/client` respond.
+
+    **Errors.** Every error uses the `Error` schema. `X-Request-Id` is returned on every response.
+servers:
+  - url: /api/v1
+tags:
+  - name: Public
+  - name: Auth
+  - name: Me
+  - name: Admin
+  - name: Compliance
+  - name: Workspace
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: esc_session
+      description: Laravel session cookie (HttpOnly). Mutating requests also require the X-XSRF-TOKEN header.
+  parameters:
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1 } }
+    PerPage: { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+    UserId: { name: user, in: path, required: true, schema: { type: integer } }
+    VersionId: { name: version, in: path, required: true, schema: { type: integer } }
+  schemas:
+    Error:
+      type: object
+      required: [success, error_code, message, request_id, timestamp]
+      properties:
+        success: { const: false }
+        error_code:
+          type: string
+          examples: [VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, TWO_FACTOR_REQUIRED, TWO_FACTOR_ENROLLMENT_REQUIRED, ACCOUNT_LOCKED, RATE_LIMITED, COMPLIANCE_CONFIGURATION_INCOMPLETE, SEPARATION_OF_DUTIES, INVALID_STATE_TRANSITION]
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties: { type: array, items: { type: string } }
+        request_id: { type: string, format: uuid }
+        timestamp: { type: string, format: date-time }
+    PageMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+        last_page: { type: integer }
+    Envelope:
+      type: object
+      required: [success, data]
+      properties:
+        success: { const: true }
+        data: {}
+        meta: { type: object }
+    ReadinessCheck:
+      type: object
+      properties:
+        key: { type: string }
+        label: { type: string }
+        passed: { type: boolean }
+        detail: { type: string }
+    Me:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        user_type: { enum: [staff, client] }
+        status: { enum: [active, suspended, deactivated] }
+        roles: { type: array, items: { type: object, properties: { name: { type: string }, label: { type: string } } } }
+        permissions: { type: array, items: { type: string } }
+        areas: { type: array, items: { enum: [admin, manager, research, workspace, portal] } }
+        two_factor:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            required: { type: boolean }
+            enrollment_required: { type: boolean }
+            verified_this_session: { type: boolean }
+        demo_mode: { type: boolean }
+    LeadIntake:
+      type: object
+      required: [full_name, mobile, consents]
+      properties:
+        full_name: { type: string, minLength: 2, maxLength: 120 }
+        mobile: { type: string, description: Indian 10-digit or E.164 }
+        email: { type: [string, "null"], format: email }
+        city: { type: [string, "null"] }
+        state: { type: [string, "null"] }
+        message: { type: [string, "null"], maxLength: 2000 }
+        form_key: { enum: [contact, talk_to_team, risk_assessment, landing_page, resource_download] }
+        trading_experience: { enum: [none, under_1y, 1_3y, 3_5y, over_5y] }
+        capital_range: { enum: [under_1l, 1l_5l, 5l_25l, 25l_1cr, over_1cr, prefer_not] }
+        segments: { type: array, items: { enum: [equity, options, futures, commodity] } }
+        website: { type: string, description: Honeypot — must be empty }
+        consents:
+          type: object
+          required: [data_processing]
+          properties:
+            data_processing: { const: true }
+            calls: { type: boolean }
+            whatsapp: { type: boolean }
+            marketing_email: { type: boolean }
+        attribution:
+          type: object
+          properties:
+            utm_source: { type: string }
+            utm_medium: { type: string }
+            utm_campaign: { type: string, description: Matched to campaigns.code }
+            utm_term: { type: string }
+            utm_content: { type: string }
+            landing_page: { type: string }
+            referrer: { type: string }
+            referral_code: { type: string }
+            vendor_code: { type: string, description: Matched to vendors.code }
+            gclid: { type: string }
+            fbclid: { type: string }
+    RegulatoryProfileInput:
+      type: object
+      properties:
+        entity_type: { enum: [sebi_registered_ra, research_entity, partner_associated_ra, technology_platform, marketing_distribution, other] }
+        legal_entity_name: { type: string }
+        brand_name: { type: string }
+        research_status: { type: string }
+        registration_number: { type: string, pattern: '^[A-Z0-9/\-]+$' }
+        registration_date: { type: string, format: date }
+        registration_valid_until: { type: string, format: date }
+        ra_name: { type: string }
+        ra_contact_email: { type: string, format: email }
+        principal_officer: { type: string }
+        compliance_officer: { type: string }
+        grievance_officer_name: { type: string }
+        grievance_officer_email: { type: string, format: email }
+        grievance_officer_phone: { type: string }
+        partner_ra:
+          type: object
+          properties: { name: { type: string }, registration_number: { type: string }, agreement_reference: { type: string } }
+        research_approval_required: { type: boolean }
+        personalized_advice_allowed: { type: boolean }
+        performance_claim_policy: { enum: [none, ledger_only] }
+        public_statement: { type: string, maxLength: 2000 }
+        review_due_at: { type: string, format: date }
+    Reason:
+      type: object
+      required: [reason]
+      properties: { reason: { type: string, maxLength: 500 } }
+  responses:
+    Error:
+      description: Error envelope
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+paths:
+  /health:
+    get:
+      tags: [Public]
+      summary: Liveness
+      responses: { '200': { description: OK } }
+
+  /public/site:
+    get:
+      tags: [Public]
+      summary: Public settings (verified values only), published policies, consent wording
+      responses: { '200': { description: OK } }
+  /public/trust-center:
+    get:
+      tags: [Public]
+      summary: Verified regulatory information; `regulatory` is null until a profile is verified
+      responses: { '200': { description: OK } }
+  /public/policies/{slug}:
+    get:
+      tags: [Public]
+      summary: Published version of a policy document
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/Error' }
+  /public/leads:
+    post:
+      tags: [Public]
+      summary: Lead intake with consent and attribution
+      description: Rate limited (5/min, 20/day per IP). New, duplicate and honeypot submissions receive the identical 201 response.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LeadIntake' } } } }
+      responses:
+        '201': { description: Accepted }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Session login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [email, password], properties: { email: { type: string }, password: { type: string }, remember: { type: boolean } } }
+      responses:
+        '200': { description: '`{two_factor_required: true}` or `{two_factor_required: false, user: Me}`' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '423': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/two-factor/challenge:
+    post:
+      tags: [Auth]
+      summary: Complete login with a TOTP or single-use recovery code
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [code], properties: { code: { type: string } } } } } }
+      responses:
+        '200': { description: '`{user: Me}`' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      security: [{ session: [] }]
+      responses: { '200': { description: OK } }
+
+  /me:
+    get:
+      tags: [Me]
+      security: [{ session: [] }]
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Me' } } } } }
+  /me/password:
+    put:
+      tags: [Me]
+      security: [{ session: [] }]
+      summary: Change password; other sessions and API tokens are revoked
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [current_password, password, password_confirmation], properties: { current_password: { type: string }, password: { type: string }, password_confirmation: { type: string } } } } }
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/Error' } }
+  /me/two-factor:
+    post:
+      tags: [Me]
+      security: [{ session: [] }]
+      summary: Begin TOTP enrollment (returns secret, otpauth URL, QR SVG)
+      responses: { '200': { description: OK }, '409': { $ref: '#/components/responses/Error' } }
+    delete:
+      tags: [Me]
+      security: [{ session: [] }]
+      summary: Disable 2FA (refused when mandatory for the role)
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [password], properties: { password: { type: string } } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+  /me/two-factor/confirm:
+    post:
+      tags: [Me]
+      security: [{ session: [] }]
+      summary: Confirm enrollment; returns recovery codes once
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [code], properties: { code: { type: string, minLength: 6, maxLength: 6 } } } } } }
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/Error' } }
+  /me/sessions:
+    get:
+      tags: [Me]
+      security: [{ session: [] }]
+      responses: { '200': { description: Sessions (IDs are SHA-256 hashes) } }
+  /me/sessions/{sessionHash}:
+    delete:
+      tags: [Me]
+      security: [{ session: [] }]
+      parameters: [{ name: sessionHash, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }]
+      responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/Error' }, '409': { $ref: '#/components/responses/Error' } }
+  /me/login-history:
+    get:
+      tags: [Me]
+      security: [{ session: [] }]
+      responses: { '200': { description: Last 50 sign-in attempts } }
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: 'Command center metrics (permission: dashboard.admin.view)'
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+  /admin/users:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: 'List users (users.view)'
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: search, in: query, schema: { type: string } }
+        - { name: 'filter[user_type]', in: query, schema: { enum: [staff, client] } }
+        - { name: 'filter[status]', in: query, schema: { enum: [active, suspended, deactivated] } }
+        - { name: 'filter[role]', in: query, schema: { type: string } }
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: 'Create staff user + employee record (users.create + roles.assign)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, roles, reason]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                mobile: { type: string }
+                password: { type: string }
+                designation: { type: string }
+                team_id: { type: integer }
+                reports_to_employee_id: { type: integer }
+                roles: { type: array, items: { type: string } }
+                reason: { type: string }
+      responses: { '201': { description: Created }, '403': { $ref: '#/components/responses/Error' }, '422': { $ref: '#/components/responses/Error' } }
+  /admin/users/{user}:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses: { '200': { description: OK } }
+    patch:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: 'Update profile/employee fields (users.update); reason required'
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses: { '200': { description: OK } }
+  /admin/users/{user}/roles:
+    put:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: 'Replace roles (roles.assign; privileged roles need roles.assign_privileged; never self)'
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [roles, reason], properties: { roles: { type: array, items: { type: string } }, reason: { type: string } } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' }, '409': { $ref: '#/components/responses/Error' } }
+  /admin/users/{user}/deactivate:
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Reason' } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' }, '409': { $ref: '#/components/responses/Error' } }
+  /admin/users/{user}/reactivate:
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Reason' } } } }
+      responses: { '200': { description: OK } }
+  /admin/users/{user}/unlock:
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Reason' } } } }
+      responses: { '200': { description: OK } }
+  /admin/users/{user}/research-authorization:
+    put:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      summary: 'Mark employee as authorized research person (research_persons.authorize; never self)'
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [authorized, reason], properties: { authorized: { type: boolean }, reason: { type: string } } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+  /admin/roles:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      responses: { '200': { description: Roles and permission catalogue } }
+  /admin/teams:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      responses: { '201': { description: Created } }
+  /admin/teams/{team}:
+    patch:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters: [{ name: team, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /admin/audit-logs:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: 'filter[action]', in: query, description: Prefix match, schema: { type: string } }
+        - { name: 'filter[actor_user_id]', in: query, schema: { type: integer } }
+        - { name: 'filter[subject_type]', in: query, schema: { type: string } }
+        - { name: 'filter[subject_id]', in: query, schema: { type: integer } }
+        - { name: 'filter[request_id]', in: query, schema: { type: string, format: uuid } }
+        - { name: 'filter[from]', in: query, schema: { type: string, format: date-time } }
+        - { name: 'filter[to]', in: query, schema: { type: string, format: date-time } }
+      responses: { '200': { description: OK } }
+  /admin/login-history:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      responses: { '200': { description: OK } }
+
+  /admin/regulatory-profile:
+    get:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      responses: { '200': { description: All versions, active version number, entity types } }
+  /admin/regulatory-profile/versions:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RegulatoryProfileInput' } } } }
+      responses: { '201': { description: Draft created } }
+  /admin/regulatory-profile/versions/{version}:
+    patch:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RegulatoryProfileInput' } } } }
+      responses: { '200': { description: OK }, '400': { $ref: '#/components/responses/Error' } }
+  /admin/regulatory-profile/versions/{version}/submit:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/Error' } }
+  /admin/regulatory-profile/versions/{version}/verify:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      summary: Verify and activate (verifier must differ from author and submitter)
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [verification_evidence], properties: { verification_evidence: { type: string, minLength: 10 } } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+  /admin/regulatory-profile/versions/{version}/reject:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Reason' } } } }
+      responses: { '200': { description: OK } }
+  /admin/compliance/readiness:
+    get:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ name: category, in: query, schema: { enum: [recommendation, research_report, educational] } }]
+      responses:
+        '200':
+          description: Publication gate checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category: { type: string }
+                  ready: { type: boolean }
+                  checks: { type: array, items: { $ref: '#/components/schemas/ReadinessCheck' } }
+  /admin/policies:
+    get:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      responses: { '200': { description: Documents with version summaries } }
+  /admin/policies/versions/{version}:
+    get:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses: { '200': { description: Version including body } }
+  /admin/policies/{slug}/versions:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [body_markdown], properties: { body_markdown: { type: string }, change_summary: { type: string }, effective_from: { type: string, format: date }, review_due_at: { type: string, format: date }, source_url: { type: string, format: uri } } } } }
+      responses: { '201': { description: Draft created } }
+  /admin/policies/versions/{version}/approve:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      summary: Approve a draft (approver must differ from author)
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+  /admin/policies/versions/{version}/publish:
+    post:
+      tags: [Compliance]
+      security: [{ session: [] }]
+      summary: Publish an approved version; previous published version is superseded
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses: { '200': { description: OK }, '400': { $ref: '#/components/responses/Error' } }
+  /admin/settings:
+    get:
+      tags: [Admin]
+      security: [{ session: [] }]
+      responses: { '200': { description: Settings (secrets masked) } }
+    put:
+      tags: [Admin]
+      security: [{ session: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [values, reason], properties: { values: { type: object }, reason: { type: string } } } } } }
+      responses: { '200': { description: OK } }
+  /admin/settings/verify:
+    post:
+      tags: [Admin]
+      security: [{ session: [] }]
+      summary: Mark a setting verified (must differ from the last editor)
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [key], properties: { key: { type: string } } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Error' } }
+
+  /employee/dashboard:
+    get:
+      tags: [Workspace]
+      security: [{ session: [] }]
+      responses: { '200': { description: Workload summary scoped to own/team/all } }
+  /employee/leads:
+    get:
+      tags: [Workspace]
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: 'filter[status]', in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Scoped lead list } }
+  /client/dashboard:
+    get:
+      tags: [Workspace]
+      security: [{ session: [] }]
+      responses: { '200': { description: Own client record, notices, module status } }

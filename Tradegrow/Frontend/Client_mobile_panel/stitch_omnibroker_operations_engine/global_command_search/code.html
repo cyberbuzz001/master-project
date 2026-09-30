@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Search | BrokerOps Enterprise</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c5c6cd; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #75777e; }
+        
+        /* Maker-Checker Cues */
+        .status-pending { border-left: 4px dashed #f59e0b; }
+        .status-verified { border-left: 4px solid #10b981; }
+        
+        .glass-effect {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-container-low": "#f3f4f5",
+                "tertiary-fixed": "#c8e7fd",
+                "on-tertiary-fixed": "#001e2d",
+                "error-container": "#ffdad6",
+                "secondary": "#0050cc",
+                "on-tertiary": "#ffffff",
+                "on-primary-container": "#76849f",
+                "surface-tint": "#515f78",
+                "on-surface-variant": "#44474d",
+                "on-secondary-fixed-variant": "#003fa4",
+                "on-tertiary-container": "#6a889b",
+                "on-secondary": "#ffffff",
+                "surface-bright": "#f8f9fa",
+                "on-primary": "#ffffff",
+                "secondary-fixed": "#dae1ff",
+                "primary-fixed": "#d6e3ff",
+                "outline": "#75777e",
+                "surface-container-lowest": "#ffffff",
+                "surface-container-highest": "#e1e3e4",
+                "surface-container-high": "#e7e8e9",
+                "background": "#f8f9fa",
+                "surface": "#f8f9fa",
+                "tertiary": "#000000",
+                "primary": "#000000",
+                "on-error-container": "#93000a",
+                "secondary-fixed-dim": "#b3c5ff",
+                "primary-fixed-dim": "#b9c7e4",
+                "on-tertiary-fixed-variant": "#2c4a5c",
+                "outline-variant": "#c5c6cd",
+                "on-secondary-container": "#f9f7ff",
+                "on-secondary-fixed": "#001849",
+                "on-error": "#ffffff",
+                "inverse-surface": "#2e3132",
+                "surface-dim": "#d9dadb",
+                "on-primary-fixed": "#0d1c32",
+                "surface-container": "#edeeef",
+                "inverse-primary": "#b9c7e4",
+                "primary-container": "#0d1c32",
+                "on-primary-fixed-variant": "#39475f",
+                "on-background": "#191c1d",
+                "tertiary-fixed-dim": "#accbe0",
+                "error": "#ba1a1a",
+                "surface-variant": "#e1e3e4",
+                "inverse-on-surface": "#f0f1f2",
+                "secondary-container": "#0266ff",
+                "on-surface": "#191c1d",
+                "tertiary-container": "#001e2d"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+              },
+              "spacing": {
+                "table-cell-padding": "8px 12px",
+                "unit": "4px",
+                "container-margin": "24px",
+                "sidebar-width": "260px",
+                "gutter": "16px",
+                "sidebar-collapsed": "64px"
+              },
+              "fontFamily": {
+                "label-md": ["Inter"],
+                "body-md": ["Inter"],
+                "headline-xl": ["Inter"],
+                "headline-md": ["Inter"],
+                "data-mono": ["Inter"],
+                "body-sm": ["Inter"],
+                "headline-lg": ["Inter"],
+                "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container z-50 flex flex-col py-4 shadow-md overflow-y-auto">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container/50 font-bold">Enterprise Suite</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span> CRM
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span> KYC
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span> Trading Ops
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span> RMS
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span> Settlements
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span> Back Office
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span> Compliance
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> System Config
+            </a>
+</nav>
+<div class="mt-auto border-t border-on-primary-container/10 pt-4 px-3 space-y-1">
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span> Search
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="star">star</span> Favorites
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span> Recent
+            </a>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="ml-[260px] min-h-screen">
+<!-- Top Nav Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface-container-lowest border-b border-outline-variant shadow-sm h-16 flex items-center justify-between px-6">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="h-6 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold border border-green-200">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> SYSTEM PULSE: OPTIMAL
+                </div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all" data-icon="apps">apps</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white text-xs font-bold ring-2 ring-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior financial operations manager in a corporate setting, soft studio lighting, high-end professional atmosphere with blurred trading screens in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-UYe8ll4OUynGoQvD1QdGOk9EahgUvH_gSdfo5vHFlpPjtEFTqxm6uFOn4Lu9jiDjtBO-tuO4lgxHo8THPb8PnsZSnorB5kCSUwkKk3zKx2qw_H2uFsDFd2LXD9jiuazsef0VcOOhjI7aT3JY9VqCkXfF2gyLJLrnBl4XvUcsvb4F9nmT3rqdsH5iDJRnULAP5agWCNZWRsMF4jbw8s6zrcvGrCMlNu74sSqIx0108koWhmjO7Biv"/>
+</div>
+</div>
+</header>
+<!-- Search Canvas Content -->
+<div class="pt-24 pb-12 px-container-margin max-w-7xl mx-auto">
+<!-- Hero Search Input Section -->
+<div class="relative mb-12">
+<div class="flex flex-col gap-2 mb-6">
+<h2 class="font-headline-xl text-headline-xl text-primary flex items-center gap-3">
+                        Global Command <span class="text-on-surface-variant font-normal">/ Search Everything</span>
+</h2>
+<p class="text-on-surface-variant font-body-md">Universal identifier lookup across 14 integrated brokerage systems.</p>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="search">search</span>
+</div>
+<input class="w-full h-16 pl-14 pr-32 bg-white border-2 border-outline-variant focus:border-secondary focus:ring-0 rounded-xl font-body-lg text-body-lg shadow-sm transition-all" placeholder="Search Client ID, PAN, Mobile, Email, Order ID, Trade ID..." type="text"/>
+<div class="absolute inset-y-0 right-4 flex items-center gap-2">
+<div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded border border-outline-variant">
+<span class="text-[10px] font-bold text-outline uppercase tracking-tighter">Cmd</span>
+<span class="text-[10px] font-bold text-outline uppercase tracking-tighter">K</span>
+</div>
+<button class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all flex items-center gap-2">
+                            Advanced <span class="material-symbols-outlined text-sm" data-icon="tune">tune</span>
+</button>
+</div>
+</div>
+<!-- Suggested Filters -->
+<div class="flex flex-wrap gap-2 mt-4 overflow-x-auto no-scrollbar">
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-white text-on-surface-variant text-label-md font-label-md hover:border-secondary hover:text-secondary transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span> Clients
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-white text-on-surface-variant text-label-md font-label-md hover:border-secondary hover:text-secondary transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="receipt_long">receipt_long</span> Orders
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-white text-on-surface-variant text-label-md font-label-md hover:border-secondary hover:text-secondary transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="rule">rule</span> KYC/Compliance
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-white text-on-surface-variant text-label-md font-label-md hover:border-secondary hover:text-secondary transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="monitoring">monitoring</span> Symbol/Ticker
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-white text-on-surface-variant text-label-md font-label-md hover:border-secondary hover:text-secondary transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="payments">payments</span> Payouts
+                    </button>
+</div>
+</div>
+<!-- Bento Layout Results -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Search Metadata & Recent -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="bg-white rounded-xl border border-outline-variant p-4 shadow-sm">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-4">Recent Inquiries</h3>
+<div class="space-y-3">
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant/60" data-icon="history">history</span>
+<div>
+<p class="font-data-mono text-data-mono text-primary">CID_990812</p>
+<p class="text-[10px] text-on-surface-variant">2 mins ago • Client ID</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-xs text-outline opacity-0 group-hover:opacity-100" data-icon="north_west">north_west</span>
+</div>
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant/60" data-icon="history">history</span>
+<div>
+<p class="font-data-mono text-data-mono text-primary">TRD_AUG_22X</p>
+<p class="text-[10px] text-on-surface-variant">15 mins ago • Trade ID</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-xs text-outline opacity-0 group-hover:opacity-100" data-icon="north_west">north_west</span>
+</div>
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant/60" data-icon="history">history</span>
+<div>
+<p class="font-data-mono text-data-mono text-primary">RELIANCE</p>
+<p class="text-[10px] text-on-surface-variant">1 hr ago • Symbol</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-xs text-outline opacity-0 group-hover:opacity-100" data-icon="north_west">north_west</span>
+</div>
+</div>
+<button class="w-full mt-4 py-2 text-secondary font-label-md text-label-md border-t border-outline-variant hover:underline">Clear History</button>
+</div>
+<!-- Role Awareness Card -->
+<div class="bg-primary-container rounded-xl p-4 text-on-primary-container">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-label-md text-label-md uppercase tracking-wider text-secondary-fixed">RBAC Active</span>
+</div>
+<p class="text-xs opacity-70 mb-3">Your role (Compliance Mgr) has restricted access to PII. Sensitivity masking enabled for PAN and Mobile numbers.</p>
+<div class="h-[1px] bg-white/10 w-full mb-3"></div>
+<div class="space-y-2">
+<div class="flex justify-between text-[11px]">
+<span>PAN Visibility</span>
+<span class="text-red-300">Masked (XXXX)</span>
+</div>
+<div class="flex justify-between text-[11px]">
+<span>Order Modify</span>
+<span class="text-green-300">Enabled</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Results Area -->
+<div class="col-span-12 lg:col-span-9 space-y-8">
+<!-- Category Section: Clients -->
+<section>
+<div class="flex items-center justify-between mb-4 px-2">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="group">group</span> Clients <span class="text-on-surface-variant font-normal text-sm">(2 Found)</span>
+</h3>
+<a class="text-secondary font-label-md text-label-md hover:underline" href="#">View All Clients</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Client Result 1 -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden hover:shadow-md transition-all status-verified group">
+<div class="p-4">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="font-bold text-lg text-primary">Aditya Shrivastav</h4>
+<p class="text-data-mono text-sm text-on-surface-variant font-medium">CID: BRK-2023-9012</p>
+</div>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded uppercase border border-green-200">Active</span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 text-xs text-on-surface-variant mb-4">
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="badge">badge</span> PAN: <span class="font-bold tracking-widest">ABC*****3F</span></div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="call">call</span> Mob: <span class="font-bold tracking-widest">+91 98*** **321</span></div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="mail">mail</span> adi.shri***@gmail.com</div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span> Mumbai, MH</div>
+</div>
+<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="flex-1 py-1.5 bg-surface-container-low hover:bg-surface-container-high rounded text-[11px] font-bold border border-outline-variant">View Ledger</button>
+<button class="flex-1 py-1.5 bg-surface-container-low hover:bg-surface-container-high rounded text-[11px] font-bold border border-outline-variant">KYC Docs</button>
+</div>
+</div>
+</div>
+<!-- Client Result 2 -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden hover:shadow-md transition-all status-pending group">
+<div class="p-4">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h4 class="font-bold text-lg text-primary">Meghna Kulkarni</h4>
+<p class="text-data-mono text-sm text-on-surface-variant font-medium">CID: BRK-2024-1104</p>
+</div>
+<span class="px-2 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold rounded uppercase border border-amber-200">Onboarding</span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 text-xs text-on-surface-variant mb-4">
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="badge">badge</span> PAN: <span class="font-bold tracking-widest">BXY*****1K</span></div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="call">call</span> Mob: <span class="font-bold tracking-widest">+91 77*** **554</span></div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="mail">mail</span> meg.kul***@outlook.com</div>
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span> Pune, MH</div>
+</div>
+<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="flex-1 py-1.5 bg-secondary text-white rounded text-[11px] font-bold">Approve KYC</button>
+<button class="flex-1 py-1.5 bg-surface-container-low hover:bg-surface-container-high rounded text-[11px] font-bold border border-outline-variant">Reject</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Section: Transactions -->
+<section>
+<div class="flex items-center justify-between mb-4 px-2">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="sync_alt">sync_alt</span> Transactions <span class="text-on-surface-variant font-normal text-sm">(Recent matching)</span>
+</h3>
+</div>
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+<th class="p-table-cell-padding">Order ID</th>
+<th class="p-table-cell-padding">Symbol</th>
+<th class="p-table-cell-padding">Type</th>
+<th class="p-table-cell-padding">Qty</th>
+<th class="p-table-cell-padding text-right">Price</th>
+<th class="p-table-cell-padding">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant text-body-sm font-data-mono">
+<tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer group">
+<td class="p-table-cell-padding text-primary font-bold">ORD_882910</td>
+<td class="p-table-cell-padding">HDFCBANK <span class="text-[10px] bg-surface-container text-outline px-1 rounded">NSE</span></td>
+<td class="p-table-cell-padding"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-table-cell-padding">450</td>
+<td class="p-table-cell-padding text-right">1,642.30</td>
+<td class="p-table-cell-padding">
+<span class="flex items-center gap-1.5 text-green-700 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> FILLED
+                                            </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer group">
+<td class="p-table-cell-padding text-primary font-bold">ORD_882909</td>
+<td class="p-table-cell-padding">TCS <span class="text-[10px] bg-surface-container text-outline px-1 rounded">NSE</span></td>
+<td class="p-table-cell-padding"><span class="text-red-600 font-bold">SELL</span></td>
+<td class="p-table-cell-padding">25</td>
+<td class="p-table-cell-padding text-right">3,890.15</td>
+<td class="p-table-cell-padding">
+<span class="flex items-center gap-1.5 text-red-700 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> REJECTED
+                                            </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors cursor-pointer group">
+<td class="p-table-cell-padding text-primary font-bold">ORD_882908</td>
+<td class="p-table-cell-padding">ZOMATO <span class="text-[10px] bg-surface-container text-outline px-1 rounded">BSE</span></td>
+<td class="p-table-cell-padding"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-table-cell-padding">1000</td>
+<td class="p-table-cell-padding text-right">182.40</td>
+<td class="p-table-cell-padding">
+<span class="flex items-center gap-1.5 text-amber-700 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> PENDING
+                                            </span>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="bg-surface-container-lowest p-3 text-center border-t border-outline-variant">
+<button class="text-secondary font-label-md text-label-md hover:underline">View All 14 Matching Orders</button>
+</div>
+</div>
+</section>
+<!-- Category Section: Compliance -->
+<section>
+<div class="flex items-center justify-between mb-4 px-2">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span> Compliance &amp; KYC <span class="text-on-surface-variant font-normal text-sm">(1 Case)</span>
+</h3>
+</div>
+<div class="bg-white rounded-xl border-2 border-dashed border-outline-variant p-6 flex flex-col items-center justify-center text-center">
+<div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-3xl" data-icon="warning">warning</span>
+</div>
+<h4 class="font-bold text-primary mb-1">High Risk Alert: KYC-ID_88019</h4>
+<p class="text-sm text-on-surface-variant max-w-md mb-4">Potential PAN mismatch detected for 'Aditya Shrivastav'. Discrepancy found between ITD records and uploaded document.</p>
+<div class="flex gap-3">
+<button class="px-4 py-2 bg-primary text-white font-bold rounded shadow-sm hover:opacity-90 transition-all">Resolve Case</button>
+<button class="px-4 py-2 bg-white text-primary border border-outline-variant font-bold rounded shadow-sm hover:bg-surface-container-low transition-all">Audit Trail</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual Search FAB -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-secondary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+<span class="absolute right-16 bg-primary-container text-white px-3 py-1.5 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">New Request</span>
+</button>
+<script>
+        // Micro-interaction: Keyboard Shortcut Handler
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input').focus();
+            }
+        });
+
+        // Search Input Glow Effect
+        const searchInput = document.querySelector('input');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-4', 'ring-secondary/10');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-4', 'ring-secondary/10');
+        });
+
+        // Simulating result filtering for visual feedback
+        searchInput.addEventListener('input', (e) => {
+            if(e.target.value.length > 2) {
+                // Add visual pulsing to titles to simulate "thinking"
+                document.querySelectorAll('h3').forEach(h => h.classList.add('animate-pulse'));
+                setTimeout(() => {
+                    document.querySelectorAll('h3').forEach(h => h.classList.remove('animate-pulse'));
+                }, 500);
+            }
+        });
+    </script>
+</body></html>

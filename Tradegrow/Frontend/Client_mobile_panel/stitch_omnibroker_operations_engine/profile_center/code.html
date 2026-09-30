@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidians Terminal | Profile Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "background": "#0c1323",
+                  "inverse-surface": "#dce2f9",
+                  "secondary": "#4edea3",
+                  "inverse-on-surface": "#293041",
+                  "on-surface-variant": "#c2c6d6",
+                  "error-container": "#93000a",
+                  "outline-variant": "#424754",
+                  "on-primary": "#002e6a",
+                  "inverse-primary": "#005ac2",
+                  "on-primary-fixed": "#001a42",
+                  "on-tertiary-container": "#5c0008",
+                  "on-background": "#dce2f9",
+                  "surface-dim": "#0c1323",
+                  "primary-fixed-dim": "#adc6ff",
+                  "surface-container-lowest": "#070e1e",
+                  "tertiary": "#ffb3ad",
+                  "surface-container": "#191f30",
+                  "primary": "#adc6ff",
+                  "on-secondary-container": "#00311f",
+                  "surface-container-low": "#141b2c",
+                  "surface-container-high": "#232a3b",
+                  "error": "#ffb4ab",
+                  "surface-variant": "#2e3446",
+                  "primary-fixed": "#d8e2ff",
+                  "on-surface": "#dce2f9",
+                  "tertiary-fixed": "#ffdad7",
+                  "secondary-fixed-dim": "#4edea3",
+                  "secondary-container": "#00a572",
+                  "on-secondary-fixed-variant": "#005236",
+                  "surface": "#0c1323",
+                  "on-error-container": "#ffdad6",
+                  "on-error": "#690005",
+                  "surface-tint": "#adc6ff",
+                  "surface-container-highest": "#2e3446",
+                  "on-primary-fixed-variant": "#004395",
+                  "on-tertiary-fixed": "#410004",
+                  "on-primary-container": "#00285d",
+                  "secondary-fixed": "#6ffbbe",
+                  "on-secondary": "#003824",
+                  "surface-bright": "#32394b",
+                  "tertiary-fixed-dim": "#ffb3ad",
+                  "tertiary-container": "#ff5451",
+                  "on-tertiary": "#68000a",
+                  "on-secondary-fixed": "#002113",
+                  "primary-container": "#4d8eff",
+                  "on-tertiary-fixed-variant": "#930013",
+                  "outline": "#8c909f"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "spacing": {
+                  "cell-padding-y": "6px",
+                  "unit": "4px",
+                  "cell-padding-x": "8px",
+                  "container-margin": "16px",
+                  "gutter": "12px"
+          },
+          "fontFamily": {
+                  "title-sm": ["Inter"],
+                  "body-md": ["Inter"],
+                  "label-caps": ["Inter"],
+                  "headline-md": ["Inter"],
+                  "data-mono": ["JetBrains Mono"],
+                  "body-sm": ["Inter"],
+                  "display-lg": ["Inter"]
+          },
+          "fontSize": {
+                  "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                  "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                  "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                  "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                  "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .glass-effect {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .status-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar Execution -->
+<header class="fixed top-0 w-full z-50 border-b border-outline-variant/30 bg-surface/70 backdrop-blur-xl flex justify-between items-center px-container-margin h-16">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high/50 p-2 rounded-full transition-colors">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-primary dark:text-primary-fixed">OBSIDIAN TERMINAL</h1>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high/50 p-2 rounded-full transition-colors">search</span>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs border border-primary/20">
+        RS
+      </div>
+</div>
+</header>
+<!-- Side Navigation Drawer (Desktop Anchor) -->
+<aside class="fixed left-0 top-0 h-full w-80 z-[40] border-r border-outline-variant/30 bg-surface-container-low pt-20 hidden md:flex flex-col p-4 gap-2">
+<div class="p-4 mb-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional close-up studio portrait of a corporate professional, Rohan Sharma, looking confident. The lighting is dramatic and cool-toned, fitting a high-end fintech terminal aesthetic. The background is a blurred dark office environment with subtle blue and teal glass highlights. 8k resolution, photorealistic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvdI1nuiZnO4kaotWJSIL4ioOwqLsSaUOAPMYdt40Zpy_dMXIv5of0dbIMi728ilovzjFxyLidsmwLYeOW8ACdG9hOAFNbwlUg0UHtlC-eRX1l8SZN5OSIcL4vvdWgpb8aV17D8rmeTt7dsNyBNRVrz5m1SLTKsv0oQXx-yqYhknEZPN_ImV1OySpOTVE4M1jUW-OYy0u3CvPPbDssubTzOIXZ1iqWOh_DFqcep0Y887VbeKoWDXw"/>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Rohan Sharma</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Client ID: IN88291</p>
+</div>
+</div>
+<nav class="space-y-1">
+<div class="bg-secondary-container text-on-secondary-container rounded-full flex items-center gap-3 px-4 py-3 cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-title-sm text-body-md">Account Settings</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-3 px-4 py-3 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-title-sm text-body-md">Reports &amp; P&amp;L</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-3 px-4 py-3 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-title-sm text-body-md">Funds</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-3 px-4 py-3 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined">headset_mic</span>
+<span class="font-title-sm text-body-md">Customer Support</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-3 px-4 py-3 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-title-sm text-body-md">Legal</span>
+</div>
+</nav>
+<div class="mt-auto p-4 border-t border-outline-variant/20">
+<div class="flex items-center justify-between text-secondary">
+<span class="font-label-caps text-label-caps">PREMIUM MEMBER</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-80 pt-20 pb-24 px-4 md:px-gutter min-h-screen">
+<!-- Hero Profile Section -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-variant/20 pb-8">
+<div class="flex items-center gap-6">
+<div class="relative">
+<div class="w-24 h-24 rounded-xl border-2 border-primary/30 p-1">
+<div class="w-full h-full rounded-lg bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A detailed high-resolution profile picture of a young professional male in his 30s. He is wearing a dark charcoal suit with a subtle texture. The environment is a sleek, modern corporate office with blue-tinted windows and minimal lighting. High-end aesthetic consistent with Obsidian Terminal brand colors of deep navy and electric blue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArjZEXNcteLSQe8bBQ8C3dVxrKf9QXB1NmfMMBc9O9L68BnFXd-f1GSLUn7ryi2hFhlZqHzDNt_cxqrXQzhZQsdQZamJbtm2z6NqoyQnJNtWIOUE3hIScoS9OHisEQQxfJcguhlzDyeLGO5kaeya-tTI9rJBe95ZD6VDtY7a8XpKxUBPH6M3VpPjhZZfr5Vdys7wMZDIUSrSZovUiHQdXtRghRBecf0ypr3LSVPDDro5y093HvpSc"/>
+</div>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-secondary text-on-secondary px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-[10px] font-bold tracking-wider">VERIFIED</span>
+</div>
+</div>
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface">Rohan Sharma</h2>
+<div class="flex items-center gap-3 mt-1">
+<span class="font-data-mono text-data-mono text-on-surface-variant px-2 py-0.5 bg-surface-container-highest rounded">ID: IN88291</span>
+<div class="flex items-center gap-1.5 text-secondary">
+<div class="w-2 h-2 rounded-full bg-secondary status-pulse"></div>
+<span class="font-label-caps text-label-caps uppercase">Account Active</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high text-on-surface px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-variant transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+<span class="font-label-caps">Edit Profile</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">security</span>
+<span class="font-label-caps">KYC Update</span>
+</button>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Column 1: Personal & KYC -->
+<div class="space-y-gutter">
+<!-- Personal Details -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-sm text-title-sm text-primary">Personal Details</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">person</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">EMAIL ADDRESS</p>
+<p class="font-body-md text-body-md">rohan.sharma.in@terminal.io</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">PHONE NUMBER</p>
+<p class="font-data-mono text-data-mono text-secondary">+91 98765 43210</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">RESIDENTIAL ADDRESS</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                42, Obsidian Heights, Financial District, <br/>Mumbai, MH 400001, India
+              </p>
+</div>
+</div>
+</section>
+<!-- KYC Status -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-24 h-24 bg-secondary/10 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-secondary/20 transition-all"></div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-sm text-title-sm text-primary">KYC Compliance</h3>
+<span class="material-symbols-outlined text-secondary">verified_user</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl">task_alt</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface">KYC Status: <span class="text-secondary font-bold">COMPLETED</span></p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Last verified on 12 Jan 2024</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Column 2: Financial Details -->
+<div class="space-y-gutter">
+<!-- Bank Accounts -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-sm text-title-sm text-primary">Bank Accounts</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">account_balance</span>
+</div>
+<div class="bg-surface-container-high/50 p-4 rounded-lg border border-outline-variant/20 mb-3">
+<div class="flex justify-between items-start mb-2">
+<p class="font-label-caps text-label-caps text-on-surface-variant">PRIMARY BANK</p>
+<span class="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-1.5 py-0.5 rounded">DEFAULT</span>
+</div>
+<p class="font-title-sm text-body-md text-on-surface">Standard Chartered Bank</p>
+<p class="font-data-mono text-data-mono text-primary mt-1 tracking-widest">**** **** 8829</p>
+<div class="mt-3 flex justify-between items-center text-[11px] text-on-surface-variant font-data-mono">
+<span>IFSC: SCBL000122</span>
+<span>TYPE: SAVINGS</span>
+</div>
+</div>
+<button class="w-full py-2 border border-dashed border-outline-variant rounded-lg text-on-surface-variant font-label-caps hover:text-primary hover:border-primary transition-all">
+            + Add Bank Account
+          </button>
+</section>
+<!-- Demat Details -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-sm text-title-sm text-primary">Demat Portfolio</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">layers</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-highest p-3 rounded">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">DP ID</p>
+<p class="font-data-mono text-data-mono">12081600</p>
+</div>
+<div class="bg-surface-container-highest p-3 rounded">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">BO ID</p>
+<p class="font-data-mono text-data-mono text-primary">00088291</p>
+</div>
+</div>
+<div class="mt-4 p-3 border-t border-outline-variant/10 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">DP Type</span>
+<span class="font-body-sm text-body-sm">CDSL</span>
+</div>
+</section>
+</div>
+<!-- Column 3: Segments & Actions -->
+<div class="space-y-gutter">
+<!-- Trading Segments -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-sm text-title-sm text-primary">Active Segments</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">monitoring</span>
+</div>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span class="font-body-md text-body-md">NSE/BSE Equity</span>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(78,222,163,0.5)]"></span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span class="font-body-md text-body-md">Futures &amp; Options</span>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(78,222,163,0.5)]"></span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded border border-outline-variant/10">
+<span class="font-body-md text-body-md">Currency Derivatives</span>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(78,222,163,0.5)]"></span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-highest/30 rounded border border-outline-variant/10 opacity-50">
+<span class="font-body-md text-body-md text-on-surface-variant">Commodity (MCX)</span>
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+</div>
+</section>
+<!-- Nominee & Documents -->
+<section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5">
+<h3 class="font-title-sm text-title-sm text-primary mb-4">Nominee &amp; Docs</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-3 hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer group">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">
+<span class="material-symbols-outlined">family_history</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md">Nominee Details</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">1 Nominee Added</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+<div class="flex items-center gap-3 p-3 hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer group">
+<div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:bg-tertiary group-hover:text-on-tertiary transition-all">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md">E-Sign Documents</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant">View Signed Forms</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Security Footer -->
+<div class="mt-gutter p-6 bg-surface-container-high/30 border border-outline-variant/20 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">verified_user</span>
+<div>
+<p class="font-title-sm text-body-md">Last Login</p>
+<p class="font-data-mono text-data-mono text-primary">12 Oct 2024, 09:15:32 AM from IP 103.22.45.101</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2 border border-error/50 text-error font-label-caps rounded-lg hover:bg-error hover:text-on-error transition-all">
+          Logout All Sessions
+        </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Anchor) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant/30 z-50 rounded-t-full shadow-2xl">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps">Watchlist</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed font-bold scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</div>
+</nav>
+<script>
+    // Micro-interactions and real-time feel
+    document.querySelectorAll('button, nav div, .cursor-pointer').forEach(el => {
+      el.addEventListener('mousedown', () => el.style.transform = 'scale(0.96)');
+      el.addEventListener('mouseup', () => el.style.transform = 'scale(1)');
+      el.addEventListener('mouseleave', () => el.style.transform = 'scale(1)');
+    });
+
+    // Handle smooth entry animations
+    window.addEventListener('DOMContentLoaded', () => {
+      const sections = document.querySelectorAll('section');
+      sections.forEach((sec, index) => {
+        sec.style.opacity = '0';
+        sec.style.transform = 'translateY(10px)';
+        sec.style.transition = 'all 0.5s ease-out';
+        setTimeout(() => {
+          sec.style.opacity = '1';
+          sec.style.transform = 'translateY(0)';
+        }, 100 * index);
+      });
+    });
+  </script>
+</body></html>

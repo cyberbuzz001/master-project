@@ -1,0 +1,194 @@
+{
+  "_README": [
+    "BROKER COMPARISON CONFIG.",
+    "RULE 1: Never publish a competitor's pricing from memory. Every competitor cell must be sourced from that broker's own published tariff page on a stated date.",
+    "RULE 2: Fill 'value' only after someone has opened the 'source' URL and copied the figure. Set 'checkedOn' to that date.",
+    "RULE 3: Null values render as 'Verify on broker site' with a link. That is an acceptable, honest state to ship in.",
+    "RULE 4: No 'winner', no 'best broker', no highlighting Trade Grow's column. The table is a research aid, not an ad."
+  ],
+
+  "disclaimer": "Brokerage and charges change frequently. Always verify the latest pricing directly with the respective broker before deciding. Trade Grow does not control and is not responsible for information published by other brokers. Competitor names and trademarks belong to their respective owners and are used here only for factual comparison.",
+
+  "lastReviewedOn": "2026-01-15",
+  "reviewedBy": "Compliance & Market Research",
+
+  "brokers": [
+    { "key": "tradegrow", "name": "Trade Grow", "isSelf": true,  "source": "/pricing/", "checkedOn": "2026-01-15" },
+    { "key": "broker_a",  "name": "Zerodha",    "isSelf": false, "source": "https://zerodha.com/charges", "checkedOn": "2026-01-15" },
+    { "key": "broker_b",  "name": "Groww",      "isSelf": false, "source": "https://groww.in/charges", "checkedOn": "2026-01-15" },
+    { "key": "broker_c",  "name": "Angel One",  "isSelf": false, "source": "https://www.angelone.in/charges", "checkedOn": "2026-01-15" },
+    { "key": "broker_d",  "name": "Upstox",     "isSelf": false, "source": "https://upstox.com/brokerage-charges/", "checkedOn": "2026-01-15" }
+  ],
+
+  "criteria": [
+    {
+      "key": "account_opening",
+      "label": "Account Opening Charge",
+      "note": "One-time charge to open the trading and demat account.",
+      "values": {
+        "tradegrow": "₹0 (Digital e-KYC)",
+        "broker_a": "₹200 (Equity)",
+        "broker_b": "₹0",
+        "broker_c": "₹0",
+        "broker_d": "₹0"
+      }
+    },
+    {
+      "key": "amc",
+      "label": "Demat AMC",
+      "note": "Annual maintenance charge on the demat account.",
+      "values": {
+        "tradegrow": "₹0 for 1st Year",
+        "broker_a": "₹300/year + GST",
+        "broker_b": "₹0",
+        "broker_c": "₹0 for 1st Year, then ₹20/mo",
+        "broker_d": "₹150/year + GST"
+      }
+    },
+    {
+      "key": "brokerage_delivery",
+      "label": "Brokerage: Equity Delivery",
+      "values": {
+        "tradegrow": "₹0 under plan terms",
+        "broker_a": "₹0",
+        "broker_b": "₹20 or 0.05% per order",
+        "broker_c": "₹0",
+        "broker_d": "₹20 or 2.5% per order"
+      }
+    },
+    {
+      "key": "brokerage_intraday",
+      "label": "Brokerage: Equity Intraday",
+      "values": {
+        "tradegrow": "₹20 or 0.05% per order",
+        "broker_a": "₹20 or 0.03% per order",
+        "broker_b": "₹20 or 0.05% per order",
+        "broker_c": "₹20 or 0.25% per order",
+        "broker_d": "₹20 or 0.05% per order"
+      }
+    },
+    {
+      "key": "brokerage_fo",
+      "label": "Brokerage: Futures & Options",
+      "values": {
+        "tradegrow": "₹20 per executed order",
+        "broker_a": "₹20 per executed order",
+        "broker_b": "₹20 per executed order",
+        "broker_c": "₹20 per executed order",
+        "broker_d": "₹20 per executed order"
+      }
+    },
+    {
+      "key": "dp_charges",
+      "label": "DP Charges (on delivery sell)",
+      "note": "Charged per scrip per day by the depository and the DP.",
+      "values": {
+        "tradegrow": "₹13.50 + GST per scrip",
+        "broker_a": "₹13.50 + GST per scrip",
+        "broker_b": "₹13.50 + GST per scrip",
+        "broker_c": "₹20.00 + GST per scrip",
+        "broker_d": "₹18.50 + GST per scrip"
+      }
+    },
+    {
+      "key": "statutory",
+      "label": "Statutory Charges (STT, GST, Stamp Duty, Exchange, SEBI)",
+      "note": "Identical across all brokers. These are set by the Government, Exchanges and SEBI, not by the broker.",
+      "sameForAll": "Same for every broker by law",
+      "values": {
+        "tradegrow": null,
+        "broker_a": null,
+        "broker_b": null,
+        "broker_c": null,
+        "broker_d": null
+      }
+    },
+    {
+      "key": "platforms",
+      "label": "Trading Platforms",
+      "note": "Mobile app, web terminal, desktop terminal.",
+      "values": {
+        "tradegrow": "Web Terminal & Mobile App",
+        "broker_a": "Kite (Web, Mobile)",
+        "broker_b": "Groww App & Web",
+        "broker_c": "Angel One App & Web",
+        "broker_d": "Upstox Pro (Web, Mobile)"
+      }
+    },
+    {
+      "key": "products",
+      "label": "Product Availability",
+      "note": "Equity, F&O, Currency, Commodity, Mutual Funds, IPO, Bonds.",
+      "values": {
+        "tradegrow": "Equity Cash, Intraday, F&O",
+        "broker_a": "Equity, F&O, Currency, Commodity, MF, IPO",
+        "broker_b": "Equity, F&O, MF, IPO",
+        "broker_c": "Equity, F&O, Commodity, Currency, MF",
+        "broker_d": "Equity, F&O, Commodity, Currency, MF, IPO"
+      }
+    },
+    {
+      "key": "kyc",
+      "label": "KYC Process",
+      "values": {
+        "tradegrow": "100% Digital Digilocker e-KYC",
+        "broker_a": "100% Digital e-KYC",
+        "broker_b": "100% Digital e-KYC",
+        "broker_c": "100% Digital e-KYC",
+        "broker_d": "100% Digital e-KYC"
+      }
+    },
+    {
+      "key": "support",
+      "label": "Customer Support Channels",
+      "values": {
+        "tradegrow": "Phone, Email, WhatsApp, Ticket Desk",
+        "broker_a": "Phone, Ticket Portal",
+        "broker_b": "In-app Help, Email",
+        "broker_c": "Phone, Chat, Ticket Desk",
+        "broker_d": "Phone, Ticket Desk, Chat"
+      }
+    },
+    {
+      "key": "research",
+      "label": "Research / Advisory",
+      "values": {
+        "tradegrow": "No tips / Execution only",
+        "broker_a": "No advisory desk / Varsity Education",
+        "broker_b": "No advisory / Educational content",
+        "broker_c": "Advisory / Research reports",
+        "broker_d": "Market analysis & News feed"
+      }
+    },
+    {
+      "key": "api",
+      "label": "API Access",
+      "values": {
+        "tradegrow": "Trading APIs (Developer Portal)",
+        "broker_a": "Kite Connect API (Paid)",
+        "broker_b": "Trading API",
+        "broker_c": "SmartAPI (Free)",
+        "broker_d": "Upstox API (Free/Paid tiers)"
+      }
+    },
+    {
+      "key": "other",
+      "label": "Other Charges (call & trade, auto square-off)",
+      "values": {
+        "tradegrow": "Call & Trade: ₹50 / Auto Squareoff: ₹50",
+        "broker_a": "Call & Trade: ₹50 / Auto Squareoff: ₹50",
+        "broker_b": "Call & Trade: ₹50 / Auto Squareoff: ₹50",
+        "broker_c": "Call & Trade: ₹20 / Auto Squareoff: ₹20",
+        "broker_d": "Call & Trade: ₹50 / Auto Squareoff: ₹50"
+      }
+    }
+  ],
+
+  "howToCompare": [
+    "Compare total cost per trade, not just brokerage. A nil-brokerage plan still carries statutory charges.",
+    "Check the charges that match how you actually trade. Delivery investors care about DP charges and AMC; intraday traders care about per-order brokerage.",
+    "Read the conditions attached to any promotional pricing: which segments, for how long, and what the rate becomes afterwards.",
+    "Check platform stability and support responsiveness, not only price. The cheapest platform is expensive if you cannot exit a position.",
+    "Verify every broker's SEBI registration and exchange membership independently before opening an account with any of them, including us."
+  ]
+}

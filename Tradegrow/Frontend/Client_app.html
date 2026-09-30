@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeGrow | Professional Trading & Investment Platform</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ==================== DESIGN SYSTEM & VARS ==================== */
+        :root {
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Light Palette */
+            --bg-body: #f4f6fa;
+            --bg-surface: #ffffff;
+            --bg-surface-elevated: #f8fafc;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+            --bg-glass-card: rgba(255, 255, 255, 0.7);
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-tertiary: #94a3b8;
+            
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --border-focus: #6366f1;
+
+            /* Financial Indicators & Branding */
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: rgba(99, 102, 241, 0.1);
+            --primary-glow: rgba(99, 102, 241, 0.25);
+
+            --gain: #10b981;
+            --gain-dark: #059669;
+            --gain-light: rgba(16, 185, 129, 0.12);
+            --gain-glow: rgba(16, 185, 129, 0.25);
+
+            --loss: #f43f5e;
+            --loss-dark: #e11d48;
+            --loss-light: rgba(244, 63, 94, 0.12);
+            --loss-glow: rgba(244, 63, 94, 0.25);
+
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.12);
+            
+            --info: #06b6d4;
+            --info-light: rgba(6, 182, 212, 0.12);
+
+            --purple: #8b5cf6;
+            --purple-light: rgba(139, 92, 246, 0.12);
+
+            /* Shadows & Effects */
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.12);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-full: 9999px;
+
+            --sidebar-w: 250px;
+            --sidebar-w-collapsed: 72px;
+            --header-h: 70px;
+            
+            --transition-fast: all 0.15s ease;
+            --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            /* Sleek Dark Palette */
+            --bg-body: #090d16;
+            --bg-surface: #111827;
+            --bg-surface-elevated: #1a2234;
+            --bg-glass: rgba(17, 24, 39, 0.85);
+            --bg-glass-card: rgba(26, 34, 52, 0.65);
+
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-tertiary: #64748b;
+
+            --border-color: #1e293b;
+            --border-light: #162032;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ==================== GLOBAL STYLES ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Monospace Numbers Utility */
+        .num-font { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+        /* App Layout Structure */
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 100;
+            display: flex; flex-direction: column;
+            transition: var(--transition-normal);
+            backdrop-filter: blur(12px);
+        }
+
+        .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+
+        .sidebar-brand {
+            height: var(--header-h);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; color: var(--text-main);
+        }
+
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px; font-weight: 800;
+            box-shadow: var(--shadow-glow);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 20px; font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-main), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar.collapsed .brand-name,
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .nav-category-title { display: none; }
+
+        .sidebar-menu {
+            flex: 1; overflow-y: auto;
+            padding: 16px 12px;
+        }
+
+        .nav-category { margin-bottom: 20px; }
+
+        .nav-category-title {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-tertiary); padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 11px 14px; border-radius: var(--radius-md);
+            color: var(--text-muted); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: var(--transition-fast);
+            margin-bottom: 4px; text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-surface-elevated);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .nav-item.active::before {
+            content: ''; position: absolute; left: 0; top: 25%; bottom: 25%;
+            width: 4px; background: var(--primary); border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .nav-item i { font-size: 17px; width: 22px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .toggle-sidebar-btn {
+            width: 100%; display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 10px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color); background: var(--bg-surface-elevated);
+            color: var(--text-muted); cursor: pointer; font-family: inherit;
+            font-size: 13px; font-weight: 600; transition: var(--transition-fast);
+        }
+
+        .toggle-sidebar-btn:hover {
+            color: var(--text-main); border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* ==================== MAIN CONTENT AREA ==================== */
+        .main-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-w);
+            transition: var(--transition-normal);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+
+        .sidebar.collapsed + .main-wrapper { margin-left: var(--sidebar-w-collapsed); }
+
+        /* Header Navigation */
+        .top-header {
+            height: var(--header-h);
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 90;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 28px; gap: 24px;
+        }
+
+        /* Search input bar */
+        .search-box {
+            position: relative; flex: 1; max-width: 440px;
+        }
+
+        .search-box input {
+            width: 100%; padding: 10px 42px 10px 40px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface-elevated);
+            color: var(--text-main); font-family: inherit;
+            font-size: 13px; font-weight: 500;
+            transition: var(--transition-fast);
+        }
+
+        .search-box input:focus {
+            outline: none; border-color: var(--primary);
+            background: var(--bg-surface);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .search-box i.search-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%); color: var(--text-tertiary); font-size: 14px;
+        }
+
+        .search-key-badge {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            padding: 2px 7px; border-radius: 6px;
+            font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+        }
+
+        /* Ticker tape bar */
+        .header-tickers {
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .ticker-pill {
+            display: flex; flex-direction: column; gap: 2px;
+            padding: 4px 10px; border-radius: var(--radius-sm);
+            cursor: pointer; transition: var(--transition-fast);
+        }
+
+        .ticker-pill:hover { background: var(--bg-surface-elevated); }
+
+        .ticker-symbol {
+            font-size: 10px; font-weight: 800; color: var(--text-tertiary);
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+
+        .ticker-val {
+            font-size: 13px; font-weight: 700; color: var(--text-main);
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .ticker-chg { font-size: 11px; font-weight: 700; }
+        .text-gain { color: var(--gain) !important; }
+        .text-loss { color: var(--loss) !important; }
+
+        /* Top Bar Right Actions */
+        .header-right {
+            display: flex; align-items: center; gap: 14px;
+        }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: var(--radius-full);
+            background: var(--gain-light); color: var(--gain-dark);
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pulse-dot {
+            width: 7px; height: 7px; background: var(--gain);
+            border-radius: 50%; box-shadow: 0 0 8px var(--gain);
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 1; }
+        }
+
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: var(--radius-full);
+            border: 1px solid var(--border-color); background: var(--bg-surface-elevated);
+            color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: var(--transition-fast);
+            font-size: 15px;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main); border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 8px; height: 8px; background: var(--loss);
+            border-radius: 50%; border: 2px solid var(--bg-surface);
+        }
+
+        .user-profile-avatar {
+            width: 40px; height: 40px; border-radius: var(--radius-full);
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 14px;
+            cursor: pointer; box-shadow: var(--shadow-sm);
+            transition: var(--transition-fast);
+        }
+
+        .user-profile-avatar:hover { transform: scale(1.05); box-shadow: var(--shadow-glow); }
+
+        /* ==================== PAGE CONTENT CONTAINER ==================== */
+        .page-viewport {
+            flex: 1; padding: 28px;
+            max-width: 1500px; width: 100%; margin: 0 auto;
+        }
+
+        .page-heading {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+        }
+
+        .page-title {
+            font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+            color: var(--text-main); margin-bottom: 4px;
+        }
+
+        .page-subtitle { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+
+        /* Page View Visibility */
+        .page-view { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .page-view.active { display: block; opacity: 1; transform: translateY(0); }
+
+        /* ==================== CARDS & CONTAINERS ==================== */
+        .card {
+            background: var(--bg-glass-card);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden; transition: var(--transition-normal);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 16px; font-weight: 700; color: var(--text-main);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .card-body { padding: 22px; }
+
+        /* Grid Utilities */
+        .grid { display: grid; gap: 20px; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+            .header-tickers { display: none; }
+        }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main-wrapper { margin-left: 0 !important; }
+            .page-viewport { padding: 16px; padding-bottom: 90px; }
+        }
+
+        /* ==================== STAT CARDS ==================== */
+        .stat-card {
+            background: var(--bg-glass-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px; position: relative; overflow: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--info));
+            opacity: 0; transition: var(--transition-fast);
+        }
+
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 8px;
+        }
+
+        .stat-val {
+            font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+            color: var(--text-main); margin-bottom: 8px;
+        }
+
+        .stat-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 12px; font-weight: 700; padding: 3px 9px;
+            border-radius: var(--radius-full);
+        }
+
+        .stat-badge.up { background: var(--gain-light); color: var(--gain); }
+        .stat-badge.down { background: var(--loss-light); color: var(--loss); }
+
+        /* ==================== BUTTONS & BADGES ==================== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 9px 18px; border-radius: var(--radius-md); font-size: 13px;
+            font-weight: 700; font-family: inherit; cursor: pointer; border: none;
+            transition: var(--transition-fast); white-space: nowrap; text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white; box-shadow: 0 4px 12px var(--primary-glow);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px var(--primary-glow); }
+
+        .btn-gain {
+            background: linear-gradient(135deg, var(--gain), #059669);
+            color: white; box-shadow: 0 4px 12px var(--gain-glow);
+        }
+        .btn-gain:hover { transform: translateY(-1px); }
+
+        .btn-loss {
+            background: linear-gradient(135deg, var(--loss), #e11d48);
+            color: white; box-shadow: 0 4px 12px var(--loss-glow);
+        }
+        .btn-loss:hover { transform: translateY(-1px); }
+
+        .btn-outline {
+            background: transparent; color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+        .btn-outline:hover { background: var(--bg-surface-elevated); color: var(--text-main); border-color: var(--text-tertiary); }
+
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-lg { padding: 12px 24px; font-size: 14px; width: 100%; }
+
+        /* ==================== DATA TABLES ==================== */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        
+        .data-table th {
+            padding: 14px 18px; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-tertiary);
+            background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 18px; border-bottom: 1px solid var(--border-light);
+            color: var(--text-main); font-weight: 600; white-space: nowrap;
+            transition: var(--transition-fast);
+        }
+
+        .data-table tr:hover td { background: var(--bg-surface-elevated); }
+        .data-table tr:last-child td { border-bottom: none; }
+
+        .stock-identity { display: flex; align-items: center; gap: 12px; }
+        
+        .stock-avatar {
+            width: 36px; height: 36px; border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 13px; color: white; flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stock-meta { display: flex; flex-direction: column; gap: 2px; }
+        .stock-symbol { font-weight: 800; font-size: 14px; color: var(--text-main); }
+        .stock-name { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+        /* ==================== QUICK ACTION PILLS ==================== */
+        .quick-actions-bar {
+            display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 24px;
+        }
+
+        .quick-pill {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); cursor: pointer; transition: var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .quick-pill:hover {
+            border-color: var(--primary); transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-pill-icon {
+            width: 36px; height: 36px; border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: white;
+        }
+
+        .quick-pill-title { font-size: 13px; font-weight: 700; color: var(--text-main); }
+
+        /* ==================== TAB NAVIGATION ==================== */
+        .tabs-bar {
+            display: flex; gap: 8px; border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px; overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 18px; font-size: 13px; font-weight: 700;
+            color: var(--text-muted); cursor: pointer; background: none; border: none;
+            border-bottom: 2px solid transparent; transition: var(--transition-fast);
+            white-space: nowrap; font-family: inherit; margin-bottom: -1px;
+        }
+
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Filter Pills */
+        .pill-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .pill-btn {
+            padding: 7px 16px; border-radius: var(--radius-full);
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            border: 1px solid var(--border-color); background: var(--bg-surface);
+            color: var(--text-muted); transition: var(--transition-fast); font-family: inherit;
+        }
+        .pill-btn:hover { background: var(--bg-surface-elevated); color: var(--text-main); }
+        .pill-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 8px var(--primary-glow); }
+
+        /* ==================== OPTION CHAIN DESIGN ==================== */
+        .option-chain-wrapper { overflow-x: auto; border-radius: var(--radius-md); }
+        .option-chain-table { width: 100%; min-width: 1000px; border-collapse: collapse; font-size: 12px; text-align: center; }
+        .option-chain-table th {
+            padding: 10px 6px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+            background: var(--bg-surface-elevated); color: var(--text-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .option-chain-table td { padding: 8px 6px; border-bottom: 1px solid var(--border-light); }
+        
+        .strike-cell {
+            background: var(--bg-surface-elevated); font-weight: 800;
+            font-size: 13px; font-family: var(--font-mono); color: var(--text-main);
+        }
+        .strike-cell.atm { background: var(--warning-light); color: var(--warning); border-left: 3px solid var(--warning); }
+
+        .oi-progress-bar { height: 4px; background: var(--border-color); border-radius: 2px; margin-top: 3px; overflow: hidden; }
+        .oi-progress-fill { height: 100%; border-radius: 2px; }
+        .oi-progress-fill.call { background: var(--gain); }
+        .oi-progress-fill.put { background: var(--loss); }
+
+        /* Greeks Grid */
+        .greeks-card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+        .greek-box {
+            background: var(--bg-surface-elevated); padding: 14px;
+            border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-light);
+        }
+        .greek-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; }
+        .greek-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
+
+        /* ==================== HEATMAP & CHARTS ==================== */
+        .heatmap-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;
+        }
+
+        .heatmap-tile {
+            padding: 16px 12px; border-radius: var(--radius-md); text-align: center;
+            cursor: pointer; transition: var(--transition-fast);
+        }
+
+        .heatmap-tile:hover { transform: scale(1.04); z-index: 2; box-shadow: var(--shadow-md); }
+
+        .chart-box {
+            position: relative; width: 100%; height: 320px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .chart-box svg { width: 100%; height: 100%; }
+
+        /* ==================== MODAL OVERLAY ==================== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px); z-index: 1000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+
+        .modal-card {
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); width: 100%; max-width: 500px;
+            box-shadow: var(--shadow-lg); overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-header {
+            padding: 18px 24px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .modal-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+
+        .modal-close-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: var(--bg-surface-elevated); color: var(--text-muted);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition-fast);
+        }
+
+        .modal-close-btn:hover { background: var(--loss-light); color: var(--loss); }
+
+        .modal-body { padding: 24px; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block; font-size: 11px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-tertiary);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%; padding: 11px 14px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color); background: var(--bg-surface-elevated);
+            color: var(--text-main); font-family: inherit; font-size: 13px; font-weight: 600;
+            transition: var(--transition-fast);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light); background: var(--bg-surface);
+        }
+
+        .segment-toggle { display: flex; gap: 8px; margin-bottom: 18px; }
+        .segment-btn {
+            flex: 1; padding: 10px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color); background: var(--bg-surface-elevated);
+            color: var(--text-muted); font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: var(--transition-fast); font-family: inherit;
+        }
+        .segment-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .order-summary-box {
+            background: var(--bg-surface-elevated); border-radius: var(--radius-md);
+            padding: 16px; border: 1px solid var(--border-light); margin-top: 18px;
+        }
+
+        .summary-line {
+            display: flex; justify-content: space-between; font-size: 12px;
+            margin-bottom: 6px; color: var(--text-muted);
+        }
+
+        .summary-line.total {
+            margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);
+            font-size: 14px; font-weight: 800; color: var(--text-main);
+        }
+
+        /* Search Dropdown Modal */
+        .search-dropdown-menu {
+            position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            max-height: 380px; overflow-y: auto; display: none; z-index: 100;
+        }
+
+        .search-dropdown-menu.active { display: block; }
+        .search-item-row {
+            padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-light); cursor: pointer; transition: var(--transition-fast);
+        }
+
+        .search-item-row:hover { background: var(--bg-surface-elevated); }
+
+        /* Toast Floating Notification */
+        .toast-stack {
+            position: fixed; top: 85px; right: 24px; z-index: 2000;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+
+        .toast-item {
+            pointer-events: auto; background: var(--bg-surface);
+            border: 1px solid var(--border-color); border-radius: var(--radius-md);
+            padding: 14px 20px; box-shadow: var(--shadow-lg);
+            display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600;
+            animation: toastSlide 0.3s ease; min-width: 320px;
+        }
+
+        .toast-item.success { border-left: 4px solid var(--gain); }
+        .toast-item.error { border-left: 4px solid var(--loss); }
+
+        @keyframes toastSlide { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Live Price Flash Effect */
+        .tick-up { animation: flashGreen 0.6s ease; }
+        .tick-down { animation: flashRed 0.6s ease; }
+
+        @keyframes flashGreen { 0% { background-color: var(--gain-light); } 100% { background-color: transparent; } }
+        @keyframes flashRed { 0% { background-color: var(--loss-light); } 100% { background-color: transparent; } }
+
+        /* Mobile Bottom Nav */
+        .mobile-bottom-bar {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-glass); backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-color); padding: 8px 0; z-index: 99;
+        }
+
+        .mobile-nav-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; color: var(--text-tertiary); font-size: 11px;
+            font-weight: 700; font-family: inherit; cursor: pointer;
+        }
+
+        .mobile-nav-btn.active { color: var(--primary); }
+        .mobile-nav-btn i { font-size: 18px; }
+
+        .fab-trigger {
+            position: fixed; bottom: 85px; right: 24px; width: 56px; height: 56px;
+            border-radius: 50%; background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white; border: none; box-shadow: var(--shadow-glow); cursor: pointer;
+            font-size: 22px; display: none; align-items: center; justify-content: center; z-index: 98;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-bar { display: flex; }
+            .fab-trigger { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- ==================== SIDEBAR ==================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <a href="#" class="brand-logo">
+                    <div class="brand-icon"><i class="fas fa-chart-line"></i></div>
+                    <span class="brand-name">TradeGrow</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="nav-category">
+                    <div class="nav-category-title">Main</div>
+                    <a class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-grid-2"></i><span class="nav-text">Dashboard</span></a>
+                    <a class="nav-item" data-page="markets" onclick="navigateTo('markets')"><i class="fas fa-chart-simple"></i><span class="nav-text">Markets</span></a>
+                    <a class="nav-item" data-page="watchlist" onclick="navigateTo('watchlist')"><i class="fas fa-bookmark"></i><span class="nav-text">Watchlist</span></a>
+                    <a class="nav-item" data-page="option-chain" onclick="navigateTo('option-chain')"><i class="fas fa-layer-group"></i><span class="nav-text">Option Chain</span></a>
+                </div>
+
+                <div class="nav-category">
+                    <div class="nav-category-title">Trading</div>
+                    <a class="nav-item" data-page="orders" onclick="navigateTo('orders')"><i class="fas fa-receipt"></i><span class="nav-text">Orders</span></a>
+                    <a class="nav-item" data-page="positions" onclick="navigateTo('positions')"><i class="fas fa-briefcase"></i><span class="nav-text">Positions</span></a>
+                    <a class="nav-item" data-page="holdings" onclick="navigateTo('holdings')"><i class="fas fa-wallet"></i><span class="nav-text">Holdings</span></a>
+                    <a class="nav-item" data-page="portfolio" onclick="navigateTo('portfolio')"><i class="fas fa-pie-chart"></i><span class="nav-text">Portfolio</span></a>
+                </div>
+
+                <div class="nav-category">
+                    <div class="nav-category-title">Investments</div>
+                    <a class="nav-item" data-page="funds" onclick="navigateTo('funds')"><i class="fas fa-building-columns"></i><span class="nav-text">Funds</span></a>
+                    <a class="nav-item" data-page="mutual-funds" onclick="navigateTo('mutual-funds')"><i class="fas fa-shapes"></i><span class="nav-text">Mutual Funds</span></a>
+                    <a class="nav-item" data-page="ipo" onclick="navigateTo('ipo')"><i class="fas fa-rocket"></i><span class="nav-text">IPO</span></a>
+                </div>
+
+                <div class="nav-category">
+                    <div class="nav-category-title">More</div>
+                    <a class="nav-item" data-page="alerts" onclick="navigateTo('alerts')"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a>
+                    <a class="nav-item" data-page="reports" onclick="navigateTo('reports')"><i class="fas fa-file-invoice"></i><span class="nav-text">Reports</span></a>
+                    <a class="nav-item" data-page="support" onclick="navigateTo('support')"><i class="fas fa-headset"></i><span class="nav-text">Support</span></a>
+                    <a class="nav-item" data-page="settings" onclick="navigateTo('settings')"><i class="fas fa-sliders"></i><span class="nav-text">Settings</span></a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" onclick="toggleSidebar()"><i class="fas fa-chevron-left" id="collapse-icon"></i><span class="nav-text">Collapse Menu</span></button>
+            </div>
+        </aside>
+
+        <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+        <main class="main-wrapper">
+            <!-- Top Sticky Navigation Bar -->
+            <header class="top-header">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search stocks, indices, ETFs... (Ctrl + K)" id="global-search-input" oninput="handleSearch(this.value)">
+                    <span class="search-key-badge">Ctrl K</span>
+
+                    <div class="search-dropdown-menu" id="search-dropdown">
+                        <div id="search-results-list"></div>
+                    </div>
+                </div>
+
+                <div class="header-tickers">
+                    <div class="ticker-pill">
+                        <span class="ticker-symbol">NIFTY 50</span>
+                        <span class="ticker-val num-font"><span id="nifty-val">24,450.30</span> <span class="ticker-chg text-gain" id="nifty-chg">+0.45%</span></span>
+                    </div>
+                    <div class="ticker-pill">
+                        <span class="ticker-symbol">BANK NIFTY</span>
+                        <span class="ticker-val num-font"><span id="banknifty-val">52,180.75</span> <span class="ticker-chg text-gain" id="banknifty-chg">+0.82%</span></span>
+                    </div>
+                    <div class="ticker-pill">
+                        <span class="ticker-symbol">SENSEX</span>
+                        <span class="ticker-val num-font"><span id="sensex-val">80,120.50</span> <span class="ticker-chg text-loss" id="sensex-chg">-0.12%</span></span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="status-badge"><span class="pulse-dot"></span> WebSocket Live</div>
+                    <button class="icon-btn" onclick="navigateTo('alerts')"><i class="fas fa-bell"></i><span class="notification-dot"></span></button>
+                    <button class="icon-btn" onclick="toggleTheme()"><i class="fas fa-moon" id="theme-toggle-icon"></i></button>
+                    <div class="user-profile-avatar" onclick="navigateTo('settings')">JD</div>
+                </div>
+            </header>
+
+            <!-- Dynamic View Container -->
+            <div class="page-viewport">
+
+                <!-- 1. DASHBOARD PAGE VIEW -->
+                <div class="page-view active" id="page-dashboard">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Good day, John</h1>
+                            <p class="page-subtitle">Here is your portfolio overview and real-time market activity</p>
+                        </div>
+                        <div style="display:flex;gap:10px">
+                            <button class="btn btn-gain" onclick="openOrderTicket('RELIANCE','Buy')"><i class="fas fa-arrow-down"></i> Quick Buy</button>
+                            <button class="btn btn-loss" onclick="openOrderTicket('RELIANCE','Sell')"><i class="fas fa-arrow-up"></i> Quick Sell</button>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions-bar">
+                        <div class="quick-pill" onclick="openOrderTicket('RELIANCE','Buy')">
+                            <div class="quick-pill-icon" style="background:var(--gain)"><i class="fas fa-plus"></i></div>
+                            <span class="quick-pill-title">Buy Stock</span>
+                        </div>
+                        <div class="quick-pill" onclick="openOrderTicket('RELIANCE','Sell')">
+                            <div class="quick-pill-icon" style="background:var(--loss)"><i class="fas fa-minus"></i></div>
+                            <span class="quick-pill-title">Sell Stock</span>
+                        </div>
+                        <div class="quick-pill" onclick="navigateTo('funds')">
+                            <div class="quick-pill-icon" style="background:var(--primary)"><i class="fas fa-wallet"></i></div>
+                            <span class="quick-pill-title">Add Funds</span>
+                        </div>
+                        <div class="quick-pill" onclick="navigateTo('option-chain')">
+                            <div class="quick-pill-icon" style="background:var(--warning)"><i class="fas fa-link"></i></div>
+                            <span class="quick-pill-title">Option Chain</span>
+                        </div>
+                        <div class="quick-pill" onclick="navigateTo('alerts')">
+                            <div class="quick-pill-icon" style="background:var(--purple)"><i class="fas fa-bell"></i></div>
+                            <span class="quick-pill-title">Set Alert</span>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Summary Stat Cards -->
+                    <div class="grid grid-4" style="margin-bottom: 24px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Portfolio Value</div>
+                            <div class="stat-val num-font" id="portfolio-value">₹12,45,000</div>
+                            <span class="stat-badge up"><i class="fas fa-arrow-trend-up"></i> +2.4%</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Today's P&L</div>
+                            <div class="stat-val num-font text-gain" id="today-pnl">+₹8,450</div>
+                            <span class="stat-badge up"><i class="fas fa-arrow-trend-up"></i> +0.68%</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Available Cash</div>
+                            <div class="stat-val num-font">₹2,35,000</div>
+                            <span style="font-size:12px;color:var(--text-tertiary)">Used Margin: ₹1,85,000</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Overall Return</div>
+                            <div class="stat-val num-font text-gain">+18.5%</div>
+                            <span class="stat-badge up"><i class="fas fa-arrow-trend-up"></i> +₹1,94,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Main Grid -->
+                    <div class="grid grid-3">
+                        <div class="card" style="grid-column: span 2;">
+                            <div class="card-header">
+                                <span class="card-title"><i class="fas fa-chart-area" style="color:var(--primary)"></i> Portfolio Growth Performance</span>
+                                <div class="pill-group" style="margin-bottom:0">
+                                    <button class="pill-btn">1D</button>
+                                    <button class="pill-btn">1W</button>
+                                    <button class="pill-btn active">1M</button>
+                                    <button class="pill-btn">1Y</button>
+                                    <button class="pill-btn">ALL</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-box">
+                                    <svg viewBox="0 0 800 320">
+                                        <defs>
+                                            <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+                                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <path id="chart-area" fill="url(#chartGlow)" d=""/>
+                                        <path id="chart-line" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" d=""/>
+                                        <line x1="0" y1="260" x2="800" y2="260" stroke="var(--border-color)" stroke-dasharray="4"/>
+                                        <line x1="0" y1="160" x2="800" y2="160" stroke="var(--border-color)" stroke-dasharray="4"/>
+                                        <line x1="0" y1="60" x2="800" y2="60" stroke="var(--border-color)" stroke-dasharray="4"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Market Indices Column -->
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title"><i class="fas fa-sliders" style="color:var(--info)"></i> Major Indices</span>
+                                <span class="status-badge"><span class="pulse-dot"></span> Live</span>
+                            </div>
+                            <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                                <div style="padding:14px;background:var(--bg-surface-elevated);border-radius:var(--radius-md);border:1px solid var(--border-light)">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                                        <span style="font-size:12px;font-weight:800;color:var(--text-tertiary)">NIFTY 50</span>
+                                        <span class="stat-badge up"><i class="fas fa-arrow-up"></i> +0.45%</span>
+                                    </div>
+                                    <div class="num-font" style="font-size:18px;font-weight:800" id="dash-nifty">24,450.30</div>
+                                </div>
+                                <div style="padding:14px;background:var(--bg-surface-elevated);border-radius:var(--radius-md);border:1px solid var(--border-light)">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                                        <span style="font-size:12px;font-weight:800;color:var(--text-tertiary)">BANK NIFTY</span>
+                                        <span class="stat-badge up"><i class="fas fa-arrow-up"></i> +0.82%</span>
+                                    </div>
+                                    <div class="num-font" style="font-size:18px;font-weight:800" id="dash-banknifty">52,180.75</div>
+                                </div>
+                                <div style="padding:14px;background:var(--bg-surface-elevated);border-radius:var(--radius-md);border:1px solid var(--border-light)">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                                        <span style="font-size:12px;font-weight:800;color:var(--text-tertiary)">INDIA VIX</span>
+                                        <span class="stat-badge down"><i class="fas fa-arrow-down"></i> -2.10%</span>
+                                    </div>
+                                    <div class="num-font" style="font-size:18px;font-weight:800">14.25</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Watchlist & Gainers Preview Grid -->
+                    <div class="grid grid-2" style="margin-top:24px">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Watchlist Highlights</span>
+                                <button class="btn btn-sm btn-outline" onclick="navigateTo('watchlist')">View All</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr><th>Instrument</th><th style="text-align:right">LTP</th><th style="text-align:right">Change</th><th style="text-align:right">Action</th></tr>
+                                    </thead>
+                                    <tbody id="dash-watchlist-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Top Gainers</span>
+                                <span class="status-badge"><span class="pulse-dot"></span> Live</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr><th>Stock</th><th style="text-align:right">LTP</th><th style="text-align:right">Change %</th></tr>
+                                    </thead>
+                                    <tbody id="dash-gainers-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MARKETS PAGE VIEW -->
+                <div class="page-view" id="page-markets">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Market Pulse</h1>
+                            <p class="page-subtitle">Track index trends, market breadth, and sector heatmaps</p>
+                        </div>
+                    </div>
+
+                    <div class="tabs-bar">
+                        <button class="tab-btn active" onclick="switchMarketTab(this,'market-overview')">Overview</button>
+                        <button class="tab-btn" onclick="switchMarketTab(this,'market-heatmap')">Sector Heatmap</button>
+                        <button class="tab-btn" onclick="switchMarketTab(this,'market-sectors')">Sectors Table</button>
+                    </div>
+
+                    <div id="market-overview" class="market-subview">
+                        <div class="grid grid-3" style="margin-bottom: 24px;">
+                            <div style="text-align:center;padding:24px;background:var(--gain-light);border-radius:var(--radius-lg);border:1px solid var(--gain-glow)">
+                                <div class="num-font" style="font-size:32px;font-weight:800;color:var(--gain)">1,850</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-top:4px">Advances</div>
+                            </div>
+                            <div style="text-align:center;padding:24px;background:var(--loss-light);border-radius:var(--radius-lg);border:1px solid var(--loss-glow)">
+                                <div class="num-font" style="font-size:32px;font-weight:800;color:var(--loss)">1,245</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-top:4px">Declines</div>
+                            </div>
+                            <div style="text-align:center;padding:24px;background:var(--bg-surface-elevated);border-radius:var(--radius-lg);border:1px solid var(--border-color)">
+                                <div class="num-font" style="font-size:32px;font-weight:800;color:var(--text-main)">105</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-top:4px">Unchanged</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="market-heatmap" class="market-subview" style="display:none">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">Live Market Heatmap</span></div>
+                            <div class="card-body">
+                                <div class="heatmap-grid" id="heatmap-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="market-sectors" class="market-subview" style="display:none">
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr><th>Sector</th><th style="text-align:right">Change %</th><th style="text-align:right">Trend</th></tr>
+                                    </thead>
+                                    <tbody id="sector-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. WATCHLIST PAGE VIEW -->
+                <div class="page-view" id="page-watchlist">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Watchlist</h1>
+                            <p class="page-subtitle">Custom watchlists and live instrument tracking</p>
+                        </div>
+                    </div>
+
+                    <div class="pill-group" id="watchlist-tabs-group">
+                        <button class="pill-btn active" onclick="switchWatchlistTab(this, 0)">Nifty 50</button>
+                        <button class="pill-btn" onclick="switchWatchlistTab(this, 1)">Bank Nifty</button>
+                        <button class="pill-btn" onclick="switchWatchlistTab(this, 2)">F&O Stocks</button>
+                        <button class="pill-btn" onclick="switchWatchlistTab(this, 3)">My Portfolio</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Instrument</th><th>Exchange</th><th style="text-align:right">LTP</th>
+                                        <th style="text-align:right">Change</th><th style="text-align:right">Change %</th>
+                                        <th style="text-align:right">Volume</th><th style="text-align:right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="watchlist-main-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. OPTION CHAIN PAGE VIEW -->
+                <div class="page-view" id="page-option-chain">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Option Chain & Greeks</h1>
+                            <p class="page-subtitle">Real-time options analytical chain, open interest, and greeks</p>
+                        </div>
+                    </div>
+
+                    <!-- Option Chain Config Bar -->
+                    <div class="card" style="margin-bottom:20px">
+                        <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+                            <div style="display:flex;gap:12px;align-items:center">
+                                <select class="form-select" style="width:140px"><option>NIFTY</option><option>BANK NIFTY</option><option>RELIANCE</option></select>
+                                <select class="form-select" style="width:150px"><option>08 Aug 2026</option><option>15 Aug 2026</option></select>
+                            </div>
+                            <div style="display:flex;gap:20px;font-size:13px;font-weight:700">
+                                <div><span style="color:var(--text-tertiary)">Spot:</span> <span class="num-font">24,450.30</span></div>
+                                <div><span style="color:var(--text-tertiary)">Futures:</span> <span class="num-font">24,520.80</span></div>
+                                <div><span style="color:var(--text-tertiary)">PCR:</span> <span class="num-font text-gain">1.12</span></div>
+                                <div><span style="color:var(--text-tertiary)">Max Pain:</span> <span class="num-font">24,500</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Greeks Grid -->
+                    <div class="greeks-card-grid">
+                        <div class="greek-box"><div class="greek-title">Delta</div><div class="greek-val num-font">0.52</div></div>
+                        <div class="greek-box"><div class="greek-title">Gamma</div><div class="greek-val num-font">0.003</div></div>
+                        <div class="greek-box"><div class="greek-title">Theta</div><div class="greek-val num-font text-loss">-12.5</div></div>
+                        <div class="greek-box"><div class="greek-title">Vega</div><div class="greek-val num-font">8.20</div></div>
+                        <div class="greek-box"><div class="greek-title">IV</div><div class="greek-val num-font">14.8%</div></div>
+                    </div>
+
+                    <!-- Main Option Chain Table -->
+                    <div class="card">
+                        <div class="option-chain-wrapper">
+                            <table class="option-chain-table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="6" style="background:var(--gain-light);color:var(--gain)">CALLS (CE)</th>
+                                        <th style="background:var(--bg-surface-elevated)">STRIKE</th>
+                                        <th colspan="6" style="background:var(--loss-light);color:var(--loss)">PUTS (PE)</th>
+                                    </tr>
+                                    <tr>
+                                        <th>IV</th><th>OI (Chg)</th><th>Volume</th><th>LTP</th><th>Chg</th><th>Action</th>
+                                        <th>STRIKE</th>
+                                        <th>Action</th><th>Chg</th><th>LTP</th><th>Volume</th><th>OI (Chg)</th><th>IV</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="option-chain-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. ORDERS PAGE VIEW -->
+                <div class="page-view" id="page-orders">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Orders Book</h1>
+                            <p class="page-subtitle">Track pending, executed, and cancelled orders</p>
+                        </div>
+                    </div>
+
+                    <div class="tabs-bar">
+                        <button class="tab-btn active" onclick="switchOrderFilter(this, 'all')">All Orders</button>
+                        <button class="tab-btn" onclick="switchOrderFilter(this, 'executed')">Executed</button>
+                        <button class="tab-btn" onclick="switchOrderFilter(this, 'open')">Open / Pending</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr><th>Time</th><th>Symbol</th><th>Type</th><th>Qty</th><th>Price</th><th>Product</th><th>Status</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="orders-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. POSITIONS PAGE VIEW -->
+                <div class="page-view" id="page-positions">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Positions</h1>
+                            <p class="page-subtitle">Live open market derivatives and intraday positions</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr><th>Symbol</th><th>Qty</th><th>Avg Price</th><th>LTP</th><th>Invested</th><th>Current</th><th>P&L</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="positions-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. HOLDINGS PAGE VIEW -->
+                <div class="page-view" id="page-holdings">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Long-term Holdings</h1>
+                            <p class="page-subtitle">Your investment portfolio and equity holdings</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-4" style="margin-bottom: 20px;">
+                        <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-val num-font">₹10,10,000</div></div>
+                        <div class="stat-card"><div class="stat-label">Current Value</div><div class="stat-val num-font">₹12,45,000</div></div>
+                        <div class="stat-card"><div class="stat-label">Day's P&L</div><div class="stat-val num-font text-gain">+₹8,450</div></div>
+                        <div class="stat-card"><div class="stat-label">Overall Gain</div><div class="stat-val num-font text-gain">+₹2,35,000 (+23.3%)</div></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr><th>Stock</th><th>Qty</th><th>Avg Price</th><th>Invested</th><th>LTP</th><th>Current</th><th>Returns</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="holdings-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. PORTFOLIO ANALYTICS VIEW -->
+                <div class="page-view" id="page-portfolio">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Portfolio Analytics</h1>
+                            <p class="page-subtitle">Asset and sector diversification metrics</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">Asset Class Allocation</span></div>
+                            <div class="card-body">
+                                <div style="display:flex;align-items:center;gap:30px">
+                                    <svg width="180" height="180" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" stroke-width="18" stroke-dasharray="75 180"/>
+                                        <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="18" stroke-dasharray="50 200" transform="rotate(110 50 50)"/>
+                                        <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="18" stroke-dasharray="35 210" transform="rotate(190 50 50)"/>
+                                    </svg>
+                                    <div style="display:flex;flex-direction:column;gap:12px">
+                                        <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#6366f1"></span> Equity Stocks (45%)</div>
+                                        <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#10b981"></span> Mutual Funds (30%)</div>
+                                        <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b"></span> Cash & Debt (25%)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">Sector Allocation Breakdown</span></div>
+                            <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:700"><span>Banking & Finance</span><span>35%</span></div>
+                                    <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden"><div style="width:35%;height:100%;background:var(--primary)"></div></div>
+                                </div>
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:700"><span>IT & Tech</span><span>25%</span></div>
+                                    <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden"><div style="width:25%;height:100%;background:var(--info)"></div></div>
+                                </div>
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:700"><span>Energy & Infrastructure</span><span>20%</span></div>
+                                    <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden"><div style="width:20%;height:100%;background:var(--warning)"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. FUNDS PAGE VIEW -->
+                <div class="page-view" id="page-funds">
+                    <div class="page-heading">
+                        <div>
+                            <h1 class="page-title">Funds & Margins</h1>
+                            <p class="page-subtitle">Manage capital deposits and withdrawals</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-3" style="margin-bottom: 24px;">
+                        <div class="stat-card"><div class="stat-label">Available Balance</div><div class="stat-val num-font">₹2,35,000</div></div>
+                        <div class="stat-card"><div class="stat-label">Used Margin</div><div class="stat-val num-font">₹1,85,000</div></div>
+                        <div class="stat-card"><div class="stat-label">Withdrawable</div><div class="stat-val num-font">₹2,10,000</div></div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">Add Capital</span></div>
+                            <div class="card-body">
+                                <div class="form-group"><label class="form-label">Deposit Amount (₹)</label><input type="number" class="form-input num-font" value="10000"></div>
+                                <button class="btn btn-primary btn-lg" onclick="showToast('Redirecting to secure payment portal...', 'success')"><i class="fas fa-shield-halved"></i> Add Funds via UPI / Netbanking</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">Withdraw Funds</span></div>
+                            <div class="card-body">
+                                <div class="form-group"><label class="form-label">Withdrawal Amount (₹)</label><input type="number" class="form-input num-font" placeholder="Enter amount"></div>
+                                <button class="btn btn-outline btn-lg" onclick="showToast('Withdrawal request placed successfully', 'success')">Request Payout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10. MUTUAL FUNDS VIEW -->
+                <div class="page-view" id="page-mutual-funds">
+                    <div class="page-heading"><div><h1 class="page-title">Mutual Funds</h1><p class="page-subtitle">Invest in top equity, midcap, and index funds</p></div></div>
+                    <div class="grid grid-3" id="mf-grid-container"></div>
+                </div>
+
+                <!-- 11. IPO VIEW -->
+                <div class="page-view" id="page-ipo">
+                    <div class="page-heading"><div><h1 class="page-title">Initial Public Offers (IPO)</h1><p class="page-subtitle">Apply for current market IPOs</p></div></div>
+                    <div class="grid grid-2" id="ipo-grid-container"></div>
+                </div>
+
+                <!-- 12. ALERTS VIEW -->
+                <div class="page-view" id="page-alerts">
+                    <div class="page-heading"><div><h1 class="page-title">Price Alerts</h1><p class="page-subtitle">Manage price triggers and notification thresholds</p></div></div>
+                    <div class="card"><div class="card-body" id="alerts-container"></div></div>
+                </div>
+
+                <!-- 13. REPORTS VIEW -->
+                <div class="page-view" id="page-reports">
+                    <div class="page-heading"><div><h1 class="page-title">Financial Reports</h1><p class="page-subtitle">Download tax statements, contract notes, and ledger accounts</p></div></div>
+                    <div class="grid grid-3" id="reports-grid-container"></div>
+                </div>
+
+                <!-- 14. SUPPORT VIEW -->
+                <div class="page-view" id="page-support">
+                    <div class="page-heading"><div><h1 class="page-title">Help & Support</h1><p class="page-subtitle">24/7 dedicated customer assistance</p></div></div>
+                    <div class="grid grid-3">
+                        <div class="card" style="text-align:center;padding:30px 20px"><i class="fas fa-comments" style="font-size:36px;color:var(--primary);margin-bottom:12px"></i><h3>Live Chat Support</h3><p style="color:var(--text-muted);font-size:13px;margin-top:6px">Connect with an agent in ~2 mins</p></div>
+                        <div class="card" style="text-align:center;padding:30px 20px"><i class="fas fa-book" style="font-size:36px;color:var(--info);margin-bottom:12px"></i><h3>Knowledge Base</h3><p style="color:var(--text-muted);font-size:13px;margin-top:6px">Guides & trading tutorials</p></div>
+                        <div class="card" style="text-align:center;padding:30px 20px"><i class="fas fa-envelope" style="font-size:36px;color:var(--warning);margin-bottom:12px"></i><h3>Raise Ticket</h3><p style="color:var(--text-muted);font-size:13px;margin-top:6px">Submit support query</p></div>
+                    </div>
+                </div>
+
+                <!-- 15. SETTINGS VIEW -->
+                <div class="page-view" id="page-settings">
+                    <div class="page-heading"><div><h1 class="page-title">Account Settings</h1><p class="page-subtitle">Profile details and security preferences</p></div></div>
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title">User Profile</span></div>
+                            <div class="card-body">
+                                <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" value="John Doe"></div>
+                                <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" value="john.doe@trade.com"></div>
+                                <button class="btn btn-primary">Save Profile</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== ORDER TICKET MODAL ==================== -->
+    <div class="modal-overlay" id="order-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span class="modal-title" id="order-modal-title">Place Order</span>
+                <button class="modal-close-btn" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="segment-toggle">
+                    <button class="segment-btn active" id="buy-toggle-btn" onclick="setOrderAction('Buy')">BUY</button>
+                    <button class="segment-btn" id="sell-toggle-btn" onclick="setOrderAction('Sell')">SELL</button>
+                </div>
+
+                <div class="form-group"><label class="form-label">Symbol</label><input type="text" class="form-input" id="order-symbol" value="RELIANCE" readonly></div>
+                
+                <div style="display:flex;gap:12px">
+                    <div class="form-group" style="flex:1"><label class="form-label">Quantity</label><input type="number" class="form-input num-font" id="order-qty" value="10" oninput="calculateOrderCharges()"></div>
+                    <div class="form-group" style="flex:1"><label class="form-label">Order Type</label>
+                        <select class="form-select" id="order-type-select" onchange="calculateOrderCharges()">
+                            <option>Market</option><option>Limit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="order-summary-box">
+                    <div class="summary-line"><span>Order Value</span><span class="num-font" id="calc-val">₹0</span></div>
+                    <div class="summary-line"><span>Estimated Charges & STT</span><span class="num-font" id="calc-charges">₹0</span></div>
+                    <div class="summary-line total"><span>Total Required Amount</span><span class="num-font" id="calc-total">₹0</span></div>
+                </div>
+
+                <button class="btn btn-primary btn-lg" style="margin-top:20px" id="submit-order-btn" onclick="executeOrder()">Submit Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation Footer -->
+    <nav class="mobile-bottom-bar">
+        <button class="mobile-nav-btn active" onclick="navigateTo('dashboard')"><i class="fas fa-grid-2"></i>Home</button>
+        <button class="mobile-nav-btn" onclick="navigateTo('markets')"><i class="fas fa-chart-simple"></i>Markets</button>
+        <button class="mobile-nav-btn" onclick="navigateTo('watchlist')"><i class="fas fa-bookmark"></i>Watchlist</button>
+        <button class="mobile-nav-btn" onclick="navigateTo('orders')"><i class="fas fa-receipt"></i>Orders</button>
+    </nav>
+    <button class="fab-trigger" onclick="openOrderTicket('RELIANCE','Buy')"><i class="fas fa-plus"></i></button>
+
+    <div class="toast-stack" id="toast-stack"></div>
+
+    <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+    <script>
+        // ==================== STATE & DATA STORES ====================
+        const stocksData = [
+            { symbol: 'RELIANCE', name: 'Reliance Industries', price: 3024.50, change: 1.25, vol: '12.5M', color: '#6366f1' },
+            { symbol: 'TCS', name: 'Tata Consultancy Services', price: 4250.30, change: -0.45, vol: '3.2M', color: '#06b6d4' },
+            { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', price: 1680.75, change: 0.82, vol: '8.1M', color: '#10b981' },
+            { symbol: 'INFY', name: 'Infosys Ltd', price: 1850.20, change: -0.30, vol: '5.4M', color: '#f59e0b' },
+            { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd', price: 1180.60, change: 1.10, vol: '10.2M', color: '#8b5cf6' },
+            { symbol: 'SBIN', name: 'State Bank of India', price: 780.40, change: 2.15, vol: '15.8M', color: '#ec4899' },
+            { symbol: 'BHARTIARTL', name: 'Bharti Airtel', price: 1450.90, change: 0.55, vol: '4.3M', color: '#3b82f6' },
+            { symbol: 'ITC', name: 'ITC Limited', price: 480.25, change: -0.80, vol: '9.7M', color: '#84cc16' }
+        ];
+
+        const watchlistsData = [
+            ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'SBIN'],
+            ['HDFCBANK', 'ICICIBANK', 'SBIN'],
+            ['RELIANCE', 'TCS', 'INFY'],
+            ['RELIANCE', 'HDFCBANK', 'ITC']
+        ];
+
+        const ordersData = [
+            { time: '09:15:32', symbol: 'RELIANCE', type: 'Buy', qty: 50, price: 3010.50, product: 'CNC', status: 'Executed' },
+            { time: '09:22:14', symbol: 'TCS', type: 'Buy', qty: 20, price: 4245.00, product: 'CNC', status: 'Executed' },
+            { time: '10:05:48', symbol: 'HDFCBANK', type: 'Sell', qty: 25, price: 1682.00, product: 'MIS', status: 'Open' }
+        ];
+
+        const holdingsData = [
+            { symbol: 'RELIANCE', name: 'Reliance Industries', qty: 50, avg: 2850, price: 3024.50, color: '#6366f1' },
+            { symbol: 'TCS', name: 'Tata Consultancy Services', qty: 20, avg: 4100, price: 4250.30, color: '#06b6d4' },
+            { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', qty: 100, avg: 1620, price: 1680.75, color: '#10b981' }
+        ];
+
+        let currentOrderAction = 'Buy';
+        let currentWatchlistIndex = 0;
+
+        // ==================== NAVIGATION ENGINE ====================
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            const targetView = document.getElementById('page-' + pageId);
+            if (targetView) targetView.classList.add('active');
+
+            const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+            if (navItem) navItem.classList.add('active');
+
+            window.scrollTo(0, 0);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            const icon = document.getElementById('collapse-icon');
+            icon.classList.toggle('fa-chevron-left');
+            icon.classList.toggle('fa-chevron-right');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-toggle-icon');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-sun';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        // ==================== RENDER ENGINES ====================
+        function renderDashboardWatchlist() {
+            const tbody = document.getElementById('dash-watchlist-body');
+            if (!tbody) return;
+            tbody.innerHTML = stocksData.slice(0, 5).map(s => `
+                <tr>
+                    <td>
+                        <div class="stock-identity">
+                            <div class="stock-avatar" style="background:${s.color}">${s.symbol[0]}</div>
+                            <div class="stock-meta"><span class="stock-symbol">${s.symbol}</span><span class="stock-name">${s.name}</span></div>
+                        </div>
+                    </td>
+                    <td style="text-align:right" class="num-font">₹${s.price.toFixed(2)}</td>
+                    <td style="text-align:right" class="${s.change >= 0 ? 'text-gain' : 'text-loss'} num-font">${s.change >= 0 ? '+' : ''}${s.change}%</td>
+                    <td style="text-align:right">
+                        <button class="btn btn-sm btn-gain" onclick="openOrderTicket('${s.symbol}','Buy')">Buy</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderDashboardGainers() {
+            const tbody = document.getElementById('dash-gainers-body');
+            if (!tbody) return;
+            const sorted = [...stocksData].sort((a,b) => b.change - a.change).slice(0, 5);
+            tbody.innerHTML = sorted.map(s => `
+                <tr>
+                    <td>
+                        <div class="stock-identity">
+                            <div class="stock-avatar" style="background:${s.color}">${s.symbol[0]}</div>
+                            <div class="stock-meta"><span class="stock-symbol">${s.symbol}</span><span class="stock-name">${s.name}</span></div>
+                        </div>
+                    </td>
+                    <td style="text-align:right" class="num-font">₹${s.price.toFixed(2)}</td>
+                    <td style="text-align:right" class="text-gain num-font">+${s.change}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderWatchlistPage(index = 0) {
+            const tbody = document.getElementById('watchlist-main-body');
+            if (!tbody) return;
+            const symbols = watchlistsData[index] || watchlistsData[0];
+            tbody.innerHTML = symbols.map(sym => {
+                const s = stocksData.find(st => st.symbol === sym) || stocksData[0];
+                return `
+                    <tr>
+                        <td>
+                            <div class="stock-identity">
+                                <div class="stock-avatar" style="background:${s.color}">${s.symbol[0]}</div>
+                                <div class="stock-meta"><span class="stock-symbol">${s.symbol}</span><span class="stock-name">${s.name}</span></div>
+                            </div>
+                        </td>
+                        <td style="color:var(--text-tertiary)">NSE</td>
+                        <td style="text-align:right" class="num-font">₹${s.price.toFixed(2)}</td>
+                        <td style="text-align:right" class="${s.change >= 0 ? 'text-gain' : 'text-loss'} num-font">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}</td>
+                        <td style="text-align:right" class="${s.change >= 0 ? 'text-gain' : 'text-loss'} num-font">${s.change >= 0 ? '+' : ''}${s.change}%</td>
+                        <td style="text-align:right" class="num-font">${s.vol}</td>
+                        <td style="text-align:right">
+                            <button class="btn btn-sm btn-gain" onclick="openOrderTicket('${s.symbol}','Buy')">Buy</button>
+                            <button class="btn btn-sm btn-loss" onclick="openOrderTicket('${s.symbol}','Sell')">Sell</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function switchWatchlistTab(btn, idx) {
+            document.querySelectorAll('#watchlist-tabs-group .pill-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderWatchlistPage(idx);
+        }
+
+        function renderOptionChain() {
+            const tbody = document.getElementById('option-chain-body');
+            if (!tbody) return;
+            let html = '';
+            const atmStrike = 24450;
+            for (let i = -4; i <= 4; i++) {
+                const strike = atmStrike + (i * 50);
+                const isAtm = i === 0;
+                const ceLtp = Math.max(10, 380 - Math.abs(i)*40 + Math.random()*5);
+                const peLtp = Math.max(10, 320 - Math.abs(i)*35 + Math.random()*5);
+                html += `
+                    <tr>
+                        <td class="num-font">14.5%</td>
+                        <td class="num-font">1,24,500 <div class="oi-progress-bar"><div class="oi-progress-fill call" style="width:65%"></div></div></td>
+                        <td class="num-font">85,200</td>
+                        <td class="num-font" style="font-weight:800">₹${ceLtp.toFixed(2)}</td>
+                        <td class="num-font text-gain">+5.20</td>
+                        <td><button class="btn btn-sm btn-gain" onclick="openOrderTicket('NIFTY ${strike} CE','Buy')">B</button></td>
+                        <td class="strike-cell ${isAtm ? 'atm' : ''}">${strike}</td>
+                        <td><button class="btn btn-sm btn-loss" onclick="openOrderTicket('NIFTY ${strike} PE','Buy')">B</button></td>
+                        <td class="num-font text-loss">-4.10</td>
+                        <td class="num-font" style="font-weight:800">₹${peLtp.toFixed(2)}</td>
+                        <td class="num-font">74,100</td>
+                        <td class="num-font">98,400 <div class="oi-progress-bar"><div class="oi-progress-fill put" style="width:50%"></div></div></td>
+                        <td class="num-font">15.2%</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = ordersData.map(o => `
+                <tr>
+                    <td style="color:var(--text-tertiary)" class="num-font">${o.time}</td>
+                    <td style="font-weight:800">${o.symbol}</td>
+                    <td class="${o.type === 'Buy' ? 'text-gain' : 'text-loss'}" style="font-weight:800">${o.type}</td>
+                    <td class="num-font">${o.qty}</td>
+                    <td class="num-font">₹${o.price.toFixed(2)}</td>
+                    <td>${o.product}</td>
+                    <td><span class="stat-badge up">${o.status}</span></td>
+                    <td><button class="btn btn-sm btn-outline">Details</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPositionsTable() {
+            const tbody = document.getElementById('positions-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = holdingsData.map(h => {
+                const invested = h.qty * h.avg;
+                const current = h.qty * h.price;
+                const pnl = current - invested;
+                return `
+                    <tr>
+                        <td style="font-weight:800">${h.symbol}</td>
+                        <td class="num-font">${h.qty}</td>
+                        <td class="num-font">₹${h.avg.toFixed(2)}</td>
+                        <td class="num-font" style="font-weight:800">₹${h.price.toFixed(2)}</td>
+                        <td class="num-font">₹${invested.toLocaleString()}</td>
+                        <td class="num-font">₹${current.toLocaleString()}</td>
+                        <td class="num-font ${pnl >= 0 ? 'text-gain' : 'text-loss'}" style="font-weight:800">${pnl >= 0 ? '+' : ''}₹${pnl.toLocaleString()}</td>
+                        <td><button class="btn btn-sm btn-loss" onclick="openOrderTicket('${h.symbol}','Sell')">Exit</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderHoldingsTable() {
+            const tbody = document.getElementById('holdings-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = holdingsData.map(h => {
+                const invested = h.qty * h.avg;
+                const current = h.qty * h.price;
+                const pnl = current - invested;
+                const pct = ((pnl / invested) * 100).toFixed(1);
+                return `
+                    <tr>
+                        <td>
+                            <div class="stock-identity">
+                                <div class="stock-avatar" style="background:${h.color}">${h.symbol[0]}</div>
+                                <div class="stock-meta"><span class="stock-symbol">${h.symbol}</span><span class="stock-name">${h.name}</span></div>
+                            </div>
+                        </td>
+                        <td class="num-font">${h.qty}</td>
+                        <td class="num-font">₹${h.avg.toFixed(2)}</td>
+                        <td class="num-font">₹${invested.toLocaleString()}</td>
+                        <td class="num-font" style="font-weight:800">₹${h.price.toFixed(2)}</td>
+                        <td class="num-font" style="font-weight:800">₹${current.toLocaleString()}</td>
+                        <td class="num-font ${pnl >= 0 ? 'text-gain' : 'text-loss'}" style="font-weight:800">${pnl >= 0 ? '+' : ''}₹${pnl.toLocaleString()} (${pct}%)</td>
+                        <td><button class="btn btn-sm btn-gain" onclick="openOrderTicket('${h.symbol}','Buy')">Add</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderHeatmap() {
+            const container = document.getElementById('heatmap-container');
+            if (!container) return;
+            container.innerHTML = stocksData.map(s => {
+                const isUp = s.change >= 0;
+                const bg = isUp ? 'var(--gain-light)' : 'var(--loss-light)';
+                const color = isUp ? 'var(--gain)' : 'var(--loss)';
+                return `
+                    <div class="heatmap-tile" style="background:${bg};color:${color}">
+                        <div style="font-weight:800;font-size:13px">${s.symbol}</div>
+                        <div class="num-font" style="font-size:12px;font-weight:700;margin-top:4px">${isUp ? '+' : ''}${s.change}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPortfolioChart() {
+            const area = document.getElementById('chart-area');
+            const line = document.getElementById('chart-line');
+            if (!area || !line) return;
+            const points = [
+                [0, 260], [100, 220], [200, 240], [300, 180],
+                [400, 190], [500, 120], [600, 140], [700, 80], [800, 90]
+            ];
+            const pathStr = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
+            line.setAttribute('d', pathStr);
+            area.setAttribute('d', `${pathStr} L800,320 L0,320 Z`);
+        }
+
+        // ==================== ORDER MODAL LOGIC ====================
+        function openOrderTicket(symbol, action) {
+            document.getElementById('order-symbol').value = symbol;
+            setOrderAction(action);
+            document.getElementById('order-modal').classList.add('active');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.remove('active');
+        }
+
+        function setOrderAction(action) {
+            currentOrderAction = action;
+            document.getElementById('buy-toggle-btn').className = 'segment-btn ' + (action === 'Buy' ? 'active' : '');
+            document.getElementById('sell-toggle-btn').className = 'segment-btn ' + (action === 'Sell' ? 'active' : '');
+            document.getElementById('order-modal-title').textContent = `Place ${action} Order`;
+            document.getElementById('submit-order-btn').className = `btn btn-lg ${action === 'Buy' ? 'btn-gain' : 'btn-loss'}`;
+            calculateOrderCharges();
+        }
+
+        function calculateOrderCharges() {
+            const qty = parseInt(document.getElementById('order-qty').value) || 0;
+            const symbol = document.getElementById('order-symbol').value;
+            const stock = stocksData.find(s => s.symbol === symbol) || { price: 3000 };
+            const val = qty * stock.price;
+            const charges = val * 0.0012;
+            const total = val + charges;
+
+            document.getElementById('calc-val').textContent = '₹' + val.toLocaleString();
+            document.getElementById('calc-charges').textContent = '₹' + charges.toFixed(2);
+            document.getElementById('calc-total').textContent = '₹' + total.toLocaleString();
+        }
+
+        function executeOrder() {
+            const symbol = document.getElementById('order-symbol').value;
+            const qty = document.getElementById('order-qty').value;
+            showToast(`${currentOrderAction} order executed for ${qty} qty of ${symbol}!`, 'success');
+            closeOrderModal();
+        }
+
+        // ==================== SEARCH & KEYBOARD SHORTCUTS ====================
+        function handleSearch(q) {
+            const dropdown = document.getElementById('search-dropdown');
+            const list = document.getElementById('search-results-list');
+            if (!q.trim()) { dropdown.classList.remove('active'); return; }
+
+            const filtered = stocksData.filter(s => s.symbol.toLowerCase().includes(q.toLowerCase()) || s.name.toLowerCase().includes(q.toLowerCase()));
+            list.innerHTML = filtered.map(s => `
+                <div class="search-item-row" onclick="openOrderTicket('${s.symbol}','Buy');dropdown.classList.remove('active')">
+                    <div>
+                        <div style="font-weight:800">${s.name}</div>
+                        <div style="font-size:11px;color:var(--text-tertiary)">${s.symbol} &bull; NSE</div>
+                    </div>
+                    <div class="num-font" style="font-weight:800">₹${s.price.toFixed(2)}</div>
+                </div>
+            `).join('');
+            dropdown.classList.add('active');
+        }
+
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('global-search-input').focus();
+            }
+            if (e.key === 'Escape') closeOrderModal();
+        });
+
+        // ==================== TOAST MESSAGES ====================
+        function showToast(msg, type = 'success') {
+            const stack = document.getElementById('toast-stack');
+            const toast = document.createElement('div');
+            toast.className = 'toast-item ' + type;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}" style="color:var(--${type === 'success' ? 'gain' : 'loss'})"></i> <span>${msg}</span>`;
+            stack.appendChild(toast);
+            setTimeout(() => toast.remove(), 3200);
+        }
+
+        // ==================== REAL-TIME WEBSOCKET SIMULATION ====================
+        function startLiveFeed() {
+            setInterval(() => {
+                stocksData.forEach(s => {
+                    const delta = (Math.random() - 0.49) * 1.5;
+                    s.price = Math.max(1, s.price + delta);
+                });
+                renderDashboardWatchlist();
+                renderWatchlistPage(currentWatchlistIndex);
+            }, 3000);
+        }
+
+        // ==================== INIT ENGINE ====================
+        function init() {
+            renderDashboardWatchlist();
+            renderDashboardGainers();
+            renderWatchlistPage(0);
+            renderOptionChain();
+            renderOrdersTable();
+            renderPositionsTable();
+            renderHoldingsTable();
+            renderHeatmap();
+            renderPortfolioChart();
+            startLiveFeed();
+        }
+
+        init();
+    </script>
+</body>
+</html>

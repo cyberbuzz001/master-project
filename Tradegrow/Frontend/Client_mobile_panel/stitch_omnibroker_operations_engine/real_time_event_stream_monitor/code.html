@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Enterprise | Event Stream Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        @keyframes pulse-dot {
+            0% { transform: scale(.8); opacity: 1; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(.8); opacity: 1; }
+        }
+        .pulse-active {
+            position: relative;
+        }
+        .pulse-active::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: inherit;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .glass-panel {
+            background: rgba(29, 31, 41, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(67, 70, 86, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #434656;
+            border-radius: 10px;
+        }
+        .node-glow {
+            filter: drop-shadow(0 0 4px rgba(183, 196, 255, 0.4));
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#282934",
+                      "secondary-fixed": "#d3e4fe",
+                      "on-secondary": "#213145",
+                      "on-tertiary": "#611300",
+                      "surface-variant": "#32343f",
+                      "on-background": "#e1e1ef",
+                      "on-primary-container": "#dfe3ff",
+                      "surface-container-low": "#191b25",
+                      "background": "#11131c",
+                      "on-tertiary-container": "#ffddd5",
+                      "inverse-primary": "#004ced",
+                      "on-secondary-container": "#a9bad3",
+                      "tertiary-fixed-dim": "#ffb4a1",
+                      "primary-fixed": "#dde1ff",
+                      "inverse-surface": "#e1e1ef",
+                      "error-container": "#93000a",
+                      "primary-fixed-dim": "#b7c4ff",
+                      "on-secondary-fixed": "#0b1c30",
+                      "outline-variant": "#434656",
+                      "inverse-on-surface": "#2e303a",
+                      "tertiary": "#ffb4a1",
+                      "on-tertiary-fixed-variant": "#891e00",
+                      "on-tertiary-fixed": "#3c0800",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-fixed": "#ffdbd2",
+                      "on-secondary-fixed-variant": "#38485d",
+                      "on-surface": "#e1e1ef",
+                      "tertiary-container": "#bf3003",
+                      "surface-dim": "#11131c",
+                      "surface-container-highest": "#32343f",
+                      "on-primary-fixed": "#001452",
+                      "surface-tint": "#b7c4ff",
+                      "secondary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#0038b6",
+                      "surface": "#11131c",
+                      "primary-container": "#0052ff",
+                      "on-surface-variant": "#c3c5d9",
+                      "surface-bright": "#373943",
+                      "primary": "#b7c4ff",
+                      "on-error": "#690005",
+                      "error": "#ffb4ab",
+                      "surface-container-lowest": "#0c0e17",
+                      "outline": "#8d90a2",
+                      "secondary": "#b7c8e1",
+                      "secondary-container": "#3a4a5f",
+                      "on-primary": "#002682",
+                      "surface-container": "#1d1f29"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "data-density-comfortable": "12px",
+                      "column-gutter": "12px",
+                      "data-density-compact": "4px",
+                      "container-margin": "24px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Hanken Grotesk"],
+                      "body-sm": ["Inter"],
+                      "display-lg": ["Hanken Grotesk"],
+                      "body-md": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "headline-sm": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30 overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-outline-variant/15 w-full h-12 flex items-center px-6 justify-between">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">BrokerAdmin Terminal</span>
+<div class="h-6 w-px bg-outline-variant/20 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full border border-outline-variant/10">
+<span class="w-2 h-2 rounded-full bg-primary pulse-active"></span>
+<span class="font-data-mono text-data-mono text-primary">System Pulse: Connected</span>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant">Latency: 12ms</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant/20 p-1.5 rounded transition-colors duration-200">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant/20 p-1.5 rounded transition-colors duration-200">settings</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant/20 p-1.5 rounded transition-colors duration-200">help</button>
+<div class="h-6 w-px bg-outline-variant/20 mx-1"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-primary">System Status: Active</span>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-12 bottom-0 w-64 bg-surface-container-low border-r border-outline-variant/10 z-40 flex flex-col">
+<div class="p-6">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Mission Control</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">Terminal v4.2</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant/10 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant/10 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">swap_horiz</span>
+<span class="font-body-md text-body-md">Trading</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant/10 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-body-md text-body-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant/10 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-body-md text-body-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-secondary-container text-on-secondary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-body-md text-body-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant/10 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings_applications</span>
+<span class="font-body-md text-body-md">System Config</span>
+</a>
+</nav>
+<div class="p-4 border-t border-outline-variant/10">
+<button class="w-full py-2.5 bg-primary text-on-primary rounded font-bold font-body-md scale-98 active:scale-95 transition-all">
+                New Order
+            </button>
+<button class="mt-4 flex items-center gap-3 px-3 py-2 text-on-surface-variant w-full hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Log Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-12 h-[calc(100vh-3rem)] overflow-hidden flex bg-background">
+<!-- Left/Center Stream Area -->
+<div class="flex-1 flex flex-col h-full border-r border-outline-variant/10">
+<!-- KPI Cards Strip -->
+<div class="grid grid-cols-4 gap-4 p-6 bg-surface-container-lowest/50">
+<div class="glass-panel p-4 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">TOTAL ACTIVE CHANNELS</p>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">9</span>
+<span class="font-body-sm text-body-sm text-primary mb-1">LIVE</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">PEAK THROUGHPUT (TPS)</p>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">1,402</span>
+<span class="font-body-sm text-body-sm text-error mb-1">↑ 12%</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">GLOBAL EVENT COUNT (24H)</p>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">2.8M</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-lg border-primary/20">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">UNAUTHORIZED ACCESS ATTEMPTS</p>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md text-primary">0</span>
+<span class="material-symbols-outlined text-primary mb-1 text-sm">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Hero Section: Live Infrastructure Map -->
+<div class="h-1/3 p-6 pt-0">
+<div class="glass-panel h-full rounded-lg relative overflow-hidden flex flex-col">
+<div class="p-3 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-high/40">
+<h3 class="font-label-caps text-label-caps text-on-surface tracking-widest">LIVE INFRASTRUCTURE MAP</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-[10px] text-on-surface-variant">STABLE</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="text-[10px] text-on-surface-variant">SUBSCRIBER</span>
+</div>
+</div>
+</div>
+<div class="flex-1 relative flex items-center justify-around px-8">
+<!-- Connection Lines (Visual Decor) -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<svg class="w-full h-full">
+<line class="text-primary" stroke="currentColor" stroke-width="1" x1="10%" x2="90%" y1="50%" y2="50%"></line>
+<line class="text-primary" stroke="currentColor" stroke-width="1" x1="20%" x2="80%" y1="30%" y2="70%"></line>
+<line class="text-primary" stroke="currentColor" stroke-width="1" x1="20%" x2="80%" y1="70%" y2="30%"></line>
+</svg>
+</div>
+<!-- Nodes -->
+<div class="flex flex-wrap justify-center gap-8 z-10">
+<!-- Node 1 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">shopping_cart</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.orders</p>
+<p class="text-[9px] text-on-surface-variant">242 tps | 12 sub</p>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">trending_up</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.trades</p>
+<p class="text-[9px] text-on-surface-variant">891 tps | 45 sub</p>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">security</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.rms</p>
+<p class="text-[9px] text-on-surface-variant">12 tps | 8 sub</p>
+</div>
+</div>
+<!-- Node 4 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">account_balance_wallet</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.margin</p>
+<p class="text-[9px] text-on-surface-variant">54 tps | 14 sub</p>
+</div>
+</div>
+<!-- Node 5 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-error-container/20 border border-error flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-error text-xl">policy</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-error">admin.surveillance</p>
+<p class="text-[9px] text-on-surface-variant">4 tps | 2 sub</p>
+</div>
+</div>
+<!-- Node 6 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">payments</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.funds</p>
+<p class="text-[9px] text-on-surface-variant">102 tps | 20 sub</p>
+</div>
+</div>
+<!-- Node 7 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">hub</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.market</p>
+<p class="text-[9px] text-on-surface-variant">2.1k tps | 112 sub</p>
+</div>
+</div>
+<!-- Node 8 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">dns</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.system</p>
+<p class="text-[9px] text-on-surface-variant">88 tps | 6 sub</p>
+</div>
+</div>
+<!-- Node 9 -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary flex items-center justify-center node-glow group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">chat_bubble</span>
+</div>
+<div class="text-center">
+<p class="font-data-mono text-[10px] text-on-surface">admin.notifications</p>
+<p class="text-[9px] text-on-surface-variant">15 tps | 14k sub</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Unified Event Stream -->
+<div class="flex-1 px-6 pb-6 overflow-hidden flex flex-col">
+<div class="glass-panel flex-1 rounded-lg flex flex-col overflow-hidden">
+<div class="p-3 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-high/40">
+<div class="flex items-center gap-3">
+<h3 class="font-label-caps text-label-caps text-on-surface tracking-widest">UNIFIED EVENT STREAM</h3>
+<div class="px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">
+<span class="font-data-mono text-[9px] text-primary uppercase">Recording: Active</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary transition-colors">pause</button>
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary transition-colors">delete</button>
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary transition-colors">filter_alt</button>
+</div>
+</div>
+<!-- High-density log -->
+<div class="flex-1 overflow-y-auto custom-scrollbar font-data-mono text-data-mono" id="event-stream">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container-low z-10">
+<tr class="border-b border-outline-variant/10">
+<th class="p-2 text-[10px] text-on-surface-variant uppercase font-bold w-32">Timestamp</th>
+<th class="p-2 text-[10px] text-on-surface-variant uppercase font-bold w-40">Channel</th>
+<th class="p-2 text-[10px] text-on-surface-variant uppercase font-bold w-24">Type</th>
+<th class="p-2 text-[10px] text-on-surface-variant uppercase font-bold">Payload</th>
+<th class="p-2 text-[10px] text-on-surface-variant uppercase font-bold w-12 text-center">Sig</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.382</td>
+<td class="p-2 text-primary">admin.trades</td>
+<td class="p-2"><span class="text-secondary">EXEC</span></td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "id": "tr_8392", "inst": "BTCUSDT", "qty": 0.5, "px": 64231.2 }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.391</td>
+<td class="p-2 text-primary">admin.orders</td>
+<td class="p-2 text-on-surface-variant">NEW</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "id": "ord_x12", "cl_id": "user_88", "type": "LIMIT" }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.405</td>
+<td class="p-2 text-error">admin.surveillance</td>
+<td class="p-2"><span class="text-error font-bold">ALERT</span></td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "trigger": "WASH_TRADE_DETECTED", "acc": "7711", "sev": "CRITICAL" }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-error">warning</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.412</td>
+<td class="p-2 text-primary">admin.margin</td>
+<td class="p-2 text-on-surface-variant">UPDATE</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "acc": "9930", "eq": 45012.33, "m_used": 12.5 }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.420</td>
+<td class="p-2 text-primary">admin.trades</td>
+<td class="p-2 text-on-surface-variant">FILL</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "id": "tr_8393", "inst": "ETHUSDT", "qty": 10, "px": 3412.1 }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<!-- Repeat stream items -->
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.425</td>
+<td class="p-2 text-primary">admin.market</td>
+<td class="p-2 text-on-surface-variant">TICK</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "sym": "SPX500", "bid": 5214.3, "ask": 5214.5 }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.431</td>
+<td class="p-2 text-primary">admin.system</td>
+<td class="p-2 text-on-surface-variant">HEART</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "node": "eu-west-1a", "cpu": 4.2, "mem": 12.8 }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors">
+<td class="p-2 text-on-surface-variant">14:22:01.442</td>
+<td class="p-2 text-primary">admin.funds</td>
+<td class="p-2 text-on-surface-variant">DEPOSIT</td>
+<td class="p-2 truncate text-on-surface/80 max-w-xs">{ "acc": "u_881", "val": 5000, "curr": "USD" }</td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Channel Authorization Inspector -->
+<aside class="w-80 h-full bg-surface-container-low flex flex-col p-6 overflow-y-auto custom-scrollbar">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Auth Inspector</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-6">Review access controls per organizational role.</p>
+<div class="space-y-6">
+<div>
+<label class="font-label-caps text-[10px] text-on-surface-variant block mb-2">SELECT ROLE</label>
+<select class="w-full bg-surface-container-high border border-outline-variant/20 rounded p-2 text-on-surface font-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option>Dealer</option>
+<option>Compliance Officer</option>
+<option>Risk Manager</option>
+<option>System Admin</option>
+</select>
+</div>
+<div>
+<div class="flex justify-between items-center mb-3">
+<label class="font-label-caps text-[10px] text-on-surface-variant">CHANNEL PERMISSIONS</label>
+<span class="text-[10px] text-primary">Role: Dealer</span>
+</div>
+<div class="space-y-2">
+<!-- Authorized -->
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-high border border-outline-variant/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="font-data-mono text-xs">admin.orders</span>
+</div>
+<span class="text-[9px] text-on-surface-variant">READ/WRITE</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-high border border-outline-variant/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="font-data-mono text-xs">admin.trades</span>
+</div>
+<span class="text-[9px] text-on-surface-variant">READ/WRITE</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-high border border-outline-variant/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+<span class="font-data-mono text-xs">admin.market</span>
+</div>
+<span class="text-[9px] text-on-surface-variant">READ ONLY</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-high border border-outline-variant/10 opacity-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">remove_circle</span>
+<span class="font-data-mono text-xs">admin.rms</span>
+</div>
+<span class="text-[9px] text-on-surface-variant">DENIED</span>
+</div>
+<!-- Restricted -->
+<div class="flex items-center justify-between p-2 rounded bg-error-container/10 border border-error/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-sm">block</span>
+<span class="font-data-mono text-xs text-error">admin.surveillance</span>
+</div>
+<span class="text-[9px] text-error font-bold">RESTRICTED</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-high border border-outline-variant/10 opacity-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">remove_circle</span>
+<span class="font-data-mono text-xs">admin.margin</span>
+</div>
+<span class="text-[9px] text-on-surface-variant">DENIED</span>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-3">SECURITY LOGS</p>
+<div class="space-y-3">
+<div class="text-[10px] font-data-mono">
+<span class="text-on-surface-variant">14:10:02</span>
+<p class="text-on-surface opacity-70 mt-0.5">Dealer 'J.Doe' attempted unauthorized join on admin.surveillance. Blocked by Policy Engine.</p>
+</div>
+<div class="text-[10px] font-data-mono">
+<span class="text-on-surface-variant">13:45:11</span>
+<p class="text-on-surface opacity-70 mt-0.5">Policy Refresh: Applied new KYC ruleset to role 'Compliance'.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6">
+<button class="w-full py-2 border border-primary text-primary hover:bg-primary/10 rounded font-bold font-body-sm transition-all">
+                    Audit Log PDF
+                </button>
+</div>
+</aside>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simulate real-time streaming
+        const streamContainer = document.querySelector('#event-stream tbody');
+        const channels = ['admin.orders', 'admin.trades', 'admin.rms', 'admin.market', 'admin.system', 'admin.funds'];
+        const types = ['UPDATE', 'TICK', 'FILL', 'HEART', 'EXEC', 'DATA'];
+        
+        function addNewEvent() {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-surface-variant/10 transition-colors animate-pulse';
+            
+            const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false }) + '.' + Math.floor(Math.random() * 999).toString().padStart(3, '0');
+            const channel = channels[Math.floor(Math.random() * channels.length)];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            row.innerHTML = `
+                <td class="p-2 text-on-surface-variant">${timestamp}</td>
+                <td class="p-2 text-primary">${channel}</td>
+                <td class="p-2 text-on-surface-variant">${type}</td>
+                <td class="p-2 truncate text-on-surface/80 max-w-xs">{ "id": "seq_${Math.floor(Math.random()*10000)}", "status": "OK", "load": 0.${Math.floor(Math.random()*9)} }</td>
+                <td class="p-2 text-center"><span class="material-symbols-outlined text-xs text-primary">verified</span></td>
+            `;
+            
+            streamContainer.prepend(row);
+            
+            // Remove pulse after animation
+            setTimeout(() => row.classList.remove('animate-pulse'), 1000);
+            
+            // Keep the log manageable
+            if (streamContainer.children.length > 50) {
+                streamContainer.removeChild(streamContainer.lastChild);
+            }
+        }
+
+        // Add events randomly between 500ms and 2000ms
+        const streamInterval = setInterval(() => {
+            if(Math.random() > 0.4) addNewEvent();
+        }, 1200);
+
+        // Micro-glimmer on nodes
+        const nodes = document.querySelectorAll('.node-glow');
+        setInterval(() => {
+            const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
+            randomNode.classList.add('scale-105');
+            setTimeout(() => randomNode.classList.remove('scale-105'), 300);
+        }, 2000);
+    </script>
+</body></html>

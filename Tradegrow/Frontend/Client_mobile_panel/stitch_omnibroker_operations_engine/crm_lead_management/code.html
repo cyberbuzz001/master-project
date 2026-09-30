@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | CRM Lead Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b9c7e4",
+                    "surface-tint": "#515f78",
+                    "outline-variant": "#c5c6cd",
+                    "secondary": "#0050cc",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#c8e7fd",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "on-primary-fixed": "#0d1c32",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#e7e8e9",
+                    "outline": "#75777e",
+                    "on-background": "#191c1d",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "primary": "#000000",
+                    "on-tertiary-container": "#6a889b",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#f9f7ff",
+                    "background": "#f8f9fa",
+                    "secondary-fixed": "#dae1ff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e1e3e4",
+                    "tertiary-container": "#001e2d",
+                    "on-surface": "#191c1d",
+                    "on-tertiary-fixed": "#001e2d",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "surface-bright": "#f8f9fa",
+                    "surface-dim": "#d9dadb",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container": "#edeeef",
+                    "surface": "#f8f9fa",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "on-secondary-fixed": "#001849",
+                    "tertiary": "#000000",
+                    "on-surface-variant": "#44474d",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#d6e3ff",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#76849f",
+                    "inverse-surface": "#2e3132",
+                    "secondary-container": "#0266ff",
+                    "on-primary-fixed-variant": "#39475f",
+                    "primary-container": "#0d1c32",
+                    "surface-container-low": "#f3f4f5",
+                    "inverse-primary": "#b9c7e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "container-margin": "24px",
+                    "sidebar-width": "260px",
+                    "sidebar-collapsed": "64px",
+                    "gutter": "16px",
+                    "table-cell-padding": "8px 12px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(229, 231, 235, 0.5); }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container shadow-md flex flex-col py-4 z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 font-label-md text-label-md uppercase tracking-wider">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Active Navigation: CRM -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 font-label-md text-label-md transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span>Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span>RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span>Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Back Office</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span>Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-4 border-t border-on-primary-container/10">
+<button class="w-full bg-secondary-container text-white py-2.5 rounded flex items-center justify-center gap-2 font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span>New Request</span>
+</button>
+<div class="mt-4 flex justify-between px-2">
+<button class="text-on-primary-container/50 hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined" data-icon="search">search</span></button>
+<button class="text-on-primary-container/50 hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined" data-icon="star">star</span></button>
+<button class="text-on-primary-container/50 hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined" data-icon="history">history</span></button>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-6 z-40">
+<div class="flex items-center gap-8 flex-1">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-1 focus:ring-secondary transition-all" placeholder="Search leads by Mobile, Email or ID..." type="text"/>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success-container/10 text-emerald-700 text-label-md font-label-md border border-emerald-100">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                System Pulse
+            </button>
+<div class="flex items-center gap-3 px-4 border-l border-outline-variant ml-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"><span class="material-symbols-outlined">apps</span></button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"><span class="material-symbols-outlined">help_outline</span></button>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a senior financial operations manager in a corporate office setting, soft natural lighting, high resolution professional photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAGzd9uY-mXguuQzIA0edfazkfcbukOPPXxX8gUTdA2-_NdQzcH5Z9oahmNTd-D95qp3njBxHUZJ99Cy5MoNi5tyH_R0nCuwbDfwxHlNz8oklb5SBhn27VOUurF3YPOYBN2GyPUUaeP8NOhVeDzXNXLoJ-4S_98rRWfKE2AgnGgoAXXdG42D0m9UxLnd0a-3_xEArZPUo_G9sPTofkSbPA547p4Yl_hLD3A0sz8C3y8xm1iSFW6EcE"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[260px] pt-16 min-h-screen">
+<div class="p-6 space-y-6">
+<!-- Dashboard Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface">Lead Management</h2>
+<p class="text-on-surface-variant font-body-md text-body-md">Real-time CRM Pipeline &amp; Relationship Manager Allocation</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface hover:bg-surface-container rounded-lg transition-all font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Advanced Filters
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white hover:opacity-90 rounded-lg transition-all font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">upload</span>
+                        Bulk Import
+                    </button>
+</div>
+</div>
+<!-- Funnel Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+<!-- Total Leads -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label-md text-label-md">Total Leads</span>
+<span class="text-emerald-600 font-label-md text-label-md flex items-center"><span class="material-symbols-outlined text-xs">trending_up</span> 12%</span>
+</div>
+<div class="text-headline-lg font-headline-lg">1,284</div>
+<div class="mt-2 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-full"></div>
+</div>
+</div>
+<!-- Prospects -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label-md text-label-md">Prospects</span>
+<span class="text-on-surface-variant font-label-md text-label-md">64% Conv.</span>
+</div>
+<div class="text-headline-lg font-headline-lg">822</div>
+<div class="mt-2 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[64%]"></div>
+</div>
+</div>
+<!-- Applications -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label-md text-label-md">Applications</span>
+<span class="text-on-surface-variant font-label-md text-label-md">40% Conv.</span>
+</div>
+<div class="text-headline-lg font-headline-lg">512</div>
+<div class="mt-2 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[40%]"></div>
+</div>
+</div>
+<!-- KYC Pending -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-1 maker-checker-pending">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label-md text-label-md">KYC Pending</span>
+<span class="text-error font-label-md text-label-md font-bold">Priority</span>
+</div>
+<div class="text-headline-lg font-headline-lg">148</div>
+<div class="mt-2 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-error w-[20%]"></div>
+</div>
+</div>
+<!-- Converted -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label-md text-label-md">Converted</span>
+<span class="text-emerald-600 font-label-md text-label-md flex items-center">Live</span>
+</div>
+<div class="text-headline-lg font-headline-lg">364</div>
+<div class="mt-2 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 w-[100%]"></div>
+</div>
+</div>
+</div>
+<!-- Filters & Controls Bar -->
+<div class="bg-surface-container-low p-3 rounded-lg flex flex-wrap gap-4 items-center border border-outline-variant">
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded px-3 py-1.5 flex-1 max-w-xs">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">search</span>
+<input class="bg-transparent border-none text-body-sm p-0 focus:ring-0 w-full" placeholder="Mobile / Email..." type="text"/>
+</div>
+<select class="bg-surface-container-lowest border-outline-variant rounded text-body-sm py-1.5 focus:ring-secondary">
+<option>All Sources</option>
+<option>Direct Web</option>
+<option>Referral</option>
+<option>Social Media</option>
+<option>Trading Expo</option>
+</select>
+<select class="bg-surface-container-lowest border-outline-variant rounded text-body-sm py-1.5 focus:ring-secondary">
+<option>All RM Managers</option>
+<option>Rahul S.</option>
+<option>Priyanka V.</option>
+<option>Amit K.</option>
+<option>Sneha M.</option>
+</select>
+<select class="bg-surface-container-lowest border-outline-variant rounded text-body-sm py-1.5 focus:ring-secondary">
+<option>All Statuses</option>
+<option>New</option>
+<option>Interested</option>
+<option>KYC Pending</option>
+<option>KYC Approved</option>
+</select>
+<div class="ml-auto flex items-center gap-2">
+<span class="text-body-sm text-on-surface-variant">Display:</span>
+<button class="p-1 hover:bg-surface-container-high rounded"><span class="material-symbols-outlined text-md">grid_view</span></button>
+<button class="p-1 bg-secondary-container text-white rounded"><span class="material-symbols-outlined text-md">view_headline</span></button>
+</div>
+</div>
+<!-- Lead Management Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Lead ID</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Lead Details</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Source</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">Score</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Assigned RM</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Next Follow-up</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1: KYC Pending (High Priority) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-pending">
+<td class="px-gutter py-3 font-data-mono text-data-mono">LD-240901</td>
+<td class="px-gutter py-3">
+<div class="font-body-md font-semibold text-primary">Arjun Mehta</div>
+<div class="text-body-sm text-on-surface-variant">+91 98765 43210</div>
+</td>
+<td class="px-gutter py-3 text-body-sm">Google Ads</td>
+<td class="px-gutter py-3 text-center">
+<span class="px-2 py-0.5 bg-error-container text-error rounded font-label-md text-xs">92</span>
+</td>
+<td class="px-gutter py-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed text-[10px] flex items-center justify-center font-bold">RS</div>
+<span class="text-body-sm">Rahul S.</span>
+</div>
+</td>
+<td class="px-gutter py-3">
+<span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-[11px] font-bold uppercase">KYC Pending</span>
+</td>
+<td class="px-gutter py-3 text-body-sm">Today, 04:30 PM</td>
+<td class="px-gutter py-3">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors" title="Call"><span class="material-symbols-outlined text-lg">call</span></button>
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors" title="WhatsApp"><span class="material-symbols-outlined text-lg">chat</span></button>
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors" title="Email"><span class="material-symbols-outlined text-lg">mail</span></button>
+<button class="p-1.5 hover:bg-surface-container-high text-on-surface rounded transition-colors" title="Assign"><span class="material-symbols-outlined text-lg">person_add</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Account Activated -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-verified">
+<td class="px-gutter py-3 font-data-mono text-data-mono">LD-240898</td>
+<td class="px-gutter py-3">
+<div class="font-body-md font-semibold text-primary">Sunita Rao</div>
+<div class="text-body-sm text-on-surface-variant">s.rao@email.com</div>
+</td>
+<td class="px-gutter py-3 text-body-sm">Referral</td>
+<td class="px-gutter py-3 text-center">
+<span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded font-label-md text-xs">78</span>
+</td>
+<td class="px-gutter py-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-fixed text-[10px] flex items-center justify-center font-bold">PV</div>
+<span class="text-body-sm">Priyanka V.</span>
+</div>
+</td>
+<td class="px-gutter py-3">
+<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[11px] font-bold uppercase">Account Activated</span>
+</td>
+<td class="px-gutter py-3 text-body-sm text-on-surface-variant">-</td>
+<td class="px-gutter py-3 text-right">
+<button class="p-1.5 hover:bg-surface-container-high text-on-surface rounded transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 3: Interested -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-gutter py-3 font-data-mono text-data-mono">LD-240905</td>
+<td class="px-gutter py-3">
+<div class="font-body-md font-semibold text-primary">Vikram Singh</div>
+<div class="text-body-sm text-on-surface-variant">+91 99000 11223</div>
+</td>
+<td class="px-gutter py-3 text-body-sm">Social Media</td>
+<td class="px-gutter py-3 text-center">
+<span class="px-2 py-0.5 bg-secondary-fixed text-secondary rounded font-label-md text-xs">85</span>
+</td>
+<td class="px-gutter py-3">
+<span class="text-body-sm text-on-surface-variant italic">Unassigned</span>
+</td>
+<td class="px-gutter py-3">
+<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[11px] font-bold uppercase">Interested</span>
+</td>
+<td class="px-gutter py-3 text-body-sm">Tomorrow, 10:00 AM</td>
+<td class="px-gutter py-3">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors"><span class="material-symbols-outlined text-lg">person_add</span></button>
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors"><span class="material-symbols-outlined text-lg">call</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Application Started -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-gutter py-3 font-data-mono text-data-mono">LD-240908</td>
+<td class="px-gutter py-3">
+<div class="font-body-md font-semibold text-primary">Nandini K.</div>
+<div class="text-body-sm text-on-surface-variant">nandini@provider.net</div>
+</td>
+<td class="px-gutter py-3 text-body-sm">Direct Web</td>
+<td class="px-gutter py-3 text-center">
+<span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded font-label-md text-xs">62</span>
+</td>
+<td class="px-gutter py-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-tertiary-fixed text-[10px] flex items-center justify-center font-bold">AK</div>
+<span class="text-body-sm">Amit K.</span>
+</div>
+</td>
+<td class="px-gutter py-3">
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded-full text-[11px] font-bold uppercase">App Started</span>
+</td>
+<td class="px-gutter py-3 text-body-sm">05 Sep, 11:30 AM</td>
+<td class="px-gutter py-3 text-right">
+<button class="p-1.5 hover:bg-surface-container-high text-on-surface rounded transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 5: KYC Approved -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-verified">
+<td class="px-gutter py-3 font-data-mono text-data-mono">LD-240910</td>
+<td class="px-gutter py-3">
+<div class="font-body-md font-semibold text-primary">Rohan Das</div>
+<div class="text-body-sm text-on-surface-variant">+91 77777 88888</div>
+</td>
+<td class="px-gutter py-3 text-body-sm">Trading Expo</td>
+<td class="px-gutter py-3 text-center">
+<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded font-label-md text-xs">98</span>
+</td>
+<td class="px-gutter py-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed text-[10px] flex items-center justify-center font-bold">RS</div>
+<span class="text-body-sm">Rahul S.</span>
+</div>
+</td>
+<td class="px-gutter py-3">
+<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[11px] font-bold uppercase">KYC Approved</span>
+</td>
+<td class="px-gutter py-3 text-body-sm text-emerald-600 font-bold">Ready to Fund</td>
+<td class="px-gutter py-3 text-right">
+<button class="p-1.5 hover:bg-secondary-container/10 text-secondary rounded transition-colors"><span class="material-symbols-outlined">payments</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-gutter py-3 bg-surface-container-low flex items-center justify-between border-t border-outline-variant">
+<span class="text-body-sm text-on-surface-variant">Showing 1-10 of 1,284 entries</span>
+<div class="flex items-center gap-1">
+<button class="p-1.5 hover:bg-surface-container-highest rounded transition-all"><span class="material-symbols-outlined">first_page</span></button>
+<button class="p-1.5 hover:bg-surface-container-highest rounded transition-all"><span class="material-symbols-outlined">chevron_left</span></button>
+<span class="px-3 py-1 bg-secondary text-white rounded text-body-sm">1</span>
+<button class="px-3 py-1 hover:bg-surface-container-highest rounded text-body-sm">2</button>
+<button class="px-3 py-1 hover:bg-surface-container-highest rounded text-body-sm">3</button>
+<span class="text-on-surface-variant">...</span>
+<button class="px-3 py-1 hover:bg-surface-container-highest rounded text-body-sm">129</button>
+<button class="p-1.5 hover:bg-surface-container-highest rounded transition-all"><span class="material-symbols-outlined">chevron_right</span></button>
+<button class="p-1.5 hover:bg-surface-container-highest rounded transition-all"><span class="material-symbols-outlined">last_page</span></button>
+</div>
+</div>
+</div>
+<!-- Bottom Productivity Bar (Secondary UI Element) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- RM Performance Leaderboard -->
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Top RM Conversion</h3>
+<button class="text-secondary text-label-md font-label-md">View All</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed-dim text-on-secondary-fixed flex items-center justify-center font-bold">PV</div>
+<div>
+<div class="text-body-md font-semibold">Priyanka V.</div>
+<div class="text-body-sm text-on-surface-variant">12 Active Leads</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-body-md font-bold text-emerald-600">88%</div>
+<div class="text-[10px] text-on-surface-variant uppercase">Success Rate</div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim text-on-primary-fixed flex items-center justify-center font-bold">RS</div>
+<div>
+<div class="text-body-md font-semibold">Rahul S.</div>
+<div class="text-body-sm text-on-surface-variant">24 Active Leads</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-body-md font-bold text-emerald-600">76%</div>
+<div class="text-[10px] text-on-surface-variant uppercase">Success Rate</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Log (Bento Style) -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-5 rounded-xl border border-outline-variant">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Compliance &amp; Audit Activity</h3>
+<span class="flex items-center gap-1 text-[10px] uppercase font-bold text-on-surface-variant"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Live Log</span>
+</div>
+<div class="space-y-3">
+<div class="flex gap-4 p-2 hover:bg-surface-container-low rounded transition-all cursor-pointer border-l-2 border-secondary">
+<div class="bg-secondary-container/10 p-2 rounded h-fit"><span class="material-symbols-outlined text-secondary">verified</span></div>
+<div class="flex-1">
+<p class="text-body-sm text-on-surface"><strong>KYC Verified:</strong> Arjun Mehta's Aadhar &amp; PAN documents verified by Rahul S.</p>
+<span class="text-[10px] text-on-surface-variant">2 minutes ago • System Audit ID: 49202</span>
+</div>
+</div>
+<div class="flex gap-4 p-2 hover:bg-surface-container-low rounded transition-all cursor-pointer border-l-2 border-error">
+<div class="bg-error-container/10 p-2 rounded h-fit"><span class="material-symbols-outlined text-error">assignment_late</span></div>
+<div class="flex-1">
+<p class="text-body-sm text-on-surface"><strong>Follow-up Missed:</strong> Sneha M. missed a scheduled call with Vikram Singh.</p>
+<span class="text-[10px] text-on-surface-variant">14 minutes ago • Escalation: RM Manager</span>
+</div>
+</div>
+<div class="flex gap-4 p-2 hover:bg-surface-container-low rounded transition-all cursor-pointer border-l-2 border-on-tertiary-container">
+<div class="bg-on-tertiary-container/10 p-2 rounded h-fit"><span class="material-symbols-outlined text-on-tertiary-container">group_add</span></div>
+<div class="flex-1">
+<p class="text-body-sm text-on-surface"><strong>Bulk Assignment:</strong> 42 new leads from 'Google Ads' assigned to 3 Relationship Managers.</p>
+<span class="text-[10px] text-on-surface-variant">1 hour ago • Batch ID: B-8821</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action for Mobile / Quick Access -->
+<button class="fixed bottom-6 right-6 w-14 h-14 bg-secondary-container text-white rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center z-50">
+<span class="material-symbols-outlined text-2xl">add_ic_call</span>
+</button>
+<script>
+        // Simple Interaction logic for demo
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if(e.target.closest('button')) return;
+                console.log('Open Lead Details for: ' + row.querySelector('.font-body-md').innerText);
+            });
+        });
+
+        // Search Input Glow Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-1', 'ring-secondary');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-1', 'ring-secondary');
+        });
+    </script>
+</body></html>

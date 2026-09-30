@@ -1,0 +1,203 @@
+{
+  "_README": "Edit answers here. Any answer containing {{pending}} renders the 'Information to be verified' badge. Company-specific answers must be approved by Compliance before the placeholder is replaced.",
+  "categories": [
+    {
+      "key": "account",
+      "label": "Account & Onboarding",
+      "items": [
+        {
+          "q": "How do I open a Trade Grow account?",
+          "a": "Account opening is fully digital. You begin with your mobile number and an OTP, enter your PAN, complete KYC, add your bank details, complete the required verification steps, and e-sign the application. Once submitted, your application goes for internal and regulatory verification before the account is activated. The step-by-step flow is on our <a href=\"/open-account/\">Account Opening</a> page."
+        },
+        {
+          "q": "What documents do I need?",
+          "a": "Typically: PAN, Aadhaar linked to your mobile number for OTP-based verification, a bank account in your own name, a signature specimen, and income proof if you wish to activate derivatives (F&amp;O). The exact list applicable to your application is shown inside the onboarding flow."
+        },
+        {
+          "q": "How long does onboarding take?",
+          "a": "{{pending}} Trade Grow will publish an expected turnaround time once the onboarding process has been through operational testing. We would rather publish nothing than publish a timeline we cannot meet."
+        },
+        {
+          "q": "Can I keep my existing Demat account with another broker?",
+          "a": "Yes. There is no requirement to close any existing account. You may hold accounts with multiple brokers and depository participants at the same time, and you can evaluate Trade Grow alongside your current broker."
+        },
+        {
+          "q": "Do I need a new Demat account, or can I link my existing one?",
+          "a": "{{pending}} Whether Trade Grow supports linking an existing demat account depends on our depository arrangement, which is not yet published. See the <a href=\"/verify/\">Verify</a> page for the current status."
+        },
+        {
+          "q": "Can NRIs open an account?",
+          "a": "{{pending}} NRI account availability has not been confirmed. Please do not assume availability until it is listed here."
+        },
+        {
+          "q": "Can I open a joint account?",
+          "a": "Trading accounts in the Indian securities market are opened in a single name. Demat accounts can be held jointly. Availability of joint demat accounts on Trade Grow is {{pending}}."
+        },
+        {
+          "q": "What if my KYC is already registered with a KRA?",
+          "a": "If you are already KYC-verified with a SEBI-registered KYC Registration Agency, parts of your information can typically be fetched during onboarding, which shortens the process. You will still need to complete broker-specific steps such as segment selection and e-signing."
+        },
+        {
+          "q": "Why was my account application rejected?",
+          "a": "Common reasons include a name mismatch between PAN and bank records, an unclear document image, a mobile number not linked to Aadhaar, or a signature mismatch. Our support team can tell you the specific reason on your application. See <a href=\"/support/\">Support</a>."
+        }
+      ]
+    },
+    {
+      "key": "pricing",
+      "label": "Pricing &amp; Charges",
+      "items": [
+        {
+          "q": "Is brokerage really Rs. 0?",
+          "a": "Only if a nil-brokerage plan is live and its conditions are published. Our current published brokerage is on the <a href=\"/pricing/\">Pricing</a> page. If you see an offer described as zero brokerage, read the applicable plan conditions: which segments it covers, whether it is time-limited, and what happens after. We do not advertise a nil-brokerage claim without those conditions attached."
+        },
+        {
+          "q": "Does zero brokerage mean a trade costs me nothing?",
+          "a": "No. Brokerage is only one component. Statutory and regulatory charges (STT/CTT, GST, Stamp Duty, Exchange Transaction Charges, SEBI Turnover Fees and DP charges) are set by the Government, Exchanges, Depositories and SEBI. They apply on every trade regardless of the brokerage plan. Trade Grow collects these and remits them; it does not keep them. Use our <a href=\"/pricing/#calculator\">cost calculator</a> to see the full picture."
+        },
+        {
+          "q": "Is there such a thing as tax-free trading?",
+          "a": "No, and no broker in India can. Taxes on securities transactions are levied by law. Any broker advertising zero tax on trades is describing something that does not exist. If you were told otherwise by anyone claiming to represent Trade Grow, please report it via <a href=\"/support/\">Support</a>."
+        },
+        {
+          "q": "What is STT?",
+          "a": "Securities Transaction Tax is a tax levied by the Government of India on transactions in listed securities. The rate depends on the segment and on whether you are buying or selling. For example, in equity intraday and futures it applies only on the sell side, while in equity delivery it applies on both sides. It is collected by the broker and paid to the Government."
+        },
+        {
+          "q": "What is GST and what is it charged on?",
+          "a": "Goods and Services Tax is charged on brokerage and on certain regulatory charges such as exchange transaction charges and SEBI turnover fees. It is not charged on the value of the shares you buy. The prevailing rate is shown in our charges schedule."
+        },
+        {
+          "q": "What is a DP charge?",
+          "a": "A Depository Participant charge is a flat fee applied when securities are debited from your demat account, that is, when you sell delivery holdings. It is typically charged per scrip per day regardless of quantity, and is shared between the depository (CDSL or NSDL) and the depository participant. It does not apply to intraday or F&amp;O trades."
+        },
+        {
+          "q": "What is stamp duty on trades?",
+          "a": "Stamp duty is a state-levied charge applied on the buy side of a transaction, at rates set under the Indian Stamp Act. Since 2020 it has been collected in a uniform, centralised manner across states."
+        },
+        {
+          "q": "What are exchange transaction charges?",
+          "a": "These are fees charged by NSE or BSE on the turnover of trades executed on their platform. The rate varies by segment. The exchange sets these rates, not the broker."
+        },
+        {
+          "q": "What is the SEBI turnover fee?",
+          "a": "A small fee levied by the Securities and Exchange Board of India on the turnover of trades, funding the regulator's operations."
+        },
+        {
+          "q": "Is there an annual maintenance charge (AMC)?",
+          "a": "{{pending}} The demat AMC applicable to Trade Grow accounts is listed in the Other Charges table on the <a href=\"/pricing/\">Pricing</a> page once approved."
+        },
+        {
+          "q": "Are there hidden charges?",
+          "a": "Our position is that every charge should appear in the published Schedule of Charges before you trade, and again on the contract note after you trade. If you find a charge on your contract note that is not in our published schedule, raise it through <a href=\"/support/\">Support</a> and it will be treated as a grievance, not a query."
+        },
+        {
+          "q": "How do I verify what I was actually charged?",
+          "a": "The contract note issued to you after each trading day is the authoritative record. It itemises brokerage and each statutory charge separately. Our calculator is indicative and is there to help you estimate before you trade, not to replace the contract note."
+        }
+      ]
+    },
+    {
+      "key": "security",
+      "label": "Security",
+      "items": [
+        {
+          "q": "Will anyone from Trade Grow ask me for my OTP?",
+          "a": "Never. No Trade Grow employee, agent, partner or support executive will ask for your OTP, password, PIN, UPI PIN or card PIN, not during onboarding, not during a sales call, not during a support call. Enter your OTP only on the official Trade Grow app or website. See <a href=\"/security-awareness/\">Security Awareness</a>."
+        },
+        {
+          "q": "Someone called claiming to be from Trade Grow and asked for remote access to my phone. Is that legitimate?",
+          "a": "No. We do not ask customers to install screen-sharing or remote-access applications. End the call and report it through <a href=\"/support/\">Support</a> with the phone number that called you."
+        },
+        {
+          "q": "How do I report suspicious activity on my account?",
+          "a": "Contact support immediately through the channels on our <a href=\"/support/\">Support</a> page. If you believe your credentials are compromised, change your password first and then report."
+        },
+        {
+          "q": "Is my data safe?",
+          "a": "We describe the specific controls that are actually implemented on our <a href=\"/security/\">Security</a> page rather than making blanket claims. We do not claim to be 100% safe, no system is, and we would encourage you to be sceptical of any financial platform that does."
+        },
+        {
+          "q": "What security features can I control myself?",
+          "a": "The account-level controls available at launch are listed on the <a href=\"/security/\">Security</a> page. Where a control is not yet available, it is marked as such rather than implied."
+        },
+        {
+          "q": "How will Trade Grow contact me officially?",
+          "a": "Only from the phone numbers, email domains and WhatsApp number published on our <a href=\"/support/\">Support</a> page. Any other number is not us. We will never contact you from a personal mobile number asking for credentials or payments."
+        },
+        {
+          "q": "Where should I send money to fund my account?",
+          "a": "Only through the funding options inside the official Trade Grow app or website, from a bank account registered in your own name. Never transfer funds to an individual's personal account, UPI ID or wallet, even if they claim to be an employee."
+        }
+      ]
+    },
+    {
+      "key": "regulation",
+      "label": "Regulation &amp; Verification",
+      "items": [
+        {
+          "q": "Who regulates trading platforms in India?",
+          "a": "The Securities and Exchange Board of India (SEBI) regulates the securities market. Stock brokers must be registered with SEBI and are also members of exchanges such as NSE and BSE. Demat accounts are held through depositories, CDSL and NSDL, via a registered Depository Participant."
+        },
+        {
+          "q": "Is Trade Grow SEBI registered?",
+          "a": "Our current registration status, including any registration number, is published on the <a href=\"/verify/\">Verify</a> page. Where a field there reads Information to be verified, that status has not yet been confirmed and you should treat it as unconfirmed. We would rather show you a blank field than a number you cannot check."
+        },
+        {
+          "q": "How can I independently verify a broker's registration?",
+          "a": "Search the SEBI intermediaries database for the registration number, check the member directory on the NSE or BSE website, and check the DP list on the CDSL or NSDL website. Each of these is a public search run by the regulator, exchange or depository, not by the broker. Step-by-step instructions are on our <a href=\"/verify/\">Verify</a> page."
+        },
+        {
+          "q": "Where can I find Trade Grow's legal entity details?",
+          "a": "The legal entity name, corporate identity number and registered office are on the <a href=\"/verify/\">Verify</a> page. You can cross-check the CIN on the Ministry of Corporate Affairs portal."
+        },
+        {
+          "q": "How do I raise a grievance?",
+          "a": "Start with Trade Grow support. If unresolved, escalate internally to the Grievance Redressal Officer whose contact details are published on the <a href=\"/verify/\">Verify</a> page. If still unresolved, you may approach the exchange investor grievance mechanism or file a complaint on SEBI's SCORES portal at scores.sebi.gov.in. The full escalation ladder with timelines is on our <a href=\"/support/\">Support</a> page."
+        },
+        {
+          "q": "What is the Investor Charter?",
+          "a": "A SEBI-mandated document setting out the services investors are entitled to, expected timelines, and investors' rights and responsibilities. Our copy is linked from the <a href=\"/verify/\">Verify</a> page when published."
+        },
+        {
+          "q": "Is my money or my shares insured?",
+          "a": "Trade Grow does not offer insurance on investments, and does not claim any. Your shares are held in your own demat account with a depository. Exchanges operate investor protection funds with defined and limited scope. Market losses are never covered by anyone."
+        }
+      ]
+    },
+    {
+      "key": "trading",
+      "label": "Trading &amp; Funds",
+      "items": [
+        {
+          "q": "What products are available on Trade Grow?",
+          "a": "{{pending}} The segments enabled at launch are listed on the <a href=\"/platform/\">Platform</a> page. Availability of a segment also depends on your own account being approved for it."
+        },
+        {
+          "q": "How do I place an order?",
+          "a": "From the order window in the app or web platform: select the instrument, choose buy or sell, choose product type (intraday or delivery), enter quantity and order type (market or limit), and confirm. The <a href=\"/platform/\">Platform</a> page walks through the screens."
+        },
+        {
+          "q": "How do I add funds?",
+          "a": "Through the Funds section of the official app or website, from a bank account registered in your own name. The available payment methods are shown in the app. Third-party transfers are not permitted under exchange rules."
+        },
+        {
+          "q": "How do I withdraw funds?",
+          "a": "Place a withdrawal request from the Funds section. Payouts are made only to your own registered bank account. Settlement timelines follow the exchange settlement cycle and applicable regulations. The specific timeline is shown at the time of the request."
+        },
+        {
+          "q": "Why can't I withdraw my full balance immediately?",
+          "a": "A portion of your balance may be unsettled. Funds from a recent sale settle according to the exchange settlement cycle, and margin blocked against open positions is not withdrawable. The app shows your withdrawable balance separately from your total balance."
+        },
+        {
+          "q": "What happens to my shares if Trade Grow shuts down?",
+          "a": "Shares you hold in delivery sit in your own demat account with the depository (CDSL or NSDL), not with the broker. You can access them through the depository directly and can transfer your account to another depository participant. This is a fair question to ask any new broker, and the answer should never be vague."
+        },
+        {
+          "q": "Does Trade Grow give buy or sell recommendations?",
+          "a": "No. Trade Grow does not provide investment advice, tips, assured returns or profit guarantees. Anyone contacting you with guaranteed-profit claims in our name is not authorised to do so. Please report it."
+        }
+      ]
+    }
+  ]
+}

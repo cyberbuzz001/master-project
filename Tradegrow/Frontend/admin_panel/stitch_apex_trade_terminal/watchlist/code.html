@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Watchlist | OBSIDIAN TERMINAL</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#d8e2ff",
+                    "surface-container-highest": "#2e3446",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-tertiary": "#68000a",
+                    "outline-variant": "#424754",
+                    "tertiary": "#ffb3ad",
+                    "surface-dim": "#0c1323",
+                    "surface": "#0c1323",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "surface-container-high": "#232a3b",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-tint": "#adc6ff",
+                    "on-primary-fixed": "#001a42",
+                    "inverse-on-surface": "#293041",
+                    "on-error-container": "#ffdad6",
+                    "error-container": "#93000a",
+                    "error": "#ffb4ab",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#070e1e",
+                    "surface-container-low": "#141b2c",
+                    "secondary": "#4edea3",
+                    "on-secondary": "#003824",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-variant": "#2e3446",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-tertiary-fixed": "#410004",
+                    "surface-container": "#191f30",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-secondary-container": "#00311f",
+                    "on-surface-variant": "#c2c6d6",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-bright": "#32394b",
+                    "on-background": "#dce2f9",
+                    "on-primary-container": "#00285d",
+                    "on-primary": "#002e6a",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-secondary-fixed": "#002113",
+                    "inverse-surface": "#dce2f9",
+                    "secondary-container": "#00a572",
+                    "primary-container": "#4d8eff",
+                    "on-surface": "#dce2f9",
+                    "outline": "#8c909f",
+                    "primary": "#adc6ff",
+                    "inverse-primary": "#005ac2",
+                    "tertiary-container": "#ff5451",
+                    "on-tertiary-container": "#5c0008",
+                    "background": "#0c1323"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "cell-padding-x": "8px",
+                    "unit": "4px",
+                    "container-margin": "16px",
+                    "gutter": "12px",
+                    "cell-padding-y": "6px"
+            },
+            "fontFamily": {
+                    "data-mono": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-header {
+            background: rgba(12, 19, 35, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .quick-action-panel {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .active-tab-indicator {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 2px;
+            background: #adc6ff;
+            transition: all 0.3s ease;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden pb-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 glass-header border-b border-outline-variant/30 px-container-margin h-16 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="search">search</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">OBSIDIAN TERMINAL</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="tune">tune</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline/20">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of Rohan Sharma, a premium stock market trader, wearing a dark navy blazer and a clean white shirt. The background is a sophisticated, blurred trading floor with soft blue and emerald lighting, reflecting a corporate glassmorphism aesthetic. The lighting is crisp and high-end, evoking expertise and trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdo2gNwtU4Lasxm7QflVIrr4nw8x-ZRcij0e4mBU1s5gbD_NtZBdD8E94qb4-Q3cuqR-FjpBZNstPoosX-rhBHa3fjFkArBVrJCAQrzmD7L2uWHEQFjCcuC9biNRixctYkU0S15iN75PXdkp3m1f1YUsYnAKgJyO7AIpLbxHYQo9JGpQrqVe6fovfitsdjjTIhX47CtdCDtz-tiTWUzMXEXaiVAcm4so-vxmWkehVTikZ2Hu47mdo"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="mt-16 px-container-margin">
+<!-- Search & View Toggle -->
+<div class="py-4 flex items-center justify-between gap-4 sticky top-16 z-40 bg-background/95 backdrop-blur-sm">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="add">add</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg py-2.5 pl-10 pr-4 text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-on-surface-variant/50" placeholder="Add stocks (e.g. RELIANCE, NIFTY...)" type="text"/>
+</div>
+<button class="flex items-center gap-2 bg-surface-container border border-outline-variant/30 px-3 py-2.5 rounded-lg hover:bg-surface-container-high transition-colors" id="viewToggle" onclick="toggleView()">
+<span class="material-symbols-outlined text-[20px]" data-icon="view_compact">view_compact</span>
+<span class="font-label-caps text-label-caps hidden sm:inline">COMPACT</span>
+</button>
+</div>
+<!-- Watchlist Tabs -->
+<div class="relative flex items-center border-b border-outline-variant/20 mb-4 overflow-x-auto no-scrollbar">
+<button class="px-4 py-3 whitespace-nowrap font-label-caps text-label-caps text-primary font-bold border-b-2 border-primary transition-all" onclick="setActiveTab(this)">WATCHLIST 1</button>
+<button class="px-4 py-3 whitespace-nowrap font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-all" onclick="setActiveTab(this)">NIFTY 50</button>
+<button class="px-4 py-3 whitespace-nowrap font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-all" onclick="setActiveTab(this)">OPTIONS</button>
+<button class="px-4 py-3 whitespace-nowrap font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-all" onclick="setActiveTab(this)">BANK NIFTY</button>
+<button class="px-4 py-3 whitespace-nowrap font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-all" onclick="setActiveTab(this)">COMMODITY</button>
+</div>
+<!-- Stock List -->
+<div class="flex flex-col gap-1" id="stockContainer">
+<!-- Row 1 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">RELIANCE</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">Reliance Industries Limited</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-secondary">2,945.30</span>
+<span class="font-data-mono text-data-mono text-[11px] text-secondary">+12.45 (+0.42%)</span>
+</div>
+</div>
+<!-- Quick Actions Overlay (Hidden by default) -->
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10 animate-in fade-in zoom-in duration-150">
+<button class="flex flex-col items-center gap-1 text-secondary">
+<div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</div>
+<span class="font-label-caps text-[10px]">BUY</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-tertiary">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="sell">sell</span>
+</div>
+<span class="font-label-caps text-[10px]">SELL</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+</div>
+<span class="font-label-caps text-[10px]">CHART</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+</div>
+<span class="font-label-caps text-[10px]">CHAIN</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">TCS</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">Tata Consultancy Services</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-error">4,120.15</span>
+<span class="font-data-mono text-data-mono text-[11px] text-error">-45.20 (-1.08%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10">
+<!-- Same actions as above -->
+</div>
+</div>
+<!-- Row 3 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">HDFCBANK</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">HDFC Bank Limited</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-secondary">1,452.80</span>
+<span class="font-data-mono text-data-mono text-[11px] text-secondary">+2.15 (+0.15%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10"></div>
+</div>
+<!-- Row 4 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">ZOMATO</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">Zomato Limited</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-secondary">188.45</span>
+<span class="font-data-mono text-data-mono text-[11px] text-secondary">+4.20 (+2.28%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10"></div>
+</div>
+<!-- Row 5 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">ITC</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">BSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">ITC Limited</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-on-surface-variant">420.10</span>
+<span class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">0.00 (0.00%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10"></div>
+</div>
+<!-- Row 6 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">ADANIENT</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">Adani Enterprises Limited</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-error">3,145.60</span>
+<span class="font-data-mono text-data-mono text-[11px] text-error">-120.40 (-3.68%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10"></div>
+</div>
+<!-- Row 7 -->
+<div class="stock-row group relative" onclick="toggleQuickActions(this)">
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm text-on-surface">MARUTI</span>
+<span class="bg-surface-variant text-[10px] px-1 rounded text-on-surface-variant">NSE</span>
+</div>
+<span class="text-on-surface-variant text-body-sm detail-text">Maruti Suzuki India</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-data-mono text-secondary">11,540.00</span>
+<span class="font-data-mono text-data-mono text-[11px] text-secondary">+185.20 (+1.63%)</span>
+</div>
+</div>
+<div class="quick-actions hidden absolute inset-0 bg-surface-container/95 flex items-center justify-around rounded-lg px-2 z-10"></div>
+</div>
+</div>
+<!-- Sticky Footer Summary (Mobile Optimized) -->
+<div class="mt-8 mb-4 flex flex-col gap-3">
+<div class="bg-surface-container-low/50 rounded-lg p-4 border border-outline-variant/20">
+<div class="flex justify-between items-center mb-2">
+<span class="text-body-sm text-on-surface-variant">Watchlist Capacity</span>
+<span class="text-body-sm text-on-surface font-bold">7 / 50</span>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[14%]"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant/30 z-50 rounded-t-full shadow-2xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary font-bold scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt" style="font-variation-settings: 'FILL' 1;">list_alt</span>
+<span class="font-label-caps text-label-caps">Watchlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</a>
+</nav>
+<script>
+        function toggleView() {
+            const container = document.getElementById('stockContainer');
+            const toggleBtn = document.getElementById('viewToggle');
+            const detailTexts = document.querySelectorAll('.detail-text');
+            
+            const isCompact = container.classList.contains('compact-mode');
+            
+            if (isCompact) {
+                container.classList.remove('compact-mode');
+                detailTexts.forEach(el => el.classList.remove('hidden'));
+                toggleBtn.querySelector('.material-symbols-outlined').innerText = 'view_compact';
+                toggleBtn.querySelector('span:last-child').innerText = 'COMPACT';
+            } else {
+                container.classList.add('compact-mode');
+                detailTexts.forEach(el => el.classList.add('hidden'));
+                toggleBtn.querySelector('.material-symbols-outlined').innerText = 'view_agenda';
+                toggleBtn.querySelector('span:last-child').innerText = 'DETAILED';
+            }
+        }
+
+        function setActiveTab(element) {
+            const buttons = element.parentElement.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+                btn.classList.add('text-on-surface-variant');
+            });
+            element.classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary');
+            element.classList.remove('text-on-surface-variant');
+        }
+
+        let activeRow = null;
+
+        function toggleQuickActions(row) {
+            const actions = row.querySelector('.quick-actions');
+            
+            // Close previous active row if it's different
+            if (activeRow && activeRow !== row) {
+                activeRow.querySelector('.quick-actions').classList.add('hidden');
+                activeRow.querySelector('.quick-actions').innerHTML = ''; // Clean up for simplicity in demo
+            }
+
+            if (actions.classList.contains('hidden')) {
+                // In a real app, we'd only inject HTML here if it didn't exist
+                actions.innerHTML = `
+                    <button class="flex flex-col items-center gap-1 text-secondary hover:scale-110 transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                        </div>
+                        <span class="font-label-caps text-[10px]">BUY</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 text-tertiary hover:scale-110 transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined" data-icon="sell">sell</span>
+                        </div>
+                        <span class="font-label-caps text-[10px]">SELL</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 text-primary hover:scale-110 transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+                        </div>
+                        <span class="font-label-caps text-[10px]">CHART</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 text-on-surface-variant hover:scale-110 transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+                            <span class="material-symbols-outlined" data-icon="layers">layers</span>
+                        </div>
+                        <span class="font-label-caps text-[10px]">CHAIN</span>
+                    </button>
+                `;
+                actions.classList.remove('hidden');
+                activeRow = row;
+            } else {
+                actions.classList.add('hidden');
+                activeRow = null;
+            }
+        }
+
+        // Close actions on click outside
+        document.addEventListener('click', (e) => {
+            if (activeRow && !activeRow.contains(e.target)) {
+                activeRow.querySelector('.quick-actions').classList.add('hidden');
+                activeRow = null;
+            }
+        }, true);
+    </script>
+</body></html>

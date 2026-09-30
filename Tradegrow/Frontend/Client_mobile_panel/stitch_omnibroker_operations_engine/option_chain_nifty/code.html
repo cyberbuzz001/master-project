@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AlphaTerminal - Option Chain</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Geist:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for high-density tables */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0e0e0e; }
+        ::-webkit-scrollbar-thumb { background: #3f4852; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #98cbff; }
+
+        .itm-surface { background-color: rgba(42, 42, 42, 0.4); }
+        .depth-bar-bid { height: 100%; position: absolute; right: 0; top: 0; background-color: rgba(0, 238, 252, 0.1); z-index: 0; pointer-events: none; }
+        .depth-bar-ask { height: 100%; position: absolute; left: 0; top: 0; background-color: rgba(235, 129, 4, 0.1); z-index: 0; pointer-events: none; }
+        
+        .transition-rows { transition: max-height 0.3s ease-out, opacity 0.2s ease-in; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#98cbff",
+                      "tertiary-fixed": "#ffdcc3",
+                      "on-primary-fixed": "#001d33",
+                      "on-error-container": "#ffdad6",
+                      "outline-variant": "#262626", /* Fixed hairline from style guidance */
+                      "surface": "#0A0A0A", /* Deepest black level 0 */
+                      "tertiary-container": "#eb8104",
+                      "tertiary-fixed-dim": "#ffb77d",
+                      "primary-container": "#00a3ff",
+                      "on-secondary-fixed-variant": "#004f54",
+                      "on-tertiary-fixed-variant": "#6e3900",
+                      "primary-fixed": "#cfe5ff",
+                      "on-tertiary-fixed": "#2f1500",
+                      "secondary-container": "#00eefc",
+                      "surface-variant": "#353534",
+                      "error": "#ffb4ab",
+                      "surface-container-highest": "#353534",
+                      "on-surface": "#e5e2e1",
+                      "on-primary-container": "#00375a",
+                      "surface-bright": "#3a3939",
+                      "outline": "#88919d",
+                      "on-secondary-fixed": "#002022",
+                      "inverse-surface": "#e5e2e1",
+                      "on-secondary-container": "#00686f",
+                      "background": "#0A0A0A",
+                      "on-background": "#e5e2e1",
+                      "inverse-primary": "#00629d",
+                      "inverse-on-surface": "#313030",
+                      "on-primary": "#003354",
+                      "surface-container": "#0F0F0F", /* Level 1 card/pane */
+                      "on-tertiary-container": "#522900",
+                      "on-tertiary": "#4d2600",
+                      "tertiary": "#ffb77d",
+                      "secondary": "#d3fbff",
+                      "surface-dim": "#131313",
+                      "secondary-fixed-dim": "#00dbe9",
+                      "surface-container-lowest": "#0e0e0e",
+                      "on-error": "#690005",
+                      "surface-container-low": "#1c1b1b",
+                      "on-secondary": "#00363a",
+                      "on-primary-fixed-variant": "#004a77",
+                      "surface-container-high": "#1A1D1E", /* Level 2 ITM focus */
+                      "error-container": "#93000a",
+                      "secondary-fixed": "#7df4ff",
+                      "on-surface-variant": "#bec7d4",
+                      "surface-tint": "#98cbff",
+                      "primary": "#98cbff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "container-padding": "16px",
+                      "gutter": "1px",
+                      "table-cell-padding": "6px 8px",
+                      "sidebar-width": "280px"
+              },
+              "fontFamily": {
+                      "compact-mono": ["JetBrains Mono"],
+                      "headline-lg": ["Geist"],
+                      "table-data": ["JetBrains Mono"],
+                      "table-label": ["Geist"],
+                      "body-md": ["Geist"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "compact-mono": ["10px", {"lineHeight": "12px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "table-data": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                      "table-label": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md overflow-hidden flex h-screen">
+<!-- Navigation Drawer (SideNav) -->
+<aside class="hidden md:flex h-full w-[280px] flex-col border-r border-outline-variant bg-surface-container">
+<div class="p-6">
+<span class="font-headline-md text-headline-md font-bold text-primary">AlphaTerminal</span>
+<div class="mt-6 flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Trader Pro</p>
+<p class="text-xs text-on-surface-variant">Institutional Account</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 mt-4">
+<a class="flex items-center gap-4 bg-primary-container/20 text-primary font-bold border-l-2 border-primary px-4 py-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span>Option Chain</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">layers</span>
+<span>Strategy Builder</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Positions</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-2">
+<span class="text-table-label font-table-label text-on-surface-variant">MARKET STATUS</span>
+<span class="h-2 w-2 rounded-full bg-secondary-fixed shadow-[0_0_8px_rgba(0,219,233,0.5)]"></span>
+</div>
+<div class="flex justify-between items-center text-compact-mono font-compact-mono">
+<span>NSE LIVE</span>
+<span class="text-secondary-fixed">14:52:41</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-[280px] z-50 h-12 bg-surface border-b border-outline-variant flex items-center justify-between px-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined md:hidden text-primary">menu</span>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-[20px] font-bold text-primary">NIFTY 50</span>
+<span class="font-compact-mono text-compact-mono text-on-surface">22,453.20</span>
+<span class="font-compact-mono text-compact-mono text-secondary-fixed">+142.45 (0.64%)</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center gap-4 text-compact-mono font-compact-mono uppercase">
+<div class="flex flex-col items-end">
+<span class="text-on-surface-variant text-[9px]">FUTURES</span>
+<span class="text-on-surface font-bold">22,480.15</span>
+</div>
+<div class="w-px h-6 bg-outline-variant"></div>
+<div class="flex flex-col items-end">
+<span class="text-on-surface-variant text-[9px]">PCR</span>
+<span class="text-on-surface font-bold">0.85</span>
+</div>
+<div class="w-px h-6 bg-outline-variant"></div>
+<div class="flex flex-col items-end">
+<span class="text-on-surface-variant text-[9px]">MAX PAIN</span>
+<span class="text-on-surface font-bold">22,400</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">search</span>
+</div>
+</header>
+<!-- Sub-header: Controls -->
+<section class="mt-12 p-3 bg-surface-container border-b border-outline-variant flex flex-wrap items-center gap-4 justify-between">
+<div class="flex items-center gap-2">
+<button class="bg-surface border border-outline-variant px-3 py-1.5 flex items-center gap-2 rounded hover:bg-surface-variant/50 transition-colors">
+<span class="text-table-label font-table-label text-on-surface-variant">EXPIRY:</span>
+<span class="text-table-label font-table-label text-on-surface font-bold">25 APR 2024</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<button class="bg-surface border border-outline-variant px-3 py-1.5 flex items-center gap-2 rounded hover:bg-surface-variant/50 transition-colors">
+<span class="text-table-label font-table-label text-on-surface-variant">RANGE:</span>
+<span class="text-table-label font-table-label text-on-surface font-bold">ATM FOCUS (±5)</span>
+<span class="material-symbols-outlined text-sm">tune</span>
+</button>
+</div>
+<div class="flex gap-2">
+<button class="bg-primary-container text-on-primary-container px-4 py-1.5 rounded font-bold text-xs uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all">Quick Trade</button>
+<button class="border border-outline-variant text-on-surface px-4 py-1.5 rounded font-bold text-xs uppercase tracking-wider hover:bg-surface-variant/50 transition-all"> Greeks</button>
+</div>
+</section>
+<!-- Option Chain Grid -->
+<section class="flex-1 overflow-auto relative">
+<!-- Table Header -->
+<div class="sticky top-0 z-40 bg-surface-container-highest border-b border-outline-variant grid grid-cols-[1fr_80px_1fr] text-center shadow-md">
+<div class="py-2 font-table-label text-table-label text-secondary-fixed border-r border-outline-variant uppercase tracking-widest">Calls</div>
+<div class="py-2 font-table-label text-table-label text-on-surface uppercase tracking-widest">Strike</div>
+<div class="py-2 font-table-label text-table-label text-tertiary-container uppercase tracking-widest">Puts</div>
+</div>
+<!-- Sub-Header: Columns -->
+<div class="sticky top-[35px] z-30 bg-surface-container grid grid-cols-[1fr_80px_1fr] text-center border-b border-outline-variant">
+<div class="grid grid-cols-3 font-table-label text-table-label text-on-surface-variant py-1 border-r border-outline-variant">
+<span>OI (Lakhs)</span>
+<span>CHG %</span>
+<span>LTP</span>
+</div>
+<div class="py-1"></div>
+<div class="grid grid-cols-3 font-table-label text-table-label text-on-surface-variant py-1">
+<span>LTP</span>
+<span>CHG %</span>
+<span>OI (Lakhs)</span>
+</div>
+</div>
+<!-- Rows Container -->
+<div class="bg-surface" id="option-chain-rows">
+<!-- Row Generator Script will insert here -->
+</div>
+</section>
+<!-- Order Basket FAB -->
+<button class="fixed bottom-6 right-6 z-50 bg-primary-container text-on-primary-container h-14 w-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all group overflow-hidden">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-y-1 transition-transform">shopping_basket</span>
+<div class="absolute -top-1 -right-1 bg-tertiary-container text-white text-[10px] font-bold h-5 w-5 rounded-full border-2 border-surface flex items-center justify-center">2</div>
+</button>
+<!-- Mobile Nav (Visible on small screens) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface border-t border-outline-variant flex items-center justify-around z-50">
+<div class="flex flex-col items-center text-primary">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-bold">Chain</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="text-[10px]">Chart</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-[10px]">Orders</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-[10px]">Portfolio</span>
+</div>
+</nav>
+</main>
+<script>
+        const strikes = [
+            22200, 22250, 22300, 22350, 22400, 22450, 22500, 22550, 22600, 22650, 22700
+        ];
+        const spotPrice = 22453.20;
+
+        const rowsContainer = document.getElementById('option-chain-rows');
+
+        strikes.forEach(strike => {
+            const isCallITM = strike < spotPrice;
+            const isPutITM = strike > spotPrice;
+            const isATM = Math.abs(strike - spotPrice) < 25;
+
+            // Pseudo-random data for simulation
+            const callLtp = (200 + (spotPrice - strike) * 0.5 + Math.random() * 5).toFixed(2);
+            const putLtp = (200 + (strike - spotPrice) * 0.5 + Math.random() * 5).toFixed(2);
+            const callOI = (15 + Math.random() * 50).toFixed(1);
+            const putOI = (15 + Math.random() * 50).toFixed(1);
+            const callChg = (Math.random() * 12 - 6).toFixed(2);
+            const putChg = (Math.random() * 12 - 6).toFixed(2);
+
+            const row = document.createElement('div');
+            row.className = `group border-b border-outline-variant hover:bg-surface-variant/20 cursor-pointer transition-colors relative`;
+            
+            row.innerHTML = `
+                <div class="grid grid-cols-[1fr_80px_1fr] h-8 items-center text-center font-table-data text-table-data relative">
+                    <!-- CALLS -->
+                    <div class="grid grid-cols-3 h-full items-center border-r border-outline-variant ${isCallITM ? 'bg-surface-container-high/40' : ''}">
+                        <div class="relative h-full flex items-center justify-center">
+                            <div class="depth-bar-bid" style="width: ${callOI}%"></div>
+                            <span class="z-10">${callOI}</span>
+                        </div>
+                        <span class="${callChg > 0 ? 'text-secondary-fixed' : 'text-error'}">${callChg}%</span>
+                        <span class="font-bold">${callLtp}</span>
+                    </div>
+
+                    <!-- STRIKE -->
+                    <div class="font-bold text-on-surface bg-surface-container border-x border-outline-variant h-full flex items-center justify-center ${isATM ? 'text-primary ring-1 ring-primary/30' : ''}">
+                        ${strike}
+                    </div>
+
+                    <!-- PUTS -->
+                    <div class="grid grid-cols-3 h-full items-center ${isPutITM ? 'bg-surface-container-high/40' : ''}">
+                        <span class="font-bold">${putLtp}</span>
+                        <span class="${putChg > 0 ? 'text-secondary-fixed' : 'text-error'}">${putChg}%</span>
+                        <div class="relative h-full flex items-center justify-center">
+                            <div class="depth-bar-ask" style="width: ${putOI}%"></div>
+                            <span class="z-10">${putOI}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expanded Greeks Panel -->
+                <div class="greeks-panel hidden overflow-hidden bg-surface-container-lowest border-y border-outline-variant px-4 py-3 transition-rows">
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="space-y-4">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-on-surface-variant uppercase font-table-label">Delta (C)</span>
+                                <span class="text-sm font-compact-mono text-primary">${(0.5 + (spotPrice-strike)/500).toFixed(2)}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-on-surface-variant uppercase font-table-label">Theta (C)</span>
+                                <span class="text-sm font-compact-mono text-error">-12.4</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center items-center">
+                            <span class="text-[9px] text-on-surface-variant uppercase font-table-label mb-2">Implied Vol (IV)</span>
+                            <div class="h-10 w-10 rounded-full border-2 border-primary-container flex items-center justify-center text-xs font-bold">14.2</div>
+                        </div>
+                        <div class="space-y-4 text-right col-start-4">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-on-surface-variant uppercase font-table-label">Delta (P)</span>
+                                <span class="text-sm font-compact-mono text-tertiary-container">${(-(0.5 + (strike-spotPrice)/500)).toFixed(2)}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-on-surface-variant uppercase font-table-label">Vega</span>
+                                <span class="text-sm font-compact-mono text-on-surface">2.84</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2 justify-center border-t border-outline-variant pt-3">
+                        <button class="text-[10px] bg-secondary-container/20 text-secondary-fixed px-3 py-1 rounded hover:bg-secondary-container/30 transition-colors uppercase font-bold">Buy Call</button>
+                        <button class="text-[10px] bg-tertiary-container/20 text-tertiary-fixed px-3 py-1 rounded hover:bg-tertiary-container/30 transition-colors uppercase font-bold">Buy Put</button>
+                    </div>
+                </div>
+            `;
+
+            row.addEventListener('click', () => {
+                const panel = row.querySelector('.greeks-panel');
+                const isHidden = panel.classList.contains('hidden');
+                
+                // Close all other panels
+                document.querySelectorAll('.greeks-panel').forEach(p => p.classList.add('hidden'));
+                
+                if (isHidden) {
+                    panel.classList.remove('hidden');
+                }
+            });
+
+            rowsContainer.appendChild(row);
+        });
+
+        // Micro-interaction for spot line indicator
+        const createSpotLine = () => {
+            const spotLine = document.createElement('div');
+            spotLine.className = 'absolute left-0 right-0 h-px bg-primary z-20 flex items-center justify-end pointer-events-none';
+            spotLine.innerHTML = `<span class="bg-primary text-[9px] text-on-primary px-1 rounded-l -mr-1 font-bold">SPOT 22,453.20</span>`;
+            
+            // Positioning it near the ATM strikes (22450 area)
+            const rows = rowsContainer.children;
+            if(rows.length > 5) {
+                rows[5].appendChild(spotLine);
+            }
+        }
+        createSpotLine();
+    </script>
+</body></html>

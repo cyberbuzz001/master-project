@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Approval Queue</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#accbe0",
+                        "outline": "#75777e",
+                        "on-primary-fixed-variant": "#39475f",
+                        "surface-dim": "#d9dadb",
+                        "surface-container": "#edeeef",
+                        "on-secondary-fixed": "#001849",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "primary-container": "#0d1c32",
+                        "on-background": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "on-primary-container": "#76849f",
+                        "surface-container-low": "#f3f4f5",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#d6e3ff",
+                        "on-primary-fixed": "#0d1c32",
+                        "surface-tint": "#515f78",
+                        "primary": "#000000",
+                        "on-tertiary-container": "#6a889b",
+                        "tertiary-fixed": "#c8e7fd",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "on-surface-variant": "#44474d",
+                        "error": "#ba1a1a",
+                        "tertiary": "#000000",
+                        "secondary-fixed": "#dae1ff",
+                        "on-secondary-container": "#f9f7ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#001e2d",
+                        "background": "#f8f9fa",
+                        "inverse-primary": "#b9c7e4",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "secondary-container": "#0266ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "surface-variant": "#e1e3e4",
+                        "secondary": "#0050cc",
+                        "tertiary-container": "#001e2d",
+                        "outline-variant": "#c5c6cd",
+                        "surface-bright": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "table-cell-padding": "8px 12px",
+                        "container-margin": "24px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .critical-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(186, 26, 26, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); }
+        }
+        .glass-header {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .ios-scroll-hide::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-secondary-container/30">
+<!-- Mobile Top Navigation Shell -->
+<header class="fixed top-0 left-0 right-0 h-16 glass-header border-b border-outline-variant z-50 px-gutter flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">Pending Approvals</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-error-container text-on-error-container text-label-md font-label-md px-2 py-0.5 rounded-full">4 Urgent</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-20 pb-24 px-gutter max-w-lg mx-auto space-y-4">
+<!-- Filter Tabs -->
+<div class="flex gap-2 overflow-x-auto ios-scroll-hide py-2">
+<button class="whitespace-nowrap bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full font-label-md text-label-md shadow-sm">All Operations</button>
+<button class="whitespace-nowrap bg-surface-container-high text-on-surface-variant px-4 py-1.5 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">Account Management</button>
+<button class="whitespace-nowrap bg-surface-container-high text-on-surface-variant px-4 py-1.5 rounded-full font-label-md text-label-md hover:bg-surface-container-highest transition-colors">RMS Rules</button>
+</div>
+<!-- Approval Card 1: Critical (Account Freeze) -->
+<article class="bg-surface-container-lowest border border-error rounded-lg shadow-sm overflow-hidden relative transition-transform active:scale-[0.99]" onclick="expandCard(this)">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error critical-pulse rounded-full" data-weight="fill">warning</span>
+<span class="text-error font-label-md text-label-md uppercase tracking-wider">Critical Risk</span>
+</div>
+<span class="text-on-surface-variant text-body-sm">2m ago</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Account Freeze: IND-8829-X</h3>
+<p class="text-on-surface-variant text-body-sm mb-4">Manual intervention requested due to suspicious login pattern.</p>
+<div class="grid grid-cols-2 gap-4 p-3 bg-surface-container-low rounded border border-outline-variant/30 mb-4">
+<div>
+<span class="block text-on-surface-variant text-label-md font-label-md uppercase mb-1">Current State</span>
+<span class="inline-flex items-center gap-1.5 text-on-surface font-data-mono text-data-mono">
+<span class="w-2 h-2 rounded-full bg-green-500"></span> Active
+                        </span>
+</div>
+<div>
+<span class="block text-on-surface-variant text-label-md font-label-md uppercase mb-1">Proposed State</span>
+<span class="inline-flex items-center gap-1.5 text-error font-data-mono text-data-mono">
+<span class="material-symbols-outlined text-sm">lock</span> Frozen
+                        </span>
+</div>
+</div>
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
+                        RK
+                    </div>
+<div>
+<div class="text-on-surface font-label-md text-label-md">Rajesh Kumar</div>
+<div class="text-on-surface-variant text-body-sm">Maker • Compliance Desk</div>
+</div>
+</div>
+<div class="space-y-3">
+<label class="block text-on-surface font-label-md text-label-md">Approval Comment <span class="text-error">*</span></label>
+<textarea class="w-full bg-surface-container rounded border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary p-3 text-body-md placeholder:text-outline-variant" placeholder="Provide justification for approval/rejection..." rows="2"></textarea>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 bg-error text-on-error py-3 rounded font-label-md text-label-md hover:bg-red-700 transition-colors shadow-sm uppercase tracking-widest">Reject</button>
+<button class="flex-1 bg-secondary-container text-on-secondary-container py-3 rounded font-label-md text-label-md hover:bg-secondary-fixed-dim transition-colors shadow-sm uppercase tracking-widest">Approve</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Approval Card 2: Medium (Fund Adjustment) -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden relative transition-transform active:scale-[0.99]">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-weight="fill">payments</span>
+<span class="text-secondary font-label-md text-label-md uppercase tracking-wider">Fund Adjustment</span>
+</div>
+<span class="text-on-surface-variant text-body-sm">15m ago</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Manual Credit: ₹1,50,000</h3>
+<p class="text-on-surface-variant text-body-sm mb-4">Reversal of technical glitch on payout transaction #TXN901.</p>
+<div class="flex flex-col gap-2 p-3 bg-surface-container-low rounded border-l-4 border-amber-400 mb-4">
+<span class="text-on-surface-variant text-label-md font-label-md uppercase">Justification</span>
+<p class="text-on-surface text-body-sm italic">"Customer bank reported delay, manual credit approved by nodal officer to maintain liquidity buffer."</p>
+</div>
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container font-bold">
+                        AS
+                    </div>
+<div>
+<div class="text-on-surface font-label-md text-label-md">Ananya Sharma</div>
+<div class="text-on-surface-variant text-body-sm">Maker • Operations Lead</div>
+</div>
+</div>
+<div class="space-y-3">
+<label class="block text-on-surface font-label-md text-label-md">Approval Comment <span class="text-error">*</span></label>
+<textarea class="w-full bg-surface-container rounded border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary p-3 text-body-md placeholder:text-outline-variant" placeholder="Review the ledger before approving..." rows="2"></textarea>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 border border-outline text-on-surface-variant py-3 rounded font-label-md text-label-md hover:bg-surface-container transition-colors uppercase tracking-widest">Reject</button>
+<button class="flex-1 bg-secondary-container text-on-secondary-container py-3 rounded font-label-md text-label-md hover:bg-secondary-fixed-dim transition-colors shadow-sm uppercase tracking-widest">Approve</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Approval Card 3: RMS Change -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden relative opacity-90">
+<div class="p-4">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">security</span>
+<span class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">RMS Rule Change</span>
+</div>
+<span class="text-on-surface-variant text-body-sm">1h ago</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Leverage Cap Modification</h3>
+<p class="text-on-surface-variant text-body-sm mb-4">Increase intraday leverage for Group A equity symbols.</p>
+<div class="grid grid-cols-2 gap-4 mb-4">
+<div class="text-center p-2 rounded bg-surface-container border border-dashed border-outline-variant">
+<div class="text-outline text-label-md uppercase font-label-md">Current</div>
+<div class="text-on-surface font-bold">5X</div>
+</div>
+<div class="text-center p-2 rounded bg-secondary-container/10 border border-secondary border-dashed">
+<div class="text-secondary text-label-md uppercase font-label-md">New</div>
+<div class="text-secondary font-bold">10X</div>
+</div>
+</div>
+<button class="w-full border border-outline text-on-surface-variant py-2 rounded font-label-md text-label-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">visibility</span>
+                    View Full Diff &amp; Approve
+                </button>
+</div>
+</article>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 right-0 h-16 bg-primary-container flex items-center justify-around px-4 z-50">
+<button class="flex flex-col items-center gap-1 text-on-primary-container/70 transition-all active:scale-95">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-label-md uppercase">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-secondary-container transition-all active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="text-[10px] font-label-md uppercase">Approvals</span>
+<div class="w-1 h-1 bg-secondary-container rounded-full mt-0.5"></div>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-primary-container/70 transition-all active:scale-95">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="text-[10px] font-label-md uppercase">Logs</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-primary-container/70 transition-all active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-label-md uppercase">Config</span>
+</button>
+</nav>
+<!-- Success Overlay (Hidden by default) -->
+<div class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-on-surface text-inverse-on-surface px-6 py-3 rounded-full shadow-xl flex items-center gap-3 opacity-0 transition-opacity pointer-events-none z-50" id="success-toast">
+<span class="material-symbols-outlined text-green-400">check_circle</span>
+<span class="font-label-md">Operation approved successfully</span>
+</div>
+<script>
+        function expandCard(el) {
+            // Logic for expanding interaction if needed
+            // console.log("Card interaction tracked");
+        }
+
+        // Simple mock interaction for demonstration
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (btn.innerText.includes('Approve') || btn.innerText.includes('Reject')) {
+                    const toast = document.getElementById('success-toast');
+                    toast.querySelector('span:last-child').innerText = btn.innerText.includes('Approve') ? 'Action Approved' : 'Action Rejected';
+                    toast.classList.remove('opacity-0');
+                    setTimeout(() => toast.classList.add('opacity-0'), 3000);
+                }
+            });
+        });
+    </script>
+</body></html>

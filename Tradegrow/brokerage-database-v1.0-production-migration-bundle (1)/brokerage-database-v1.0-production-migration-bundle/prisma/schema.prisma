@@ -1,0 +1,696 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public", "identity", "customers", "kyc", "market", "trading", "broker", "risk", "portfolio", "ledger", "payments", "settlement", "reconciliation", "notifications", "audit", "integration"]
+}
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String?   @unique @db.Citext
+  mobileCountryCode String?   @db.VarChar(5)
+  mobileNumber      String?   @db.VarChar(20)
+  passwordHash      String?
+  status            UserStatus @default(ACTIVE)
+  emailVerifiedAt   DateTime?
+  mobileVerifiedAt  DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  customer          Customer?
+  sessions          Session[]
+  devices           Device[]
+  roles             UserRole[]
+  notifications     Notification[]
+  auditEvents       AuditEvent[]
+  withdrawalsApproved Withdrawal[] @relation("WithdrawalApprover")
+
+  @@map("users")
+  @@schema("identity")
+  @@index([mobileCountryCode, mobileNumber])
+}
+
+model Session {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  refreshTokenHash String
+  ipAddress        String?  @db.Inet
+  userAgent        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("sessions")
+  @@schema("identity")
+  @@index([userId])
+}
+
+model Device {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @db.Uuid
+  deviceFingerprint String
+  deviceName        String?
+  trusted           Boolean  @default(false)
+  lastSeenAt        DateTime?
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, deviceFingerprint])
+  @@map("devices")
+  @@schema("identity")
+}
+
+model Role {
+  id            String           @id @default(uuid()) @db.Uuid
+  code          String           @unique
+  name          String
+  description   String?
+  isSystemRole  Boolean          @default(true)
+  permissions   RolePermission[]
+  users         UserRole[]
+  @@map("roles")
+  @@schema("identity")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  code        String           @unique
+  name        String
+  resource    String
+  action      String
+  roles       RolePermission[]
+  @@map("permissions")
+  @@schema("identity")
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+  @@schema("identity")
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+  @@map("user_roles")
+  @@schema("identity")
+}
+
+model Customer {
+  id                      String             @id @default(uuid()) @db.Uuid
+  userId                  String             @unique @db.Uuid
+  customerCode            String             @unique
+  panHash                 String?
+  panLast4                String?            @db.VarChar(4)
+  dateOfBirth             DateTime?          @db.Date
+  gender                  String?
+  status                  CustomerStatus     @default(PENDING)
+  onboardingCompletedAt   DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id])
+  profile                 CustomerProfile?
+  addresses               Address[]
+  bankAccounts            BankAccount[]
+  nominees                Nominee[]
+  kycCase                 KycCase?
+  consents                Consent[]
+  tradingAccounts         TradingAccount[]
+  @@map("customers")
+  @@schema("customers")
+}
+
+model CustomerProfile {
+  customerId        String   @id @db.Uuid
+  firstName         String?
+  middleName        String?
+  lastName          String?
+  displayName       String?
+  occupation        String?
+  annualIncomeRange String?
+  riskProfile       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("profiles")
+  @@schema("customers")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid
+  customerId   String   @db.Uuid
+  addressType  String
+  addressLine1 String
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String   @default("India")
+  isPrimary    Boolean  @default(false)
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("addresses")
+  @@schema("customers")
+  @@index([customerId])
+}
+
+model BankAccount {
+  id                    String       @id @default(uuid()) @db.Uuid
+  customerId            String       @db.Uuid
+  accountHolderName     String
+  accountNumberEncrypted String
+  accountNumberLast4    String?      @db.VarChar(4)
+  ifscCode              String
+  bankName              String?
+  status                BankStatus   @default(PENDING)
+  isPrimary             Boolean      @default(false)
+  verifiedAt            DateTime?
+  createdAt             DateTime     @default(now())
+  customer              Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  withdrawals           Withdrawal[]
+  @@map("bank_accounts")
+  @@schema("customers")
+}
+
+model Nominee {
+  id                   String   @id @default(uuid()) @db.Uuid
+  customerId           String   @db.Uuid
+  fullName              String
+  relationship          String?
+  dateOfBirth           DateTime? @db.Date
+  allocationPercentage  Decimal  @db.Decimal(5,2)
+  createdAt             DateTime @default(now())
+  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("nominees")
+  @@schema("customers")
+}
+
+model KycCase {
+  id                   String    @id @default(uuid()) @db.Uuid
+  customerId           String    @unique @db.Uuid
+  status               KycStatus @default(PENDING)
+  verificationProvider String?
+  providerReference    String?
+  submittedAt          DateTime?
+  verifiedAt           DateTime?
+  rejectedAt           DateTime?
+  rejectionReason      String?
+  customer             Customer  @relation(fields: [customerId], references: [id])
+  documents            KycDocument[]
+  @@map("cases")
+  @@schema("kyc")
+}
+
+model KycDocument {
+  id             String    @id @default(uuid()) @db.Uuid
+  kycCaseId      String    @db.Uuid
+  documentType   String
+  storageReference String
+  checksum       String?
+  status         String    @default("PENDING")
+  createdAt      DateTime  @default(now())
+  kycCase        KycCase   @relation(fields: [kycCaseId], references: [id], onDelete: Cascade)
+  @@map("documents")
+  @@schema("kyc")
+}
+
+model Consent {
+  id             String   @id @default(uuid()) @db.Uuid
+  customerId     String   @db.Uuid
+  consentType    String
+  version        String
+  acceptedAt     DateTime
+  ipAddress      String?  @db.Inet
+  documentHash   String?
+  customer       Customer @relation(fields: [customerId], references: [id])
+  @@map("consents")
+  @@schema("kyc")
+}
+
+model Exchange {
+  id       String    @id @default(uuid()) @db.Uuid
+  code     String    @unique
+  name     String
+  active   Boolean   @default(true)
+  segments Segment[]
+  @@map("exchanges")
+  @@schema("market")
+}
+
+model Segment {
+  id          String        @id @default(uuid()) @db.Uuid
+  exchangeId  String        @db.Uuid
+  code        String
+  name        String
+  active      Boolean       @default(true)
+  exchange    Exchange      @relation(fields: [exchangeId], references: [id])
+  instruments Instrument[]
+  accountSegments AccountSegment[]
+  @@unique([exchangeId, code])
+  @@map("segments")
+  @@schema("market")
+}
+
+model Instrument {
+  id                    String    @id @default(uuid()) @db.Uuid
+  segmentId             String    @db.Uuid
+  tradingSymbol         String
+  displayName           String?
+  isin                  String?
+  instrumentToken       String?
+  instrumentType        String
+  lotSize               Decimal   @default(1) @db.Decimal(20,4)
+  tickSize              Decimal   @db.Decimal(20,8)
+  expiryDate            DateTime? @db.Date
+  strikePrice           Decimal?  @db.Decimal(20,8)
+  optionType            String?
+  active                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  segment               Segment   @relation(fields: [segmentId], references: [id])
+  orders                Order[]
+  trades                Trade[]
+  positions             Position[]
+  holdings              Holding[]
+  obligations           Obligation[]
+  @@unique([segmentId, tradingSymbol])
+  @@map("instruments")
+  @@schema("market")
+}
+
+model TradingAccount {
+  id              String       @id @default(uuid()) @db.Uuid
+  customerId      String       @db.Uuid
+  accountNumber   String       @unique
+  status          AccountStatus @default(PENDING)
+  tradingEnabled  Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  customer        Customer     @relation(fields: [customerId], references: [id])
+  segments        AccountSegment[]
+  brokerAccounts  BrokerAccount[]
+  orders          Order[]
+  trades          Trade[]
+  positions       Position[]
+  holdings        Holding[]
+  payments        Payment[]
+  withdrawals     Withdrawal[]
+  ledgerAccounts  LedgerAccount[]
+  settlements     Settlement[]
+  riskLimits      RiskLimit[]
+  @@map("accounts")
+  @@schema("trading")
+}
+
+model AccountSegment {
+  accountId  String @db.Uuid
+  segmentId  String @db.Uuid
+  enabled    Boolean @default(false)
+  account    TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  segment    Segment @relation(fields: [segmentId], references: [id])
+  @@id([accountId, segmentId])
+  @@map("account_segments")
+  @@schema("trading")
+}
+
+model BrokerAccount {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tradingAccountId      String    @db.Uuid
+  brokerCode             String
+  brokerClientReference String?
+  status                String    @default("ACTIVE")
+  createdAt             DateTime  @default(now())
+  tradingAccount        TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  @@unique([tradingAccountId, brokerCode])
+  @@map("accounts")
+  @@schema("broker")
+}
+
+model RiskLimit {
+  id                String   @id @default(uuid()) @db.Uuid
+  tradingAccountId  String   @db.Uuid
+  maxOrderValue     Decimal? @db.Decimal(24,8)
+  maxDailyTurnover  Decimal? @db.Decimal(24,8)
+  maxExposure       Decimal? @db.Decimal(24,8)
+  maxOpenPositions  Int?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  tradingAccount    TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  @@map("account_limits")
+  @@schema("risk")
+}
+
+model Order {
+  id                      String      @id @default(uuid()) @db.Uuid
+  clientOrderId           String      @unique @db.Uuid
+  tradingAccountId        String      @db.Uuid
+  instrumentId            String      @db.Uuid
+  side                    String
+  productType             String
+  orderType               String
+  quantity                Decimal     @db.Decimal(20,4)
+  disclosedQuantity       Decimal?    @db.Decimal(20,4)
+  price                   Decimal?    @db.Decimal(20,8)
+  triggerPrice            Decimal?    @db.Decimal(20,8)
+  validity                String      @default("DAY")
+  status                  String      @default("NEW")
+  filledQuantity          Decimal     @default(0) @db.Decimal(20,4)
+  remainingQuantity       Decimal?    @db.Decimal(20,4)
+  averageExecutionPrice   Decimal?    @db.Decimal(20,8)
+  rejectionCode           String?
+  rejectionReason         String?
+  idempotencyKey          String
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  tradingAccount          TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  instrument              Instrument @relation(fields: [instrumentId], references: [id])
+  events                  OrderEvent[]
+  trades                  Trade[]
+  @@unique([tradingAccountId, idempotencyKey])
+  @@map("orders")
+  @@schema("trading")
+}
+
+model OrderEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  orderId         String   @db.Uuid
+  eventType       String
+  previousStatus  String?
+  newStatus       String?
+  payload         Json     @default("{}")
+  source          String
+  createdAt       DateTime @default(now())
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@map("order_events")
+  @@schema("trading")
+  @@index([orderId, createdAt])
+}
+
+model Trade {
+  id                 String   @id @default(uuid()) @db.Uuid
+  orderId            String   @db.Uuid
+  tradingAccountId   String   @db.Uuid
+  instrumentId       String   @db.Uuid
+  brokerTradeId      String?
+  side               String
+  quantity           Decimal  @db.Decimal(20,4)
+  executionPrice     Decimal  @db.Decimal(20,8)
+  grossValue         Decimal  @db.Decimal(24,8)
+  executedAt         DateTime
+  createdAt          DateTime @default(now())
+  order              Order   @relation(fields: [orderId], references: [id])
+  tradingAccount     TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  instrument         Instrument @relation(fields: [instrumentId], references: [id])
+  @@map("trades")
+  @@schema("trading")
+}
+
+model Position {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tradingAccountId   String   @db.Uuid
+  instrumentId       String   @db.Uuid
+  productType        String
+  quantity           Decimal  @default(0) @db.Decimal(20,4)
+  averagePrice       Decimal  @default(0) @db.Decimal(20,8)
+  realizedPnl        Decimal  @default(0) @db.Decimal(24,8)
+  unrealizedPnl      Decimal  @default(0) @db.Decimal(24,8)
+  lastPrice          Decimal? @db.Decimal(20,8)
+  updatedAt          DateTime @updatedAt
+  tradingAccount     TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  instrument         Instrument @relation(fields: [instrumentId], references: [id])
+  @@unique([tradingAccountId, instrumentId, productType])
+  @@map("positions")
+  @@schema("portfolio")
+}
+
+model Holding {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tradingAccountId   String   @db.Uuid
+  instrumentId       String   @db.Uuid
+  quantity           Decimal  @default(0) @db.Decimal(20,4)
+  availableQuantity  Decimal  @default(0) @db.Decimal(20,4)
+  pledgedQuantity    Decimal  @default(0) @db.Decimal(20,4)
+  averagePrice       Decimal? @db.Decimal(20,8)
+  updatedAt          DateTime @updatedAt
+  tradingAccount     TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  instrument         Instrument @relation(fields: [instrumentId], references: [id])
+  @@unique([tradingAccountId, instrumentId])
+  @@map("holdings")
+  @@schema("portfolio")
+}
+
+model ChartOfAccount {
+  id          String   @id @default(uuid()) @db.Uuid
+  accountCode String   @unique
+  accountName String
+  accountType String
+  parentId    String?  @db.Uuid
+  active      Boolean  @default(true)
+  parent      ChartOfAccount? @relation("CoATree", fields: [parentId], references: [id])
+  children    ChartOfAccount[] @relation("CoATree")
+  ledgerAccounts LedgerAccount[]
+  @@map("chart_of_accounts")
+  @@schema("ledger")
+}
+
+model LedgerAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  tradingAccountId  String?  @db.Uuid
+  chartAccountId    String   @db.Uuid
+  accountCode       String   @unique
+  currency          String   @default("INR") @db.Char(3)
+  status            String   @default("ACTIVE")
+  tradingAccount    TradingAccount? @relation(fields: [tradingAccountId], references: [id])
+  chartAccount      ChartOfAccount @relation(fields: [chartAccountId], references: [id])
+  entries           LedgerEntry[]
+  @@map("accounts")
+  @@schema("ledger")
+}
+
+model LedgerTransaction {
+  id                   String   @id @default(uuid()) @db.Uuid
+  transactionReference String   @unique
+  transactionType      String
+  sourceType           String?
+  sourceId             String?  @db.Uuid
+  status               String   @default("POSTED")
+  description          String?
+  createdAt            DateTime @default(now())
+  entries              LedgerEntry[]
+  @@map("transactions")
+  @@schema("ledger")
+}
+
+model LedgerEntry {
+  id               String   @id @default(uuid()) @db.Uuid
+  transactionId    String   @db.Uuid
+  ledgerAccountId  String   @db.Uuid
+  debit            Decimal  @default(0) @db.Decimal(24,8)
+  credit           Decimal  @default(0) @db.Decimal(24,8)
+  currency         String   @default("INR") @db.Char(3)
+  createdAt        DateTime @default(now())
+  transaction      LedgerTransaction @relation(fields: [transactionId], references: [id])
+  ledgerAccount    LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+  @@map("entries")
+  @@schema("ledger")
+}
+
+model Payment {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tradingAccountId    String   @db.Uuid
+  provider            String
+  providerReference   String?
+  transactionType     String
+  amount              Decimal  @db.Decimal(24,8)
+  currency            String   @default("INR") @db.Char(3)
+  status              String   @default("CREATED")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  tradingAccount      TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  @@map("transactions")
+  @@schema("payments")
+}
+
+model Withdrawal {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tradingAccountId   String   @db.Uuid
+  bankAccountId      String   @db.Uuid
+  amount             Decimal  @db.Decimal(24,8)
+  status             String   @default("REQUESTED")
+  approvedBy         String?  @db.Uuid
+  providerReference  String?
+  createdAt          DateTime @default(now())
+  tradingAccount     TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  bankAccount        BankAccount @relation(fields: [bankAccountId], references: [id])
+  approver           User? @relation("WithdrawalApprover", fields: [approvedBy], references: [id])
+  @@map("withdrawals")
+  @@schema("payments")
+}
+
+model Settlement {
+  id                String   @id @default(uuid()) @db.Uuid
+  tradingAccountId  String   @db.Uuid
+  settlementDate    DateTime @db.Date
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+  tradingAccount    TradingAccount @relation(fields: [tradingAccountId], references: [id])
+  obligations       Obligation[]
+  @@map("settlements")
+  @@schema("settlement")
+}
+
+model Obligation {
+  id             String   @id @default(uuid()) @db.Uuid
+  settlementId   String   @db.Uuid
+  obligationType String
+  amount         Decimal? @db.Decimal(24,8)
+  quantity       Decimal? @db.Decimal(20,4)
+  instrumentId   String? @db.Uuid
+  status         String   @default("PENDING")
+  settlement     Settlement @relation(fields: [settlementId], references: [id])
+  instrument     Instrument? @relation(fields: [instrumentId], references: [id])
+  @@map("obligations")
+  @@schema("settlement")
+}
+
+model ReconciliationRun {
+  id                 String   @id @default(uuid()) @db.Uuid
+  reconciliationType String
+  businessDate       DateTime @db.Date
+  status             String   @default("RUNNING")
+  startedAt          DateTime @default(now())
+  completedAt        DateTime?
+  totalRecords       Int      @default(0)
+  matchedRecords     Int      @default(0)
+  exceptionRecords   Int      @default(0)
+  exceptions         ReconciliationException[]
+  @@map("runs")
+  @@schema("reconciliation")
+}
+
+model ReconciliationException {
+  id             String   @id @default(uuid()) @db.Uuid
+  runId          String   @db.Uuid
+  entityType     String
+  entityId       String?  @db.Uuid
+  internalValue  Json?
+  externalValue  Json?
+  difference     Json?
+  status         String   @default("OPEN")
+  assignedTo     String?  @db.Uuid
+  resolutionNotes String?
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+  run            ReconciliationRun @relation(fields: [runId], references: [id])
+  @@map("exceptions")
+  @@schema("reconciliation")
+}
+
+model Notification {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  notificationType String
+  title            String
+  message          String
+  data             Json?
+  readAt           DateTime?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+  @@map("notifications")
+  @@schema("notifications")
+}
+
+model AuditEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  actorUserId    String?  @db.Uuid
+  actorType      String
+  action         String
+  resourceType   String
+  resourceId     String?  @db.Uuid
+  beforeState    Json?
+  afterState     Json?
+  ipAddress      String?  @db.Inet
+  userAgent      String?
+  correlationId  String?  @db.Uuid
+  createdAt      DateTime @default(now())
+  actor          User?    @relation(fields: [actorUserId], references: [id])
+  @@map("events")
+  @@schema("audit")
+  @@index([resourceType, resourceId])
+  @@index([actorUserId, createdAt])
+}
+
+model OutboxEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  aggregateType  String
+  aggregateId    String   @db.Uuid
+  eventType      String
+  eventVersion   Int      @default(1)
+  payload        Json
+  correlationId  String?  @db.Uuid
+  causationId    String?  @db.Uuid
+  publishedAt    DateTime?
+  attempts       Int      @default(0)
+  lastError      String?
+  createdAt      DateTime @default(now())
+  @@map("outbox_events")
+  @@schema("integration")
+  @@index([createdAt])
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  LOCKED
+  CLOSED
+  @@map("user_status")
+  @@schema("identity")
+}
+
+enum CustomerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  @@map("customer_status")
+  @@schema("customers")
+}
+
+enum BankStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  BLOCKED
+  @@map("bank_status")
+  @@schema("customers")
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+  EXPIRED
+  @@map("kyc_status")
+  @@schema("kyc")
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  @@map("account_status")
+  @@schema("trading")
+}

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal | Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#003824",
+                    "inverse-primary": "#005ac2",
+                    "on-secondary-container": "#00311f",
+                    "primary-container": "#4d8eff",
+                    "surface-container-low": "#141b2c",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#410004",
+                    "on-background": "#dce2f9",
+                    "secondary": "#4edea3",
+                    "surface-variant": "#2e3446",
+                    "surface-container": "#191f30",
+                    "outline": "#8c909f",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "inverse-on-surface": "#293041",
+                    "surface": "#0c1323",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-container-high": "#232a3b",
+                    "on-tertiary": "#68000a",
+                    "secondary-container": "#00a572",
+                    "tertiary-container": "#ff5451",
+                    "surface-container-lowest": "#070e1e",
+                    "tertiary": "#ffb3ad",
+                    "on-surface-variant": "#c2c6d6",
+                    "surface-bright": "#32394b",
+                    "background": "#0c1323",
+                    "on-surface": "#dce2f9",
+                    "on-secondary-fixed": "#002113",
+                    "on-error-container": "#ffdad6",
+                    "primary": "#adc6ff",
+                    "on-primary-container": "#00285d",
+                    "inverse-surface": "#dce2f9",
+                    "surface-dim": "#0c1323",
+                    "secondary-fixed-dim": "#4edea3",
+                    "primary-fixed": "#d8e2ff",
+                    "on-tertiary-container": "#5c0008",
+                    "on-primary-fixed": "#001a42",
+                    "surface-container-highest": "#2e3446",
+                    "error-container": "#93000a",
+                    "primary-fixed-dim": "#adc6ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "tertiary-fixed": "#ffdad7",
+                    "outline-variant": "#424754",
+                    "surface-tint": "#adc6ff",
+                    "on-error": "#690005",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-primary": "#002e6a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "12px",
+                    "cell-padding-y": "6px",
+                    "cell-padding-x": "8px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "title-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        .active-tab-indicator {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #adc6ff;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0c1323;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2e3446;
+            border-radius: 10px;
+        }
+        @keyframes pulse-emerald {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse-status {
+            animation: pulse-emerald 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant shadow-sm flex items-center justify-between px-gutter h-16">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<h1 class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Obsidian Terminal</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant">
+<div class="w-2 h-2 rounded-full bg-secondary pulse-status"></div>
+<span class="font-label-caps text-label-caps text-secondary">CONNECTED</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-highlight transition-colors p-2 rounded-full">account_circle</span>
+</div>
+</header>
+<main class="pt-20 pb-24 px-4 max-w-7xl mx-auto flex flex-col md:flex-row gap-6">
+<!-- Sidebar Navigation (Desktop) -->
+<aside class="hidden md:flex flex-col w-64 h-[calc(100vh-120px)] sticky top-20 glass-panel rounded-xl p-4">
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-body-md text-body-md">Markets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-body-md text-body-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Portfolio</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 space-y-6">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary">Order Management</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Track, modify, and execute your trades across all exchanges.</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container border border-outline-variant text-on-surface px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-surface-variant transition-all font-body-sm text-body-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg flex items-center gap-2 font-bold hover:opacity-90 transition-all font-body-sm text-body-sm active:scale-95 shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Order
+                    </button>
+</div>
+</div>
+<!-- Tabs Section -->
+<div class="border-b border-outline-variant overflow-x-auto custom-scrollbar">
+<div class="flex gap-8 min-w-max px-2">
+<button class="relative py-3 flex items-center gap-2 text-primary group">
+<span class="font-label-caps text-label-caps">OPEN (2)</span>
+<div class="active-tab-indicator"></div>
+</button>
+<button class="py-3 flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="font-label-caps text-label-caps">EXECUTED</span>
+</button>
+<button class="py-3 flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="font-label-caps text-label-caps">PENDING</span>
+</button>
+<button class="py-3 flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="font-label-caps text-label-caps">REJECTED</span>
+</button>
+</div>
+</div>
+<!-- Orders List (High Density) -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-high border-b border-outline-variant">
+<tr>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">INSTRUMENT</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">SIDE</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant text-right">QTY</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant text-right">PRICE / TYPE</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">STATUS</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant">TIME</th>
+<th class="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Order 1 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="py-cell-padding-y px-4">
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">RELIANCE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">NSE</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#10B981]/10 text-secondary border border-secondary/20 uppercase tracking-wider">BUY</span>
+</td>
+<td class="py-cell-padding-y px-4 text-right">
+<span class="font-data-mono text-data-mono">10</span>
+</td>
+<td class="py-cell-padding-y px-4 text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-data-mono">2,940.00</span>
+<span class="font-label-caps text-[9px] text-on-surface-variant">LIMIT</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-amber-500 font-semibold">Partially Filled</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">4 / 10 QTY</span>
+</div>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<span class="font-data-mono text-data-mono text-on-surface-variant">10:45 AM</span>
+</td>
+<td class="py-cell-padding-y px-4">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded transition-all active:scale-90" title="Modify Order">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded transition-all active:scale-90" title="Cancel Order">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Order 2 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="py-cell-padding-y px-4">
+<div class="flex flex-col">
+<span class="font-title-sm text-title-sm text-on-surface">HDFCBANK</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">NSE</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EF4444]/10 text-error border border-error/20 uppercase tracking-wider">SELL</span>
+</td>
+<td class="py-cell-padding-y px-4 text-right">
+<span class="font-data-mono text-data-mono">50</span>
+</td>
+<td class="py-cell-padding-y px-4 text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-data-mono">1,422.00</span>
+<span class="font-label-caps text-[9px] text-on-surface-variant">MARKET</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-amber-500/50"></div>
+<span class="font-body-sm text-body-sm text-amber-500 font-semibold">Open</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-4">
+<span class="font-data-mono text-data-mono text-on-surface-variant">11:02 AM</span>
+</td>
+<td class="py-cell-padding-y px-4">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded transition-all active:scale-90" title="Modify Order">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded transition-all active:scale-90" title="Cancel Order">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State Contextual Hint -->
+<div class="p-4 bg-surface-container-lowest flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant italic">2 pending actions require your attention.</span>
+<button class="text-primary font-bold font-label-caps text-label-caps hover:underline">CANCEL ALL OPEN</button>
+</div>
+</div>
+<!-- Contextual Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="glass-panel p-4 rounded-xl">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Today's Executed Value</p>
+<div class="flex items-end gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">₹142,500.20</span>
+<span class="font-body-sm text-body-sm text-secondary mb-1">+4.2%</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Margin Utilization</p>
+<div class="w-full bg-surface-container h-2 rounded-full mt-2 mb-1 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 65%;"></div>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface-variant">₹65,000 / ₹100,000 used</span>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Connectivity Status</p>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Direct API - Ultra Low Latency</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant z-50">
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 duration-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-[10px]">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 duration-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-[10px]">Markets</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary font-bold active:scale-95 duration-100 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-caps text-[10px]">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 duration-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined">star</span>
+<span class="font-label-caps text-[10px]">Watchlist</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 duration-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-[10px]">Portfolio</span>
+</button>
+</nav>
+<!-- Atmospheric Effect (Subtle Glow) -->
+<div class="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[150px] pointer-events-none z-0"></div>
+<div class="fixed bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary/5 blur-[120px] pointer-events-none z-0"></div>
+<script>
+        // Simple Interaction logic for tabs
+        const tabs = document.querySelectorAll('button[class*="label-caps"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // This is a UI demo, normally we'd switch content here
+                console.log('Switching to tab:', this.innerText);
+            });
+        });
+
+        // Dynamic highlight for table rows
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.boxShadow = 'inset 4px 0 0 #adc6ff';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Monitoring Hub | System Configuration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500&amp;family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#515f78",
+                    "surface-container-high": "#1f2942",
+                    "secondary": "#b5c7ea",
+                    "on-surface-variant": "#c5c6cd",
+                    "secondary-fixed-dim": "#b5c7ea",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "tertiary-fixed": "#ffdcbd",
+                    "surface-container-lowest": "#030d25",
+                    "primary-fixed": "#d6e3ff",
+                    "surface-container-low": "#101b33",
+                    "surface": "#07122a",
+                    "surface-container": "#151f37",
+                    "on-primary-fixed-variant": "#39475f",
+                    "outline-variant": "#44474d",
+                    "on-tertiary-fixed-variant": "#5d4124",
+                    "on-tertiary-container": "#9d7b5a",
+                    "on-secondary-fixed-variant": "#354764",
+                    "on-secondary-container": "#a3b6d8",
+                    "on-primary-container": "#74829d",
+                    "on-background": "#d9e2ff",
+                    "secondary-container": "#354764",
+                    "primary-container": "#0a192f",
+                    "on-error": "#690005",
+                    "tertiary": "#e7bf99",
+                    "on-secondary-fixed": "#071c36",
+                    "inverse-surface": "#d9e2ff",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#b9c7e4",
+                    "inverse-on-surface": "#263049",
+                    "background": "#07122a",
+                    "surface-variant": "#2a344e",
+                    "secondary-fixed": "#d5e3ff",
+                    "on-tertiary": "#432b10",
+                    "primary": "#b9c7e4",
+                    "on-secondary": "#1e314c",
+                    "error": "#ffb4ab",
+                    "tertiary-container": "#281400",
+                    "surface-container-highest": "#2a344e",
+                    "on-primary": "#233148",
+                    "outline": "#8f9097",
+                    "on-surface": "#d9e2ff",
+                    "tertiary-fixed-dim": "#e7bf99",
+                    "on-tertiary-fixed": "#2b1701",
+                    "surface-dim": "#07122a",
+                    "error-container": "#93000a",
+                    "surface-bright": "#2f3952",
+                    "status_success": "#4ade80",
+                    "status_critical": "#f87171",
+                    "status_info": "#60a5fa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "density-default": "8px",
+                    "density-compact": "4px",
+                    "gutter": "12px",
+                    "unit": "4px",
+                    "margin-page": "24px"
+            },
+            "fontFamily": {
+                    "body-lg": ["JetBrains Mono"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "body-md": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-sm": ["JetBrains Mono"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { background-color: #07122a; color: #d9e2ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; vertical-align: middle; }
+        .status-pulse { animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+        .card-outline { border: 1px solid rgba(255,255,255,0.1); }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #44474d; border-radius: 2px; }
+        input[type="range"] { accent-color: #b5c7ea; }
+        .glass-panel { background: rgba(21, 31, 55, 0.7); backdrop-filter: blur(12px); }
+    </style>
+</head>
+<body class="font-body-md overflow-hidden flex h-screen">
+<!-- SideNavBar Anchor -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-surface-container border-r border-outline-variant/15 w-64">
+<div class="p-6 flex flex-col gap-1">
+<h1 class="font-headline-sm text-headline-sm font-black text-secondary">APEX HUB</h1>
+<p class="text-[10px] font-label-caps tracking-widest text-on-surface-variant">OPERATIONAL NODE 01</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150 ease-in-out cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150 ease-in-out cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-caps text-label-caps">Order Book</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150 ease-in-out cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps">Ledger</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150 ease-in-out cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-label-caps text-label-caps">Exchanges</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150 ease-in-out cursor-pointer rounded">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="font-label-caps text-label-caps">Risk Manager</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 bg-secondary-container text-on-secondary-container border-l-4 border-secondary transition-all duration-150 ease-in-out cursor-pointer rounded-r">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</div>
+</nav>
+<div class="p-4 border-t border-outline-variant/15">
+<button class="w-full py-2 bg-secondary text-on-secondary font-label-caps text-label-caps rounded flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Terminal
+            </button>
+<div class="mt-4 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface cursor-pointer rounded transition-colors">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 flex flex-col h-screen relative">
+<!-- TopAppBar Anchor -->
+<header class="flex justify-between items-center w-full px-6 h-12 z-50 bg-surface border-b border-outline-variant/15 shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-sm text-headline-sm font-data-mono text-primary">Apex Monitoring Hub</span>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Global Configuration</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-highest p-1 rounded cursor-pointer transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-highest p-1 rounded cursor-pointer transition-colors" data-icon="help">help</span>
+</div>
+<button class="px-3 py-1 bg-error-container text-error border border-error/20 font-label-caps text-[10px] hover:bg-error hover:text-on-error transition-all active:opacity-80">
+                    Emergency Stop
+                </button>
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Configuration Grid -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Global Actions & Ticker -->
+<div class="flex justify-between items-center mb-4">
+<div class="flex items-center gap-8 bg-surface-container-low px-4 py-2 rounded-lg card-outline">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-status_success status-pulse"></span>
+<span class="text-[10px] font-label-caps text-on-surface-variant">NETWORK: ONLINE</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">LATENCY:</span>
+<span class="font-data-mono text-status_info">14ms</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">ACTIVE NODES:</span>
+<span class="font-data-mono text-secondary">08/08</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant/30 text-on-surface font-label-caps text-[11px] hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+                        Audit View
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2 bg-secondary text-on-secondary font-label-caps text-[11px] font-bold hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="save">save</span>
+                        Global Save
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-4">
+<!-- Exchange Management -->
+<section class="col-span-8 bg-surface-container card-outline p-4 flex flex-col gap-4">
+<div class="flex justify-between items-center border-b border-outline-variant/10 pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance">account_balance</span>
+<h2 class="font-headline-sm text-on-surface">Exchange Management</h2>
+</div>
+<span class="text-[10px] font-label-caps text-status_info px-2 py-0.5 bg-status_info/10 border border-status_info/20 rounded">SYNC ACTIVE</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="text-left text-[10px] font-label-caps text-on-surface-variant border-b border-outline-variant/10">
+<th class="pb-2 font-bold uppercase tracking-widest">Exchange</th>
+<th class="pb-2 font-bold uppercase tracking-widest">Connectivity</th>
+<th class="pb-2 font-bold uppercase tracking-widest text-right">Market Hours (UTC)</th>
+<th class="pb-2 font-bold uppercase tracking-widest text-right">Throughput</th>
+<th class="pb-2 font-bold uppercase tracking-widest text-center">Auto-Connect</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-xs">
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-highest/50 transition-colors">
+<td class="py-2.5 text-secondary font-bold">NSE</td>
+<td class="py-2.5">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-status_success"></span>
+<span class="text-[10px] text-status_success">CONNECTED</span>
+</div>
+</td>
+<td class="py-2.5 text-right text-on-surface-variant">09:15 - 15:30</td>
+<td class="py-2.5 text-right">4.2M req/s</td>
+<td class="py-2.5 text-center">
+<input checked="" class="form-checkbox bg-surface border-outline-variant text-secondary focus:ring-0 rounded-sm" type="checkbox"/>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-highest/50 transition-colors">
+<td class="py-2.5 text-secondary font-bold">BSE</td>
+<td class="py-2.5">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-status_success"></span>
+<span class="text-[10px] text-status_success">CONNECTED</span>
+</div>
+</td>
+<td class="py-2.5 text-right text-on-surface-variant">09:15 - 15:30</td>
+<td class="py-2.5 text-right">1.8M req/s</td>
+<td class="py-2.5 text-center">
+<input checked="" class="form-checkbox bg-surface border-outline-variant text-secondary focus:ring-0 rounded-sm" type="checkbox"/>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/5 hover:bg-surface-container-highest/50 transition-colors">
+<td class="py-2.5 text-secondary font-bold">MCX</td>
+<td class="py-2.5">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-status_critical status-pulse"></span>
+<span class="text-[10px] text-status_critical">STALE FEED</span>
+</div>
+</td>
+<td class="py-2.5 text-right text-on-surface-variant">10:00 - 23:30</td>
+<td class="py-2.5 text-right">-- req/s</td>
+<td class="py-2.5 text-center">
+<input class="form-checkbox bg-surface border-outline-variant text-secondary focus:ring-0 rounded-sm" type="checkbox"/>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Trading Segments -->
+<section class="col-span-4 bg-surface-container card-outline p-4">
+<div class="flex items-center gap-2 border-b border-outline-variant/10 pb-3 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="layers">layers</span>
+<h2 class="font-headline-sm text-on-surface">Trading Segments</h2>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded card-outline">
+<div>
+<p class="font-label-caps text-[11px] text-on-surface font-bold">EQUITY CASH</p>
+<p class="text-[10px] text-on-surface-variant font-data-mono">Segment ID: 1001</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded card-outline">
+<div>
+<p class="font-label-caps text-[11px] text-on-surface font-bold">F&amp;O (DERIVATIVES)</p>
+<p class="text-[10px] text-on-surface-variant font-data-mono">Segment ID: 1002</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded card-outline">
+<div>
+<p class="font-label-caps text-[11px] text-on-surface font-bold">CURRENCY</p>
+<p class="text-[10px] text-on-surface-variant font-data-mono">Segment ID: 1003</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded card-outline">
+<div>
+<p class="font-label-caps text-[11px] text-on-surface font-bold">COMMODITY</p>
+<p class="text-[10px] text-on-surface-variant font-data-mono">Segment ID: 1004</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Order & Product Types -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container card-outline p-4">
+<div class="flex items-center justify-between border-b border-outline-variant/10 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="shopping_cart">shopping_cart</span>
+<h2 class="font-headline-sm text-on-surface">Order &amp; Product Types</h2>
+</div>
+<button class="text-[10px] font-label-caps text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                            MANAGE ALL
+                        </button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 border border-outline-variant/15 rounded flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-sm text-secondary font-bold">CNC</span>
+<span class="text-[9px] font-label-caps px-1 bg-surface-container-highest text-on-surface-variant">DELIVERY</span>
+</div>
+<p class="text-[10px] text-on-surface-variant">Cash N Carry. Full margin required. No intraday squaring.</p>
+</div>
+<div class="p-3 border border-outline-variant/15 rounded flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-sm text-secondary font-bold">MIS</span>
+<span class="text-[9px] font-label-caps px-1 bg-surface-container-highest text-on-surface-variant">INTRADAY</span>
+</div>
+<p class="text-[10px] text-on-surface-variant">Intraday Square-off. Margin leverage enabled.</p>
+</div>
+<div class="p-3 border border-outline-variant/15 rounded flex flex-col gap-2 opacity-50 grayscale">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-sm text-secondary font-bold">NRML</span>
+<span class="text-[9px] font-label-caps px-1 bg-surface-container-highest text-on-surface-variant">POSITIONAL</span>
+</div>
+<p class="text-[10px] text-on-surface-variant">Normal product for Derivatives. Overnight holding.</p>
+</div>
+<div class="p-3 border border-outline-variant/15 rounded flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-sm text-secondary font-bold">GTC</span>
+<span class="text-[9px] font-label-caps px-1 bg-surface-container-highest text-on-surface-variant">VALIDITY</span>
+</div>
+<p class="text-[10px] text-on-surface-variant">Good Till Cancelled. Valid for 365 days.</p>
+</div>
+</div>
+</section>
+<!-- Feature Flags -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container card-outline p-4">
+<div class="flex items-center gap-2 border-b border-outline-variant/10 pb-3 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="flag">flag</span>
+<h2 class="font-headline-sm text-on-surface">Feature Flags &amp; Rollouts</h2>
+</div>
+<div class="space-y-4">
+<!-- Flag 1 -->
+<div class="flex items-center gap-6 p-2 hover:bg-surface-container-highest/30 rounded transition-colors">
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[11px] text-on-surface">ADVANCED OPTION CHAIN</span>
+<span class="text-[9px] font-label-caps px-1.5 py-0.5 bg-status_info/10 text-status_info rounded border border-status_info/20">STAGING</span>
+</div>
+<p class="text-[10px] text-on-surface-variant font-data-mono mt-1">Key: `feat_v2_opt_chain`</p>
+</div>
+<div class="w-48 flex flex-col gap-1">
+<div class="flex justify-between text-[9px] font-label-caps text-on-surface-variant">
+<span>Rollout</span>
+<span>75%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 75%"></div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-8 h-4 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+<!-- Flag 2 -->
+<div class="flex items-center gap-6 p-2 hover:bg-surface-container-highest/30 rounded transition-colors">
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[11px] text-on-surface">INSTANT PAYOUTS (UPI)</span>
+<span class="text-[9px] font-label-caps px-1.5 py-0.5 bg-status_success/10 text-status_success rounded border border-status_success/20">PRODUCTION</span>
+</div>
+<p class="text-[10px] text-on-surface-variant font-data-mono mt-1">Key: `pay_instant_v4`</p>
+</div>
+<div class="w-48 flex flex-col gap-1">
+<div class="flex justify-between text-[9px] font-label-caps text-on-surface-variant">
+<span>Rollout</span>
+<span>100%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-status_success" style="width: 100%"></div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-8 h-4 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+<!-- Flag 3 -->
+<div class="flex items-center gap-6 p-2 hover:bg-surface-container-highest/30 rounded transition-colors">
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[11px] text-on-surface">MTF (MARGIN TRADE FUNDING)</span>
+<span class="text-[9px] font-label-caps px-1.5 py-0.5 bg-error/10 text-error rounded border border-error/20">DISABLED</span>
+</div>
+<p class="text-[10px] text-on-surface-variant font-data-mono mt-1">Key: `serv_mtf_v1`</p>
+</div>
+<div class="w-48 flex flex-col gap-1">
+<div class="flex justify-between text-[9px] font-label-caps text-on-surface-variant">
+<span>Rollout</span>
+<span>0%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-error" style="width: 0%"></div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-8 h-4 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-status_success"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Market Calendar -->
+<section class="col-span-12 bg-surface-container card-outline p-4">
+<div class="flex items-center justify-between border-b border-outline-variant/10 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="calendar_month">calendar_month</span>
+<h2 class="font-headline-sm text-on-surface">Market Calendar &amp; Timing Overrides</h2>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-surface-container-highest border border-outline-variant/30 text-[10px] font-label-caps text-on-surface transition-colors hover:border-secondary">ADD HOLIDAY</button>
+<button class="px-3 py-1 bg-surface-container-highest border border-outline-variant/30 text-[10px] font-label-caps text-on-surface transition-colors hover:border-secondary">SESSION OVERRIDE</button>
+</div>
+</div>
+<div class="flex gap-6 overflow-x-auto pb-2">
+<!-- Calendar Item 1 -->
+<div class="min-w-[200px] p-3 border border-outline-variant/15 rounded bg-surface-container-low flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status_critical"></div>
+<div class="flex justify-between items-start">
+<span class="font-data-mono text-lg font-bold text-on-surface">26 JAN</span>
+<span class="text-[9px] font-label-caps text-status_critical">MARKET CLOSED</span>
+</div>
+<p class="font-label-caps text-[10px] text-on-surface-variant">REPUBLIC DAY</p>
+<div class="mt-2 text-[9px] font-data-mono text-on-surface-variant/60">Effect: ALL SEGMENTS</div>
+</div>
+<!-- Calendar Item 2 -->
+<div class="min-w-[200px] p-3 border border-outline-variant/15 rounded bg-surface-container-low flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status_info"></div>
+<div class="flex justify-between items-start">
+<span class="font-data-mono text-lg font-bold text-on-surface">01 FEB</span>
+<span class="text-[9px] font-label-caps text-status_info">EXTENDED SESSION</span>
+</div>
+<p class="font-label-caps text-[10px] text-on-surface-variant">BUDGET DAY 2024</p>
+<div class="mt-2 text-[9px] font-data-mono text-on-surface-variant/60">New Close: 17:30 UTC</div>
+</div>
+<!-- Calendar Item 3 -->
+<div class="min-w-[200px] p-3 border border-outline-variant/15 rounded bg-surface-container-low flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status_critical"></div>
+<div class="flex justify-between items-start">
+<span class="font-data-mono text-lg font-bold text-on-surface">08 MAR</span>
+<span class="text-[9px] font-label-caps text-status_critical">MARKET CLOSED</span>
+</div>
+<p class="font-label-caps text-[10px] text-on-surface-variant">MAHASHIVRATRI</p>
+<div class="mt-2 text-[9px] font-data-mono text-on-surface-variant/60">Effect: CASH + F&amp;O</div>
+</div>
+<!-- Calendar Item 4 -->
+<div class="min-w-[200px] p-3 border border-outline-variant/15 rounded bg-surface-container-low flex flex-col gap-2 relative overflow-hidden opacity-40">
+<div class="absolute top-0 left-0 w-1 h-full bg-outline"></div>
+<div class="flex justify-between items-start">
+<span class="font-data-mono text-lg font-bold text-on-surface">25 MAR</span>
+<span class="text-[9px] font-label-caps text-on-surface-variant">PENDING</span>
+</div>
+<p class="font-label-caps text-[10px] text-on-surface-variant">HOLI</p>
+<div class="mt-2 text-[9px] font-data-mono text-on-surface-variant/60">Status: To be confirmed</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Real-time Ticker Footer -->
+<footer class="h-8 bg-surface-container-lowest border-t border-outline-variant/15 flex items-center px-4 overflow-hidden shrink-0">
+<div class="flex items-center gap-6 whitespace-nowrap animate-marquee">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">SYSTEM LOAD:</span>
+<span class="font-data-mono text-xs text-status_success">24.2%</span>
+</div>
+<div class="w-px h-3 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">TPS:</span>
+<span class="font-data-mono text-xs text-secondary">12,401</span>
+</div>
+<div class="w-px h-3 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">DB REPLICATION:</span>
+<span class="font-data-mono text-xs text-status_success">SYNCHRONIZED</span>
+</div>
+<div class="w-px h-3 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">MEMORY:</span>
+<span class="font-data-mono text-xs text-secondary">64.5 GB / 128 GB</span>
+</div>
+<div class="w-px h-3 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-label-caps text-on-surface-variant">ERROR RATE:</span>
+<span class="font-data-mono text-xs text-status_success">0.0004%</span>
+</div>
+</div>
+</footer>
+</main>
+<style>
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: fit-content;
+            animation: marquee 30s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
+<script>
+        // Simple notification for "Save" action
+        document.querySelector('button.bg-secondary').addEventListener('click', () => {
+            const btn = document.querySelector('button.bg-secondary');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm" data-icon="done">done</span> SAVED';
+            btn.classList.replace('bg-secondary', 'bg-status_success');
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.replace('bg-status_success', 'bg-secondary');
+            }, 2000);
+        });
+
+        // Toggle handling visuals
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const parent = e.target.closest('.card-outline');
+                if(parent && !e.target.checked) {
+                    // parent.style.opacity = '0.7';
+                } else if(parent) {
+                    // parent.style.opacity = '1';
+                }
+            });
+        });
+    </script>
+</body></html>

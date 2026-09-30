@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Complaint Management System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#0d1c32",
+                        "tertiary-fixed": "#c8e7fd",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "outline-variant": "#c5c6cd",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "secondary": "#0050cc",
+                        "on-primary-container": "#76849f",
+                        "on-surface-variant": "#44474d",
+                        "on-secondary-fixed": "#001849",
+                        "tertiary-container": "#001e2d",
+                        "primary-fixed": "#d6e3ff",
+                        "outline": "#75777e",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#515f78",
+                        "on-tertiary-container": "#6a889b",
+                        "on-background": "#191c1d",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary-fixed": "#dae1ff",
+                        "on-secondary-container": "#f9f7ff",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "surface-variant": "#e1e3e4",
+                        "background": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "inverse-primary": "#b9c7e4",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#000000",
+                        "secondary-container": "#0266ff",
+                        "primary": "#000000",
+                        "on-tertiary-fixed": "#001e2d",
+                        "primary-container": "#0d1c32"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "table-cell-padding": "8px 12px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F9FAFB; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sla-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container text-on-primary-container flex flex-col py-4 z-50 shadow-md">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-[10px] uppercase tracking-widest opacity-60">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span> CRM
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span> KYC
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span> Trading Ops
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span> RMS
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span> Settlements
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span> Back Office
+            </a>
+<!-- Active State -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 px-6 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="gavel" style="font-variation-settings: 'FILL' 1;">gavel</span> Compliance
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> System Config
+            </a>
+</nav>
+<div class="px-6 mt-auto pt-6 border-t border-on-primary-container/10">
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 rounded font-label-md text-label-md flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span> New Request
+            </button>
+<div class="mt-4 flex justify-between">
+<span class="material-symbols-outlined text-on-primary-container/50 cursor-pointer hover:text-white" data-icon="search">search</span>
+<span class="material-symbols-outlined text-on-primary-container/50 cursor-pointer hover:text-white" data-icon="star">star</span>
+<span class="material-symbols-outlined text-on-primary-container/50 cursor-pointer hover:text-white" data-icon="history">history</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[260px] min-h-screen">
+<!-- Top Navigation -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant z-40 flex justify-between items-center px-6">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Risk</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md text-body-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded text-primary font-body-sm text-body-sm border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-green-500 sla-pulse"></span>
+                    System Pulse
+                </div>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer" data-icon="apps">apps</span>
+<span class="material-symbols-outlined cursor-pointer" data-icon="help_outline">help_outline</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged operations manager in a corporate setting, with sharp lighting and a blurred background of a modern office space, reflecting institutional reliability and leadership. Clean, light-mode corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOP4yLTd2o-zKQW7wzim2CJalUxXbAzclww7oLvuW9Hav3sViZd0LNlLKiG-lGg46Y9SyC3yb9UCQTXqU26PTrEpt3b2Lo1czB8qqkXCknZ-g1lu4-irakBDgQaW8acGIZY78WZ54tZXI2Ro3P_Ya__3HE11tSLIYeMclQd5cUPezcDbbv1QPCD4aljc7MbR9CWArUaKwARh_hGZBbqdXYIPBqvhaQkAJlyeXtDPZEzzn9k-hme_BP"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="pt-16 p-6">
+<!-- Dashboard Header -->
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface">Complaint Queue</h2>
+<p class="text-on-surface-variant font-body-md text-body-md">Institutional Client Resolution &amp; SLA Monitoring</p>
+</div>
+<div class="flex gap-2">
+<div class="flex bg-surface-container rounded p-1 border border-outline-variant">
+<button class="px-3 py-1 text-label-md font-label-md bg-surface-container-lowest shadow-sm rounded text-primary">Active Tickets</button>
+<button class="px-3 py-1 text-label-md font-label-md text-on-surface-variant hover:text-primary">Archived</button>
+</div>
+</div>
+</div>
+<!-- Stats Bar -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-body-sm text-body-sm uppercase tracking-wider">Open Complaints</p>
+<p class="font-headline-lg text-headline-lg text-on-surface">142</p>
+</div>
+<div class="text-secondary opacity-20"><span class="material-symbols-outlined text-4xl" data-icon="pending">pending</span></div>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-body-sm text-body-sm uppercase tracking-wider">Critical Priority</p>
+<p class="font-headline-lg text-headline-lg text-error">12</p>
+</div>
+<div class="text-error opacity-20"><span class="material-symbols-outlined text-4xl" data-icon="priority_high">priority_high</span></div>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-body-sm text-body-sm uppercase tracking-wider">SLA Breaches</p>
+<p class="font-headline-lg text-headline-lg text-error">04</p>
+</div>
+<div class="text-error opacity-20"><span class="material-symbols-outlined text-4xl" data-icon="timer_off">timer_off</span></div>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-body-sm text-body-sm uppercase tracking-wider">Avg. Resolution</p>
+<p class="font-headline-lg text-headline-lg text-on-surface">1.4h</p>
+</div>
+<div class="text-secondary opacity-20"><span class="material-symbols-outlined text-4xl" data-icon="speed">speed</span></div>
+</div>
+</div>
+<!-- Filters & Controls -->
+<div class="bg-surface-container-low border border-outline-variant rounded-t p-3 flex justify-between items-center">
+<div class="flex gap-4">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+</span>
+<select class="pl-10 pr-8 py-1.5 bg-surface-container-lowest border border-outline-variant rounded text-label-md font-label-md text-on-surface appearance-none min-w-[140px]">
+<option>All Categories</option>
+<option>Trade Execution</option>
+<option>Margin Calls</option>
+<option>Onboarding</option>
+</select>
+</div>
+<div class="relative">
+<select class="px-4 py-1.5 bg-surface-container-lowest border border-outline-variant rounded text-label-md font-label-md text-on-surface appearance-none min-w-[140px]">
+<option>All Priorities</option>
+<option>Critical</option>
+<option>High</option>
+<option>Medium</option>
+</select>
+</div>
+<div class="relative">
+<select class="px-4 py-1.5 bg-surface-container-lowest border border-outline-variant rounded text-label-md font-label-md text-on-surface appearance-none min-w-[140px]">
+<option>Assigned Team</option>
+<option>Compliance</option>
+<option>Risk Desk</option>
+<option>Settlements</option>
+</select>
+</div>
+</div>
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="search">search</span>
+</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-lowest border border-outline-variant rounded text-body-sm font-body-sm text-on-surface w-64" placeholder="Search by ID or Client..." type="text"/>
+</div>
+</div>
+<!-- Main Data Table -->
+<div class="bg-surface-container-lowest border-x border-b border-outline-variant overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="p-[8px_12px] border-b border-outline-variant w-12"></th>
+<th class="p-[8px_12px] border-b border-outline-variant">Complaint ID</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Client</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Category</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Status</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Priority</th>
+<th class="p-[8px_12px] border-b border-outline-variant">SLA Timer</th>
+<th class="p-[8px_12px] border-b border-outline-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row 1: SLA Breach -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-pending">
+<td class="p-[8px_12px] text-center"><input class="rounded border-outline-variant" type="checkbox"/></td>
+<td class="p-[8px_12px] font-semibold text-primary">#CMP-98212</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-on-primary-fixed text-[10px] flex items-center justify-center text-white">RH</div>
+                                    Reliance HNI
+                                </div>
+</td>
+<td class="p-[8px_12px]">Trade Execution</td>
+<td class="p-[8px_12px]">
+<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Under Review</span>
+</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-1 text-error">
+<span class="material-symbols-outlined text-sm" data-icon="error">error</span> CRITICAL
+                                </div>
+</td>
+<td class="p-[8px_12px]">
+<div class="text-error font-bold flex items-center gap-1 sla-pulse">
+                                    -00:42:15 <span class="material-symbols-outlined text-xs" data-icon="warning">warning</span>
+</div>
+</td>
+<td class="p-[8px_12px] text-right">
+<button class="text-secondary font-bold text-xs hover:underline">PROCESS</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-verified">
+<td class="p-[8px_12px] text-center"><input class="rounded border-outline-variant" type="checkbox"/></td>
+<td class="p-[8px_12px] font-semibold text-primary">#CMP-98213</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-blue-900 text-[10px] flex items-center justify-center text-white">TC</div>
+                                    Tata Capital
+                                </div>
+</td>
+<td class="p-[8px_12px]">Margin Dispute</td>
+<td class="p-[8px_12px]">
+<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Escalated</span>
+</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-1 text-amber-600">
+<span class="material-symbols-outlined text-sm" data-icon="keyboard_double_arrow_up">keyboard_double_arrow_up</span> HIGH
+                                </div>
+</td>
+<td class="p-[8px_12px]">01:15:30</td>
+<td class="p-[8px_12px] text-right">
+<button class="text-secondary font-bold text-xs hover:underline">VIEW</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-[8px_12px] text-center"><input class="rounded border-outline-variant" type="checkbox"/></td>
+<td class="p-[8px_12px] font-semibold text-primary">#CMP-98214</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-green-900 text-[10px] flex items-center justify-center text-white">AS</div>
+                                    Amit Shah (Retail)
+                                </div>
+</td>
+<td class="p-[8px_12px]">KYC Update</td>
+<td class="p-[8px_12px]">
+<span class="bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Open</span>
+</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined text-sm" data-icon="remove">remove</span> MEDIUM
+                                </div>
+</td>
+<td class="p-[8px_12px]">03:45:00</td>
+<td class="p-[8px_12px] text-right">
+<button class="text-secondary font-bold text-xs hover:underline">ASSIGN</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors maker-checker-pending">
+<td class="p-[8px_12px] text-center"><input class="rounded border-outline-variant" type="checkbox"/></td>
+<td class="p-[8px_12px] font-semibold text-primary">#CMP-98215</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-indigo-900 text-[10px] flex items-center justify-center text-white">HF</div>
+                                    HDFC Securities
+                                </div>
+</td>
+<td class="p-[8px_12px]">RMS Limit Change</td>
+<td class="p-[8px_12px]">
+<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Pending Approval</span>
+</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-1 text-error">
+<span class="material-symbols-outlined text-sm" data-icon="priority_high">priority_high</span> HIGH
+                                </div>
+</td>
+<td class="p-[8px_12px]">00:08:22</td>
+<td class="p-[8px_12px] text-right">
+<button class="text-secondary font-bold text-xs hover:underline">REVIEW</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Resolution Workflow Modal (Simplified View) -->
+<div class="mt-8 grid grid-cols-12 gap-6">
+<div class="col-span-8 bg-surface-container-lowest border border-outline-variant rounded p-6 shadow-sm">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-label-md font-label-md text-on-surface-variant uppercase mb-1 block">Active Case</span>
+<h3 class="font-headline-md text-headline-md text-primary">Case Details: CMP-98212</h3>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-surface-container-low border border-outline-variant rounded text-label-md font-label-md text-on-surface hover:bg-surface-container transition-all">Internal Note</button>
+<button class="px-4 py-2 bg-secondary text-on-secondary rounded text-label-md font-label-md shadow-sm active:opacity-80">Transition Status</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8 mb-8">
+<div class="space-y-4">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant opacity-70">Client Summary</label>
+<p class="text-body-md font-body-md mt-1">Reliance HNI Group - Multiple trade failures reported on NIFTY50 options during peak volatility.</p>
+</div>
+<div class="flex gap-12">
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant opacity-70">Logged By</label>
+<p class="text-body-md font-body-md mt-1">System Audit</p>
+</div>
+<div>
+<label class="text-[10px] uppercase font-bold text-on-surface-variant opacity-70">Timestamp</label>
+<p class="text-body-md font-body-md mt-1">12 Oct, 10:22 AM</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded border border-outline-variant">
+<label class="text-[10px] uppercase font-bold text-on-surface-variant opacity-70">Compliance Status</label>
+<div class="flex items-center gap-2 mt-2">
+<span class="material-symbols-outlined text-error" data-icon="cancel">cancel</span>
+<span class="text-body-md font-bold text-error">SLA Breached (42m)</span>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-1 leading-tight">Regulatory reporting required if resolution exceeds 2 hours for HNI accounts.</p>
+</div>
+</div>
+<div class="border-t border-outline-variant pt-6">
+<h4 class="text-label-md font-label-md text-on-surface mb-4">Workflow Progress</h4>
+<div class="flex items-center justify-between relative">
+<div class="absolute h-0.5 bg-outline-variant w-full top-4 left-0 -z-10"></div>
+<div class="flex flex-col items-center gap-2 bg-surface-container-lowest px-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-sm" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-[10px] font-bold uppercase text-on-surface">Open</span>
+</div>
+<div class="flex flex-col items-center gap-2 bg-surface-container-lowest px-2">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-sm" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-[10px] font-bold uppercase text-on-surface">Under Review</span>
+</div>
+<div class="flex flex-col items-center gap-2 bg-surface-container-lowest px-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border-4 border-surface-container-lowest flex items-center justify-center text-on-surface-variant">
+<div class="w-2 h-2 rounded-full bg-on-surface-variant animate-pulse"></div>
+</div>
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Resolution</span>
+</div>
+<div class="flex flex-col items-center gap-2 bg-surface-container-lowest px-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border-4 border-surface-container-lowest"></div>
+<span class="text-[10px] font-bold uppercase text-on-surface-variant opacity-40">Verification</span>
+</div>
+<div class="flex flex-col items-center gap-2 bg-surface-container-lowest px-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border-4 border-surface-container-lowest"></div>
+<span class="text-[10px] font-bold uppercase text-on-surface-variant opacity-40">Closed</span>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-4 space-y-6">
+<!-- Audit Log -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 shadow-sm">
+<h4 class="font-label-md text-label-md text-on-surface mb-4">Audit Trail</h4>
+<div class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+<div class="relative pl-6 pb-2 border-l border-outline-variant">
+<div class="absolute w-2.5 h-2.5 bg-secondary rounded-full -left-[5.5px] top-1"></div>
+<p class="text-[11px] font-bold text-primary">11:05 AM</p>
+<p class="text-body-sm text-on-surface">Status moved to <span class="font-bold">Under Review</span> by Compliance Head.</p>
+</div>
+<div class="relative pl-6 pb-2 border-l border-outline-variant">
+<div class="absolute w-2.5 h-2.5 bg-outline rounded-full -left-[5.5px] top-1"></div>
+<p class="text-[11px] font-bold text-on-surface-variant">10:50 AM</p>
+<p class="text-body-sm text-on-surface">Internal note: "Investigating server logs for the reported time period."</p>
+</div>
+<div class="relative pl-6 pb-2 border-l border-outline-variant">
+<div class="absolute w-2.5 h-2.5 bg-outline rounded-full -left-[5.5px] top-1"></div>
+<p class="text-[11px] font-bold text-on-surface-variant">10:22 AM</p>
+<p class="text-body-sm text-on-surface">Complaint auto-generated by RMS monitoring agent.</p>
+</div>
+</div>
+</div>
+<!-- SLA Heatmap placeholder -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 shadow-sm">
+<h4 class="font-label-md text-label-md text-on-surface mb-2">Team Load</h4>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant uppercase mb-1">
+<span>Compliance</span>
+<span>82% Load</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full" style="width: 82%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant uppercase mb-1">
+<span>Risk Management</span>
+<span>45% Load</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Pagination -->
+<footer class="p-6 border-t border-outline-variant flex justify-between items-center text-body-sm text-on-surface-variant bg-surface-container-lowest">
+<div>Showing 1 - 25 of 142 complaints</div>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low"><span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center bg-secondary text-on-secondary rounded font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low">3</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low"><span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span></button>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interactions for table rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+                    // Logic for selecting a row would go here
+                    document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('bg-secondary-container/5'));
+                    row.classList.add('bg-secondary-container/5');
+                }
+            });
+        });
+    </script>
+</body></html>

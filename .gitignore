@@ -73,3 +73,5 @@ Thumbs.db
 .gemini/
 .agents/
 scratch/
+*.git_sub_bak
+.git_sub_bak

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal | Positions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#ffb3ad",
+                    "tertiary-fixed": "#ffdad7",
+                    "on-tertiary-fixed": "#410004",
+                    "error-container": "#93000a",
+                    "on-secondary-fixed": "#002113",
+                    "surface-container-low": "#141b2c",
+                    "inverse-on-surface": "#293041",
+                    "on-error": "#690005",
+                    "primary-fixed": "#d8e2ff",
+                    "on-primary-fixed": "#001a42",
+                    "secondary": "#4edea3",
+                    "inverse-surface": "#dce2f9",
+                    "on-surface": "#dce2f9",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-primary": "#002e6a",
+                    "surface-variant": "#2e3446",
+                    "secondary-fixed-dim": "#4edea3",
+                    "outline": "#8c909f",
+                    "outline-variant": "#424754",
+                    "surface-container": "#191f30",
+                    "surface-container-lowest": "#070e1e",
+                    "primary": "#adc6ff",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-secondary-container": "#00311f",
+                    "surface-tint": "#adc6ff",
+                    "surface-dim": "#0c1323",
+                    "tertiary-container": "#ff5451",
+                    "surface-container-highest": "#2e3446",
+                    "on-tertiary": "#68000a",
+                    "on-primary-container": "#00285d",
+                    "on-background": "#dce2f9",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-bright": "#32394b",
+                    "primary-container": "#4d8eff",
+                    "error": "#ffb4ab",
+                    "surface": "#0c1323",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-secondary": "#003824",
+                    "on-error-container": "#ffdad6",
+                    "secondary-container": "#00a572",
+                    "inverse-primary": "#005ac2",
+                    "on-tertiary-container": "#5c0008",
+                    "background": "#0c1323",
+                    "surface-container-high": "#232a3b",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-surface-variant": "#c2c6d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "cell-padding-x": "8px",
+                    "unit": "4px",
+                    "container-margin": "16px",
+                    "cell-padding-y": "6px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0c1323;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+        .pnl-positive { color: #4edea3; }
+        .pnl-negative { color: #ffb4ab; }
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(78, 222, 163, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(78, 222, 163, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(78, 222, 163, 0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-container-margin h-16 border-b border-outline-variant/30 bg-surface/70 backdrop-blur-xl">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary cursor-pointer">search</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">OBSIDIAN TERMINAL</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="pulse-dot bg-secondary"></span>
+<span class="font-data-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Live Connection</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">RS</div>
+</div>
+</header>
+<main class="pt-20 pb-32 px-gutter lg:px-container-margin max-w-7xl mx-auto">
+<!-- Positions Header & Stats -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface">Positions</h2>
+<div class="flex gap-4 mt-4 overflow-x-auto no-scrollbar">
+<button class="px-4 py-1 border-b-2 border-primary text-primary font-bold transition-all">Open</button>
+<button class="px-4 py-1 text-on-surface-variant hover:text-on-surface transition-colors">Closed</button>
+<button class="px-4 py-1 text-on-surface-variant hover:text-on-surface transition-colors">Intraday</button>
+<button class="px-4 py-1 text-on-surface-variant hover:text-on-surface transition-colors">F&amp;O</button>
+</div>
+</div>
+<!-- Summary Card -->
+<div class="glass-panel p-4 rounded-xl flex-grow md:max-w-md grid grid-cols-3 divide-x divide-outline-variant/30">
+<div class="px-3">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Unrealized P&amp;L</p>
+<p class="font-data-mono text-title-sm pnl-positive">+₹24,510.40</p>
+</div>
+<div class="px-3">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Realized P&amp;L</p>
+<p class="font-data-mono text-title-sm pnl-negative">-₹1,240.00</p>
+</div>
+<div class="px-3">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase">Total Day</p>
+<p class="font-data-mono text-title-sm pnl-positive">+₹23,270.40</p>
+</div>
+</div>
+</div>
+<!-- High Density Positions Table -->
+<div class="glass-panel rounded-xl overflow-hidden mb-12">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest/50 border-b border-outline-variant/30">
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant">SYMBOL</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant text-right">QTY / AVG</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant text-right">LTP</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant text-right">P&amp;L / %</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant text-center">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors group">
+<td class="py-3 px-cell-padding-x">
+<div class="flex flex-col">
+<span class="font-title-sm text-on-surface tracking-tight">RELIANCE</span>
+<span class="font-label-caps text-[10px] text-primary/70">NSE | CNC</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">500</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant">Avg: 2,410.20</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">2,542.45</span>
+<span class="font-data-mono text-[11px] text-secondary">+1.24%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-title-sm pnl-positive">+₹66,125.00</span>
+<span class="font-data-mono text-[11px] pnl-positive">+5.48%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/20 text-primary rounded transition-all" title="Add"><span class="material-symbols-outlined">add_circle</span></button>
+<button class="p-2 hover:bg-error/20 text-error rounded transition-all" title="Exit"><span class="material-symbols-outlined">logout</span></button>
+<button class="p-2 hover:bg-secondary/20 text-secondary rounded transition-all" title="Convert"><span class="material-symbols-outlined">published_with_changes</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors group">
+<td class="py-3 px-cell-padding-x">
+<div class="flex flex-col">
+<span class="font-title-sm text-on-surface tracking-tight">NIFTY 22500 CE</span>
+<span class="font-label-caps text-[10px] text-tertiary">NFO | MAR EXP</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">2,500</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant">Avg: 112.50</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">98.20</span>
+<span class="font-data-mono text-[11px] text-error">-4.12%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-title-sm pnl-negative">-₹35,750.00</span>
+<span class="font-data-mono text-[11px] pnl-negative">-12.71%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/20 text-primary rounded transition-all"><span class="material-symbols-outlined">add_circle</span></button>
+<button class="p-2 hover:bg-error/20 text-error rounded transition-all"><span class="material-symbols-outlined">logout</span></button>
+<button class="p-2 hover:bg-secondary/20 text-secondary rounded transition-all"><span class="material-symbols-outlined">published_with_changes</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors group">
+<td class="py-3 px-cell-padding-x">
+<div class="flex flex-col">
+<span class="font-title-sm text-on-surface tracking-tight">HDFCBANK</span>
+<span class="font-label-caps text-[10px] text-primary/70">NSE | MIS</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">1,200</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant">Avg: 1,422.00</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">1,438.90</span>
+<span class="font-data-mono text-[11px] text-secondary">+0.85%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-title-sm pnl-positive">+₹20,280.00</span>
+<span class="font-data-mono text-[11px] pnl-positive">+1.19%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/20 text-primary rounded transition-all"><span class="material-symbols-outlined">add_circle</span></button>
+<button class="p-2 hover:bg-error/20 text-error rounded transition-all"><span class="material-symbols-outlined">logout</span></button>
+<button class="p-2 hover:bg-secondary/20 text-secondary rounded transition-all"><span class="material-symbols-outlined">published_with_changes</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors group">
+<td class="py-3 px-cell-padding-x">
+<div class="flex flex-col">
+<span class="font-title-sm text-on-surface tracking-tight">TATASTEEL</span>
+<span class="font-label-caps text-[10px] text-primary/70">NSE | CNC</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">3,000</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant">Avg: 142.10</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-on-surface">144.55</span>
+<span class="font-data-mono text-[11px] text-secondary">+0.20%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x text-right">
+<div class="flex flex-col">
+<span class="font-data-mono text-title-sm pnl-positive">+₹7,350.00</span>
+<span class="font-data-mono text-[11px] pnl-positive">+1.72%</span>
+</div>
+</td>
+<td class="py-3 px-cell-padding-x">
+<div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/20 text-primary rounded transition-all"><span class="material-symbols-outlined">add_circle</span></button>
+<button class="p-2 hover:bg-error/20 text-error rounded transition-all"><span class="material-symbols-outlined">logout</span></button>
+<button class="p-2 hover:bg-secondary/20 text-secondary rounded transition-all"><span class="material-symbols-outlined">published_with_changes</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Bottom Actions Bar -->
+<div class="fixed bottom-16 left-0 w-full h-16 glass-panel border-t-0 flex items-center justify-between px-container-margin z-40">
+<div class="hidden md:flex gap-4">
+<div class="flex flex-col">
+<span class="font-label-caps text-[9px] text-on-surface-variant">AVAILABLE MARGIN</span>
+<span class="font-data-mono text-on-surface">₹4,28,450.00</span>
+</div>
+<div class="flex flex-col border-l border-outline-variant/30 pl-4">
+<span class="font-label-caps text-[9px] text-on-surface-variant">USED MARGIN</span>
+<span class="font-data-mono text-on-surface">₹1,12,000.00</span>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-2 bg-surface-variant text-on-surface-variant font-bold rounded-lg border border-outline-variant/30 hover:bg-surface-bright transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span>Filter</span>
+</button>
+<button class="flex-[2] md:flex-none px-8 py-2 bg-error-container text-on-error-container font-bold rounded-lg border border-error/20 hover:bg-error hover:text-on-error transition-all flex items-center justify-center gap-2 active:scale-95">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+<span>EXIT ALL</span>
+</button>
+</div>
+</div>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant/30 z-50 rounded-t-full shadow-2xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-label-caps mt-1">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps mt-1">Watchlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary font-bold scale-95 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-caps text-label-caps mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps mt-1">Portfolio</span>
+</a>
+</nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Prevent click if clicking an action button
+                if (e.target.closest('button')) return;
+                
+                // Toggle expansion or selection effect
+                row.classList.toggle('bg-surface-container-highest/60');
+            });
+        });
+
+        // Pulsing live price animation simulation
+        setInterval(() => {
+            const rows = document.querySelectorAll('tbody tr');
+            const randomRow = rows[Math.floor(Math.random() * rows.length)];
+            const ltp = randomRow.querySelector('td:nth-child(3) .font-data-mono');
+            if (ltp) {
+                const originalColor = ltp.style.color;
+                ltp.classList.add('scale-105');
+                ltp.style.color = Math.random() > 0.5 ? '#4edea3' : '#ffb4ab';
+                setTimeout(() => {
+                    ltp.classList.remove('scale-105');
+                    ltp.style.color = '';
+                }, 400);
+            }
+        }, 1200);
+    </script>
+</body></html>

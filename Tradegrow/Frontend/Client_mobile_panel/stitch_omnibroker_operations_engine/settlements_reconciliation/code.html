@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerAdmin | Settlements & Reconciliation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pipeline-gradient {
+            background: linear-gradient(90deg, rgba(2, 102, 255, 0.1) 0%, rgba(2, 102, 255, 0) 100%);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c5c6cd;
+            border-radius: 10px;
+        }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .status-pulse {
+            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-container": "#f9f7ff",
+                        "surface": "#f8f9fa",
+                        "surface-container-high": "#e7e8e9",
+                        "primary-fixed": "#d6e3ff",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "secondary-container": "#0266ff",
+                        "on-tertiary-fixed": "#001e2d",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#75777e",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-variant": "#e1e3e4",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "outline-variant": "#c5c6cd",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary": "#0050cc",
+                        "tertiary-fixed": "#c8e7fd",
+                        "on-secondary-fixed": "#001849",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary": "#000000",
+                        "secondary-fixed": "#dae1ff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container": "#edeeef",
+                        "primary-container": "#0d1c32",
+                        "on-surface": "#191c1d",
+                        "primary": "#000000",
+                        "on-background": "#191c1d",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#44474d",
+                        "surface-tint": "#515f78",
+                        "inverse-primary": "#b9c7e4",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#0d1c32",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "background": "#f8f9fa",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-container": "#6a889b",
+                        "tertiary-container": "#001e2d",
+                        "on-primary-container": "#76849f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-collapsed": "64px",
+                        "gutter": "16px",
+                        "sidebar-width": "260px",
+                        "unit": "4px",
+                        "container-margin": "24px",
+                        "table-cell-padding": "8px 12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "data-mono": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-secondary-fixed">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container text-on-primary-container flex flex-col py-4 z-50 shadow-md">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 text-xs tracking-wider">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+<span class="font-label-md text-label-md">KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">query_stats</span>
+<span class="font-label-md text-label-md">Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">security</span>
+<span class="font-label-md text-label-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 mx-2 rounded-r transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="font-label-md text-label-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-md text-label-md">Back Office</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">gavel</span>
+<span class="font-label-md text-label-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 mx-2 rounded transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-md text-label-md">System Config</span>
+</a>
+</nav>
+<div class="px-2 mt-auto">
+<button class="w-full flex items-center justify-center gap-2 bg-secondary text-on-secondary py-2.5 rounded-lg font-label-md text-label-md hover:bg-secondary/90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Request</span>
+</button>
+<div class="mt-4 pt-4 border-t border-on-primary-container/10 space-y-2">
+<div class="flex items-center gap-3 px-3 py-2 text-on-primary-container/50 hover:text-on-primary-container cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[18px]">search</span>
+<span class="text-xs uppercase tracking-widest font-semibold">Search</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-primary-container/50 hover:text-on-primary-container cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="text-xs uppercase tracking-widest font-semibold">Favorites</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant z-40 flex items-center justify-between px-6 shadow-sm">
+<div class="flex items-center gap-8">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</h2>
+<div class="hidden md:flex gap-6">
+<a class="text-on-surface-variant hover:text-on-surface transition-all font-body-md text-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-all font-body-md text-body-md" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-all font-body-md text-body-md" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-outline-variant hover:text-primary cursor-pointer p-2 rounded-full hover:bg-surface-container-low transition-all">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</div>
+<span class="material-symbols-outlined text-outline-variant hover:text-primary cursor-pointer p-2 rounded-full hover:bg-surface-container-low transition-all">apps</span>
+<span class="material-symbols-outlined text-outline-variant hover:text-primary cursor-pointer p-2 rounded-full hover:bg-surface-container-low transition-all">help_outline</span>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<button class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-secondary/20 transition-all">System Pulse</button>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional portrait of an Operations Manager in a modern office, wearing professional corporate attire. The lighting is soft and neutral, with a blurred financial data visualization in the background. The aesthetic is clean, corporate, and high-trust, featuring a blue and white color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQnmD4QweCs1lPK-wcmMym_yrOGQjkE9tgfxrPZFPIUMqX8BThHrfmhK9HFxyMHWX2HN4KmsqR52GwH2v6D6M8QodYeYcDQRtmTmHup80bCa8rx-55sQzLgnC3j4l4iJOtsw-ciuTWcnakFgMww5TKfuh5lw3z7IqNZ-k7p_42wDr37ZCmhLA1LrIo7OWuTmptmnnchWCoWc0ufgMEt924TWl7vMcdULJgm9DTI53YUPCegvosHC-f"/>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[260px] mt-16 p-gutter min-h-[calc(100vh-64px)] overflow-y-auto bg-background">
+<!-- Header Section -->
+<div class="mb-8 flex justify-between items-end">
+<div>
+<nav class="flex items-center gap-2 text-xs text-on-surface-variant mb-2">
+<span>BrokerOps</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Settlements</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Dashboard</span>
+</nav>
+<h3 class="font-headline-xl text-headline-xl text-primary">Settlements & Reconciliation</h3>
+<p class="text-on-surface-variant mt-1">Real-time monitoring of fund flows and transaction integrity.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-4 py-2 rounded font-label-md text-label-md hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span>Oct 24, 2023</span>
+</button>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded font-label-md text-label-md hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+<span>Export Audit Log</span>
+</button>
+</div>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<!-- Today's Pay-in -->
+<div class="bg-surface-container-lowest border border-outline-variant p-5 rounded-lg shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-label-md text-on-surface-variant uppercase tracking-wider">Today's Pay-in</span>
+<span class="bg-secondary-container/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">LIVE</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg">₹142.8 Cr</span>
+<span class="text-success text-[12px] font-semibold text-green-600">↑ 12.4%</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-3/4"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2">75% of expected volume processed</p>
+</div>
+<!-- Today's Pay-out -->
+<div class="bg-surface-container-lowest border border-outline-variant p-5 rounded-lg shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-label-md text-on-surface-variant uppercase tracking-wider">Today's Pay-out</span>
+<span class="material-symbols-outlined text-outline-variant text-[18px]">account_balance_wallet</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg">₹98.2 Cr</span>
+<span class="text-error text-[12px] font-semibold">↓ 3.1%</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-[60%]"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2">Cycle EOD estimate: ₹125 Cr</p>
+</div>
+<!-- Failure Rate -->
+<div class="bg-surface-container-lowest border border-outline-variant p-5 rounded-lg shadow-sm border-l-4 border-l-error">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-label-md text-on-surface-variant uppercase tracking-wider">Failure Rate</span>
+<span class="material-symbols-outlined text-error text-[18px]">report</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg text-error">0.84%</span>
+<span class="text-on-surface-variant text-[12px] font-semibold">Prev: 0.72%</span>
+</div>
+<div class="mt-4 flex gap-1">
+<div class="h-1 bg-error w-1/4 rounded-full"></div>
+<div class="h-1 bg-surface-container w-1/4 rounded-full"></div>
+<div class="h-1 bg-surface-container w-1/4 rounded-full"></div>
+<div class="h-1 bg-surface-container w-1/4 rounded-full"></div>
+</div>
+<p class="text-[10px] text-error mt-2 font-semibold">12 Critical exceptions pending</p>
+</div>
+<!-- Recon Matches -->
+<div class="bg-surface-container-lowest border border-outline-variant p-5 rounded-lg shadow-sm border-l-4 border-l-green-500">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-label-md text-on-surface-variant uppercase tracking-wider">Recon Health</span>
+<span class="material-symbols-outlined text-green-500 text-[18px]">verified</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg">99.16%</span>
+<span class="text-green-600 text-[12px] font-semibold">↑ 0.5%</span>
+</div>
+<div class="mt-4 flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-on-surface-variant">Ledger vs Bank synced (5m ago)</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2 font-medium">Automatic matching active</p>
+</div>
+</div>
+<!-- Settlement Pipeline Visualization -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 mb-8 shadow-sm">
+<h4 class="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">lan</span>
+                Settlement Flow Pipeline
+            </h4>
+<div class="relative flex items-center justify-between gap-4">
+<!-- Connectors -->
+<div class="absolute top-1/2 left-0 w-full h-[2px] bg-outline-variant/30 -z-0"></div>
+<!-- Stage 1: Exchange -->
+<div class="relative z-10 bg-white border border-outline-variant p-4 rounded-lg w-full max-w-[200px] flex flex-col items-center text-center shadow-sm">
+<div class="bg-primary-container text-white p-2 rounded mb-3">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<span class="font-label-md text-label-md uppercase tracking-wider mb-1">Exchange</span>
+<span class="text-body-sm font-bold text-secondary">NSE / BSE</span>
+<div class="mt-3 text-[10px] text-on-surface-variant bg-surface-container px-2 py-1 rounded">Confirmed</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant z-10 bg-background rounded-full">arrow_forward</span>
+<!-- Stage 2: Clearing -->
+<div class="relative z-10 bg-white border-2 border-secondary-container p-4 rounded-lg w-full max-w-[200px] flex flex-col items-center text-center shadow-sm pipeline-gradient">
+<div class="bg-secondary-container text-white p-2 rounded mb-3">
+<span class="material-symbols-outlined">sync_alt</span>
+</div>
+<span class="font-label-md text-label-md uppercase tracking-wider mb-1">Clearing</span>
+<span class="text-body-sm font-bold text-secondary">NCL / ICCL</span>
+<div class="mt-3 text-[10px] text-on-secondary-fixed-variant bg-secondary-fixed px-2 py-1 rounded font-semibold status-pulse">Processing...</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant z-10 bg-background rounded-full">arrow_forward</span>
+<!-- Stage 3: Broker -->
+<div class="relative z-10 bg-white border border-outline-variant p-4 rounded-lg w-full max-w-[200px] flex flex-col items-center text-center shadow-sm">
+<div class="bg-surface-container-high text-primary p-2 rounded mb-3">
+<span class="material-symbols-outlined">business</span>
+</div>
+<span class="font-label-md text-label-md uppercase tracking-wider mb-1">Broker Node</span>
+<span class="text-body-sm font-bold text-primary">BrokerOps Internal</span>
+<div class="mt-3 text-[10px] text-on-surface-variant bg-surface-container px-2 py-1 rounded italic">Awaiting Sync</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant z-10 bg-background rounded-full">arrow_forward</span>
+<!-- Stage 4: Client Ledger -->
+<div class="relative z-10 bg-white border border-outline-variant p-4 rounded-lg w-full max-w-[200px] flex flex-col items-center text-center shadow-sm">
+<div class="bg-surface-container-high text-primary p-2 rounded mb-3">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="font-label-md text-label-md uppercase tracking-wider mb-1">Client Ledger</span>
+<span class="text-body-sm font-bold text-primary">Beneficiary A/C</span>
+<div class="mt-3 text-[10px] text-on-surface-variant bg-surface-container px-2 py-1 rounded italic">Scheduled T+1</div>
+</div>
+</div>
+</div>
+<!-- Mismatches & Exceptions Table -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+<div class="p-5 border-b border-outline-variant flex justify-between items-center bg-white">
+<h4 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-error">warning</span>
+                        Mismatches & Exceptions
+                    </h4>
+<div class="flex gap-2">
+<div class="bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded flex items-center gap-2 text-xs">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-semibold">8 High Priority</span>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant">
+<tr>
+<th class="px-gutter py-3 border-b border-outline-variant">Ref ID</th>
+<th class="px-gutter py-3 border-b border-outline-variant">Type</th>
+<th class="px-gutter py-3 border-b border-outline-variant">Source Entity</th>
+<th class="px-gutter py-3 border-b border-outline-variant text-right">Discrepancy</th>
+<th class="px-gutter py-3 border-b border-outline-variant">Status</th>
+<th class="px-gutter py-3 border-b border-outline-variant">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">TXN-09822</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-2 text-xs">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                        Funds
+                                    </div>
+</td>
+<td class="px-gutter py-table-cell-padding text-xs">HDFC BANK / NCL</td>
+<td class="px-gutter py-table-cell-padding text-right font-bold text-error">₹45,20,000</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="border border-error/50 bg-error/5 text-error text-[10px] px-2 py-0.5 rounded font-bold">UNRECONCILED</span>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<button class="text-secondary hover:underline text-[11px] font-bold">INVESTIGATE</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">TXN-11045</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-2 text-xs">
+<span class="material-symbols-outlined text-[14px]">inventory_2</span>
+                                        Securities
+                                    </div>
+</td>
+<td class="px-gutter py-table-cell-padding text-xs">CDSL / ICCL</td>
+<td class="px-gutter py-table-cell-padding text-right font-bold text-error">2,400 QTY (RELIANCE)</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="border border-error/50 bg-error/5 text-error text-[10px] px-2 py-0.5 rounded font-bold">UNRECONCILED</span>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<button class="text-secondary hover:underline text-[11px] font-bold">INVESTIGATE</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">TXN-11082</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-2 text-xs">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                        Brokerage
+                                    </div>
+</td>
+<td class="px-gutter py-table-cell-padding text-xs">Internal / NCL</td>
+<td class="px-gutter py-table-cell-padding text-right font-bold text-error">₹12,450</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="border border-outline bg-surface-container-low text-on-surface-variant text-[10px] px-2 py-0.5 rounded font-bold">PENDING APPROVAL</span>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<button class="text-secondary hover:underline text-[11px] font-bold">APPROVE</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">TXN-08912</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-2 text-xs">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                        Stamp Duty
+                                    </div>
+</td>
+<td class="px-gutter py-table-cell-padding text-xs">Govt Portal / Internal</td>
+<td class="px-gutter py-table-cell-padding text-right font-bold text-error">₹42.00</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="border border-error/50 bg-error/5 text-error text-[10px] px-2 py-0.5 rounded font-bold">UNRECONCILED</span>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<button class="text-secondary hover:underline text-[11px] font-bold">INVESTIGATE</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Workflow Summary / Actions -->
+<div class="space-y-6">
+<!-- Maker-Checker Queue -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm border-l-4 border-l-amber-500">
+<h5 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 flex items-center justify-between">
+                        Maker-Checker Queue
+                        <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded">4 Pending</span>
+</h5>
+<div class="space-y-3">
+<div class="p-3 bg-surface-container-low rounded border border-dashed border-amber-400">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold">T+1 Settlement File</span>
+<span class="text-[10px] text-on-surface-variant">10:42 AM</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-tight">Batch #20231024-B for NSE Equity segment. Total 1.2M transactions.</p>
+<div class="mt-3 flex gap-2">
+<button class="flex-1 text-[10px] bg-secondary text-white py-1 rounded font-bold hover:bg-secondary/90">APPROVE</button>
+<button class="flex-1 text-[10px] bg-surface-container-high py-1 rounded font-bold border border-outline-variant">REJECT</button>
+</div>
+</div>
+<div class="p-3 bg-surface-container-low rounded border border-dashed border-amber-400">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold">Manual Adjustment</span>
+<span class="text-[10px] text-on-surface-variant">11:15 AM</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-tight">Correction for Client 44021: Incorrect stamp duty calc. Value: ₹1,200.</p>
+<div class="mt-3 flex gap-2">
+<button class="flex-1 text-[10px] bg-secondary text-white py-1 rounded font-bold hover:bg-secondary/90">APPROVE</button>
+<button class="flex-1 text-[10px] bg-surface-container-high py-1 rounded font-bold border border-outline-variant">REJECT</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Monitoring -->
+<div class="bg-primary-container text-on-primary-container rounded-lg p-5 shadow-sm">
+<h5 class="text-xs font-bold uppercase tracking-widest text-on-primary-container/60 mb-4 flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full status-pulse"></span>
+                        Live Audit Stream
+                    </h5>
+<div class="space-y-4 font-data-mono text-[11px]">
+<div class="flex gap-3 border-l border-on-primary-container/20 pl-3">
+<span class="text-on-primary-container/40">11:58:02</span>
+<span>[NCL] API Callback: Settlement File Confirmed</span>
+</div>
+<div class="flex gap-3 border-l border-on-primary-container/20 pl-3">
+<span class="text-on-primary-container/40">11:57:45</span>
+<span class="text-error-container">Mismatch detected: Bank Ref #AX-001 vs Ledger</span>
+</div>
+<div class="flex gap-3 border-l border-on-primary-container/20 pl-3">
+<span class="text-on-primary-container/40">11:55:12</span>
+<span>[ICCL] Payout processed: ₹14.5M to 120 clients</span>
+</div>
+<div class="flex gap-3 border-l border-on-primary-container/20 pl-3">
+<span class="text-on-primary-container/40">11:54:30</span>
+<span class="text-secondary-fixed">System Auto-Reconcile: Completed for Segment F&O</span>
+</div>
+</div>
+<button class="w-full mt-6 text-[10px] text-on-primary-container/70 border border-on-primary-container/30 py-2 rounded font-bold hover:bg-on-primary-container/10 transition-all">VIEW FULL AUDIT TRAIL</button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interactions for the "Live" badges and pulses
+        document.addEventListener('DOMContentLoaded', () => {
+            const investigateButtons = document.querySelectorAll('button:contains("INVESTIGATE")');
+            investigateButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    alert('Opening detailed discrepancy report for transaction analysis.');
+                });
+            });
+        });
+        
+        // Handling mobile sidebar collapse logic could go here
+    </script>
+</body></html>

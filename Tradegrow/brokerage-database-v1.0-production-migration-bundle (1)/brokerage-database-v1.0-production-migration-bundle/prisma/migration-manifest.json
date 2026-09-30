@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "migration_count": 25,
+  "migrations": [
+    "001_001_extensions",
+    "002_002_schemas",
+    "003_003_identity",
+    "004_004_customers",
+    "005_005_kyc",
+    "006_006_market",
+    "007_007_trading_accounts",
+    "008_008_broker",
+    "009_009_risk",
+    "010_010_orders",
+    "011_011_trades",
+    "012_012_portfolio",
+    "013_013_ledger",
+    "014_014_payments",
+    "015_015_settlement",
+    "016_016_reconciliation",
+    "017_017_notifications",
+    "018_018_audit",
+    "019_019_reporting",
+    "020_020_indexes",
+    "021_021_constraints",
+    "022_022_triggers",
+    "023_023_outbox",
+    "024_024_reference_seed",
+    "025_025_rbac_seed"
+  ]
+}

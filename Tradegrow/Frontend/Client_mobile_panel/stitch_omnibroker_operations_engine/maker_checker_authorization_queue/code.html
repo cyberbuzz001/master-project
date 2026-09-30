@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Maker-Checker Approval Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#f8f9fa",
+                    "on-tertiary-fixed": "#001e2d",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "secondary-container": "#0266ff",
+                    "surface-container-highest": "#e1e3e4",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "secondary-fixed": "#dae1ff",
+                    "on-primary-fixed-variant": "#39475f",
+                    "on-primary-container": "#76849f",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "inverse-surface": "#2e3132",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container": "#edeeef",
+                    "outline-variant": "#c5c6cd",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "inverse-primary": "#b9c7e4",
+                    "tertiary-fixed": "#c8e7fd",
+                    "on-secondary-fixed": "#001849",
+                    "tertiary": "#000000",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "primary-fixed": "#d6e3ff",
+                    "secondary": "#0050cc",
+                    "primary": "#000000",
+                    "outline": "#75777e",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "surface-bright": "#f8f9fa",
+                    "on-tertiary-container": "#6a889b",
+                    "surface-variant": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d9dadb",
+                    "on-error": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#001e2d",
+                    "surface-tint": "#515f78",
+                    "surface": "#f8f9fa",
+                    "on-secondary-container": "#f9f7ff",
+                    "on-surface-variant": "#44474d",
+                    "on-primary": "#ffffff",
+                    "on-background": "#191c1d",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-container": "#0d1c32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sidebar-collapsed": "64px",
+                    "unit": "4px",
+                    "sidebar-width": "260px",
+                    "gutter": "16px",
+                    "table-cell-padding": "8px 12px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            color: #191c1d;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .approval-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .pending-border {
+            border-left: 4px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container flex flex-col py-4 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 font-label-md text-label-md uppercase tracking-widest">Enterprise Suite</p>
+</div>
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+<!-- CRM -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<!-- KYC -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">KYC</span>
+</a>
+<!-- Trading Ops (Active) -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 transition-transform duration-150 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-label-md text-label-md">Trading Ops</span>
+</a>
+<!-- RMS -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-md text-label-md">RMS</span>
+</a>
+<!-- Settlements -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-md text-label-md">Settlements</span>
+</a>
+<!-- Back Office -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Back Office</span>
+</a>
+<!-- Compliance -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md text-label-md">Compliance</span>
+</a>
+<!-- System Config -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-1">
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 px-4 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 mb-4 hover:opacity-90">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Request
+            </button>
+<div class="border-t border-on-primary-container/10 pt-4">
+<a class="flex items-center gap-3 text-on-primary-container/50 p-3 hover:text-on-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/50 p-3 hover:text-on-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">Recently Visited</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest flex justify-between items-center px-6 z-40 border-b border-outline-variant shadow-sm ml-[260px]">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="flex gap-6 items-center">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Risk</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md text-body-md" href="#">Approvals</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 bg-surface-container-low px-3 py-1.5 rounded-full hover:bg-surface-container-high transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[18px] text-green-600">bolt</span>
+<span class="text-label-md font-label-md text-primary">System Pulse</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Close up professional portrait of a financial operations manager in a sleek corporate setting. The lighting is crisp and cool, reflecting a high-end fintech environment with subtle blue and white tones. The subject has a confident and authoritative expression, wearing a minimalist modern business attire." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOXQs2ymA27AVDwzv_9IJDoPG64-Fa81IhkedUMRkShPOuEmt3zB1zjdPEYyc_ZAjLwqNgK8HVpWTTFj40ghtqIpg-MazOOmoxnFmlLp_7ylmU6KTi9b0iMYDj0GCInN6qMuTaiMRJy4HDXf73or3R7iOWAMDrBbvjOLKON1pr57xpbiYX0v99wxA4w68Zj13m9ftzKmArv7WUJER3UEfCwlcMYmDmW3sbw78QYMyBLPsRbAUyh6aw"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[260px] mt-16 p-6 h-[calc(100vh-64px)] overflow-y-auto bg-background">
+<!-- Header & Stats Row -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<nav class="flex text-label-md font-label-md text-on-surface-variant gap-2 mb-2">
+<span>Trading Ops</span>
+<span>/</span>
+<span class="text-secondary">Maker-Checker Portal</span>
+</nav>
+<h2 class="font-headline-xl text-headline-xl text-primary">Pending Approvals</h2>
+<p class="text-body-md text-on-surface-variant mt-1">Reviewing high-risk operations requiring second-level verification.</p>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant min-w-[140px] shadow-sm">
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Queue Status</p>
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-primary">12</span>
+<span class="text-label-md font-label-md text-error px-2 py-0.5 bg-error-container rounded-full">High Priority</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant min-w-[140px] shadow-sm">
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Avg. TAT</p>
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-primary">14m</span>
+<span class="text-label-md font-label-md text-green-600 px-2 py-0.5 bg-green-50 rounded-full">↓ 2.4%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="flex items-center gap-4 mb-6 bg-surface-container-low p-3 rounded-xl border border-outline-variant/30">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none" placeholder="Search by Client ID, Request ID, or Maker..." type="text"/>
+</div>
+<select class="bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md outline-none">
+<option>All Action Types</option>
+<option>KYC Approvals</option>
+<option>Account Freezes</option>
+<option>Brokerage Changes</option>
+</select>
+<button class="bg-surface-container-lowest border border-outline-variant p-2 rounded-lg hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<!-- Approval Grid -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Approval Item 1: KYC Approval -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all approval-card pending-border">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1">verified_user</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">High-Value KYC Approval</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">REQ-889201 • Client: RAJESH_INVEST_CORP</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-md font-label-md text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full uppercase tracking-wider">Pending</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">18 mins ago</p>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6 items-center border-y border-outline-variant/30 py-4 mb-4">
+<div class="col-span-3">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Requested By</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-container text-[10px] text-white flex items-center justify-center font-bold">AS</div>
+<span class="text-body-md font-medium">Ananya Sharma</span>
+</div>
+</div>
+<div class="col-span-7">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Change Detail</p>
+<div class="flex items-center gap-3">
+<span class="text-body-sm bg-red-50 text-red-700 px-2 py-1 rounded border border-red-100">Level 2 (Active)</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_forward</span>
+<span class="text-body-sm bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 font-bold">Level 4 (Professional Elite)</span>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<button class="text-secondary font-label-md text-label-md hover:underline">View Dossier</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2 text-body-md focus:ring-1 focus:ring-secondary outline-none" placeholder="Add approval/rejection notes..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="px-6 py-2 border border-error text-error font-label-md text-label-md rounded-lg hover:bg-error/5 transition-all">Reject</button>
+<button class="px-6 py-2 bg-secondary text-white font-label-md text-label-md rounded-lg hover:bg-secondary/90 shadow-sm transition-all active:scale-[0.98]">Approve</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Approval Item 2: Brokerage Change -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all approval-card pending-border">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-700">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1">account_balance_wallet</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Custom Brokerage Plan Override</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">REQ-889215 • Client: INTRA_DAY_ALPHA_01</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-md font-label-md text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full uppercase tracking-wider">Pending</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">42 mins ago</p>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6 items-center border-y border-outline-variant/30 py-4 mb-4">
+<div class="col-span-3">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Requested By</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-container text-[10px] text-white flex items-center justify-center font-bold">RK</div>
+<span class="text-body-md font-medium">Rohan Kapoor</span>
+</div>
+</div>
+<div class="col-span-7">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Change Detail</p>
+<div class="flex items-center gap-3">
+<div class="text-body-sm">
+<span class="text-on-surface-variant">Standard:</span>
+<span class="font-data-mono text-data-mono line-through text-red-400">0.05%</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_forward</span>
+<div class="text-body-sm">
+<span class="text-on-surface-variant">Custom:</span>
+<span class="font-data-mono text-data-mono font-bold text-green-700">0.01% (Flat Fee Ceiling ₹20)</span>
+</div>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<button class="text-secondary font-label-md text-label-md hover:underline">Rev Limit Check</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2 text-body-md focus:ring-1 focus:ring-secondary outline-none" placeholder="Add approval/rejection notes..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="px-6 py-2 border border-error text-error font-label-md text-label-md rounded-lg hover:bg-error/5 transition-all">Reject</button>
+<button class="px-6 py-2 bg-secondary text-white font-label-md text-label-md rounded-lg hover:bg-secondary/90 shadow-sm transition-all active:scale-[0.98]">Approve</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Approval Item 3: Account Freeze -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all approval-card pending-border">
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-error/10 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1">lock</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Emergency Account Freeze</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">REQ-889244 • Client: SUNIL_MEHTA_TRADE</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-md font-label-md text-white bg-error px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Critical</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">Just Now</p>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6 items-center border-y border-outline-variant/30 py-4 mb-4 bg-error-container/10">
+<div class="col-span-3">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Requested By</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-error text-[10px] text-white flex items-center justify-center font-bold">SYS</div>
+<span class="text-body-md font-medium">RMS Sentinel (Auto)</span>
+</div>
+</div>
+<div class="col-span-7">
+<p class="text-label-md font-label-md text-on-surface-variant mb-1 uppercase">Reason for Lock</p>
+<div class="flex items-center gap-3">
+<span class="text-body-sm font-bold text-error">Anomalous Activity Detected: Concurrent logins from disparate geographies (Mumbai &amp; Moscow).</span>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<button class="text-error font-label-md text-label-md hover:underline">Security Logs</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<input class="w-full bg-surface-container-low border-none rounded-lg px-4 py-2 text-body-md focus:ring-1 focus:ring-secondary outline-none" placeholder="Explain override if rejecting..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="px-6 py-2 border border-outline text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-all">Dismiss</button>
+<button class="px-6 py-2 bg-error text-white font-label-md text-label-md rounded-lg hover:bg-error/90 shadow-sm transition-all active:scale-[0.98]">Confirm Lock</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Pagination / Info -->
+<div class="mt-8 pt-6 border-t border-outline-variant flex justify-between items-center text-body-sm text-on-surface-variant">
+<div>Showing <span class="font-semibold text-primary">3</span> of <span class="font-semibold text-primary">12</span> pending requests</div>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="px-3 border border-outline-variant rounded-lg bg-secondary-container text-white font-medium">1</button>
+<button class="px-3 border border-outline-variant rounded-lg hover:bg-surface-container-low">2</button>
+<button class="px-3 border border-outline-variant rounded-lg hover:bg-surface-container-low">3</button>
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Background Decoration -->
+<div class="fixed inset-0 pointer-events-none -z-10 opacity-30">
+<div class="absolute top-[20%] right-[10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-[10%] left-[300px] w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px]"></div>
+</div>
+<script>
+        // Micro-interaction for approval buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(this.textContent === 'Approve' || this.textContent === 'Reject' || this.textContent === 'Confirm Lock') {
+                    const card = this.closest('.approval-card');
+                    card.style.transform = 'translateX(100px)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    </script>
+</body></html>

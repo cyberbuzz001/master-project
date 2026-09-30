@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StockSharp - Portfolio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00E676",
+                        "danger": "#FF5252",
+                        "info": "#448AFF",
+                        "warning": "#FF6D00",
+                        "bg-dark": "#0D1117",
+                        "surface-1": "#161B22",
+                        "surface-2": "#1C2128",
+                        "text-primary": "#FFFFFF",
+                        "text-muted": "#8B949E"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "2xl": "1.75rem",
+                        "3xl": "2rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Geist", "sans-serif"],
+                        "display": ["Geist", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Space Grotesk", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .gradient-border-primary {
+            position: relative;
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.8), rgba(22, 27, 34, 0.95));
+            background-clip: padding-box;
+            border: 1px solid transparent;
+        }
+        .gradient-border-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -1;
+            margin: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00E676, transparent 60%);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-bg-dark text-text-primary font-body antialiased selection:bg-primary/30 selection:text-white pb-32">
+<!-- TOP HEADER (Shared Component JSON logic applied) -->
+<header class="flex justify-between items-center px-4 h-16 w-full z-50 docked full-width top-0 border-b border-[#1C2128] bg-[#0D1117] dark:bg-[#0D1117] sticky">
+<button class="text-text-primary p-2 -ml-2 rounded-full hover:bg-[#161B22] transition-colors active:scale-95 duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="font-headline font-bold text-lg tracking-tight text-white">Portfolio</h1>
+<button class="text-[#8B949E] p-2 -mr-2 rounded-full hover:bg-[#161B22] transition-colors active:scale-95 duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">filter_list</span>
+</button>
+</header>
+<main class="px-4 pt-6 space-y-8">
+<!-- PORTFOLIO SUMMARY CARD -->
+<section class="gradient-border-primary rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
+<!-- Subtle glow effect -->
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl transition-opacity duration-500 group-hover:bg-primary/20"></div>
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+<!-- Values -->
+<div class="space-y-1">
+<p class="text-text-muted font-medium text-sm tracking-wide">Investment Value</p>
+<h2 class="font-label font-bold text-4xl text-white tracking-tight tabular-nums pb-2">₹12,45,800</h2>
+<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3">
+<div class="flex items-center gap-1.5 text-primary bg-primary/10 px-2.5 py-1 rounded-md">
+<span class="text-xs font-semibold">Today</span>
+<span class="font-label font-bold text-sm tabular-nums">+₹15,230</span>
+<span class="font-label font-bold text-xs tabular-nums bg-primary/20 px-1.5 rounded">(+1.24%)</span>
+</div>
+<div class="flex items-center gap-1.5 text-primary bg-primary/10 px-2.5 py-1 rounded-md">
+<span class="text-xs font-semibold">Overall</span>
+<span class="font-label font-bold text-sm tabular-nums">+₹2,45,800</span>
+<span class="font-label font-bold text-xs tabular-nums bg-primary/20 px-1.5 rounded">(+24.5%)</span>
+</div>
+</div>
+</div>
+<!-- Allocation Mini Donut -->
+<div class="flex items-center gap-4 border-t md:border-t-0 md:border-l border-surface-2 pt-4 md:pt-0 md:pl-6 w-full md:w-auto justify-between md:justify-end">
+<div class="space-y-2">
+<div class="flex items-center gap-2 text-xs">
+<div class="w-2 h-2 rounded-full bg-[#00E676]"></div>
+<span class="text-text-muted w-12">Equity</span>
+<span class="font-label tabular-nums text-white">60%</span>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<div class="w-2 h-2 rounded-full bg-[#00BFA5]"></div>
+<span class="text-text-muted w-12">F&amp;O</span>
+<span class="font-label tabular-nums text-white">25%</span>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<div class="w-2 h-2 rounded-full bg-gray-600"></div>
+<span class="text-text-muted w-12">Others</span>
+<span class="font-label tabular-nums text-white">15%</span>
+</div>
+</div>
+<!-- SVG Donut Chart -->
+<div class="relative w-16 h-16 shrink-0 transform -rotate-90">
+<svg class="w-full h-full" viewbox="0 0 36 36">
+<!-- Background track -->
+<circle cx="18" cy="18" fill="none" r="15.915" stroke="#1C2128" stroke-width="3"></circle>
+<!-- Equity (60%) -->
+<circle cx="18" cy="18" fill="none" r="15.915" stroke="#00E676" stroke-dasharray="60 40" stroke-dashoffset="0" stroke-width="3"></circle>
+<!-- F&O (25%) -->
+<circle cx="18" cy="18" fill="none" r="15.915" stroke="#00BFA5" stroke-dasharray="25 75" stroke-dashoffset="-60" stroke-width="3"></circle>
+<!-- Others (15%) -->
+<circle cx="18" cy="18" fill="none" r="15.915" stroke="#4B5563" stroke-dasharray="15 85" stroke-dashoffset="-85" stroke-width="3"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center transform rotate-90">
+<span class="material-symbols-outlined text-primary text-sm font-bold" style="font-variation-settings: 'FILL' 1;">pie_chart</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SEGMENT TOGGLE TABS -->
+<section>
+<div class="bg-surface-1 p-1 rounded-full flex items-center overflow-x-auto hide-scrollbar snap-x snap-mandatory">
+<button class="snap-start shrink-0 px-5 py-2 rounded-full bg-primary text-bg-dark font-semibold text-sm transition-all duration-200">
+                    All Holdings
+                </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-full text-text-muted hover:text-white hover:bg-surface-2 font-medium text-sm transition-all duration-200">
+                    Equity
+                </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-full text-text-muted hover:text-white hover:bg-surface-2 font-medium text-sm transition-all duration-200">
+                    F&amp;O
+                </button>
+<button class="snap-start shrink-0 px-5 py-2 rounded-full text-text-muted hover:text-white hover:bg-surface-2 font-medium text-sm transition-all duration-200">
+                    Commodities
+                </button>
+</div>
+</section>
+<!-- HOLDINGS LIST -->
+<section class="space-y-4">
+<!-- Item 1: RELIANCE -->
+<div class="bg-surface-1 border border-surface-2 rounded-2xl p-4 hover:border-surface-2/80 hover:bg-surface-1/80 transition-all cursor-pointer active:scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white font-bold font-headline text-lg shadow-inner">
+                            R
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-white font-headline tracking-wide">RELIANCE</h3>
+<span class="text-[9px] font-bold bg-surface-2 text-text-muted px-1.5 py-0.5 rounded uppercase tracking-wider">NSE</span>
+</div>
+<p class="text-xs text-text-muted mt-0.5 font-label">Qty: 10 <span class="mx-1 opacity-50">•</span> Avg: ₹2,420.50</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label font-bold text-white tabular-nums">₹2,456.30</p>
+<p class="text-xs text-text-muted mt-0.5">LTP</p>
+</div>
+</div>
+<div class="flex items-end justify-between border-t border-surface-2 pt-3">
+<div>
+<p class="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-semibold">P&amp;L</p>
+<p class="font-label font-bold text-primary tabular-nums flex items-center gap-1">
+                            +₹358 <span class="text-xs bg-primary/10 px-1.5 py-0.5 rounded">(+1.48%)</span>
+</p>
+</div>
+<!-- Sparkline Up -->
+<div class="w-16 h-8 flex items-end opacity-80">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 40">
+<path d="M0 35 L20 25 L40 30 L60 15 L80 20 L100 5" fill="none" stroke="#00E676" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Item 2: INFY -->
+<div class="bg-surface-1 border border-surface-2 rounded-2xl p-4 hover:border-surface-2/80 hover:bg-surface-1/80 transition-all cursor-pointer active:scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-800 flex items-center justify-center text-white font-bold font-headline text-lg shadow-inner">
+                            I
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-white font-headline tracking-wide">INFY</h3>
+<span class="text-[9px] font-bold bg-surface-2 text-text-muted px-1.5 py-0.5 rounded uppercase tracking-wider">NSE</span>
+</div>
+<p class="text-xs text-text-muted mt-0.5 font-label">Qty: 25 <span class="mx-1 opacity-50">•</span> Avg: ₹1,820.00</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label font-bold text-white tabular-nums">₹1,845.60</p>
+<p class="text-xs text-text-muted mt-0.5">LTP</p>
+</div>
+</div>
+<div class="flex items-end justify-between border-t border-surface-2 pt-3">
+<div>
+<p class="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-semibold">P&amp;L</p>
+<p class="font-label font-bold text-primary tabular-nums flex items-center gap-1">
+                            +₹640 <span class="text-xs bg-primary/10 px-1.5 py-0.5 rounded">(+1.41%)</span>
+</p>
+</div>
+<!-- Sparkline Up -->
+<div class="w-16 h-8 flex items-end opacity-80">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 40">
+<path d="M0 30 L25 35 L50 20 L75 25 L100 10" fill="none" stroke="#00E676" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Item 3: TCS -->
+<div class="bg-surface-1 border border-surface-2 rounded-2xl p-4 hover:border-surface-2/80 hover:bg-surface-1/80 transition-all cursor-pointer active:scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-800 flex items-center justify-center text-white font-bold font-headline text-lg shadow-inner">
+                            T
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-white font-headline tracking-wide">TCS</h3>
+<span class="text-[9px] font-bold bg-surface-2 text-text-muted px-1.5 py-0.5 rounded uppercase tracking-wider">NSE</span>
+</div>
+<p class="text-xs text-text-muted mt-0.5 font-label">Qty: 5 <span class="mx-1 opacity-50">•</span> Avg: ₹4,050.00</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label font-bold text-white tabular-nums">₹4,125.80</p>
+<p class="text-xs text-text-muted mt-0.5">LTP</p>
+</div>
+</div>
+<div class="flex items-end justify-between border-t border-surface-2 pt-3">
+<div>
+<p class="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-semibold">P&amp;L</p>
+<p class="font-label font-bold text-primary tabular-nums flex items-center gap-1">
+                            +₹379 <span class="text-xs bg-primary/10 px-1.5 py-0.5 rounded">(+1.87%)</span>
+</p>
+</div>
+<!-- Sparkline Up -->
+<div class="w-16 h-8 flex items-end opacity-80">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 40">
+<path d="M0 38 L30 25 L60 30 L85 15 L100 5" fill="none" stroke="#00E676" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Item 4: HDFC BANK -->
+<div class="bg-surface-1 border border-surface-2 rounded-2xl p-4 hover:border-surface-2/80 hover:bg-surface-1/80 transition-all cursor-pointer active:scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center text-white font-bold font-headline text-lg shadow-inner">
+                            H
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-white font-headline tracking-wide">HDFC BANK</h3>
+<span class="text-[9px] font-bold bg-surface-2 text-text-muted px-1.5 py-0.5 rounded uppercase tracking-wider">NSE</span>
+</div>
+<p class="text-xs text-text-muted mt-0.5 font-label">Qty: 15 <span class="mx-1 opacity-50">•</span> Avg: ₹1,690.00</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label font-bold text-white tabular-nums">₹1,670.25</p>
+<p class="text-xs text-text-muted mt-0.5">LTP</p>
+</div>
+</div>
+<div class="flex items-end justify-between border-t border-surface-2 pt-3">
+<div>
+<p class="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-semibold">P&amp;L</p>
+<p class="font-label font-bold text-danger tabular-nums flex items-center gap-1">
+                            -₹296 <span class="text-xs bg-danger/10 px-1.5 py-0.5 rounded">(-1.17%)</span>
+</p>
+</div>
+<!-- Sparkline Down -->
+<div class="w-16 h-8 flex items-end opacity-80">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 40">
+<path d="M0 5 L20 15 L40 10 L70 30 L100 35" fill="none" stroke="#FF5252" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Item 5: TATAMOTORS -->
+<div class="bg-surface-1 border border-surface-2 rounded-2xl p-4 hover:border-surface-2/80 hover:bg-surface-1/80 transition-all cursor-pointer active:scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white font-bold font-headline text-lg shadow-inner">
+                            T
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-white font-headline tracking-wide">TATAMOTORS</h3>
+<span class="text-[9px] font-bold bg-surface-2 text-text-muted px-1.5 py-0.5 rounded uppercase tracking-wider">NSE</span>
+</div>
+<p class="text-xs text-text-muted mt-0.5 font-label">Qty: 50 <span class="mx-1 opacity-50">•</span> Avg: ₹950.00</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label font-bold text-white tabular-nums">₹985.40</p>
+<p class="text-xs text-text-muted mt-0.5">LTP</p>
+</div>
+</div>
+<div class="flex items-end justify-between border-t border-surface-2 pt-3">
+<div>
+<p class="text-[10px] text-text-muted uppercase tracking-wider mb-1 font-semibold">P&amp;L</p>
+<p class="font-label font-bold text-primary tabular-nums flex items-center gap-1">
+                            +₹1,770 <span class="text-xs bg-primary/10 px-1.5 py-0.5 rounded">(+3.73%)</span>
+</p>
+</div>
+<!-- Sparkline Up -->
+<div class="w-16 h-8 flex items-end opacity-80">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 40">
+<path d="M0 35 L15 30 L40 38 L65 15 L100 2" fill="none" stroke="#00E676" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom spacing for FAB and Nav -->
+<div class="h-6"></div>
+</main>
+<!-- FLOATING ACTION BUTTON -->
+<button class="fixed bottom-28 right-6 w-14 h-14 bg-primary rounded-full shadow-[0_4px_20px_rgba(0,230,118,0.4)] flex items-center justify-center text-bg-dark hover:scale-105 active:scale-95 transition-transform duration-200 z-40">
+<span class="material-symbols-outlined text-3xl font-medium">add</span>
+</button>
+<!-- BOTTOM NAV (Shared Component JSON logic applied) -->
+<!-- active tab: Portfolio -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 pb-safe bg-[#161B22]/80 backdrop-blur-md rounded-t-xl border-t border-[#1C2128] shadow-[0_-4px_10px_rgba(0,0,0,0.3)] md:hidden">
+<button class="flex flex-col items-center justify-center text-[#8B949E] hover:text-white transition-all active:scale-90 duration-150 group">
+<span class="material-symbols-outlined text-2xl mb-1 group-hover:scale-110 transition-transform">home</span>
+<span class="font-label text-[10px] uppercase tracking-wider">Home</span>
+</button>
+<!-- Active Tab -->
+<button class="flex flex-col items-center justify-center text-[#00E676] font-bold hover:text-white transition-all active:scale-90 duration-150 group relative">
+<div class="absolute -top-1 w-8 h-1 bg-[#00E676] rounded-full shadow-[0_0_10px_#00E676]"></div>
+<span class="material-symbols-outlined text-2xl mb-1 mt-1" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-label text-[10px] uppercase tracking-wider">Portfolio</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] hover:text-white transition-all active:scale-90 duration-150 group">
+<span class="material-symbols-outlined text-2xl mb-1 group-hover:scale-110 transition-transform">layers</span>
+<span class="font-label text-[10px] uppercase tracking-wider">Options</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] hover:text-white transition-all active:scale-90 duration-150 group">
+<span class="material-symbols-outlined text-2xl mb-1 group-hover:scale-110 transition-transform">assignment</span>
+<span class="font-label text-[10px] uppercase tracking-wider">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] hover:text-white transition-all active:scale-90 duration-150 group">
+<span class="material-symbols-outlined text-2xl mb-1 group-hover:scale-110 transition-transform">person</span>
+<span class="font-label text-[10px] uppercase tracking-wider">Profile</span>
+</button>
+</nav>
+</body></html>

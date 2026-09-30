@@ -1,0 +1,106 @@
+<footer class="site-footer">
+  <div class="wrap">
+
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <span class="logo logo--footer">
+          <svg class="logo__mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="url(#lgf)"/>
+            <path d="M8 21.5l5-5.5 4 3.5 7-8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="11.5" r="2.4" fill="#fff"/>
+            <defs><linearGradient id="lgf" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#1B4DFF"/><stop offset="1" stop-color="#0FB5A5"/>
+            </linearGradient></defs>
+          </svg>
+          <span class="logo__text">Trade&thinsp;Grow</span>
+        </span>
+        <p class="site-footer__entity">{{cfg:entity.legalName}}</p>
+        <p class="site-footer__addr">
+          {{cfg:entity.registeredOffice.line1}}<br>
+          {{cfg:entity.registeredOffice.city}}, {{cfg:entity.registeredOffice.state}} {{cfg:entity.registeredOffice.pincode}}
+        </p>
+      </div>
+
+      <nav class="site-footer__col" aria-label="Verify">
+        <h2>Verify</h2>
+        <a href="/verify/">Verify Trade Grow</a>
+        <a href="/verify/#sebi">SEBI registration</a>
+        <a href="/verify/#officers">Compliance &amp; grievance officers</a>
+        <a href="/verify/#documents">Documents</a>
+        <a href="/verify/#how-to-verify">How to verify us yourself</a>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Costs">
+        <h2>Costs</h2>
+        <a href="/pricing/">Pricing &amp; charges</a>
+        <a href="/pricing/#calculator">Cost calculator</a>
+        <a href="/compare/">Compare brokers</a>
+        <a href="/learn/brokerage-charges-explained/">Brokerage charges explained</a>
+        <a href="/learn/what-is-stt/">What is STT?</a>
+        <a href="/learn/what-is-dp-charge/">What is a DP charge?</a>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Platform">
+        <h2>Platform</h2>
+        <a href="/platform/">Platform tour</a>
+        <a href="/open-account/">Account opening</a>
+        <a href="/security/">Security</a>
+        <a href="/security-awareness/">Fraud awareness</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Learn">
+        <h2>Learn</h2>
+        <a href="/learn/how-to-verify-a-stock-broker/">How to verify a broker</a>
+        <a href="/learn/how-to-choose-a-stock-broker/">How to choose a broker</a>
+        <a href="/learn/what-is-demat-account/">What is a demat account?</a>
+        <a href="/learn/how-kyc-works/">How KYC works</a>
+        <a href="/learn/how-to-compare-brokerage-charges/">Comparing brokerage charges</a>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Support">
+        <h2>Support</h2>
+        <a href="/support/">Contact support</a>
+        <a href="/support/#ticket">Raise a ticket</a>
+        <a href="/support/#escalation">Grievance escalation</a>
+        <a href="https://scores.sebi.gov.in" target="_blank" rel="noopener noreferrer">SEBI SCORES</a>
+      </nav>
+    </div>
+
+    <div class="site-footer__legal">
+      <div class="site-footer__docs">
+        <a href="/terms/">Terms &amp; Conditions</a>
+        <a href="/privacy/">Privacy Policy</a>
+        <a href="/risk-disclosure/">Risk Disclosure</a>
+        <a href="/investor-charter/">Investor Charter</a>
+        <a href="/grievance-policy/">Grievance Policy</a>
+        <a href="/pmla-policy/">PMLA Policy</a>
+      </div>
+
+      <div class="site-footer__reg">
+        <p><strong>SEBI Registration:</strong> {{cfg:regulatory.sebi.registrationNumber}}</p>
+        <p><strong>Compliance Officer:</strong> {{cfg:officers.compliance.name}} &middot; {{cfg:officers.compliance.email}}</p>
+        <p><strong>Grievance Officer:</strong> {{cfg:officers.grievance.name}} &middot; {{cfg:officers.grievance.email}}</p>
+      </div>
+
+      {{comp:marketRisk}}
+
+      <p class="site-footer__disc">
+        {{cfg:compliance.chargesDisclaimer}}
+      </p>
+
+      <p class="site-footer__disc">
+        Investor grievances may be escalated to the relevant exchange or filed on SEBI&rsquo;s SCORES
+        portal at <a href="https://scores.sebi.gov.in" target="_blank" rel="noopener noreferrer">scores.sebi.gov.in</a>.
+        Where any detail on this website reads &ldquo;{{cfg:compliance.pendingLabel}}&rdquo;, it has not yet been
+        confirmed and must not be relied upon.
+      </p>
+
+      <p class="site-footer__copy">
+        &copy; <span data-year>2026</span> {{cfg:entity.legalName}}. All rights reserved.
+        Other broker names and trademarks referenced on this site belong to their respective owners.
+      </p>
+    </div>
+
+  </div>
+</footer>

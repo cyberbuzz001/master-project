@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal - Reports Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#c4c6d0",
+                      "error-container": "#93000a",
+                      "outline-variant": "#44474f",
+                      "on-secondary-container": "#003e28",
+                      "secondary-fixed": "#6ffbbe",
+                      "primary-fixed-dim": "#adc6ff",
+                      "surface-tint": "#adc6ff",
+                      "on-tertiary-fixed-variant": "#6c3832",
+                      "background": "#0c1323",
+                      "execution-buy": "#4EDEA3",
+                      "on-error": "#690005",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-tertiary": "#51221d",
+                      "secondary": "#4edea3",
+                      "on-primary-fixed": "#001a42",
+                      "tertiary-fixed": "#ffdad5",
+                      "on-tertiary-container": "#7a433c",
+                      "execution-sell": "#FFB4AB",
+                      "status-pending": "#ADC6FF",
+                      "on-error-container": "#ffdad6",
+                      "tertiary": "#ffd9d4",
+                      "surface-container-lowest": "#070e1e",
+                      "surface-container-low": "#141b2c",
+                      "surface-container": "#191f30",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-container-highest": "#2e3446",
+                      "primary-container": "#adc6ff",
+                      "primary": "#d8e2ff",
+                      "surface-variant": "#2e3446",
+                      "secondary-container": "#00b47d",
+                      "outline": "#8e909a",
+                      "outline-technical": "#1E293B",
+                      "tertiary-container": "#feb3aa",
+                      "inverse-primary": "#455e90",
+                      "on-primary-fixed-variant": "#2c4677",
+                      "error": "#ffb4ab",
+                      "primary-fixed": "#d8e2ff",
+                      "tertiary-fixed-dim": "#ffb4ab",
+                      "surface-dim": "#0c1323",
+                      "on-secondary-fixed": "#002114",
+                      "on-secondary": "#003824",
+                      "on-tertiary-fixed": "#360e0a",
+                      "on-primary-container": "#385283",
+                      "inverse-on-surface": "#293041",
+                      "surface-bright": "#32394b",
+                      "on-background": "#dce2f9",
+                      "on-surface": "#dce2f9",
+                      "surface": "#0c1323",
+                      "inverse-surface": "#dce2f9",
+                      "surface-container-high": "#232a3b",
+                      "surface-glass": "rgba(18, 24, 38, 0.7)",
+                      "on-primary": "#122f5f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "container-margin": "16px",
+                      "cell-padding-y": "6px",
+                      "gutter": "12px",
+                      "cell-padding-x": "8px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "title-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "title-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c1323; /* fallback */
+            color: #dce2f9; /* fallback */
+        }
+        
+        /* Custom scrollbar for terminal aesthetic */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E293B;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2e3446;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden selection:bg-primary/30 selection:text-primary">
+<!-- Top Navigation -->
+<header class="bg-surface-glass/80 dark:bg-surface-glass/80 text-primary dark:text-primary-fixed-dim font-body-sm text-body-sm fixed top-0 right-0 left-64 h-16 backdrop-blur-md border-b border-outline-technical shadow-sm flex justify-between items-center px-gutter w-full z-40 transition-all focus-within:ring-1 focus-within:ring-primary">
+<!-- Left: Brand / Section Title (if not using search_bar: on_left for title space) -->
+<div class="flex items-center gap-4">
+<!-- Search placeholder aligned left as requested -->
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-technical rounded pl-9 pr-3 py-1.5 font-data-mono text-data-mono text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-0 focus:outline-none transition-colors" placeholder="Search Symbol..." type="text"/>
+</div>
+</div>
+<!-- Center: Nav Links -->
+<nav class="hidden md:flex gap-6 absolute left-1/2 -translate-x-1/2">
+<a class="text-on-surface-variant hover:text-primary transition-all pb-1" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-primary transition-all pb-1" href="#">Liquidity</a>
+<a class="text-on-surface-variant hover:text-primary transition-all pb-1" href="#">Research</a>
+</nav>
+<!-- Right: Actions -->
+<div class="flex items-center gap-4">
+<button class="bg-primary-container text-on-primary-container font-label-caps text-label-caps px-4 py-2 rounded border border-primary/20 hover:bg-primary-fixed transition-colors">Connect Wallet</button>
+<div class="flex items-center gap-2 border-l border-outline-technical pl-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center w-8 h-8 rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center w-8 h-8 rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+</div>
+<!-- Profile Avatar Placeholder -->
+<div class="w-8 h-8 rounded bg-surface-container-highest overflow-hidden border border-outline-technical cursor-pointer">
+<img alt="Executive Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an executive trader in a dark suit against a dark grey abstract technical background. Crisp focus, high contrast, cinematic lighting, modern corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQggNMd1xUbukWDaZqOW5i2uRzNgqGlop74zh9n_cyQ-3DU8bvu0zkedAyHCks5GRLvYrPbvUjWn4_4YVtbPEh2LaX9Jn2_4diXNBNSlqzAzpGP2cMppQCfDfNUVk2nkQc53Qx41oDAOdJ4aOEMGUodly6y-KezA84iVmQ1jLShWAI6u6nLwYsg0XdcBFP0rGtelvv34D0TLBN8j0bPeHvXw8VGfjLDZfzpAxaDEXC_JzWw6yowJo"/>
+</div>
+</div>
+</header>
+<!-- Side Navigation -->
+<aside class="bg-surface-glass dark:bg-surface-glass text-primary dark:text-primary-fixed-dim font-label-caps text-label-caps h-screen w-64 fixed left-0 top-0 backdrop-blur-xl border-r border-outline-technical z-50 flex flex-col h-full py-spacing-container-margin">
+<!-- Brand Header -->
+<div class="px-6 pb-6 border-b border-outline-technical mb-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary text-[20px]">terminal</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tighter truncate w-40">Obsidian Terminal</h1>
+<p class="font-label-caps text-[9px] text-on-surface-variant/70 uppercase tracking-widest mt-0.5">Institutional Grade</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">show_chart</span>
+<span>Markets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">visibility</span>
+<span>Watchlist</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">receipt_long</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">account_balance_wallet</span>
+<span>Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">payments</span>
+<span>Funds</span>
+</a>
+<!-- Active State Navigation -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-secondary bg-secondary-fixed-dim/10 border-r-2 border-secondary opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">assessment</span>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-container-highest transition-colors group opacity-80 hover:opacity-100" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<!-- CTA Bottom -->
+<div class="px-4 pt-4 mt-auto border-t border-outline-technical">
+<button class="w-full bg-execution-buy/10 border border-execution-buy/30 text-execution-buy font-label-caps text-label-caps py-2 rounded hover:bg-execution-buy hover:text-on-secondary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                New Order
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 h-screen flex flex-col bg-background relative overflow-hidden">
+<!-- Abstract Background Element for depth -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-20" style="background-image: radial-gradient(circle at 50% 50%, #1a2333 0%, transparent 70%);"></div>
+<!-- Page Header -->
+<div class="relative z-10 px-6 py-5 border-b border-outline-technical bg-surface-container-lowest/50 backdrop-blur-sm flex justify-between items-end shrink-0">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">assessment</span>
+<h2 class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-widest">Command Center / Reports</h2>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface">Reports &amp; Analytics</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex bg-surface-container border border-outline-technical rounded p-1">
+<button class="px-3 py-1 rounded bg-surface-container-highest text-on-surface font-label-caps text-label-caps border border-outline-variant shadow-sm">Consolidated</button>
+<button class="px-3 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-caps text-label-caps transition-colors">By Segment</button>
+</div>
+<button class="bg-surface-container-low border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-label-caps text-label-caps px-4 py-2 rounded transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                    Refresh Data
+                </button>
+</div>
+</div>
+<!-- Main Content Area - Grid Layout -->
+<div class="flex-1 overflow-auto p-6 relative z-10">
+<div class="grid grid-cols-12 gap-6 h-full max-h-[800px]">
+<!-- Left Column: Report Selection & Filters (3 columns) -->
+<div class="col-span-3 flex flex-col gap-6">
+<!-- Report Types List -->
+<div class="bg-surface-glass border border-outline-technical rounded backdrop-blur-[12px] flex flex-col overflow-hidden">
+<div class="p-4 border-b border-outline-technical bg-surface-container-lowest/50">
+<h3 class="font-title-sm text-title-sm text-on-surface">Report Registry</h3>
+</div>
+<div class="flex-1 overflow-y-auto p-2 space-y-1">
+<!-- Active Report Type -->
+<button class="w-full text-left px-3 py-2.5 rounded bg-primary/10 border border-primary/30 flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[18px]">receipt</span>
+<span class="font-body-md text-body-md text-primary">Contract Notes</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[16px] opacity-100">chevron_right</span>
+</button>
+<button class="w-full text-left px-3 py-2.5 rounded hover:bg-surface-container-highest border border-transparent transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">menu_book</span>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">Trade Book</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full text-left px-3 py-2.5 rounded hover:bg-surface-container-highest border border-transparent transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">account_balance</span>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">Ledger</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full text-left px-3 py-2.5 rounded hover:bg-surface-container-highest border border-transparent transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">monitoring</span>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">P&amp;L Statement</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full text-left px-3 py-2.5 rounded hover:bg-surface-container-highest border border-transparent transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">inventory</span>
+<span class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface">Holdings</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Filter Parameters -->
+<div class="bg-surface-glass border border-outline-technical rounded backdrop-blur-[12px] flex flex-col flex-1">
+<div class="p-4 border-b border-outline-technical bg-surface-container-lowest/50 flex justify-between items-center">
+<h3 class="font-title-sm text-title-sm text-on-surface">Parameters</h3>
+<button class="text-secondary font-label-caps text-[10px] uppercase hover:underline">Reset</button>
+</div>
+<div class="p-4 space-y-5">
+<!-- Date Range -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Date Range</label>
+<div class="grid grid-cols-2 gap-2">
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded px-2 py-1.5 font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-0 [&amp;::-webkit-calendar-picker-indicator]:filter [&amp;::-webkit-calendar-picker-indicator]:invert-[0.8]" type="date"/>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded px-2 py-1.5 font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-0 [&amp;::-webkit-calendar-picker-indicator]:filter [&amp;::-webkit-calendar-picker-indicator]:invert-[0.8]" type="date"/>
+</div>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 py-1 bg-surface-container border border-outline-technical rounded font-label-caps text-[9px] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors">1W</button>
+<button class="flex-1 py-1 bg-primary/10 border border-primary/30 rounded font-label-caps text-[9px] text-primary transition-colors">1M</button>
+<button class="flex-1 py-1 bg-surface-container border border-outline-technical rounded font-label-caps text-[9px] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors">3M</button>
+<button class="flex-1 py-1 bg-surface-container border border-outline-technical rounded font-label-caps text-[9px] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors">YTD</button>
+</div>
+</div>
+<!-- Segment Filter -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Segment</label>
+<div class="space-y-1">
+<label class="flex items-center gap-2 p-1.5 hover:bg-surface-container rounded cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Equity (EQ)</span>
+</label>
+<label class="flex items-center gap-2 p-1.5 hover:bg-surface-container rounded cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Derivatives (F&amp;O)</span>
+</label>
+<label class="flex items-center gap-2 p-1.5 hover:bg-surface-container rounded cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Currency (CDS)</span>
+</label>
+</div>
+</div>
+<!-- Exchange Filter -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Exchange</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded px-2 py-1.5 font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-0 appearance-none">
+<option>All Exchanges</option>
+<option>NSE</option>
+<option>BSE</option>
+<option>MCX</option>
+</select>
+</div>
+</div>
+<div class="p-4 mt-auto border-t border-outline-technical">
+<button class="w-full bg-surface-container-highest border border-outline-variant text-on-surface font-label-caps text-label-caps py-2 rounded hover:bg-primary/20 hover:border-primary hover:text-primary transition-all">
+                                Apply Filters
+                            </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Data View (9 columns) -->
+<div class="col-span-9 flex flex-col bg-surface-glass border border-outline-technical rounded backdrop-blur-[12px] overflow-hidden shadow-lg">
+<!-- Data Header Toolbar -->
+<div class="px-4 py-3 border-b border-outline-technical bg-surface-container-lowest/80 flex justify-between items-center">
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+                                Contract Notes Viewer
+                                <span class="bg-surface-container border border-outline-variant px-1.5 py-0.5 rounded text-[10px] font-data-mono text-on-surface-variant">4 Records</span>
+</h3>
+<p class="font-body-sm text-[11px] text-on-surface-variant mt-0.5">Showing generated notes for the selected period.</p>
+</div>
+<!-- Action Bar -->
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-surface-container rounded border border-outline-technical p-0.5">
+<button class="px-2 py-1 flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-[14px]">picture_as_pdf</span>
+                                    PDF
+                                </button>
+<div class="w-px h-4 bg-outline-technical"></div>
+<button class="px-2 py-1 flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-[14px]">description</span>
+                                    CSV
+                                </button>
+<div class="w-px h-4 bg-outline-technical"></div>
+<button class="px-2 py-1 flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-[14px]">table</span>
+                                    XLSX
+                                </button>
+</div>
+<button class="bg-primary text-on-primary-fixed font-label-caps text-label-caps px-4 py-1.5 rounded flex items-center gap-2 hover:bg-primary-fixed transition-colors shadow-[0_0_10px_rgba(173,198,255,0.2)]">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                                Download All
+                            </button>
+</div>
+</div>
+<!-- Data Grid Container -->
+<div class="flex-1 overflow-auto bg-[#070e1e]">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container z-10 border-b border-outline-technical shadow-sm">
+<tr>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider w-10">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary" type="checkbox"/>
+</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary transition-colors group">
+<div class="flex items-center gap-1">Trade Date <span class="material-symbols-outlined text-[12px] opacity-0 group-hover:opacity-100">arrow_downward</span></div>
+</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider">Note No.</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider">Segment</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider text-right">Net Value</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider text-center">Status</th>
+<th class="px-4 py-2 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono divide-y divide-outline-technical/50">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-4 py-3">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 text-on-surface">2023-10-24</td>
+<td class="px-4 py-3 text-primary-fixed-dim">CN-2023-8942A</td>
+<td class="px-4 py-3">
+<span class="px-1.5 py-0.5 rounded text-[10px] border border-outline-variant bg-surface-container text-on-surface-variant">EQ</span>
+</td>
+<td class="px-4 py-3 text-right text-execution-buy">+₹14,520.50</td>
+<td class="px-4 py-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-execution-buy/10 border border-execution-buy/30 text-execution-buy text-[10px] uppercase">
+<span class="w-1 h-1 rounded-full bg-execution-buy animate-pulse"></span>
+                                            Generated
+                                        </span>
+</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="View">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Download">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-4 py-3">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 text-on-surface">2023-10-23</td>
+<td class="px-4 py-3 text-primary-fixed-dim">CN-2023-8941B</td>
+<td class="px-4 py-3">
+<span class="px-1.5 py-0.5 rounded text-[10px] border border-outline-variant bg-surface-container text-on-surface-variant">F&amp;O</span>
+</td>
+<td class="px-4 py-3 text-right text-execution-sell">-₹3,240.00</td>
+<td class="px-4 py-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-execution-buy/10 border border-execution-buy/30 text-execution-buy text-[10px] uppercase">
+<span class="w-1 h-1 rounded-full bg-execution-buy"></span>
+                                            Generated
+                                        </span>
+</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="View">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Download">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-4 py-3">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 text-on-surface">2023-10-20</td>
+<td class="px-4 py-3 text-primary-fixed-dim">CN-2023-8890A</td>
+<td class="px-4 py-3">
+<span class="px-1.5 py-0.5 rounded text-[10px] border border-outline-variant bg-surface-container text-on-surface-variant">EQ</span>
+</td>
+<td class="px-4 py-3 text-right text-execution-buy">+₹45,900.25</td>
+<td class="px-4 py-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-execution-buy/10 border border-execution-buy/30 text-execution-buy text-[10px] uppercase">
+<span class="w-1 h-1 rounded-full bg-execution-buy"></span>
+                                            Generated
+                                        </span>
+</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="View">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Download">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 - Pending status example -->
+<tr class="hover:bg-surface-container/50 transition-colors group bg-surface-container-lowest/30">
+<td class="px-4 py-3">
+<input class="rounded border-outline-variant bg-surface-container-lowest text-outline opacity-50" disabled="" type="checkbox"/>
+</td>
+<td class="px-4 py-3 text-on-surface-variant">2023-10-25</td>
+<td class="px-4 py-3 text-on-surface-variant italic">Pending Generation</td>
+<td class="px-4 py-3">
+<span class="px-1.5 py-0.5 rounded text-[10px] border border-outline-variant/50 bg-surface-container/50 text-on-surface-variant/50">EQ</span>
+</td>
+<td class="px-4 py-3 text-right text-on-surface-variant">--</td>
+<td class="px-4 py-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-status-pending/10 border border-status-pending/30 text-status-pending text-[10px] uppercase">
+<span class="material-symbols-outlined text-[10px] animate-spin">sync</span>
+                                            Processing
+                                        </span>
+</td>
+<td class="px-4 py-3 text-right">
+<!-- Actions disabled for pending -->
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Data Footer / Pagination -->
+<div class="px-4 py-2 border-t border-outline-technical bg-surface-container-lowest flex justify-between items-center text-on-surface-variant font-data-mono text-[11px]">
+<div>
+                            Showing 1-4 of 4 records
+                        </div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span>Rows per page:</span>
+<select class="bg-transparent border-none text-primary focus:ring-0 cursor-pointer text-[11px] p-0 pr-4">
+<option>25</option>
+<option>50</option>
+<option>100</option>
+</select>
+</div>
+<div class="flex gap-1">
+<button class="p-1 rounded hover:bg-surface-container disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

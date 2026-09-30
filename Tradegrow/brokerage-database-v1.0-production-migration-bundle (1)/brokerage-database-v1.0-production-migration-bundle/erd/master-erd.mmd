@@ -1,0 +1,19 @@
+erDiagram
+  USERS ||--o| CUSTOMERS : owns
+  CUSTOMERS ||--o{ TRADING_ACCOUNTS : has
+  EXCHANGES ||--o{ SEGMENTS : contains
+  SEGMENTS ||--o{ INSTRUMENTS : lists
+  TRADING_ACCOUNTS ||--o{ ORDERS : places
+  INSTRUMENTS ||--o{ ORDERS : targets
+  ORDERS ||--o{ ORDER_EVENTS : emits
+  ORDERS ||--o{ TRADES : fills
+  TRADING_ACCOUNTS ||--o{ POSITIONS : owns
+  INSTRUMENTS ||--o{ POSITIONS : identifies
+  TRADING_ACCOUNTS ||--o{ HOLDINGS : owns
+  TRADING_ACCOUNTS ||--o{ PAYMENTS : funds
+  TRADING_ACCOUNTS ||--o{ SETTLEMENTS : settles
+  SETTLEMENTS ||--o{ OBLIGATIONS : contains
+  LEDGER_TRANSACTIONS ||--o{ LEDGER_ENTRIES : contains
+  LEDGER_ACCOUNTS ||--o{ LEDGER_ENTRIES : posts
+  RECONCILIATION_RUNS ||--o{ RECONCILIATION_EXCEPTIONS : finds
+  USERS ||--o{ AUDIT_EVENTS : acts

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: brokerage-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: brokerage
+      POSTGRES_USER: brokerage
+      POSTGRES_PASSWORD: brokerage
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brokerage -d brokerage"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - brokerage_pgdata:/var/lib/postgresql/data
+
+volumes:
+  brokerage_pgdata:

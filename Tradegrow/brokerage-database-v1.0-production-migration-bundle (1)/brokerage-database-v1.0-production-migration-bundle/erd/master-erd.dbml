@@ -1,0 +1,51 @@
+Project brokerage_database_v1 {
+  database_type: "PostgreSQL"
+}
+
+Table identity.users { id uuid [pk]; email citext; status varchar }
+Table customers.customers { id uuid [pk]; user_id uuid [unique]; customer_code varchar [unique] }
+Table trading.accounts { id uuid [pk]; customer_id uuid; account_number varchar [unique] }
+Table market.exchanges { id uuid [pk]; code varchar [unique] }
+Table market.segments { id uuid [pk]; exchange_id uuid; code varchar }
+Table market.instruments { id uuid [pk]; segment_id uuid; trading_symbol varchar }
+Table trading.orders { id uuid [pk]; client_order_id uuid [unique]; trading_account_id uuid; instrument_id uuid; idempotency_key varchar }
+Table trading.order_events { id uuid [pk]; order_id uuid }
+Table trading.trades { id uuid [pk]; order_id uuid; trading_account_id uuid; instrument_id uuid }
+Table portfolio.positions { id uuid [pk]; trading_account_id uuid; instrument_id uuid; product_type varchar }
+Table portfolio.holdings { id uuid [pk]; trading_account_id uuid; instrument_id uuid }
+Table ledger.accounts { id uuid [pk]; trading_account_id uuid; chart_account_id uuid }
+Table ledger.transactions { id uuid [pk]; transaction_reference varchar [unique] }
+Table ledger.entries { id uuid [pk]; transaction_id uuid; ledger_account_id uuid; debit decimal; credit decimal }
+Table payments.transactions { id uuid [pk]; trading_account_id uuid; provider varchar; provider_reference varchar }
+Table payments.withdrawals { id uuid [pk]; trading_account_id uuid; bank_account_id uuid }
+Table settlement.settlements { id uuid [pk]; trading_account_id uuid; settlement_date date }
+Table settlement.obligations { id uuid [pk]; settlement_id uuid; instrument_id uuid }
+Table reconciliation.runs { id uuid [pk]; business_date date }
+Table reconciliation.exceptions { id uuid [pk]; run_id uuid; entity_id uuid }
+Table audit.events { id uuid [pk]; actor_user_id uuid; resource_id uuid }
+Table integration.outbox_events { id uuid [pk]; aggregate_id uuid; event_type varchar }
+
+Ref: customers.customers.user_id > identity.users.id
+Ref: trading.accounts.customer_id > customers.customers.id
+Ref: market.segments.exchange_id > market.exchanges.id
+Ref: market.instruments.segment_id > market.segments.id
+Ref: trading.orders.trading_account_id > trading.accounts.id
+Ref: trading.orders.instrument_id > market.instruments.id
+Ref: trading.order_events.order_id > trading.orders.id
+Ref: trading.trades.order_id > trading.orders.id
+Ref: trading.trades.trading_account_id > trading.accounts.id
+Ref: trading.trades.instrument_id > market.instruments.id
+Ref: portfolio.positions.trading_account_id > trading.accounts.id
+Ref: portfolio.positions.instrument_id > market.instruments.id
+Ref: portfolio.holdings.trading_account_id > trading.accounts.id
+Ref: portfolio.holdings.instrument_id > market.instruments.id
+Ref: ledger.accounts.trading_account_id > trading.accounts.id
+Ref: ledger.entries.transaction_id > ledger.transactions.id
+Ref: ledger.entries.ledger_account_id > ledger.accounts.id
+Ref: payments.transactions.trading_account_id > trading.accounts.id
+Ref: payments.withdrawals.trading_account_id > trading.accounts.id
+Ref: settlement.settlements.trading_account_id > trading.accounts.id
+Ref: settlement.obligations.settlement_id > settlement.settlements.id
+Ref: settlement.obligations.instrument_id > market.instruments.id
+Ref: reconciliation.exceptions.run_id > reconciliation.runs.id
+Ref: audit.events.actor_user_id > identity.users.id

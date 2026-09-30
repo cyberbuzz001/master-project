@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Monitoring Hub | Developer Architecture</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #07122a; }
+        ::-webkit-scrollbar-thumb { background: #2a344e; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b9c7e4; }
+        
+        .method-get { color: #81b1ff; }
+        .method-post { color: #81ffb1; }
+        .method-patch { color: #ffeb81; }
+        .method-delete { color: #ff8181; }
+
+        .erd-line {
+            background-image: radial-gradient(circle, #44474d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#515f78",
+                        "surface-container-high": "#1f2942",
+                        "secondary": "#b5c7ea",
+                        "on-surface-variant": "#c5c6cd",
+                        "secondary-fixed-dim": "#b5c7ea",
+                        "on-primary-fixed": "#0d1c32",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed": "#ffdcbd",
+                        "surface-container-lowest": "#030d25",
+                        "primary-fixed": "#d6e3ff",
+                        "surface-container-low": "#101b33",
+                        "surface": "#07122a",
+                        "surface-container": "#151f37",
+                        "on-primary-fixed-variant": "#39475f",
+                        "outline-variant": "#44474d",
+                        "on-tertiary-fixed-variant": "#5d4124",
+                        "on-tertiary-container": "#9d7b5a",
+                        "on-secondary-fixed-variant": "#354764",
+                        "on-secondary-container": "#a3b6d8",
+                        "on-primary-container": "#74829d",
+                        "on-background": "#d9e2ff",
+                        "secondary-container": "#354764",
+                        "primary-container": "#0a192f",
+                        "on-error": "#690005",
+                        "tertiary": "#e7bf99",
+                        "on-secondary-fixed": "#071c36",
+                        "inverse-surface": "#d9e2ff",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#b9c7e4",
+                        "inverse-on-surface": "#263049",
+                        "background": "#07122a",
+                        "surface-variant": "#2a344e",
+                        "secondary-fixed": "#d5e3ff",
+                        "on-tertiary": "#432b10",
+                        "primary": "#b9c7e4",
+                        "on-secondary": "#1e314c",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#281400",
+                        "surface-container-highest": "#2a344e",
+                        "on-primary": "#233148",
+                        "outline": "#8f9097",
+                        "on-surface": "#d9e2ff",
+                        "tertiary-fixed-dim": "#e7bf99",
+                        "on-tertiary-fixed": "#2b1701",
+                        "surface-dim": "#07122a",
+                        "error-container": "#93000a",
+                        "surface-bright": "#2f3952"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "density-default": "8px",
+                        "density-compact": "4px",
+                        "gutter": "12px",
+                        "unit": "4px",
+                        "margin-page": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "data-mono": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Top Navigation Anchor -->
+<header class="bg-surface text-primary font-headline-sm font-data-mono flex justify-between items-center w-full px-gutter h-12 z-50 border-b border-outline-variant/15 docked full-width top-0 fixed">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Apex Monitoring Hub</span>
+<div class="hidden md:flex gap-4 items-center">
+<nav class="flex items-center gap-6">
+<a class="text-on-surface-variant hover:bg-surface-container-highest transition-colors px-2 py-1" href="#">System</a>
+<a class="text-primary border-b-2 border-primary transition-colors px-2 py-1" href="#">Architecture</a>
+<a class="text-on-surface-variant hover:bg-surface-container-highest transition-colors px-2 py-1" href="#">Security</a>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-secondary text-on-secondary px-4 h-8 text-label-caps font-label-caps hover:bg-surface-container-highest transition-colors">Emergency Stop</button>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-highest p-1">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-highest p-1">settings</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-highest p-1">help</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A professional high-contrast portrait of a technical system administrator with cool blue lighting and a minimalist data-centric background, matching a dark corporate UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5IYgUloYJtjTPpGQaKKFTKINF6SE0wD9KJXbUPtH6qmOA9zHF-cjqTzh4xk5rUPZYmpZPDCPa0I5MsKZ2p0dFJ_asCUOt4QJl0yVYkSAZGMT5sD-XrmFvJCvvk-j3b65MkfCScaHRo2NIrtDfQY2w73n1vOc3j6HVluLhl9wHgooJZxxO2go2K0gLjqsgnUV17STNj7EvHUxebSvN8ApAR43M9M5R39kpD4KOnYBYxVPqie39R_ru"/>
+</div>
+</div>
+</header>
+<!-- Side Navigation Anchor -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-surface-container border-r border-outline-variant/15 w-64 docked left-0">
+<div class="p-6 mt-12">
+<h1 class="font-headline-sm text-headline-sm font-black text-secondary">APEX HUB</h1>
+<p class="font-label-caps text-label-caps opacity-60">Operational Node 01</p>
+</div>
+<nav class="flex-grow flex flex-col mt-4">
+<div class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-3 bg-secondary-container text-on-secondary-container border-l-4 border-secondary transition-all cursor-pointer">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps">Order Book</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-caps text-label-caps">Ledger</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-caps text-label-caps">Exchanges</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-caps text-label-caps">Risk Manager</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</div>
+</nav>
+<div class="p-6 border-t border-outline-variant/10">
+<button class="w-full bg-secondary text-on-secondary py-2 font-label-caps text-label-caps hover:opacity-90">New Terminal</button>
+<div class="mt-4 flex items-center gap-3 text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-caps text-label-caps">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-12 h-screen flex flex-col">
+<!-- Developer Pulse Header -->
+<section class="h-14 bg-surface-container-low border-b border-outline-variant/15 flex items-center px-6 gap-8 shrink-0">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Service Uptime</span>
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-[#81ffb1] animate-pulse"></span>
+<span class="font-data-mono text-data-mono text-[#81ffb1]">99.98%</span>
+</div>
+</div>
+<div class="flex items-center gap-2 border-l border-outline-variant/30 pl-8">
+<span class="font-label-caps text-label-caps text-on-surface-variant">API Latency</span>
+<span class="font-data-mono text-data-mono text-secondary">24ms <span class="text-xs text-on-surface-variant opacity-50">avg</span></span>
+</div>
+<div class="flex items-center gap-2 border-l border-outline-variant/30 pl-8">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Active Instances</span>
+<span class="font-data-mono text-data-mono text-primary">08 Nodes</span>
+</div>
+<div class="flex items-center gap-2 border-l border-outline-variant/30 pl-8 ml-auto">
+<div class="flex gap-1">
+<div class="w-1 h-3 bg-[#81ffb1]"></div>
+<div class="w-1 h-4 bg-[#81ffb1]"></div>
+<div class="w-1 h-2 bg-[#81ffb1]"></div>
+<div class="w-1 h-5 bg-[#81ffb1]"></div>
+<div class="w-1 h-3 bg-[#81ffb1]"></div>
+<div class="w-1 h-4 bg-[#81ffb1]"></div>
+<div class="w-1 h-6 bg-[#81ffb1]"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Real-time Stream</span>
+</div>
+</section>
+<!-- Main Split Pane Layout -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Left Pane: API Documentation Tree -->
+<section class="w-1/3 min-w-[320px] bg-surface-container-lowest border-r border-outline-variant/15 overflow-y-auto p-6">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline-sm text-headline-sm text-primary">API Directory</h2>
+<span class="text-xs font-data-mono bg-surface-variant px-2 py-0.5 border border-outline-variant/30 text-on-surface-variant">v1.4.2</span>
+</div>
+<div class="space-y-6">
+<!-- API Group: Admin -->
+<div class="group">
+<div class="flex items-center gap-2 text-on-surface-variant mb-2 opacity-60">
+<span class="material-symbols-outlined text-sm">folder_open</span>
+<span class="font-label-caps text-label-caps tracking-widest">/API/V1/ADMIN</span>
+</div>
+<ul class="space-y-1 ml-4 border-l border-outline-variant/10">
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-get font-bold">GET</span>
+<span class="font-body-sm text-body-sm text-on-surface">/clients</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-post font-bold">POST</span>
+<span class="font-body-sm text-body-sm text-on-surface">/clients</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-get font-bold">GET</span>
+<span class="font-body-sm text-body-sm text-on-surface">/rms/rules</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-patch font-bold">PATCH</span>
+<span class="font-body-sm text-body-sm text-on-surface">/rms/rules/{id}</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+</ul>
+</div>
+<!-- API Group: Core -->
+<div class="group">
+<div class="flex items-center gap-2 text-on-surface-variant mb-2 opacity-60">
+<span class="material-symbols-outlined text-sm">folder</span>
+<span class="font-label-caps text-label-caps tracking-widest">/API/V1/CORE</span>
+</div>
+<ul class="space-y-1 ml-4 border-l border-outline-variant/10">
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-get font-bold">GET</span>
+<span class="font-body-sm text-body-sm text-on-surface">/orders</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-post font-bold">POST</span>
+<span class="font-body-sm text-body-sm text-on-surface">/orders/execute</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs method-get font-bold">GET</span>
+<span class="font-body-sm text-body-sm text-on-surface">/kyc/cases</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover/item:opacity-100 pr-2">arrow_forward</span>
+</li>
+</ul>
+</div>
+<!-- Webhooks -->
+<div class="group">
+<div class="flex items-center gap-2 text-on-surface-variant mb-2 opacity-60">
+<span class="material-symbols-outlined text-sm">settings_input_antenna</span>
+<span class="font-label-caps text-label-caps tracking-widest">WEBHOOKS</span>
+</div>
+<ul class="space-y-1 ml-4 border-l border-outline-variant/10">
+<li class="flex items-center justify-between py-1.5 pl-4 hover:bg-surface-container-high transition-colors cursor-pointer group/item">
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-xs text-secondary font-bold">PUSH</span>
+<span class="font-body-sm text-body-sm text-on-surface">order.status.changed</span>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Center/Right Pane: Database Schema Viewer -->
+<section class="flex-1 bg-surface-container-low p-8 relative overflow-auto erd-line">
+<div class="mb-8">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-2">Primary Schema Explorer</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl">Visual representation of core relational architecture. Relationships are mapped via foreign key constraints enforced at the database level.</p>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-8 pb-20">
+<!-- Table: Employees -->
+<div class="bg-surface-container-high border border-outline-variant/30 rounded shadow-2xl transition-transform hover:scale-[1.02]">
+<div class="bg-secondary-container p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-secondary-container">account_circle</span>
+<span class="font-data-mono font-bold text-on-secondary-container">employees</span>
+</div>
+<span class="font-label-caps text-[9px] px-1 bg-on-secondary-container/10 text-on-secondary-container border border-on-secondary-container/20">RELATIONAL</span>
+</div>
+<div class="p-0">
+<table class="w-full text-left font-data-mono text-xs">
+<tbody><tr class="border-b border-outline-variant/10 bg-surface/30">
+<td class="p-2 py-3 font-bold text-primary italic">PK</td>
+<td class="p-2 py-3 text-on-surface">id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">name</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(255)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3 font-bold text-secondary italic">FK</td>
+<td class="p-2 py-3 text-on-surface">role_id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">INT</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">access_level</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">SMALLINT</td>
+</tr>
+<tr>
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">last_login</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">TIMESTAMPTZ</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+<!-- Table: Clients -->
+<div class="bg-surface-container-high border border-outline-variant/30 rounded shadow-2xl transition-transform hover:scale-[1.02]">
+<div class="bg-primary-container p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">groups</span>
+<span class="font-data-mono font-bold text-primary">clients</span>
+</div>
+<span class="font-label-caps text-[9px] px-1 bg-primary/10 text-primary border border-primary/20">RELATIONAL</span>
+</div>
+<div class="p-0">
+<table class="w-full text-left font-data-mono text-xs">
+<tbody><tr class="border-b border-outline-variant/10 bg-surface/30">
+<td class="p-2 py-3 font-bold text-primary italic">PK</td>
+<td class="p-2 py-3 text-on-surface">id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">legal_name</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(512)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">tax_id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(64)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3 font-bold text-secondary italic">FK</td>
+<td class="p-2 py-3 text-on-surface">kyc_id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr>
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">risk_profile</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">ENUM</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+<!-- Table: Orders -->
+<div class="bg-surface-container-high border border-outline-variant/30 rounded shadow-2xl transition-transform hover:scale-[1.02]">
+<div class="bg-surface-variant p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface">shopping_cart</span>
+<span class="font-data-mono font-bold text-on-surface">orders</span>
+</div>
+<span class="font-label-caps text-[9px] px-1 bg-on-surface/10 text-on-surface border border-on-surface/20">HIGH_DENSITY</span>
+</div>
+<div class="p-0">
+<table class="w-full text-left font-data-mono text-xs">
+<tbody><tr class="border-b border-outline-variant/10 bg-surface/30">
+<td class="p-2 py-3 font-bold text-primary italic">PK</td>
+<td class="p-2 py-3 text-on-surface">id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">BIGINT</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3 font-bold text-secondary italic">FK</td>
+<td class="p-2 py-3 text-on-surface">client_id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">symbol</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(16)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">amount</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">DECIMAL(24,8)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">price</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">DECIMAL(24,8)</td>
+</tr>
+<tr>
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">status</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(32)</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+<!-- Table: KYC Cases -->
+<div class="bg-surface-container-high border border-outline-variant/30 rounded shadow-2xl transition-transform hover:scale-[1.02]">
+<div class="bg-[#281400] p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">fact_check</span>
+<span class="font-data-mono font-bold text-tertiary">kyc_cases</span>
+</div>
+<span class="font-label-caps text-[9px] px-1 bg-tertiary/10 text-tertiary border border-tertiary/20">COMPLIANCE</span>
+</div>
+<div class="p-0">
+<table class="w-full text-left font-data-mono text-xs">
+<tbody><tr class="border-b border-outline-variant/10 bg-surface/30">
+<td class="p-2 py-3 font-bold text-primary italic">PK</td>
+<td class="p-2 py-3 text-on-surface">id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">status</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">ENUM</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3 font-bold text-secondary italic">FK</td>
+<td class="p-2 py-3 text-on-surface">reviewer_id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">UUID</td>
+</tr>
+<tr>
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">docs_url</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">TEXT</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+<!-- Table: RMS Rules -->
+<div class="bg-surface-container-high border border-outline-variant/30 rounded shadow-2xl transition-transform hover:scale-[1.02]">
+<div class="bg-[#93000a]/20 p-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error">gavel</span>
+<span class="font-data-mono font-bold text-error">rms_rules</span>
+</div>
+<span class="font-label-caps text-[9px] px-1 bg-error/10 text-error border border-error/20">SECURITY</span>
+</div>
+<div class="p-0">
+<table class="w-full text-left font-data-mono text-xs">
+<tbody><tr class="border-b border-outline-variant/10 bg-surface/30">
+<td class="p-2 py-3 font-bold text-primary italic">PK</td>
+<td class="p-2 py-3 text-on-surface">id</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">INT</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">rule_name</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">VARCHAR(128)</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">expression</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">JSONB</td>
+</tr>
+<tr>
+<td class="p-2 py-3"></td>
+<td class="p-2 py-3 text-on-surface">is_active</td>
+<td class="p-2 py-3 text-on-surface-variant opacity-60">BOOLEAN</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+</div>
+<!-- Floating ERD Action Controls -->
+<div class="fixed bottom-6 right-6 flex flex-col gap-2">
+<button class="bg-surface border border-outline-variant/30 p-2 text-on-surface-variant hover:text-primary transition-all shadow-xl">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<button class="bg-surface border border-outline-variant/30 p-2 text-on-surface-variant hover:text-primary transition-all shadow-xl">
+<span class="material-symbols-outlined">zoom_out</span>
+</button>
+<button class="bg-primary text-on-primary p-3 shadow-2xl hover:opacity-90">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Bottom Real-time Tickers -->
+<footer class="fixed bottom-0 left-64 right-0 h-8 bg-surface-container-highest border-t border-outline-variant/15 flex items-center overflow-hidden whitespace-nowrap z-50">
+<div class="flex animate-[scroll_30s_linear_infinite] items-center gap-12 px-6">
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">LATEST_DEPLOY:</span>
+<span class="font-data-mono text-data-mono text-[#81ffb1]">COMMIT_B9C7E4</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">DB_REPLICA_LAG:</span>
+<span class="font-data-mono text-data-mono text-secondary">0.02ms</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">NODE_01_CPU:</span>
+<span class="font-data-mono text-data-mono text-primary">12%</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">MEMORY_USAGE:</span>
+<span class="font-data-mono text-data-mono text-secondary">4.2GB / 16GB</span>
+</div>
+<!-- Repeat for seamless scrolling -->
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">LATEST_DEPLOY:</span>
+<span class="font-data-mono text-data-mono text-[#81ffb1]">COMMIT_B9C7E4</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">DB_REPLICA_LAG:</span>
+<span class="font-data-mono text-data-mono text-secondary">0.02ms</span>
+</div>
+</div>
+</footer>
+<style>
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+<script>
+        // Simple Micro-interaction: Update pulse timestamps
+        setInterval(() => {
+            const timeSpan = document.querySelector('.real-time-stream');
+            if (timeSpan) {
+                const now = new Date();
+                timeSpan.innerText = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+        }, 1000);
+
+        // Flash simulation for data updates
+        function simulateUpdate() {
+            const cells = document.querySelectorAll('td.text-on-surface');
+            const randomCell = cells[Math.floor(Math.random() * cells.length)];
+            const originalBg = randomCell.parentElement.style.backgroundColor;
+            
+            randomCell.parentElement.style.backgroundColor = 'rgba(181, 199, 234, 0.2)';
+            setTimeout(() => {
+                randomCell.parentElement.style.backgroundColor = originalBg;
+            }, 500);
+        }
+
+        setInterval(simulateUpdate, 3000);
+    </script>
+</body></html>

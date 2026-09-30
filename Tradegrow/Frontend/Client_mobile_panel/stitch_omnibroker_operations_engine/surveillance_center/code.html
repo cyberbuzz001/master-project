@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps Surveillance | Enterprise Suite</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#001e2d",
+                        "error": "#ba1a1a",
+                        "surface-container": "#edeeef",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "tertiary-fixed": "#c8e7fd",
+                        "secondary-fixed": "#dae1ff",
+                        "on-primary-container": "#76849f",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "surface-variant": "#e1e3e4",
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#001849",
+                        "on-primary-fixed": "#0d1c32",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-container": "#0266ff",
+                        "inverse-primary": "#b9c7e4",
+                        "inverse-on-surface": "#f0f1f2",
+                        "background": "#f8f9fa",
+                        "on-surface-variant": "#44474d",
+                        "on-tertiary-fixed": "#001e2d",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "outline": "#75777e",
+                        "primary-container": "#0d1c32",
+                        "surface-dim": "#d9dadb",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "secondary": "#0050cc",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#515f78",
+                        "on-primary-fixed-variant": "#39475f",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "on-background": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "on-tertiary-container": "#6a889b",
+                        "on-secondary-container": "#f9f7ff",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c5c6cd",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "table-cell-padding": "8px 12px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .heatmap-cell { transition: all 0.2s ease; }
+        .heatmap-cell:hover { transform: scale(1.1); z-index: 10; cursor: pointer; }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SIDE NAVIGATION BAR (Predicted from JSON) -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container z-50 flex flex-col py-4 shadow-md">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-[10px] text-on-primary-container/50 uppercase tracking-[0.2em] font-bold">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1 px-2">
+<!-- Compliance is the active navigation item -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-label-md text-label-md">Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-md text-label-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-md text-label-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Back Office</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 shadow-inner" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md text-label-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-2 space-y-1">
+<button class="w-full mb-4 py-2 px-4 bg-secondary-container text-on-secondary-container font-label-md rounded flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Request
+            </button>
+<div class="border-t border-on-primary-container/10 pt-4">
+<a class="flex items-center gap-3 text-on-primary-container/70 p-2 hover:bg-on-primary-container/10 rounded" href="#">
+<span class="material-symbols-outlined text-[20px]">search</span>
+<span class="text-xs">Search</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 p-2 hover:bg-on-primary-container/10 rounded" href="#">
+<span class="material-symbols-outlined text-[20px]">star</span>
+<span class="text-xs">Favorites</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TOP NAVIGATION BAR (Predicted from JSON) -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant z-40 flex justify-between items-center px-6">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full w-80 text-body-sm focus:ring-1 focus:ring-secondary" placeholder="Search instruments, accounts, or alert IDs..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Risk</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="text-[10px] font-bold text-green-700 uppercase">System Pulse</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<div class="h-8 w-8 rounded-full bg-primary overflow-hidden border border-outline-variant ml-2">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of a financial systems operations manager, wearing a crisp dark suit, clean minimalist background, focused and authoritative corporate lighting, sharp high-resolution photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEgh-ZPR7Z-vU-knoZBbJeSzTW1tu52wVuD_lYFlKH0TKJuK6pgK1EyJ3lXEZ1wifc0BaFxaFSnCfnYEjU4LqH9LMyfdz5bt3e0kY15FbwejQ9vKT5cvc51mocXpfcLCKc241oFDxanfY72DtkVmz6JAgqkwI-GgRnHYHIxOxXL3YJWthmipOszwMdZDnOfsy4WPGFCvEaQSeHbIkHvEyw1GA-QAt_8BooS4Zrqha6fUTHCxowJtDe"/>
+</div>
+</div>
+</header>
+<!-- MAIN WORKSPACE -->
+<main class="ml-[260px] pt-16 min-h-screen">
+<div class="p-6">
+<!-- HEADER SECTION -->
+<div class="flex justify-between items-end mb-6">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-1">
+<span class="font-label-md text-label-md">COMPLIANCE</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-md text-label-md text-secondary">SURVEILLANCE WORKBENCH</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl tracking-tight">Active Surveillance Queue</h2>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant text-on-surface font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filters
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+                        Export Audit Log
+                    </button>
+</div>
+</div>
+<!-- DASHBOARD TOP ROW: Bento Stats -->
+<div class="grid grid-cols-12 gap-4 mb-6">
+<div class="col-span-3 bg-white p-4 border border-outline-variant shadow-sm relative overflow-hidden">
+<div class="relative z-10">
+<p class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider mb-2">Total Alerts (24h)</p>
+<div class="flex items-end gap-3">
+<span class="font-headline-lg text-headline-lg">1,284</span>
+<span class="text-green-600 font-bold text-xs mb-1 flex items-center"><span class="material-symbols-outlined text-[14px]">trending_down</span> 12%</span>
+</div>
+</div>
+<div class="absolute right-[-10px] bottom-[-10px] opacity-10">
+<span class="material-symbols-outlined text-[80px]">warning</span>
+</div>
+</div>
+<div class="col-span-3 bg-white p-4 border border-outline-variant shadow-sm border-l-4 border-error">
+<p class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider mb-2">Critical Severity</p>
+<div class="flex items-end gap-3">
+<span class="font-headline-lg text-headline-lg text-error">42</span>
+<span class="text-error font-bold text-xs mb-1 flex items-center"><span class="material-symbols-outlined text-[14px]">trending_up</span> 4%</span>
+</div>
+</div>
+<div class="col-span-3 bg-white p-4 border border-outline-variant shadow-sm">
+<p class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider mb-2">Avg. Resolution Time</p>
+<div class="flex items-end gap-3">
+<span class="font-headline-lg text-headline-lg">18.5m</span>
+<span class="text-green-600 font-bold text-xs mb-1 flex items-center"><span class="material-symbols-outlined text-[14px]">expand_more</span> 2.1m</span>
+</div>
+</div>
+<div class="col-span-3 bg-white p-4 border border-outline-variant shadow-sm">
+<p class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider mb-2">Pending Analyst Review</p>
+<div class="flex items-end gap-3">
+<span class="font-headline-lg text-headline-lg">156</span>
+<div class="h-2 w-24 bg-surface-container rounded-full overflow-hidden mb-2">
+<div class="h-full bg-secondary w-[65%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- WORKSPACE GRID -->
+<div class="grid grid-cols-12 gap-6">
+<!-- ALERT QUEUE PANEL -->
+<div class="col-span-7 bg-white border border-outline-variant shadow-sm flex flex-col h-[700px]">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-headline-md text-headline-md">Surveillance Alerts</h3>
+<div class="flex gap-2">
+<span class="bg-error/10 text-error text-[10px] font-bold px-2 py-0.5 rounded">3 NEW CRITICAL</span>
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-2 py-0.5 rounded">REFRESHED: JUST NOW</span>
+</div>
+</div>
+<!-- ALERT LIST -->
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container-low z-10">
+<tr>
+<th class="p-table-cell-padding text-[11px] font-bold text-on-surface-variant uppercase border-b border-outline-variant">Alert ID</th>
+<th class="p-table-cell-padding text-[11px] font-bold text-on-surface-variant uppercase border-b border-outline-variant">Type</th>
+<th class="p-table-cell-padding text-[11px] font-bold text-on-surface-variant uppercase border-b border-outline-variant text-center">Severity</th>
+<th class="p-table-cell-padding text-[11px] font-bold text-on-surface-variant uppercase border-b border-outline-variant text-center">Workflow</th>
+<th class="p-table-cell-padding text-[11px] font-bold text-on-surface-variant uppercase border-b border-outline-variant">Timestamp</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Alert Row 1 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors group">
+<td class="p-table-cell-padding font-data-mono text-data-mono">#SRV-8821</td>
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="text-body-md font-semibold">Wash Trading Detected</span>
+<span class="text-[11px] text-on-surface-variant">REL-INFRA / HFT-309</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-center">
+<span class="px-2 py-1 bg-error text-white text-[10px] font-bold rounded">CRITICAL</span>
+</td>
+<td class="p-table-cell-padding">
+<div class="flex items-center justify-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary uppercase">Investigation</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant text-[11px]">14:22:05.122</td>
+</tr>
+<!-- Alert Row 2 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors group bg-secondary/5">
+<td class="p-table-cell-padding font-data-mono text-data-mono">#SRV-8822</td>
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="text-body-md font-semibold">Price Manipulation</span>
+<span class="text-[11px] text-on-surface-variant">SBIN / NSE_CASH</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-center">
+<span class="px-2 py-1 bg-orange-500 text-white text-[10px] font-bold rounded">HIGH</span>
+</td>
+<td class="p-table-cell-padding">
+<div class="flex items-center justify-center gap-1">
+<span class="w-2 h-2 rounded-full bg-on-surface-variant"></span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Analyst Review</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant text-[11px]">14:21:44.890</td>
+</tr>
+<!-- Alert Row 3 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors group">
+<td class="p-table-cell-padding font-data-mono text-data-mono">#SRV-8820</td>
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="text-body-md font-semibold">Abnormal Volume Spike</span>
+<span class="text-[11px] text-on-surface-variant">ZOMATO / FUTURES</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-center">
+<span class="px-2 py-1 bg-yellow-500 text-on-surface text-[10px] font-bold rounded">MEDIUM</span>
+</td>
+<td class="p-table-cell-padding">
+<div class="flex items-center justify-center gap-1">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] font-bold text-green-600 uppercase">Resolution</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant text-[11px]">14:20:12.005</td>
+</tr>
+<!-- Repeat for UI density -->
+<script>
+                                    const alerts = [
+                                        { id: '#SRV-8819', type: 'Layering Activity', entity: 'TATASTEEL', severity: 'LOW', status: 'Analyst Review', time: '14:18:02', s_class: 'bg-blue-400', st_class: 'bg-on-surface-variant' },
+                                        { id: '#SRV-8818', type: 'Wash Trading', entity: 'INFY', severity: 'CRITICAL', status: 'Investigation', time: '14:15:33', s_class: 'bg-error', st_class: 'bg-secondary' },
+                                        { id: '#SRV-8817', type: 'Spoofing Detected', entity: 'RELIANCE', severity: 'HIGH', status: 'Investigation', time: '14:12:11', s_class: 'bg-orange-500', st_class: 'bg-secondary' },
+                                        { id: '#SRV-8816', type: 'Volume Anomaly', entity: 'HDFCBANK', severity: 'LOW', status: 'Resolution', time: '14:10:44', s_class: 'bg-blue-400', st_class: 'bg-green-500' },
+                                        { id: '#SRV-8815', type: 'Price Spike', entity: 'ITC', severity: 'MEDIUM', status: 'Analyst Review', time: '14:05:00', s_class: 'bg-yellow-500', st_class: 'bg-on-surface-variant' },
+                                        { id: '#SRV-8814', type: 'Wash Trading', entity: 'ADANIENT', severity: 'CRITICAL', status: 'Investigation', time: '13:58:12', s_class: 'bg-error', st_class: 'bg-secondary' },
+                                        { id: '#SRV-8813', type: 'Abnormal Cancellation', entity: 'WIPRO', severity: 'LOW', status: 'Resolution', time: '13:55:01', s_class: 'bg-blue-400', st_class: 'bg-green-500' },
+                                    ];
+                                    alerts.forEach(a => {
+                                        document.write(`
+                                            <tr class="hover:bg-surface-container-low cursor-pointer transition-colors group">
+                                                <td class="p-table-cell-padding font-data-mono text-data-mono">${a.id}</td>
+                                                <td class="p-table-cell-padding">
+                                                    <div class="flex flex-col">
+                                                        <span class="text-body-md font-semibold">${a.type}</span>
+                                                        <span class="text-[11px] text-on-surface-variant">${a.entity} / CASH</span>
+                                                    </div>
+                                                </td>
+                                                <td class="p-table-cell-padding text-center">
+                                                    <span class="px-2 py-1 ${a.s_class} ${a.severity === 'MEDIUM' ? 'text-on-surface' : 'text-white'} text-[10px] font-bold rounded">${a.severity}</span>
+                                                </td>
+                                                <td class="p-table-cell-padding">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <span class="w-2 h-2 rounded-full ${a.st_class}"></span>
+                                                        <span class="text-[10px] font-bold uppercase text-on-surface-variant">${a.status}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="p-table-cell-padding text-on-surface-variant text-[11px]">${a.time}.000</td>
+                                            </tr>
+                                        `);
+                                    });
+                                </script>
+</tbody>
+</table>
+</div>
+</div>
+<!-- INVESTIGATION DETAIL PANEL -->
+<div class="col-span-5 flex flex-col gap-6">
+<!-- SUSPICIOUS ACTIVITY HEATMAP -->
+<div class="bg-white border border-outline-variant shadow-sm p-4">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant">Market Hotspots (HFT Activity)</h3>
+<span class="text-[10px] bg-secondary-container/10 text-secondary-container px-2 py-0.5 rounded font-bold">LIVE MAP</span>
+</div>
+<div class="grid grid-cols-10 grid-rows-5 gap-1 h-32">
+<!-- JS will generate heatmap cells -->
+<script>
+                                for(let i=0; i<50; i++) {
+                                    const intensities = ['bg-surface-container', 'bg-red-50', 'bg-red-100', 'bg-red-200', 'bg-red-300', 'bg-red-500', 'bg-red-700'];
+                                    const intensity = intensities[Math.floor(Math.random() * intensities.length)];
+                                    document.write(`<div class="heatmap-cell ${intensity} rounded-sm"></div>`);
+                                }
+                            </script>
+</div>
+<div class="flex justify-between mt-2 text-[9px] text-on-surface-variant font-bold">
+<span>NORMAL VOLUME</span>
+<span>HIGH RISK CONCENTRATION</span>
+</div>
+</div>
+<!-- DETAILED INVESTIGATION VIEW -->
+<div class="bg-white border border-outline-variant shadow-sm flex flex-1 flex-col overflow-hidden maker-checker-pending">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<div>
+<h3 class="font-headline-md text-headline-md">Investigation #SRV-8821</h3>
+<p class="text-xs text-on-surface-variant">Case Owner: <span class="font-bold">Rahul S. (Senior Analyst)</span></p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">open_in_full</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+<!-- EVIDENCE LOGS -->
+<div class="mb-6">
+<h4 class="text-[11px] font-bold text-on-surface-variant uppercase mb-3 border-b border-outline-variant pb-1">Automated Evidence Logs</h4>
+<div class="space-y-3">
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="flex justify-between mb-1">
+<span class="text-[10px] font-bold text-secondary">MATCHING ORDER PAIRS</span>
+<span class="text-[10px] text-on-surface-variant">14:22:01.002</span>
+</div>
+<p class="text-xs">Detected 5 successive circular trades between AC-9921 and AC-8822 within 400ms window.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="flex justify-between mb-1">
+<span class="text-[10px] font-bold text-error">IP ADDRESS CONFLICT</span>
+<span class="text-[10px] text-on-surface-variant">14:22:01.015</span>
+</div>
+<p class="text-xs">Both trading entities originating from matching IP: 192.168.1.104. Potential self-trading violation.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="flex justify-between mb-1">
+<span class="text-[10px] font-bold text-on-surface">SYSTEM RECOMMENDATION</span>
+<span class="text-[10px] text-on-surface-variant">AI-V4.2</span>
+</div>
+<p class="text-xs font-semibold">Elevate to Compliance Officer. high probability of Wash Trading (94%).</p>
+</div>
+</div>
+</div>
+<!-- RESOLUTION FORM -->
+<div class="mt-auto">
+<h4 class="text-[11px] font-bold text-on-surface-variant uppercase mb-3 border-b border-outline-variant pb-1">Resolution &amp; Audit Trail</h4>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-semibold mb-1">Action Taken <span class="text-error">*</span></label>
+<select class="w-full text-xs border-outline-variant rounded focus:ring-secondary focus:border-secondary">
+<option>Mark as Suspicious (Escalate to SEBI)</option>
+<option>Client Warning Issued</option>
+<option>False Positive - System Noise</option>
+<option>Internal Account Correction</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-semibold mb-1">Reason for Resolution <span class="text-error">*</span></label>
+<textarea class="w-full text-xs border-outline-variant rounded focus:ring-secondary focus:border-secondary" placeholder="Mandatory field: provide detailed justification for audit purposes..." rows="3"></textarea>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-2 bg-secondary text-white font-label-md rounded active:scale-95 transition-transform">
+                                            Update Workflow
+                                        </button>
+<button class="px-4 py-2 border border-outline-variant text-on-surface font-label-md rounded hover:bg-surface-container-low transition-colors">
+                                            Add Note
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- LIVE MONITOR FLOATING TILE (Bottom Right) -->
+<div class="fixed bottom-6 right-6 w-72 bg-primary-container text-on-primary-container p-4 shadow-xl border-l-4 border-secondary-container z-50 animate-bounce-short">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">analytics</span>
+<span class="text-xs font-bold uppercase tracking-widest">Live Surveillance Feed</span>
+</div>
+<button class="opacity-50 hover:opacity-100"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] border-b border-on-primary-container/10 pb-1">
+<span>RELIANCE.NS</span>
+<span class="text-green-400">+1.2%</span>
+<span class="text-on-primary-container/60 font-mono">14:23:44</span>
+</div>
+<div class="flex justify-between text-[10px] border-b border-on-primary-container/10 pb-1">
+<span>HDFCBANK.NS</span>
+<span class="text-error">-0.4%</span>
+<span class="text-on-primary-container/60 font-mono">14:23:42</span>
+</div>
+<div class="flex justify-between text-[10px] bg-secondary-container/10 p-1">
+<span class="font-bold">SUSPICIOUS VOL</span>
+<span class="text-secondary-container font-bold">#SRV-8824</span>
+<span class="text-white/60 font-mono">NOW</span>
+</div>
+</div>
+</div>
+<style>
+        @keyframes bounce-short {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-short {
+            animation: bounce-short 3s ease-in-out infinite;
+        }
+    </style>
+<script>
+        // Micro-interactions for table rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('bg-secondary/10'));
+                row.classList.add('bg-secondary/10');
+            });
+        });
+
+        // Heatmap cell flicker effect
+        setInterval(() => {
+            const cells = document.querySelectorAll('.heatmap-cell');
+            const randomCell = cells[Math.floor(Math.random() * cells.length)];
+            randomCell.classList.add('opacity-50');
+            setTimeout(() => randomCell.classList.remove('opacity-50'), 300);
+        }, 1000);
+    </script>
+</body></html>

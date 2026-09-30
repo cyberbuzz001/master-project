@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trade Grow — Acquisition Planning Calculator (Internal)</title>
+<style>
+  :root{
+    --ink:#0A2540; --muted:#5A6B87; --brand:#1B4DFF; --brand-50:#F3F6FF; --brand-100:#E8EEFF;
+    --line:#E3E8F0; --bg:#F7F9FC; --ok:#0E8A5F; --ok-50:#E8F7F0; --warn:#A9640B; --warn-50:#FDF4E5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+  header{background:var(--ink);color:#fff;padding:26px 0}
+  header .wrap{padding-block:0}
+  h1{margin:0 0 6px;font-size:1.5rem;letter-spacing:-.02em}
+  header p{margin:0;color:#9DB2CC;font-size:.9rem}
+  .banner{background:var(--warn-50);border:1px solid #F0DCB8;border-left:3px solid var(--warn);
+          border-radius:8px;padding:14px 16px;margin:24px 0;font-size:.92rem}
+  h2{font-size:1.12rem;margin:30px 0 12px;letter-spacing:-.015em}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;
+        box-shadow:0 1px 3px rgba(10,37,64,.05)}
+  .row{display:grid;grid-template-columns:1fr 104px;gap:12px;align-items:center;
+       padding:9px 0;border-bottom:1px solid #EDF1F7}
+  .row:last-child{border-bottom:0}
+  .row label{font-size:.9rem}
+  .row .hint{display:block;font-size:.76rem;color:var(--muted)}
+  input{width:100%;padding:8px 10px;font:inherit;font-size:.92rem;text-align:right;
+        border:1px solid var(--line);border-radius:8px;font-variant-numeric:tabular-nums}
+  input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(27,77,255,.12)}
+  .suffix{position:relative}
+  .out{background:var(--ink);color:#fff;border-radius:14px;padding:22px;position:sticky;top:20px}
+  .big{border-bottom:1px solid rgba(255,255,255,.14);padding-bottom:16px;margin-bottom:16px}
+  .big span{font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:#8FA8C6;
+            font-weight:700;display:block;margin-bottom:4px}
+  .big strong{font-size:2.1rem;display:block;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .big em{font-style:normal;font-size:.83rem;color:#8FA8C6;display:block;margin-top:4px}
+  .lines{display:grid;gap:7px;font-size:.9rem;margin:0}
+  .lines div{display:flex;justify-content:space-between;gap:12px}
+  .lines dt{color:#B7C7DA}
+  .lines dd{margin:0;font-weight:650;font-variant-numeric:tabular-nums}
+  .sub{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:#7F97B5;
+       font-weight:700;margin:14px 0 2px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);
+        border-radius:12px;overflow:hidden;font-size:.88rem}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid #EDF1F7}
+  thead th{background:var(--bg);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;
+           color:var(--muted)}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:last-child td,tbody tr:last-child th{border-bottom:0}
+  .drop{color:var(--warn);font-weight:650}
+  .note{font-size:.85rem;color:var(--muted);margin-top:10px}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:6px;
+        background:var(--brand-100);color:#1039CC}
+  .warnrow{background:var(--warn-50)}
+  button{font:inherit;font-weight:650;padding:9px 16px;border-radius:9px;border:1px solid var(--line);
+         background:#fff;cursor:pointer}
+  button:hover{background:var(--bg)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Acquisition Planning Calculator</h1>
+    <p>Internal tool — Trade Grow. Not part of the public website.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="banner">
+    <strong>Every rate below starts blank on purpose.</strong>
+    This tool contains no assumed conversion rates. Enter the figures you have actually measured.
+    Until you have real data from the first 30 days, treat any output as an illustration of
+    sensitivity, not a forecast. A plan built on guessed rates will be wrong by a factor, not by a
+    few percent.
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0">Target</h2>
+        <div class="row">
+          <label for="target">Active clients required
+            <span class="hint">Activated, funded, and having placed at least one trade</span></label>
+          <input id="target" type="number" value="1000" min="1" step="1">
+        </div>
+        <div class="row">
+          <label for="months">Months available</label>
+          <input id="months" type="number" value="12" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2 style="margin-top:0">Measured conversion rates <span class="pill">%</span></h2>
+        <div id="rates"></div>
+        <p class="note">Leave a rate blank if you have not measured it yet — the result will tell
+        you it cannot be computed rather than inventing a number.</p>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2 style="margin-top:0">Capacity &amp; cost</h2>
+        <div class="row">
+          <label for="dials">Dials per agent per working day
+            <span class="hint">Measure this in week 1. Our playbook produces longer calls than a
+            pure pitch, so borrowed benchmarks overstate capacity.</span></label>
+          <input id="dials" type="number" value="" min="0" step="1" placeholder="—">
+        </div>
+        <div class="row">
+          <label for="wdays">Working days per month</label>
+          <input id="wdays" type="number" value="22" min="1" step="1">
+        </div>
+        <div class="row">
+          <label for="agents">Agents currently on floor</label>
+          <input id="agents" type="number" value="" min="0" step="1" placeholder="—">
+        </div>
+        <div class="row">
+          <label for="cpl">Cost per lead (₹)</label>
+          <input id="cpl" type="number" value="" min="0" step="0.01" placeholder="—">
+        </div>
+        <div class="row">
+          <label for="arpu">Expected monthly revenue per active client (₹)</label>
+          <input id="arpu" type="number" value="" min="0" step="0.01" placeholder="—">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="out">
+        <div class="big">
+          <span>Leads required</span>
+          <strong id="o-leads">—</strong>
+          <em id="o-endtoend">Enter measured rates to compute</em>
+        </div>
+        <dl class="lines">
+          <div class="sub" style="margin-top:0">Volume</div>
+          <div><dt>Leads per month</dt><dd id="o-lpm">—</dd></div>
+          <div><dt>Leads per working day</dt><dd id="o-lpd">—</dd></div>
+          <div><dt>Dials per day required</dt><dd id="o-dpd">—</dd></div>
+
+          <div class="sub">Headcount</div>
+          <div><dt>Agents required</dt><dd id="o-agents">—</dd></div>
+          <div><dt>Current monthly capacity</dt><dd id="o-cap">—</dd></div>
+          <div><dt>Months at current capacity</dt><dd id="o-months">—</dd></div>
+
+          <div class="sub">Economics</div>
+          <div><dt>Total lead spend</dt><dd id="o-spend">—</dd></div>
+          <div><dt>Cost per active client</dt><dd id="o-cpa">—</dd></div>
+          <div><dt>Payback period</dt><dd id="o-payback">—</dd></div>
+        </dl>
+        <p class="note" id="o-note" style="color:#8FA8C6;margin-top:16px"></p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Funnel breakdown</h2>
+  <table>
+    <thead>
+      <tr><th>Stage</th><th class="n">Rate</th><th class="n">Volume required</th><th class="n">Drop-off</th></tr>
+    </thead>
+    <tbody id="funnel"><tr><td colspan="4" style="color:#5A6B87">Enter rates above.</td></tr></tbody>
+  </table>
+  <p class="note">
+    The largest drop-off row is where to spend your next month of effort. Fix the worst step before
+    increasing lead volume — scaling a leaky funnel multiplies the leak.
+  </p>
+
+  <p style="margin-top:22px"><button id="reset">Clear all rates</button></p>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STAGES = [
+    { key:'connect',   label:'Lead → Connected call',        hint:'Connected ÷ dials' },
+    { key:'interest',  label:'Connected → Interested',       hint:'Agreed to receive details' },
+    { key:'verify',    label:'Interested → Visited /verify', hint:'The trust step' },
+    { key:'kycstart',  label:'Verified → KYC started',       hint:'' },
+    { key:'kyccomp',   label:'KYC started → KYC completed',  hint:'Onboarding friction' },
+    { key:'activate',  label:'KYC completed → Activated',    hint:'' },
+    { key:'fund',      label:'Activated → Funded',           hint:'Sales quality signal' },
+    { key:'trade',     label:'Funded → First trade',         hint:'' }
+  ];
+
+  var ratesEl = document.getElementById('rates');
+  ratesEl.innerHTML = STAGES.map(function(s){
+    return '<div class="row"><label for="r-'+s.key+'">'+s.label+
+           (s.hint ? '<span class="hint">'+s.hint+'</span>' : '')+
+           '</label><input id="r-'+s.key+'" type="number" min="0" max="100" step="0.1" placeholder="—"></div>';
+  }).join('');
+
+  var $ = function(id){ return document.getElementById(id); };
+  var num = function(id){ var v = parseFloat($(id).value); return isFinite(v) ? v : null; };
+  var fmt = function(n){ return Math.round(n).toLocaleString('en-IN'); };
+  var inr = function(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); };
+
+  function calc(){
+    var target  = num('target');
+    var months  = num('months');
+    var rates   = STAGES.map(function(s){ return num('r-'+s.key); });
+    var missing = rates.some(function(r){ return r === null || r <= 0; });
+
+    var fEl = document.getElementById('funnel');
+
+    if (!target || missing) {
+      ['o-leads','o-lpm','o-lpd','o-dpd','o-agents','o-cap','o-months','o-spend','o-cpa','o-payback']
+        .forEach(function(id){ $(id).textContent = '—'; });
+      $('o-endtoend').textContent = 'Enter every measured rate to compute';
+      $('o-note').textContent = missing
+        ? 'One or more rates are blank or zero. This tool will not substitute an assumed value — an unmeasured rate is the largest source of error in an acquisition plan.'
+        : '';
+      fEl.innerHTML = '<tr><td colspan="4" style="color:#5A6B87">Enter all rates above.</td></tr>';
+      return;
+    }
+
+    // End-to-end conversion
+    var endToEnd = rates.reduce(function(a,r){ return a * (r/100); }, 1);
+    var leads = target / endToEnd;
+
+    $('o-leads').textContent = fmt(leads);
+    $('o-endtoend').textContent = 'End-to-end conversion: ' + (endToEnd*100).toFixed(3) + '%';
+
+    // Volume
+    var wdays  = num('wdays') || 22;
+    var lpm    = months ? leads / months : null;
+    var lpd    = lpm ? lpm / wdays : null;
+    $('o-lpm').textContent = lpm ? fmt(lpm) : '—';
+    $('o-lpd').textContent = lpd ? fmt(lpd) : '—';
+    $('o-dpd').textContent = lpd ? fmt(lpd) : '—'; // 1 dial = 1 lead touched
+
+    // Capacity
+    var dials  = num('dials');
+    var agents = num('agents');
+    if (dials && months) {
+      $('o-agents').textContent = Math.ceil(leads / (dials * wdays * months)) + ' agents';
+    } else { $('o-agents').textContent = '—'; }
+
+    if (dials && agents) {
+      var cap = dials * wdays * agents;
+      $('o-cap').textContent = fmt(cap) + ' dials/mo';
+      $('o-months').textContent = (leads / cap).toFixed(1) + ' months';
+    } else {
+      $('o-cap').textContent = '—'; $('o-months').textContent = '—';
+    }
+
+    // Economics
+    var cpl  = num('cpl');
+    var arpu = num('arpu');
+    if (cpl) {
+      var spend = leads * cpl;
+      var cpa = spend / target;
+      $('o-spend').textContent = inr(spend);
+      $('o-cpa').textContent   = inr(cpa);
+      $('o-payback').textContent = arpu ? (cpa/arpu).toFixed(1) + ' months' : '—';
+    } else {
+      $('o-spend').textContent = '—'; $('o-cpa').textContent = '—'; $('o-payback').textContent = '—';
+    }
+
+    // Funnel table — walk forward from required leads
+    var running = leads, rows = '', worst = -1, worstIdx = -1;
+    STAGES.forEach(function(s, i){
+      var before = running;
+      running = running * (rates[i]/100);
+      var drop = before - running;
+      if (drop > worst) { worst = drop; worstIdx = i; }
+      rows += '<tr data-i="'+i+'"><th scope="row">'+s.label+'</th>'+
+              '<td class="n">'+rates[i].toFixed(1)+'%</td>'+
+              '<td class="n">'+fmt(running)+'</td>'+
+              '<td class="n drop">−'+fmt(drop)+'</td></tr>';
+    });
+    fEl.innerHTML = rows;
+    var wr = fEl.querySelector('tr[data-i="'+worstIdx+'"]');
+    if (wr) wr.className = 'warnrow';
+
+    $('o-note').textContent = 'Largest drop-off: ' + STAGES[worstIdx].label +
+      '. Fix this step before increasing lead volume.';
+  }
+
+  document.addEventListener('input', calc);
+  document.getElementById('reset').addEventListener('click', function(){
+    STAGES.forEach(function(s){ $('r-'+s.key).value = ''; });
+    ['dials','agents','cpl','arpu'].forEach(function(id){ $(id).value = ''; });
+    calc();
+  });
+
+  calc();
+})();
+</script>
+</body>
+</html>

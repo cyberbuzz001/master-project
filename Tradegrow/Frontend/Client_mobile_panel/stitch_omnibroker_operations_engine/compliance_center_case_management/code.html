@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps Compliance Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#0d1c32",
+                        "tertiary-fixed": "#c8e7fd",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "outline-variant": "#c5c6cd",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "secondary": "#0050cc",
+                        "on-primary-container": "#76849f",
+                        "on-surface-variant": "#44474d",
+                        "on-secondary-fixed": "#001849",
+                        "tertiary-container": "#001e2d",
+                        "primary-fixed": "#d6e3ff",
+                        "outline": "#75777e",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#515f78",
+                        "on-tertiary-container": "#6a889b",
+                        "on-background": "#191c1d",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary-fixed": "#dae1ff",
+                        "on-secondary-container": "#f9f7ff",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "surface-variant": "#e1e3e4",
+                        "background": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "inverse-primary": "#b9c7e4",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#000000",
+                        "secondary-container": "#0266ff",
+                        "primary": "#000000",
+                        "on-tertiary-fixed": "#001e2d",
+                        "primary-container": "#0d1c32"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "table-cell-padding": "8px 12px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: 20px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6cd; border-radius: 10px; }
+        .active-row { border-left: 4px solid #0266ff; background-color: #f3f4f5; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden">
+<!-- Sidebar (Shared Component) -->
+<aside class="bg-primary-container fixed left-0 top-0 h-full w-[260px] shadow-md flex flex-col h-full py-4 z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container">BrokerAdmin</h1>
+<p class="text-[10px] text-on-primary-container/60 tracking-widest uppercase">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">group</span> CRM
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">verified_user</span> KYC
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">query_stats</span> Trading Ops
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">security</span> RMS
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">account_balance</span> Settlements
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Back Office
+            </a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 px-6 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">gavel</span> Compliance
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span> System Config
+            </a>
+</nav>
+<div class="mt-auto px-6 space-y-4">
+<button class="w-full bg-secondary text-white font-label-md text-label-md py-3 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span> New Request
+            </button>
+<div class="pt-4 border-t border-on-primary-container/10 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate financial compliance officer in a dark blue business suit, photographed in a high-key, modern office setting with soft, neutral lighting and a blurred minimalist background of a glass-walled conference room. The style is crisp, clean, and evokes institutional trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMWknRSzOdPjpZPSy6GIyB5RNaubWScH5He7O7iRTUvZtQTWSRBVJ2K3sO4OL5_fglVCVs6OJf-weU4Ut1IYwK_uTd_CiO1BZp3GdaruGXzGWCkiWYTqxtzWa_kKgf4Zs4hr69LFhT1CsRMHn6b4fbB0AxXK3oyfdOS2GjWAi5pMKavG00wTWWDZMXi_zuYMa6PMpZLB80eS_TrdYpyLNX8BqprXIdzBg8GUbv9Vg4oEcGRRWsAk3g"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-secondary-container">Admin User</p>
+<p class="text-[10px] text-on-primary-container/60">Compliance Lead</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation (Shared Component) -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant z-40 px-6 flex justify-between items-center ml-[260px]">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-1 focus:ring-secondary" placeholder="Search cases, entities..." type="text"/>
+</div>
+</div>
+<nav class="flex items-center gap-6">
+<div class="flex items-center gap-6 text-body-md">
+<a class="text-on-surface-variant hover:text-on-surface" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface" href="#">Risk</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1" href="#">Reports</a>
+</div>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all text-on-surface-variant relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-white"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<button class="bg-secondary/10 text-secondary font-label-md text-label-md px-4 py-1.5 rounded-lg border border-secondary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bolt</span> System Pulse
+                </button>
+</div>
+</nav>
+</header>
+<!-- Main Workspace -->
+<main class="ml-[260px] pt-16 h-screen flex flex-col overflow-hidden">
+<!-- Workflow Tracker Header -->
+<div class="bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Compliance Dashboard</h2>
+<p class="text-body-sm text-on-surface-variant">Active investigation pipeline</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container-high text-on-surface px-4 py-1.5 rounded-lg text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined">filter_alt</span> Filter
+                    </button>
+<button class="bg-surface-container-high text-on-surface px-4 py-1.5 rounded-lg text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined">download</span> Export
+                    </button>
+</div>
+</div>
+<!-- Workflow Steps -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1">
+<div class="flex items-center gap-1 group cursor-pointer">
+<div class="px-4 py-1.5 bg-surface-container-highest rounded-full text-label-md flex items-center gap-2 text-on-surface">
+                        Created <span class="bg-on-surface-variant/20 px-2 rounded-full text-[10px]">12</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center gap-1 group cursor-pointer">
+<div class="px-4 py-1.5 bg-surface-container-highest rounded-full text-label-md flex items-center gap-2 text-on-surface">
+                        Assigned <span class="bg-on-surface-variant/20 px-2 rounded-full text-[10px]">08</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center gap-1 group cursor-pointer">
+<div class="px-4 py-1.5 bg-secondary text-white rounded-full text-label-md flex items-center gap-2">
+                        Investigation <span class="bg-white/20 px-2 rounded-full text-[10px]">24</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center gap-1 group cursor-pointer">
+<div class="px-4 py-1.5 bg-surface-container-highest rounded-full text-label-md flex items-center gap-2 text-on-surface">
+                        Escalated <span class="bg-on-surface-variant/20 px-2 rounded-full text-[10px]">03</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center gap-1 group cursor-pointer">
+<div class="px-4 py-1.5 bg-surface-container-highest rounded-full text-label-md flex items-center gap-2 text-on-surface">
+                        Resolved <span class="bg-on-surface-variant/20 px-2 rounded-full text-[10px]">156</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Content Grid -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Case List Panel -->
+<section class="w-1/3 bg-white border-r border-outline-variant flex flex-col">
+<div class="p-4 border-b border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<h3 class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Active Cases</h3>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-surface-container rounded"><span class="material-symbols-outlined text-[18px]">sort</span></button>
+<button class="p-1 hover:bg-surface-container rounded"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Case Items -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors active-row">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold text-secondary tracking-tight">KYC-2023-9981</span>
+<span class="text-[10px] bg-secondary-container/10 text-secondary-container border border-secondary-container/20 px-2 py-0.5 rounded uppercase font-bold">Investigation</span>
+</div>
+<h4 class="font-label-md text-on-surface mb-1">Sudhir Malhotra (HNI Client)</h4>
+<p class="text-body-sm text-on-surface-variant truncate">High volume deposit from unverified entity (UAE Offshore). Pending source of wealth proof.</p>
+<div class="flex items-center justify-between mt-3">
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-tertiary-fixed flex items-center justify-center text-[10px] text-tertiary-container font-bold">AS</div>
+<span class="text-[11px] text-on-surface-variant">Assigned to: A. Sharma</span>
+</div>
+<span class="text-[11px] text-on-surface-variant">2h ago</span>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold text-error tracking-tight">AML-2023-4502</span>
+<span class="text-[10px] bg-error-container/10 text-error border border-error-container/20 px-2 py-0.5 rounded uppercase font-bold">Escalated</span>
+</div>
+<h4 class="font-label-md text-on-surface mb-1">Vertex FinTech Solutions</h4>
+<p class="text-body-sm text-on-surface-variant truncate">Layering suspicion on multi-node transfers. Pattern matches red flag ID 45B.</p>
+<div class="flex items-center justify-between mt-3">
+<div class="flex items-center gap-2">
+<img class="w-5 h-5 rounded-full object-cover" data-alt="Close-up portrait of a female financial analyst in a modern, brightly lit office environment. She is wearing professional neutral tones, with soft sunlight filtering through a minimalist corporate window. The image conveys high precision, professionalism, and analytical focus, fitting a high-end fintech design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfjiE6cJMWuE2kk-xFgK1cz7OgYbk3_jO9oy-WP3h5WYoLK3VxkU9IKmd-m4HKpvrjzUCGLWK9Gkueo9POfqVKaycSQO49tbOMCx8cmG_p3LJITOxBeEQhAJ60AzOehcgVzaTZNjSK0xXSwlwOI7KcWcSJPzzCv3qmBW6LOeMeJ2Pz2_Bp76Il0ROBAEdLoeAOKArbwnY3fiFeODQ4QV_AtFgFZWMrVDN3rZ10CMjrjYg90EcriTgY"/>
+<span class="text-[11px] text-on-surface-variant">Assigned to: S. Roy</span>
+</div>
+<span class="text-[11px] text-on-surface-variant">5h ago</span>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold text-on-surface-variant tracking-tight">SURV-2023-112</span>
+<span class="text-[10px] bg-surface-container-highest text-on-surface-variant border border-outline-variant px-2 py-0.5 rounded uppercase font-bold">Assigned</span>
+</div>
+<h4 class="font-label-md text-on-surface mb-1">Market Manipulation Alert: INFY</h4>
+<p class="text-body-sm text-on-surface-variant truncate">Unusual pre-market buy volume detected from 12 related accounts.</p>
+<div class="flex items-center justify-between mt-3">
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-primary-fixed flex items-center justify-center text-[10px] text-primary font-bold">JD</div>
+<span class="text-[11px] text-on-surface-variant">Assigned to: J. Doe</span>
+</div>
+<span class="text-[11px] text-on-surface-variant">1d ago</span>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold text-secondary tracking-tight">KYC-2023-8872</span>
+<span class="text-[10px] bg-secondary-container/10 text-secondary-container border border-secondary-container/20 px-2 py-0.5 rounded uppercase font-bold">Investigation</span>
+</div>
+<h4 class="font-label-md text-on-surface mb-1">Rohan Kapoor</h4>
+<p class="text-body-sm text-on-surface-variant truncate">PAN Card verification mismatch with UIDAI database. Requires physical audit.</p>
+<div class="flex items-center justify-between mt-3">
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] text-on-surface font-bold">RK</div>
+<span class="text-[11px] text-on-surface-variant">Assigned to: R. Kumar</span>
+</div>
+<span class="text-[11px] text-on-surface-variant">2d ago</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Case Detail Pane -->
+<section class="flex-1 bg-surface-container-low flex flex-col overflow-hidden">
+<!-- Detail Header -->
+<div class="bg-white p-6 shadow-sm z-10">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">KYC-2023-9981: Sudhir Malhotra</h2>
+<span class="status-dot bg-secondary-container"></span>
+<span class="text-label-md text-secondary">Active Investigation</span>
+</div>
+<div class="flex gap-4 text-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> Created: Oct 24, 2023</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">priority_high</span> Risk Score: 88/100 (High)</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">account_tree</span> Workflow: Institutional KYC</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">gavel</span> Take Action
+                            </button>
+<button class="bg-white border border-outline-variant text-on-surface px-4 py-2 rounded-lg font-label-md text-label-md">
+                                Reassign
+                            </button>
+</div>
+</div>
+</div>
+<!-- Detail Content Scrollable -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+<div class="grid grid-cols-12 gap-6">
+<!-- Left: Timeline & Evidence -->
+<div class="col-span-8 space-y-6">
+<!-- Investigation Summary Card -->
+<div class="bg-white p-6 rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-label-md text-label-md uppercase mb-4 text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined">description</span> Investigation Summary
+                                </h3>
+<div class="bg-surface-container-low p-4 rounded-lg mb-4 border-l-4 border-secondary-container">
+<p class="text-body-md text-on-surface leading-relaxed">
+                                        System triggered alert <strong>STR-44</strong> (Suspicious Transaction Reporting) after a deposit of ₹4.5 Cr was received from 'Oceanic Investments LLC', a Seychelles-registered entity. The client's declared annual income is ₹50-75 Lakhs. No prior business relationship with the remitting entity exists in the client's KYC record.
+                                    </p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-3 border border-outline-variant rounded-lg">
+<p class="text-body-sm text-on-surface-variant mb-1">Source of Funds</p>
+<p class="font-label-md text-on-surface">Offshore Transfer (Seychelles)</p>
+</div>
+<div class="p-3 border border-outline-variant rounded-lg">
+<p class="text-body-sm text-on-surface-variant mb-1">Regulatory Threshold</p>
+<p class="font-label-md text-error">Exceeded by 600%</p>
+</div>
+</div>
+</div>
+<!-- Timeline -->
+<div class="bg-white p-6 rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-label-md text-label-md uppercase mb-6 text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined">history</span> Case Timeline
+                                </h3>
+<div class="space-y-6 relative before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-0 before:w-px before:bg-outline-variant">
+<!-- Timeline Item 1 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 bg-secondary-container rounded-full flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-[14px]">flag</span>
+</div>
+<div class="flex justify-between items-start mb-1">
+<p class="font-label-md text-on-surface">Case Initiated by AI Surveillance</p>
+<span class="text-body-sm text-on-surface-variant">Oct 24, 09:12 AM</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">System detected anomalous inward remittance from high-risk jurisdiction.</p>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 bg-surface-container-highest rounded-full flex items-center justify-center text-on-surface-variant z-10">
+<span class="material-symbols-outlined text-[14px]">person</span>
+</div>
+<div class="flex justify-between items-start mb-1">
+<p class="font-label-md text-on-surface">Assigned to Ananya Sharma</p>
+<span class="text-body-sm text-on-surface-variant">Oct 24, 10:45 AM</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Auto-allocated based on expertise in HNI-KYC.</p>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 bg-surface-container-highest rounded-full flex items-center justify-center text-on-surface-variant z-10">
+<span class="material-symbols-outlined text-[14px]">attach_file</span>
+</div>
+<div class="flex justify-between items-start mb-1">
+<p class="font-label-md text-on-surface">Evidence Uploaded: Bank Statement</p>
+<span class="text-body-sm text-on-surface-variant">Oct 24, 02:20 PM</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Added 'HDFC_Statement_Sep23.pdf' to evidence log.</p>
+</div>
+<!-- Timeline Item 4 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 bg-secondary rounded-full flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-[14px]">edit</span>
+</div>
+<div class="flex justify-between items-start mb-1">
+<p class="font-label-md text-on-surface">Investigation Note Added</p>
+<span class="text-body-sm text-on-surface-variant">Oct 25, 11:30 AM</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">"Client claims remittance is for sale of property, but no registered sale deed provided."</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Evidence & Status -->
+<div class="col-span-4 space-y-6">
+<!-- Regulatory Status Card -->
+<div class="bg-white p-5 rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-label-md text-label-md uppercase mb-4 text-on-surface-variant">Filing Status</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-body-sm">PMLA Reporting</span>
+<span class="text-body-sm font-bold text-error">Pending</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full">
+<div class="bg-secondary-container h-full w-[25%] rounded-full"></div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant">
+<span class="text-body-sm">FIU-IND Submission</span>
+<span class="text-[10px] px-2 py-0.5 bg-surface-container rounded-full text-on-surface-variant uppercase font-bold">Not Required</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-body-sm">Internal Audit</span>
+<span class="text-[10px] px-2 py-0.5 bg-secondary-container/10 text-secondary-container rounded-full uppercase font-bold">In Review</span>
+</div>
+</div>
+</div>
+<!-- Evidence Log -->
+<div class="bg-white p-5 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant">Evidence Log</h3>
+<button class="text-secondary text-body-sm font-bold">+ Add</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-2 hover:bg-surface-container-low rounded group transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">picture_as_pdf</span>
+<div class="flex-1 overflow-hidden">
+<p class="text-body-sm font-bold truncate">HDFC_Statement_Sep23.pdf</p>
+<p class="text-[10px] text-on-surface-variant">1.2 MB • Oct 24</p>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 cursor-pointer">download</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-surface-container-low rounded group transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">image</span>
+<div class="flex-1 overflow-hidden">
+<p class="text-body-sm font-bold truncate">PAN_Card_Physical_Scan.png</p>
+<p class="text-[10px] text-on-surface-variant">450 KB • Oct 24</p>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 cursor-pointer">download</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-surface-container-low rounded group transition-all border-dashed border border-outline-variant opacity-60">
+<span class="material-symbols-outlined text-on-surface-variant">description</span>
+<div class="flex-1 overflow-hidden">
+<p class="text-body-sm font-bold truncate">Sale_Deed_Property_X.pdf</p>
+<p class="text-[10px] text-error font-bold">Missing Document</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Assigned Team -->
+<div class="bg-white p-5 rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-label-md text-label-md uppercase mb-4 text-on-surface-variant">Collaboration</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-white flex items-center justify-center font-bold text-xs">AS</div>
+<div>
+<p class="text-body-sm font-bold">Ananya Sharma</p>
+<p class="text-[10px] text-on-surface-variant">Primary Investigator</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-xs">PK</div>
+<div>
+<p class="text-body-sm font-bold">Pritam Kumar</p>
+<p class="text-[10px] text-on-surface-variant">Legal Reviewer</p>
+</div>
+</div>
+<button class="w-full mt-2 border border-outline-variant border-dashed p-2 rounded-lg text-body-sm text-on-surface-variant hover:bg-surface-container-low transition-all">
+                                        + Invite Collaborator
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple interactive tabs/selection logic
+        document.querySelectorAll('section.w-1\/3 > div.flex-1 > div').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('section.w-1\/3 > div.flex-1 > div').forEach(el => el.classList.remove('active-row'));
+                this.classList.add('active-row');
+            });
+        });
+
+        // Hover effects for the pulse button
+        const pulseBtn = document.querySelector('button:has(.material-symbols-outlined:contains("bolt"))');
+        if(pulseBtn) {
+            pulseBtn.addEventListener('mouseenter', () => pulseBtn.classList.add('scale-[1.02]'));
+            pulseBtn.addEventListener('mouseleave', () => pulseBtn.classList.remove('scale-[1.02]'));
+        }
+    </script>
+</body></html>

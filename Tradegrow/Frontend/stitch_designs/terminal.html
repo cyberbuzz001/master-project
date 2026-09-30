@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StockSharp - Trading Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                bg: '#0D1117',
+                surface: '#161B22',
+                surfaceLight: '#1C2128',
+                border: '#30363D',
+                primary: '#00E676',
+                danger: '#FF5252',
+                info: '#448AFF',
+                warning: '#FF6D00',
+                text: '#FFFFFF',
+                muted: '#8B949E'
+              }
+            },
+            fontFamily: {
+              headline: ["Geist", "sans-serif"],
+              display: ["Geist", "sans-serif"],
+              body: ["Inter", "sans-serif"],
+              label: ["Space Grotesk", "monospace"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0D1117; color: #FFFFFF; }
+        .font-headline { font-family: 'Geist', sans-serif; }
+        .font-label { font-family: 'Space Grotesk', monospace; font-variant-numeric: tabular-nums; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        
+        /* Custom Scrollbar for dense terminal feel */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0D1117; }
+        ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8B949E; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-brand-bg text-brand-text antialiased">
+<!-- Top Navigation Bar (Generated from JSON) -->
+<nav class="flex justify-between items-center w-full px-4 h-14 z-50 bg-[#0D1117] border-b border-[#1C2128]">
+<div class="flex items-center gap-6">
+<div class="text-xl font-headline font-black text-[#00E676]">StockSharp</div>
+<div class="hidden md:flex items-center gap-4">
+<a class="font-headline font-bold text-lg tracking-tight text-[#00E676] border-b-2 border-[#00E676] pb-2 pt-2" href="#">Stocks</a>
+<a class="font-headline font-bold text-lg tracking-tight text-[#8B949E] hover:text-white transition-colors pb-2 pt-2" href="#">F&amp;O</a>
+<a class="font-headline font-bold text-lg tracking-tight text-[#8B949E] hover:text-white transition-colors pb-2 pt-2" href="#">Commodities</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-brand-muted text-sm">search</span>
+<input class="bg-brand-surfaceLight border border-brand-border text-sm rounded-md pl-8 pr-3 py-1 w-48 text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary" placeholder="Search (Ctrl+K)" type="text"/>
+</div>
+<div class="text-sm font-label font-medium mr-4 flex items-center gap-1">
+<span class="text-brand-muted">Margin:</span>
+<span class="text-brand-text">₹1,24,500.00</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-[#8B949E] hover:text-white hover:bg-[#161B22] rounded-lg transition-all p-1.5 flex active:scale-95 duration-150"><span class="material-symbols-outlined text-xl">notifications</span></button>
+<button class="text-[#8B949E] hover:text-white hover:bg-[#161B22] rounded-lg transition-all p-1.5 flex active:scale-95 duration-150"><span class="material-symbols-outlined text-xl">help</span></button>
+<button class="text-[#8B949E] hover:text-white hover:bg-[#161B22] rounded-lg transition-all p-1.5 flex active:scale-95 duration-150"><span class="material-symbols-outlined text-xl">settings</span></button>
+<div class="h-7 w-7 rounded-full bg-brand-surfaceLight border border-brand-border overflow-hidden ml-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-brand-muted text-lg">person</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Terminal Layout -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Side Navigation + Watchlist (20% logic approx) -->
+<div class="w-16 flex-shrink-0 flex flex-col items-center z-40 bg-[#0D1117] border-r border-[#1C2128] py-4 justify-between hidden md:flex">
+<div class="w-full flex flex-col items-center gap-2">
+<button class="flex flex-col items-center justify-center bg-[#161B22] text-[#00E676] border-l-4 border-[#00E676] w-full py-4 transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="font-body text-[10px] font-medium">Explore</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-4 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">account_balance_wallet</span>
+<span class="font-body text-[10px] font-medium">Holdings</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-4 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">query_stats</span>
+<span class="font-body text-[10px] font-medium">Positions</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-4 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">list_alt</span>
+<span class="font-body text-[10px] font-medium">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-4 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">visibility</span>
+<span class="font-body text-[10px] font-medium">Watchlist</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-4 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">grid_view</span>
+<span class="font-body text-[10px] font-medium">Options</span>
+</button>
+</div>
+<div class="w-full flex flex-col items-center gap-2">
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-3 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1">contact_support</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#8B949E] w-full py-3 hover:bg-[#1C2128] hover:text-white transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined mb-1 text-brand-danger">logout</span>
+</button>
+</div>
+</div>
+<div class="w-[300px] flex-shrink-0 bg-brand-surface border-r border-brand-border flex flex-col">
+<!-- Watchlist Header -->
+<div class="p-3 border-b border-brand-border bg-brand-bg flex-shrink-0">
+<div class="relative mb-3">
+<span class="material-symbols-outlined absolute left-2.5 top-1.5 text-brand-muted text-[16px]">search</span>
+<input class="w-full bg-brand-surface border border-brand-border text-xs rounded-sm pl-8 pr-3 py-1.5 text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-primary" placeholder="Search eg: INFY BSE, NIFTY FUT" type="text"/>
+<span class="absolute right-2 top-1.5 text-brand-muted text-[10px] border border-brand-border px-1 rounded">/</span>
+</div>
+<div class="flex text-[11px] font-medium uppercase tracking-wider text-brand-muted">
+<div class="cursor-pointer border-b-2 border-brand-primary text-brand-primary pb-1 mr-4">Default <span class="text-[9px] bg-brand-surfaceLight px-1 ml-1 rounded">50</span></div>
+<div class="cursor-pointer hover:text-brand-text border-b-2 border-transparent pb-1 mr-4 transition-colors">F&amp;O <span class="text-[9px] bg-brand-surface px-1 ml-1 rounded">0</span></div>
+<div class="cursor-pointer hover:text-brand-text border-b-2 border-transparent pb-1 transition-colors">Custom <span class="text-[9px] bg-brand-surface px-1 ml-1 rounded">0</span></div>
+</div>
+</div>
+<!-- Watchlist Items -->
+<div class="flex-1 overflow-y-auto">
+<!-- Active Item -->
+<div class="flex justify-between items-center p-3 border-b border-brand-border bg-brand-surfaceLight border-l-2 border-l-brand-primary cursor-pointer group hover:bg-[#21262d] transition-colors relative">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm tracking-wide">RELIANCE</span>
+<span class="text-[10px] text-brand-muted mt-0.5">NSE</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-brand-primary text-sm font-medium tabular-nums">2456.30</span>
+<span class="font-label text-brand-primary text-[10px] flex items-center mt-0.5 tabular-nums">
+<span class="material-symbols-outlined text-[10px] mr-0.5">arrow_upward</span> 1.9%
+                        </span>
+</div>
+<!-- Hover Actions (Buy/Sell) -->
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[#21262d] pl-2">
+<button class="bg-brand-primary/20 text-brand-primary text-xs font-bold px-2 py-1 rounded hover:bg-brand-primary hover:text-brand-bg transition-colors">B</button>
+<button class="bg-brand-danger/20 text-brand-danger text-xs font-bold px-2 py-1 rounded hover:bg-brand-danger hover:text-white transition-colors">S</button>
+</div>
+</div>
+<div class="flex justify-between items-center p-3 border-b border-brand-border border-l-2 border-l-transparent hover:bg-brand-surfaceLight cursor-pointer group transition-colors relative">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm tracking-wide text-brand-muted group-hover:text-brand-text">TCS</span>
+<span class="text-[10px] text-brand-muted mt-0.5">NSE</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-brand-primary text-sm font-medium tabular-nums">4125.80</span>
+<span class="font-label text-brand-primary text-[10px] flex items-center mt-0.5 tabular-nums">
+<span class="material-symbols-outlined text-[10px] mr-0.5">arrow_upward</span> 1.2%
+                        </span>
+</div>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surfaceLight pl-2">
+<button class="bg-brand-primary/20 text-brand-primary text-xs font-bold px-2 py-1 rounded hover:bg-brand-primary hover:text-brand-bg transition-colors">B</button>
+<button class="bg-brand-danger/20 text-brand-danger text-xs font-bold px-2 py-1 rounded hover:bg-brand-danger hover:text-white transition-colors">S</button>
+</div>
+</div>
+<div class="flex justify-between items-center p-3 border-b border-brand-border border-l-2 border-l-transparent hover:bg-brand-surfaceLight cursor-pointer group transition-colors relative">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm tracking-wide text-brand-muted group-hover:text-brand-text">INFY</span>
+<span class="text-[10px] text-brand-muted mt-0.5">NSE</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-brand-primary text-sm font-medium tabular-nums">1845.60</span>
+<span class="font-label text-brand-primary text-[10px] flex items-center mt-0.5 tabular-nums">
+<span class="material-symbols-outlined text-[10px] mr-0.5">arrow_upward</span> 2.8%
+                        </span>
+</div>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surfaceLight pl-2">
+<button class="bg-brand-primary/20 text-brand-primary text-xs font-bold px-2 py-1 rounded hover:bg-brand-primary hover:text-brand-bg transition-colors">B</button>
+<button class="bg-brand-danger/20 text-brand-danger text-xs font-bold px-2 py-1 rounded hover:bg-brand-danger hover:text-white transition-colors">S</button>
+</div>
+</div>
+<div class="flex justify-between items-center p-3 border-b border-brand-border border-l-2 border-l-transparent hover:bg-brand-surfaceLight cursor-pointer group transition-colors relative">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm tracking-wide text-brand-muted group-hover:text-brand-text">HDFC BANK</span>
+<span class="text-[10px] text-brand-muted mt-0.5">NSE</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-brand-danger text-sm font-medium tabular-nums">1670.25</span>
+<span class="font-label text-brand-danger text-[10px] flex items-center mt-0.5 tabular-nums">
+<span class="material-symbols-outlined text-[10px] mr-0.5">arrow_downward</span> 0.5%
+                        </span>
+</div>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surfaceLight pl-2">
+<button class="bg-brand-primary/20 text-brand-primary text-xs font-bold px-2 py-1 rounded hover:bg-brand-primary hover:text-brand-bg transition-colors">B</button>
+<button class="bg-brand-danger/20 text-brand-danger text-xs font-bold px-2 py-1 rounded hover:bg-brand-danger hover:text-white transition-colors">S</button>
+</div>
+</div>
+<div class="flex justify-between items-center p-3 border-b border-brand-border border-l-2 border-l-transparent hover:bg-brand-surfaceLight cursor-pointer group transition-colors relative">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm tracking-wide text-brand-muted group-hover:text-brand-text">TATAMOTORS</span>
+<span class="text-[10px] text-brand-muted mt-0.5">NSE</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-brand-primary text-sm font-medium tabular-nums">985.40</span>
+<span class="font-label text-brand-primary text-[10px] flex items-center mt-0.5 tabular-nums">
+<span class="material-symbols-outlined text-[10px] mr-0.5">arrow_upward</span> 3.2%
+                        </span>
+</div>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surfaceLight pl-2">
+<button class="bg-brand-primary/20 text-brand-primary text-xs font-bold px-2 py-1 rounded hover:bg-brand-primary hover:text-brand-bg transition-colors">B</button>
+<button class="bg-brand-danger/20 text-brand-danger text-xs font-bold px-2 py-1 rounded hover:bg-brand-danger hover:text-white transition-colors">S</button>
+</div>
+</div>
+</div>
+<div class="p-3 text-[10px] text-brand-muted text-center border-t border-brand-border bg-brand-bg">
+                Data is real-time. Settings <span class="material-symbols-outlined text-[10px] align-middle">settings</span>
+</div>
+</div>
+<!-- Center Panel: Chart Area (55% logic approx) -->
+<div class="flex-1 flex flex-col min-w-[500px] bg-[#161B22] relative z-10">
+<!-- Chart Header Toolbar -->
+<div class="h-12 border-b border-brand-border flex items-center justify-between px-4 bg-brand-surface shrink-0">
+<div class="flex items-center gap-4">
+<div>
+<span class="font-headline font-bold text-base tracking-wide">RELIANCE</span>
+<span class="text-[10px] text-brand-muted ml-1 bg-brand-bg px-1 py-0.5 rounded border border-brand-border">NSE</span>
+</div>
+<div class="flex items-center gap-2 font-label">
+<span class="text-sm font-bold tabular-nums">2456.30</span>
+<span class="text-brand-primary text-xs font-medium tabular-nums">+45.60 (1.89%)</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<!-- Timeframes -->
+<div class="flex bg-brand-bg border border-brand-border rounded p-0.5 text-xs font-medium">
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">1m</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">5m</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">15m</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">1H</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">4H</button>
+<button class="px-2 py-1 bg-brand-surfaceLight text-brand-text rounded shadow-sm">1D</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">1W</button>
+<button class="px-2 py-1 text-brand-muted hover:text-brand-text rounded transition-colors">1M</button>
+</div>
+<div class="h-4 w-px bg-brand-border mx-1"></div>
+<!-- Chart Types -->
+<div class="flex items-center gap-1">
+<button class="p-1 text-brand-primary bg-brand-primary/10 rounded" title="Candlestick"><span class="material-symbols-outlined text-sm">candlestick_chart</span></button>
+<button class="p-1 text-brand-muted hover:text-brand-text rounded transition-colors" title="Line"><span class="material-symbols-outlined text-sm">show_chart</span></button>
+<button class="p-1 text-brand-muted hover:text-brand-text rounded transition-colors" title="Area"><span class="material-symbols-outlined text-sm">area_chart</span></button>
+</div>
+<div class="h-4 w-px bg-brand-border mx-1"></div>
+<button class="flex items-center gap-1 text-xs text-brand-muted hover:text-brand-text font-medium px-2 py-1 border border-brand-border rounded bg-brand-bg">
+<span class="material-symbols-outlined text-sm">add</span> Indicators
+                     </button>
+</div>
+</div>
+<!-- Indicator Badges Overlay -->
+<div class="absolute top-14 left-14 z-20 flex flex-col gap-1 pointer-events-none">
+<div class="bg-brand-bg/80 backdrop-blur-sm border border-brand-border rounded px-2 py-1 text-[10px] flex items-center gap-2 pointer-events-auto shadow-md">
+<div class="w-2 h-2 rounded-full bg-brand-info"></div>
+<span class="font-medium text-brand-muted">SMA 20</span>
+<span class="font-label tabular-nums">2385.40</span>
+<button class="text-brand-muted hover:text-brand-text ml-1"><span class="material-symbols-outlined text-[10px]">visibility</span></button>
+</div>
+<div class="bg-brand-bg/80 backdrop-blur-sm border border-brand-border rounded px-2 py-1 text-[10px] flex items-center gap-2 pointer-events-auto shadow-md">
+<div class="w-2 h-2 rounded-full bg-brand-warning"></div>
+<span class="font-medium text-brand-muted">SMA 50</span>
+<span class="font-label tabular-nums">2310.20</span>
+<button class="text-brand-muted hover:text-brand-text ml-1"><span class="material-symbols-outlined text-[10px]">visibility</span></button>
+</div>
+<div class="bg-brand-bg/80 backdrop-blur-sm border border-brand-border rounded px-2 py-1 text-[10px] flex items-center gap-2 pointer-events-auto shadow-md">
+<span class="font-medium text-brand-muted">RSI (14)</span>
+<span class="font-label tabular-nums text-brand-primary">68.5</span>
+<button class="text-brand-muted hover:text-brand-text ml-1"><span class="material-symbols-outlined text-[10px]">visibility</span></button>
+</div>
+<div class="bg-brand-bg/80 backdrop-blur-sm border border-brand-border rounded px-2 py-1 text-[10px] flex items-center gap-2 pointer-events-auto shadow-md">
+<span class="font-medium text-brand-muted">MACD (12,26,9)</span>
+<span class="font-label tabular-nums text-brand-primary">15.2</span>
+<button class="text-brand-muted hover:text-brand-text ml-1"><span class="material-symbols-outlined text-[10px]">visibility</span></button>
+</div>
+</div>
+<div class="flex-1 flex relative">
+<!-- Drawing Tools Sidebar -->
+<div class="w-10 border-r border-brand-border bg-brand-surface flex flex-col items-center py-2 gap-3 z-20 shrink-0">
+<button class="p-1.5 text-brand-muted hover:text-brand-text rounded transition-colors" title="Cursor"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="p-1.5 text-brand-primary bg-brand-primary/10 rounded" title="Trend Line"><span class="material-symbols-outlined text-sm">horizontal_rule</span></button>
+<button class="p-1.5 text-brand-muted hover:text-brand-text rounded transition-colors" title="Fibonacci"><span class="material-symbols-outlined text-sm">format_align_center</span></button>
+<button class="p-1.5 text-brand-muted hover:text-brand-text rounded transition-colors" title="Brush"><span class="material-symbols-outlined text-sm">brush</span></button>
+<button class="p-1.5 text-brand-muted hover:text-brand-text rounded transition-colors" title="Text"><span class="material-symbols-outlined text-sm">title</span></button>
+<button class="p-1.5 text-brand-muted hover:text-brand-text rounded transition-colors mt-auto" title="Delete"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+<!-- Main Chart Canvas Area -->
+<div class="flex-1 bg-[#1C2128] relative overflow-hidden" id="chart-container">
+<!-- SVG Grid Background & Lines (Simulated Chart) -->
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="50" id="grid" patternunits="userSpaceOnUse" width="100">
+<path d="M 100 0 L 0 0 0 50" fill="none" stroke="#30363D" stroke-dasharray="2,2" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+<!-- Price Line (Dashed) -->
+<line stroke="#8B949E" stroke-dasharray="4,4" stroke-width="1" x1="0" x2="100%" y1="40%" y2="40%"></line>
+<!-- SMA 20 (Blue) -->
+<path d="M0,200 Q150,220 300,180 T600,150 T900,120" fill="none" stroke="#448AFF" stroke-width="1.5"></path>
+<!-- SMA 50 (Orange) -->
+<path d="M0,250 Q200,260 400,220 T800,200" fill="none" stroke="#FF6D00" stroke-width="1.5"></path>
+<!-- Candlesticks (Simplified representation) -->
+<g transform="translate(100, 0)">
+<!-- Green Candle -->
+<line stroke="#00E676" stroke-width="1.5" x1="20" x2="20" y1="250" y2="150"></line>
+<rect fill="#00E676" height="60" width="10" x="15" y="170"></rect>
+<!-- Red Candle -->
+<line stroke="#FF5252" stroke-width="1.5" x1="60" x2="60" y1="160" y2="220"></line>
+<rect fill="#FF5252" height="30" width="10" x="55" y="180"></rect>
+<!-- Green Candle -->
+<line stroke="#00E676" stroke-width="1.5" x1="100" x2="100" y1="200" y2="100"></line>
+<rect fill="#00E676" height="50" width="10" x="95" y="120"></rect>
+<!-- Current Price Indicator Box on right -->
+<rect fill="#161B22" height="24" stroke="#00E676" stroke-width="1" width="60" x="calc(100% - 160px)" y="calc(40% - 12px)"></rect>
+<text class="tabular-nums" fill="#00E676" font-family="Space Grotesk" font-size="12" x="calc(100% - 155px)" y="calc(40% + 4px)">2456.30</text>
+</g>
+</svg>
+<!-- Volume Bar Area (Bottom) -->
+<div class="absolute bottom-0 left-0 right-[60px] h-24 border-t border-brand-border border-opacity-30 bg-gradient-to-t from-brand-bg/50 to-transparent flex items-end px-2">
+<!-- Volume Bars -->
+<div class="w-full flex items-end gap-1 px-4 h-full pt-4">
+<div class="w-3 bg-brand-primary opacity-50 h-[30%]"></div>
+<div class="w-3 bg-brand-danger opacity-50 h-[60%]"></div>
+<div class="w-3 bg-brand-primary opacity-50 h-[45%]"></div>
+<div class="w-3 bg-brand-primary opacity-50 h-[80%]"></div>
+<div class="w-3 bg-brand-danger opacity-50 h-[20%]"></div>
+<div class="w-3 bg-brand-primary opacity-50 h-[50%]"></div>
+<div class="w-3 bg-brand-primary opacity-50 h-[90%]"></div>
+<div class="w-3 bg-brand-danger opacity-50 h-[70%]"></div>
+<div class="w-3 bg-brand-danger opacity-50 h-[40%]"></div>
+<div class="w-3 bg-brand-primary opacity-50 h-[65%]"></div>
+</div>
+</div>
+<!-- Y-Axis (Price) -->
+<div class="absolute top-0 bottom-0 right-0 w-[60px] bg-brand-surface border-l border-brand-border flex flex-col justify-between py-4 text-[10px] text-brand-muted font-label items-end pr-2">
+<span>2500.00</span>
+<span>2480.00</span>
+<span>2460.00</span>
+<span class="text-brand-primary bg-brand-primary/10 px-1 rounded -mr-2 pr-2">2456.30</span>
+<span>2440.00</span>
+<span>2420.00</span>
+<span>2400.00</span>
+<span>2380.00</span>
+</div>
+<!-- X-Axis (Time) -->
+<div class="absolute bottom-0 left-0 right-[60px] h-6 bg-brand-surface border-t border-brand-border flex justify-between px-10 text-[10px] text-brand-muted font-label items-center">
+<span>09:15</span>
+<span>10:30</span>
+<span>11:45</span>
+<span>13:00</span>
+<span>14:15</span>
+<span>15:30</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Order Entry & Market Depth (25% logic approx) -->
+<div class="w-[320px] flex-shrink-0 bg-brand-surface border-l border-brand-border flex flex-col overflow-y-auto">
+<!-- Order Entry Component -->
+<div class="p-4 border-b border-brand-border bg-brand-bg relative">
+<div class="absolute top-2 right-2 bg-brand-warning/20 text-brand-warning text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border border-brand-warning/30">
+                    Simulation Mode
+                </div>
+<h3 class="font-headline font-bold text-lg mb-4 text-brand-text">Place Order</h3>
+<!-- Buy/Sell Toggle -->
+<div class="flex rounded-md p-1 bg-brand-surface border border-brand-border mb-4">
+<button class="flex-1 py-1.5 text-sm font-bold rounded bg-brand-primary text-brand-bg shadow-sm transition-colors">BUY</button>
+<button class="flex-1 py-1.5 text-sm font-bold rounded text-brand-muted hover:text-brand-danger transition-colors">SELL</button>
+</div>
+<!-- Product Type (CNC/MIS) -->
+<div class="flex gap-4 mb-4 text-xs font-medium text-brand-muted">
+<label class="flex items-center gap-1.5 cursor-pointer text-brand-text">
+<input checked="" class="text-brand-primary bg-brand-surface border-brand-border focus:ring-brand-primary focus:ring-1 focus:ring-offset-0 focus:ring-offset-transparent" name="product" type="radio"/>
+                        MIS (Intraday)
+                    </label>
+<label class="flex items-center gap-1.5 cursor-pointer hover:text-brand-text transition-colors">
+<input class="text-brand-primary bg-brand-surface border-brand-border focus:ring-brand-primary focus:ring-1 focus:ring-offset-0 focus:ring-offset-transparent" name="product" type="radio"/>
+                        CNC (Long term)
+                    </label>
+</div>
+<!-- Order Type Tabs -->
+<div class="flex text-xs font-medium border-b border-brand-border mb-4">
+<div class="flex-1 pb-2 text-center cursor-pointer text-brand-muted hover:text-brand-text transition-colors">Market</div>
+<div class="flex-1 pb-2 text-center cursor-pointer text-brand-primary border-b-2 border-brand-primary">Limit</div>
+<div class="flex-1 pb-2 text-center cursor-pointer text-brand-muted hover:text-brand-text transition-colors">SL</div>
+<div class="flex-1 pb-2 text-center cursor-pointer text-brand-muted hover:text-brand-text transition-colors">SL-M</div>
+</div>
+<!-- Inputs -->
+<div class="grid grid-cols-2 gap-3 mb-5">
+<div>
+<label class="block text-[10px] uppercase tracking-wider text-brand-muted mb-1">Qty</label>
+<input class="w-full bg-[#1C2128] border border-brand-border rounded px-3 py-2 text-sm font-label text-brand-text focus:outline-none focus:border-brand-primary tabular-nums" type="number" value="1"/>
+</div>
+<div>
+<label class="block text-[10px] uppercase tracking-wider text-brand-muted mb-1">Price (₹)</label>
+<input class="w-full bg-[#1C2128] border border-brand-border rounded px-3 py-2 text-sm font-label text-brand-text focus:outline-none focus:border-brand-primary tabular-nums" step="0.05" type="number" value="2456.30"/>
+</div>
+</div>
+<!-- Margin Info -->
+<div class="flex justify-between items-center text-xs mb-4 p-2 bg-[#1C2128] rounded border border-brand-border/50">
+<span class="text-brand-muted">Margin Required</span>
+<span class="font-label text-brand-text font-medium">₹491.26 <span class="text-brand-muted text-[10px]">(5x)</span></span>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-brand-primary hover:bg-[#00C853] text-brand-bg font-headline font-bold text-base py-3 rounded-md transition-colors shadow-[0_0_15px_rgba(0,230,118,0.2)] hover:shadow-[0_0_20px_rgba(0,230,118,0.4)] active:scale-[0.98] duration-150 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span>
+                    Place Buy Order
+                </button>
+</div>
+<!-- Market Depth (Level 2 Data) -->
+<div class="p-4 flex-1">
+<div class="flex justify-between items-center mb-3">
+<h4 class="font-headline font-bold text-sm text-brand-text">Market Depth</h4>
+<span class="text-[10px] bg-[#1C2128] text-brand-muted px-1.5 py-0.5 rounded">L2</span>
+</div>
+<div class="grid grid-cols-2 gap-4 text-xs">
+<!-- Bids (Left/Green) -->
+<div>
+<div class="flex justify-between text-[10px] text-brand-muted mb-2 border-b border-brand-border pb-1 uppercase tracking-wider">
+<span>Bid Qty</span>
+<span>Bid</span>
+</div>
+<div class="space-y-1 relative">
+<!-- Depth Bars generated with CSS background linear-gradients for a clean look -->
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 right-0 bg-brand-primary/10 rounded-sm" style="width: 85%;"></div>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pl-1">1,245</span>
+<span class="font-label tabular-nums text-brand-primary relative z-10 pr-1 font-medium">2455.80</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 right-0 bg-brand-primary/10 rounded-sm" style="width: 60%;"></div>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pl-1">840</span>
+<span class="font-label tabular-nums text-brand-primary relative z-10 pr-1">2455.60</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 right-0 bg-brand-primary/10 rounded-sm" style="width: 95%;"></div>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pl-1">2,100</span>
+<span class="font-label tabular-nums text-brand-primary relative z-10 pr-1">2455.40</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 right-0 bg-brand-primary/10 rounded-sm" style="width: 30%;"></div>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pl-1">320</span>
+<span class="font-label tabular-nums text-brand-primary relative z-10 pr-1">2455.20</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 right-0 bg-brand-primary/10 rounded-sm" style="width: 45%;"></div>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pl-1">560</span>
+<span class="font-label tabular-nums text-brand-primary relative z-10 pr-1">2455.00</span>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-brand-border/50 flex justify-between text-[10px] font-label text-brand-primary/70">
+<span>Total</span>
+<span>5,065</span>
+</div>
+</div>
+<!-- Asks (Right/Red) -->
+<div>
+<div class="flex justify-between text-[10px] text-brand-muted mb-2 border-b border-brand-border pb-1 uppercase tracking-wider">
+<span>Ask</span>
+<span>Ask Qty</span>
+</div>
+<div class="space-y-1 relative">
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 left-0 bg-brand-danger/10 rounded-sm" style="width: 40%;"></div>
+<span class="font-label tabular-nums text-brand-danger relative z-10 pl-1 font-medium">2456.30</span>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pr-1">450</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 left-0 bg-brand-danger/10 rounded-sm" style="width: 75%;"></div>
+<span class="font-label tabular-nums text-brand-danger relative z-10 pl-1">2456.50</span>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pr-1">1,120</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 left-0 bg-brand-danger/10 rounded-sm" style="width: 20%;"></div>
+<span class="font-label tabular-nums text-brand-danger relative z-10 pl-1">2456.70</span>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pr-1">180</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 left-0 bg-brand-danger/10 rounded-sm" style="width: 90%;"></div>
+<span class="font-label tabular-nums text-brand-danger relative z-10 pl-1">2456.90</span>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pr-1">1,850</span>
+</div>
+<div class="flex justify-between py-1 relative">
+<div class="absolute inset-y-0 left-0 bg-brand-danger/10 rounded-sm" style="width: 50%;"></div>
+<span class="font-label tabular-nums text-brand-danger relative z-10 pl-1">2457.10</span>
+<span class="font-label tabular-nums text-brand-muted relative z-10 pr-1">620</span>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-brand-border/50 flex justify-between text-[10px] font-label text-brand-danger/70">
+<span>Total</span>
+<span>4,220</span>
+</div>
+</div>
+</div>
+<!-- Quick stats below depth -->
+<div class="mt-4 grid grid-cols-2 gap-2 text-[10px] bg-[#1C2128] p-2 rounded border border-brand-border/50">
+<div class="flex justify-between">
+<span class="text-brand-muted">Open</span>
+<span class="font-label tabular-nums text-brand-text">2410.50</span>
+</div>
+<div class="flex justify-between">
+<span class="text-brand-muted">High</span>
+<span class="font-label tabular-nums text-brand-text">2465.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-brand-muted">Low</span>
+<span class="font-label tabular-nums text-brand-text">2398.20</span>
+</div>
+<div class="flex justify-between">
+<span class="text-brand-muted">Prev. Close</span>
+<span class="font-label tabular-nums text-brand-text">2410.70</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Script for subtle ticker micro-interactions -->
+<script>
+        // Simulate price ticker flashes on watchlist items randomly to make the UI feel alive
+        document.addEventListener("DOMContentLoaded", () => {
+            const priceElements = document.querySelectorAll('.font-label.text-brand-primary.text-sm');
+            
+            setInterval(() => {
+                // Pick a random element
+                if(priceElements.length === 0) return;
+                const index = Math.floor(Math.random() * priceElements.length);
+                const el = priceElements[index];
+                
+                // Determine flash color based on simulated up/down
+                const isUp = Math.random() > 0.5;
+                const originalColor = el.style.color;
+                
+                if (isUp) {
+                    el.style.backgroundColor = 'rgba(0, 230, 118, 0.2)';
+                } else {
+                    el.style.backgroundColor = 'rgba(255, 82, 82, 0.2)';
+                    // temporarily make text red if it was green
+                    if(el.classList.contains('text-brand-primary')) {
+                        el.classList.remove('text-brand-primary');
+                        el.classList.add('text-brand-danger');
+                        
+                        setTimeout(() => {
+                             el.classList.remove('text-brand-danger');
+                             el.classList.add('text-brand-primary');
+                        }, 500);
+                    }
+                }
+                
+                setTimeout(() => {
+                    el.style.backgroundColor = 'transparent';
+                }, 300);
+                
+            }, 2000);
+        });
+    </script>
+</body></html>

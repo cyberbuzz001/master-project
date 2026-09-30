@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Terminal - Pro Brokerage Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 71, 84, 0.3);
+        }
+        .data-mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #424754; border-radius: 10px; }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#68000a",
+                    "on-tertiary-container": "#5c0008",
+                    "on-primary": "#002e6a",
+                    "on-primary-container": "#00285d",
+                    "inverse-on-surface": "#293041",
+                    "surface-container": "#191f30",
+                    "tertiary": "#ffb3ad",
+                    "surface-tint": "#adc6ff",
+                    "error-container": "#93000a",
+                    "tertiary-fixed": "#ffdad7",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#c2c6d6",
+                    "background": "#0c1323",
+                    "secondary-container": "#00a572",
+                    "surface-bright": "#32394b",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-container-high": "#232a3b",
+                    "on-error-container": "#ffdad6",
+                    "inverse-primary": "#005ac2",
+                    "error": "#ffb4ab",
+                    "surface-variant": "#2e3446",
+                    "on-secondary-container": "#00311f",
+                    "on-secondary": "#003824",
+                    "on-surface": "#dce2f9",
+                    "on-tertiary-fixed": "#410004",
+                    "secondary": "#4edea3",
+                    "on-background": "#dce2f9",
+                    "surface-container-lowest": "#070e1e",
+                    "inverse-surface": "#dce2f9",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-error": "#690005",
+                    "outline-variant": "#424754",
+                    "surface": "#0c1323",
+                    "on-secondary-fixed": "#002113",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "tertiary-container": "#ff5451",
+                    "surface-container-highest": "#2e3446",
+                    "on-primary-fixed": "#001a42",
+                    "outline": "#8c909f",
+                    "primary": "#adc6ff",
+                    "surface-container-low": "#141b2c",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-dim": "#0c1323",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "primary-fixed": "#d8e2ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "primary-container": "#4d8eff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "cell-padding-x": "8px",
+                    "unit": "4px",
+                    "cell-padding-y": "6px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "title-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden pb-20">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container/70 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-gutter py-unit w-full max-w-full h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-primary-container text-on-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional close-up profile portrait of a confident Indian male trader in his early 30s, wearing a smart casual navy blazer. The lighting is soft and corporate, with a clean architectural background of a modern glass office. High resolution, professional photography style with a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe0CQSKMh0_Mn0Ml4ZE5ml7AMOHL7o3v9QeBWuiS3P-PTrEwmGUAdcDM24A8zYZb_ALdjI7NFFyxJ6aP2a-wlcWuzunbenTaB7L65joj1I3CzWARDWYtwQ940XrrVPBmvGz7t0Z5gykKmjw7X_ahvExaSi1whVXfKWIi3xRTVWDChtaOcEIdmZiejpai46Sdu7pAeDpdwmgzZIJBgGzfYZP08BvtcSeRmymSTHztvCKcPtttTHXOU"/>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-sm text-title-sm">Hi, Arjun</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary text-[10px] font-bold border border-secondary/20 uppercase tracking-wider">KYC Verified</span>
+</div>
+<span class="text-on-surface-variant text-[12px]">Welcome back to your terminal</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary">search</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright transition-colors active:scale-95 relative">
+<span class="material-symbols-outlined text-primary">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+</div>
+</header>
+<main class="mt-20 px-gutter space-y-6">
+<!-- Portfolio Overview -->
+<section>
+<div class="glass-panel p-5 rounded-xl bg-gradient-to-br from-surface-container-high to-surface-container shadow-2xl relative overflow-hidden">
+
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-on-surface-variant font-label-caps text-label-caps mb-1">TOTAL PORTFOLIO VALUE</p>
+<h2 class="font-display-lg text-display-lg data-mono tracking-tight">₹14,52,890.45</h2>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant font-label-caps text-label-caps mb-1">TODAY'S P&amp;L</p>
+<p class="text-secondary font-title-sm text-title-sm data-mono">+₹12,450.20 (0.86%)</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-outline-variant/20">
+<div>
+<p class="text-on-surface-variant text-[11px] font-medium uppercase mb-1">Available Cash</p>
+<p class="data-mono text-primary">₹45,200.00</p>
+</div>
+<div class="text-right">
+<p class="text-on-surface-variant text-[11px] font-medium uppercase mb-1">Used Margin</p>
+<p class="data-mono text-on-surface">₹2,10,000.00</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions -->
+<section class="grid grid-cols-4 gap-2">
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-bright transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">add_card</span>
+</div>
+<span class="text-[11px] font-semibold text-on-surface-variant">Add Funds</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-bright transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<span class="text-[11px] font-semibold text-on-surface-variant">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-bright transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</div>
+<span class="text-[11px] font-semibold text-on-surface-variant">Watchlist</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-bright transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<span class="text-[11px] font-semibold text-on-surface-variant">Mutual Funds</span>
+</button>
+</section>
+<!-- Market Indices -->
+<section>
+<div class="flex justify-between items-end mb-4">
+<h3 class="font-title-sm text-title-sm">Market Indices</h3>
+<span class="text-[12px] text-primary flex items-center gap-1">Live <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span></span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-2 -mx-gutter px-gutter no-scrollbar">
+<!-- NIFTY 50 -->
+<div class="min-w-[180px] p-4 rounded-xl bg-surface-container border border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-bold text-[13px]">NIFTY 50</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">trending_up</span>
+</div>
+<p class="data-mono text-lg font-bold">22,147.25</p>
+<p class="text-secondary text-[12px] data-mono">+124.50 (0.57%)</p>
+<div class="mt-3 h-8 w-full opacity-50">
+<svg class="w-full h-full stroke-secondary fill-none stroke-2" viewbox="0 0 100 20">
+<path d="M0,15 L10,12 L20,18 L30,10 L40,12 L50,5 L60,8 L70,3 L80,10 L90,2 L100,6"></path>
+</svg>
+</div>
+</div>
+<!-- BANK NIFTY -->
+<div class="min-w-[180px] p-4 rounded-xl bg-surface-container border border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-bold text-[13px]">BANK NIFTY</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">trending_up</span>
+</div>
+<p class="data-mono text-lg font-bold">46,812.90</p>
+<p class="text-secondary text-[12px] data-mono">+342.15 (0.74%)</p>
+<div class="mt-3 h-8 w-full opacity-50">
+<svg class="w-full h-full stroke-secondary fill-none stroke-2" viewbox="0 0 100 20">
+<path d="M0,18 L10,15 L20,12 L30,14 L40,8 L50,10 L60,4 L70,6 L80,2 L90,5 L100,1"></path>
+</svg>
+</div>
+</div>
+<!-- SENSEX -->
+<div class="min-w-[180px] p-4 rounded-xl bg-surface-container border border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-bold text-[13px]">SENSEX</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">trending_down</span>
+</div>
+<p class="data-mono text-lg font-bold">72,987.30</p>
+<p class="text-error text-[12px] data-mono">-89.40 (-0.12%)</p>
+<div class="mt-3 h-8 w-full opacity-50">
+<svg class="w-full h-full stroke-error fill-none stroke-2" viewbox="0 0 100 20">
+<path d="M0,5 L10,8 L20,4 L30,12 L40,10 L50,15 L60,12 L70,18 L80,14 L90,19 L100,16"></path>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Watchlist Preview -->
+<section class="pb-8">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-title-sm text-title-sm">Quick Watchlist</h3>
+<button class="text-primary text-[13px] font-medium">View All</button>
+</div>
+<div class="space-y-1">
+<!-- Stock Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer border-b border-outline-variant/10">
+<div>
+<p class="font-bold text-on-surface">RELIANCE</p>
+<p class="text-[11px] text-on-surface-variant uppercase">NSE • Energy</p>
+</div>
+<div class="text-right">
+<p class="data-mono font-bold text-on-surface">₹2,945.30</p>
+<p class="data-mono text-[12px] text-secondary">+₹34.20 (+1.17%)</p>
+</div>
+</div>
+<!-- Stock Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer border-b border-outline-variant/10">
+<div>
+<p class="font-bold text-on-surface">HDFCBANK</p>
+<p class="text-[11px] text-on-surface-variant uppercase">NSE • Banking</p>
+</div>
+<div class="text-right">
+<p class="data-mono font-bold text-on-surface">₹1,422.15</p>
+<p class="data-mono text-[12px] text-error">-₹4.50 (-0.32%)</p>
+</div>
+</div>
+<!-- Stock Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer border-b border-outline-variant/10">
+<div>
+<p class="font-bold text-on-surface">TCS</p>
+<p class="text-[11px] text-on-surface-variant uppercase">NSE • IT Services</p>
+</div>
+<div class="text-right">
+<p class="data-mono font-bold text-on-surface">₹4,105.80</p>
+<p class="data-mono text-[12px] text-secondary">+₹12.40 (+0.30%)</p>
+</div>
+</div>
+<!-- Stock Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer border-b border-outline-variant/10">
+<div>
+<p class="font-bold text-on-surface">INFY</p>
+<p class="text-[11px] text-on-surface-variant uppercase">NSE • IT Services</p>
+</div>
+<div class="text-right">
+<p class="data-mono font-bold text-on-surface">₹1,674.20</p>
+<p class="data-mono text-[12px] text-secondary">+₹45.10 (+2.76%)</p>
+</div>
+</div>
+<!-- Stock Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">
+<div>
+<p class="font-bold text-on-surface">ZOMATO</p>
+<p class="text-[11px] text-on-surface-variant uppercase">NSE • Tech</p>
+</div>
+<div class="text-right">
+<p class="data-mono font-bold text-on-surface">₹164.35</p>
+<p class="data-mono text-[12px] text-error">-₹1.20 (-0.72%)</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button (for core trading task) -->
+<button class="fixed bottom-20 right-4 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-[32px]">add_task</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container/80 backdrop-blur-xl border-t border-outline-variant/20 rounded-t-xl shadow-2xl">
+<div class="flex justify-around items-center h-16 w-full px-2 pb-safe">
+<!-- Active: Dashboard -->
+<a class="flex flex-col items-center justify-center text-secondary bg-secondary-container/10 rounded-xl px-3 py-1 active:scale-90 duration-200 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-[10px] mt-0.5">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-[10px] mt-0.5">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-caps text-[10px] mt-0.5">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-[10px] mt-0.5">Portfolio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-[10px] mt-0.5">Profile</span>
+</a>
+</div>
+</nav>
+<script>
+        // Micro-interactions for live price updates
+        function updatePrices() {
+            const tickers = document.querySelectorAll('.data-mono');
+            tickers.forEach(ticker => {
+                if (Math.random() > 0.7) {
+                    ticker.classList.add('opacity-50');
+                    setTimeout(() => ticker.classList.remove('opacity-50'), 200);
+                }
+            });
+        }
+        setInterval(updatePrices, 3000);
+
+        // Simple horizontal scroll handling for indices
+        const indicesScroll = document.querySelector('.no-scrollbar');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        indicesScroll.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - indicesScroll.offsetLeft;
+            scrollLeft = indicesScroll.scrollLeft;
+        });
+        indicesScroll.addEventListener('mouseleave', () => isDown = false);
+        indicesScroll.addEventListener('mouseup', () => isDown = false);
+        indicesScroll.addEventListener('mousemove', (e) => {
+            if(!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - indicesScroll.offsetLeft;
+            const walk = (x - startX) * 2;
+            indicesScroll.scrollLeft = scrollLeft - walk;
+        });
+    </script>
+</body></html>

@@ -1,0 +1,420 @@
+<!--meta {
+  "title": "The Trade Grow Platform — Interactive Tour & Features",
+  "description": "Interactive walkthrough of the Trade Grow trading terminal: live watchlist, pre-trade cost estimator order window, portfolio analytics, and funds management."
+}-->
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Platform</p>
+      <h1 class="h1">See the platform before you sign up for it</h1>
+      <p class="lede">
+        You should not have to complete KYC to find out what an app looks like. Explore our interactive
+        terminal walkthrough below to see how orders, watchlists, portfolio holdings, and real-time cost
+        breakdowns work.
+      </p>
+    </div>
+
+    <div class="notice notice--warn">
+      <strong>{{cfg:compliance.illustrativeLabel}}.</strong>
+      The interactive screens on this page are functional simulations built for this website, not captures
+      of the live production database. Figures shown are illustrative and do not represent real prices,
+      real holdings, or actual returns.
+    </div>
+
+    <!-- Interactive Platform Tour Terminal -->
+    <div class="terminal-showcase" id="terminal-showcase">
+      <div class="terminal-showcase__header">
+        <div class="terminal-showcase__tabs" role="tablist" aria-label="Terminal views">
+          <button class="terminal-tab is-active" id="ttab-watchlist" role="tab" aria-selected="true" aria-controls="tview-watchlist">
+            Watchlist &amp; Market
+          </button>
+          <button class="terminal-tab" id="ttab-order" role="tab" aria-selected="false" aria-controls="tview-order">
+            Order Window &amp; Pre-Trade Cost
+          </button>
+          <button class="terminal-tab" id="ttab-portfolio" role="tab" aria-selected="false" aria-controls="tview-portfolio">
+            Holdings &amp; Positions
+          </button>
+          <button class="terminal-tab" id="ttab-funds" role="tab" aria-selected="false" aria-controls="tview-funds">
+            Funds &amp; Margin
+          </button>
+        </div>
+
+        <div class="terminal-showcase__controls">
+          <button type="button" class="theme-toggle-btn" id="btn-theme-toggle">
+            <span class="theme-icon" aria-hidden="true">&#9681;</span>
+            <span class="sr-only">Switch terminal theme: </span><span id="theme-btn-text">Dark Mode</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="terminal-showcase__screen" id="terminal-screen" data-theme="dark">
+
+        <!-- VIEW 1: Watchlist & Market -->
+        <div class="terminal-view is-active" id="tview-watchlist" role="tabpanel" aria-labelledby="ttab-watchlist">
+          <div class="market-grid">
+            <div class="market-list">
+              <div class="market-list__head">
+                <span class="small font-mono">WATCHLIST (5)</span>
+                <span class="small muted">Live Simulated</span>
+              </div>
+              <div class="market-item is-selected" data-symbol="RELIANCE" data-price="2940.50" data-change="+1.15%" data-seg="NSE">
+                <div>
+                  <strong>RELIANCE</strong>
+                  <span class="sym">NSE &middot; Equity</span>
+                </div>
+                <div class="text-right">
+                  <strong>&#8377;2,940.50</strong>
+                  <span class="num num--up">+1.15%</span>
+                </div>
+              </div>
+              <div class="market-item" data-symbol="TCS" data-price="3892.10" data-change="-0.42%" data-seg="NSE">
+                <div>
+                  <strong>TCS</strong>
+                  <span class="sym">NSE &middot; Equity</span>
+                </div>
+                <div class="text-right">
+                  <strong>&#8377;3,892.10</strong>
+                  <span class="num num--down">-0.42%</span>
+                </div>
+              </div>
+              <div class="market-item" data-symbol="INFY" data-price="1520.30" data-change="+0.85%" data-seg="NSE">
+                <div>
+                  <strong>INFY</strong>
+                  <span class="sym">NSE &middot; Equity</span>
+                </div>
+                <div class="text-right">
+                  <strong>&#8377;1,520.30</strong>
+                  <span class="num num--up">+0.85%</span>
+                </div>
+              </div>
+              <div class="market-item" data-symbol="HDFCBANK" data-price="1684.00" data-change="+0.24%" data-seg="NSE">
+                <div>
+                  <strong>HDFCBANK</strong>
+                  <span class="sym">NSE &middot; Equity</span>
+                </div>
+                <div class="text-right">
+                  <strong>&#8377;1,684.00</strong>
+                  <span class="num num--up">+0.24%</span>
+                </div>
+              </div>
+              <div class="market-item" data-symbol="NIFTY 24500 CE" data-price="142.50" data-change="-5.20%" data-seg="NFO">
+                <div>
+                  <strong>NIFTY 24500 CE</strong>
+                  <span class="sym">NFO &middot; Options</span>
+                </div>
+                <div class="text-right">
+                  <strong>&#8377;142.50</strong>
+                  <span class="num num--down">-5.20%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="market-detail">
+              <div class="market-detail__head">
+                <div>
+                  <p class="h4" id="m-symbol" style="margin:0">RELIANCE</p>
+                  <p class="muted small" id="m-desc">Reliance Industries Limited &middot; NSE EQ</p>
+                </div>
+                <div class="text-right">
+                  <p class="h4" id="m-price" style="margin:0">&#8377;2,940.50</p>
+                  <span class="num num--up" id="m-change">+1.15% (&#8377;33.40)</span>
+                </div>
+              </div>
+
+              <!-- Mock Mini Chart SVG -->
+              <div class="mock-chart-container">
+                <svg viewBox="0 0 500 160" class="mock-chart-svg" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#0FB5A5" stop-opacity="0.35"/>
+                      <stop offset="100%" stop-color="#0FB5A5" stop-opacity="0.0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,140 Q60,110 120,125 T240,90 T360,60 T450,45 L500,30 L500,160 L0,160 Z" fill="url(#chartGrad)"/>
+                  <path d="M0,140 Q60,110 120,125 T240,90 T360,60 T450,45 L500,30" fill="none" stroke="#0FB5A5" stroke-width="2.5"/>
+                  <circle cx="500" cy="30" r="4" fill="#0FB5A5"/>
+                </svg>
+                <div class="chart-time-labels">
+                  <span>09:15</span><span>11:00</span><span>13:00</span><span>14:30</span><span>15:30</span>
+                </div>
+              </div>
+
+              <!-- Market Depth Table -->
+              <div class="market-depth">
+                <div class="market-depth__col">
+                  <span class="small font-mono" style="color:var(--ok)">BUY ORDERS (BID)</span>
+                  <div class="depth-row"><span>Qty: 1,200</span><span class="num">&#8377;2,940.00</span></div>
+                  <div class="depth-row"><span>Qty: 450</span><span class="num">&#8377;2,939.50</span></div>
+                  <div class="depth-row"><span>Qty: 890</span><span class="num">&#8377;2,939.00</span></div>
+                </div>
+                <div class="market-depth__col">
+                  <span class="small font-mono" style="color:var(--danger)">SELL ORDERS (ASK)</span>
+                  <div class="depth-row"><span class="num">&#8377;2,940.50</span><span>Qty: 780</span></div>
+                  <div class="depth-row"><span class="num">&#8377;2,941.00</span><span>Qty: 2,100</span></div>
+                  <div class="depth-row"><span class="num">&#8377;2,941.50</span><span>Qty: 1,050</span></div>
+                </div>
+              </div>
+
+              <div class="market-actions">
+                <button type="button" class="btn btn--primary btn--sm" id="btn-trade-this">Buy / Sell in Order Window &rarr;</button>
+                <span class="small muted">Click any stock in the list to inspect.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: Order Window & Pre-Trade Cost -->
+        <div class="terminal-view" id="tview-order" role="tabpanel" aria-labelledby="ttab-order">
+          <div class="order-grid">
+            <div class="order-form-panel">
+              <div class="order-form-head">
+                <div class="order-type-switch">
+                  <button type="button" class="ot-btn is-buy is-active" id="ot-buy-btn">BUY</button>
+                  <button type="button" class="ot-btn is-sell" id="ot-sell-btn">SELL</button>
+                </div>
+                <span class="badge badge--dark" id="order-scrip-badge">RELIANCE &middot; NSE</span>
+              </div>
+
+              <div class="field--row" style="margin-top:14px">
+                <div class="field">
+                  <label for="p-qty">Quantity</label>
+                  <input type="number" id="p-qty" value="50" min="1" step="1">
+                </div>
+                <div class="field">
+                  <label for="p-price">Price (&#8377;)</label>
+                  <input type="number" id="p-price" value="2940.50" min="0.05" step="0.05">
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:10px">
+                <label id="p-product-label">Product Type</label>
+                <div class="segbtns" style="margin-top:4px" role="radiogroup" aria-labelledby="p-product-label">
+                  <input type="radio" name="p_prod" id="pp-cnc" value="delivery" checked>
+                  <label for="pp-cnc">Delivery (CNC)</label>
+                  <input type="radio" name="p_prod" id="pp-mis" value="intraday">
+                  <label for="pp-mis">Intraday (MIS)</label>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:10px">
+                <label id="p-order-type-label">Order Type</label>
+                <div class="segbtns" style="margin-top:4px" role="radiogroup" aria-labelledby="p-order-type-label">
+                  <input type="radio" name="p_type" id="pt-lmt" value="limit" checked>
+                  <label for="pt-lmt">Limit</label>
+                  <input type="radio" name="p_type" id="pt-mkt" value="market">
+                  <label for="pt-mkt">Market</label>
+                </div>
+              </div>
+
+              <div style="margin-top:16px">
+                <button type="button" class="btn btn--primary" id="btn-sim-order" style="width:100%">
+                  Submit Order (Simulation)
+                </button>
+              </div>
+
+              <p class="small muted" style="margin-top:10px;text-align:center">
+                Simulated demo. No real order will be routed to the exchange.
+              </p>
+            </div>
+
+            <div class="order-cost-panel">
+              <p class="h5" style="margin:0 0 .5em">Pre-Trade Charge Breakdown</p>
+              <p class="small muted">Estimated total cost displayed <em>before</em> you confirm your order.</p>
+
+              <div class="cost-stat-card">
+                <div class="cost-stat-row">
+                  <span>Required Margin / Turnover:</span>
+                  <strong id="p-calc-turnover">&#8377;1,47,025.00</strong>
+                </div>
+                <div class="cost-stat-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;margin-top:6px">
+                  <span>Total Estimated Charges:</span>
+                  <strong class="cost-total-num" id="p-calc-total">&#8377;176.43</strong>
+                </div>
+              </div>
+
+              <dl class="calc__lines" style="margin-top:14px">
+                <div><dt>Brokerage (Trade Grow)</dt><dd id="p-c-bro">&#8377;20.00</dd></div>
+                <div><dt>STT (Government)</dt><dd id="p-c-stt">&#8377;147.00</dd></div>
+                <div><dt>Exchange Txn (NSE)</dt><dd id="p-c-exc">&#8377;4.37</dd></div>
+                <div><dt>SEBI Turnover Fee</dt><dd id="p-c-seb">&#8377;0.15</dd></div>
+                <div><dt>GST (18% on fees)</dt><dd id="p-c-gst">&#8377;4.41</dd></div>
+                <div><dt>Stamp Duty (Buy side)</dt><dd id="p-c-sta">&#8377;0.50</dd></div>
+              </dl>
+
+              <div class="notice notice--tint small" style="margin-top:14px">
+                Transparent itemisation: You always see exactly what is Trade Grow's fee and what is statutory tax before executing.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 3: Holdings & Positions -->
+        <div class="terminal-view" id="tview-portfolio" role="tabpanel" aria-labelledby="ttab-portfolio">
+          <div class="portfolio-header">
+            <div class="portfolio-stat">
+              <span class="muted small">TOTAL INVESTED</span>
+              <strong>&#8377;3,42,800.00</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span class="muted small">CURRENT VALUE</span>
+              <strong>&#8377;3,68,450.00</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span class="muted small">TOTAL P&amp;L (UNREALIZED)</span>
+              <strong class="num num--up">+&#8377;25,650.00 (+7.48%)</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span class="muted small">DAY P&amp;L</span>
+              <strong class="num num--up">+&#8377;1,820.00 (+0.50%)</strong>
+            </div>
+          </div>
+
+          <div class="table-scroll" style="margin-top:18px">
+            <table class="table table--terminal">
+              <caption class="sr-only">Illustrative order book</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Instrument</th>
+                  <th scope="col">Qty</th>
+                  <th scope="col">Avg Cost</th>
+                  <th scope="col">LTP</th>
+                  <th scope="col">Current Value</th>
+                  <th scope="col">P&amp;L</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><strong>RELIANCE</strong> <span class="sym">NSE</span></th>
+                  <td>50</td>
+                  <td>&#8377;2,810.00</td>
+                  <td>&#8377;2,940.50</td>
+                  <td>&#8377;1,47,025.00</td>
+                  <td class="num num--up">+&#8377;6,525.00 (+4.64%)</td>
+                </tr>
+                <tr>
+                  <th scope="row"><strong>TCS</strong> <span class="sym">NSE</span></th>
+                  <td>25</td>
+                  <td>&#8377;3,650.00</td>
+                  <td>&#8377;3,892.10</td>
+                  <td>&#8377;97,302.50</td>
+                  <td class="num num--up">+&#8377;6,052.50 (+6.63%)</td>
+                </tr>
+                <tr>
+                  <th scope="row"><strong>INFY</strong> <span class="sym">NSE</span></th>
+                  <td>40</td>
+                  <td>&#8377;1,420.00</td>
+                  <td>&#8377;1,520.30</td>
+                  <td>&#8377;60,812.00</td>
+                  <td class="num num--up">+&#8377;4,012.00 (+7.06%)</td>
+                </tr>
+                <tr>
+                  <th scope="row"><strong>HDFCBANK</strong> <span class="sym">NSE</span></th>
+                  <td>38</td>
+                  <td>&#8377;1,690.00</td>
+                  <td>&#8377;1,684.00</td>
+                  <td>&#8377;63,992.00</td>
+                  <td class="num num--down">-&#8377;228.00 (-0.35%)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted small" style="margin-top:12px">
+            Securities held are directly deposited with CDSL / NSDL under your personal Demat ID.
+          </p>
+        </div>
+
+        <!-- VIEW 4: Funds & Margin -->
+        <div class="terminal-view" id="tview-funds" role="tabpanel" aria-labelledby="ttab-funds">
+          <div class="funds-grid">
+            <div class="funds-card">
+              <p class="h5" style="margin:0 0 .5em">Funds Available</p>
+              <div class="funds-total">
+                <span class="muted small">AVAILABLE TO TRADE</span>
+                <strong style="font-size:1.8rem">&#8377;85,420.00</strong>
+              </div>
+              <dl class="kvlist" style="margin-top:16px">
+                <div class="kv"><dt>Total Account Balance</dt><dd>&#8377;1,25,420.00</dd></div>
+                <div class="kv"><dt>Used Margin (Positions)</dt><dd>&#8377;40,000.00</dd></div>
+                <div class="kv"><dt>Withdrawable Balance</dt><dd>&#8377;85,420.00</dd></div>
+                <div class="kv"><dt>Unsettled Credits (T+1)</dt><dd>&#8377;0.00</dd></div>
+              </dl>
+              <div style="display:flex;gap:10px;margin-top:16px">
+                <button type="button" class="btn btn--primary btn--sm" id="btn-mock-add-funds">Add Funds (UPI/Netbanking)</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-mock-withdraw">Withdraw to Bank</button>
+              </div>
+            </div>
+
+            <div class="funds-rules">
+              <h2 class="h5">Regulatory Money Movement Rules</h2>
+              <ul class="steps steps--compact">
+                <li>
+                  <strong>Primary Bank Remittance:</strong>
+                  <span>Withdrawals are remitted strictly to your linked primary bank account in your own name.</span>
+                </li>
+                <li>
+                  <strong>Third-Party Ban:</strong>
+                  <span>Transfers from accounts of relatives or third parties are strictly prohibited by SEBI and rejected.</span>
+                </li>
+                <li>
+                  <strong>Quarterly Settlement:</strong>
+                  <span>Unutilized client funds are periodically returned to your bank account as per SEBI running account settlement rules.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div style="margin-top:60px">
+      <div class="section__head">
+        <h2 class="h2">Architecture Designed for Investor Control</h2>
+        <p class="lede">Every screen in Trade Grow is built around transparency, speed, and auditability.</p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <h3 class="card__title">Itemized Order Confirmation</h3>
+          <p class="card__body">
+            No mystery charges after market close. Every order preview displays the exact government taxes,
+            exchange turnover fees, and brokerage before you tap confirm.
+          </p>
+        </article>
+        <article class="card">
+          <h3 class="card__title">Direct Depository Holding</h3>
+          <p class="card__body">
+            Your shares remain safely held in CDSL / NSDL depositories under your personal BOID,
+            verifiable through depository statements sent directly to your registered email.
+          </p>
+        </article>
+        <article class="card">
+          <h3 class="card__title">Zero Data Sharing</h3>
+          <p class="card__body">
+            We never share your trading volume or portfolio data with external telemarketers or tips providers.
+            Your holdings and activity remain strictly private.
+          </p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2 class="h2">Ready to trade with total clarity?</h2>
+      <p>
+        Open your trading and demat account digitally in under 10 minutes, or verify our regulatory
+        credentials first.
+      </p>
+      <div class="cta-band__actions">
+        <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">Start Account Opening</a>
+        <a class="btn btn--ghost btn--lg" href="/verify/" data-ev="verify_page_view">Verify Our Credentials</a>
+        <a class="btn btn--ghost btn--lg" href="/pricing/">View All Charges</a>
+      </div>
+    </div>
+  </div>
+</section>

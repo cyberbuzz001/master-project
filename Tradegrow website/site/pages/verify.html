@@ -1,0 +1,180 @@
+<!--meta {
+  "title": "Verify Trade Grow — Company, Regulatory and Contact Details",
+  "description": "Every company, registration, membership and officer detail for Trade Grow, with step-by-step instructions for checking each one against the regulator's own database."
+}-->
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Verify Trade Grow</p>
+      <h1 class="h1">Don&rsquo;t just trust us. Verify us.</h1>
+      <p class="lede">
+        Trade Grow is a new platform. You have no history with us, no friend who has used us for
+        five years, and no reason yet to hand us your PAN. That is a reasonable position to be in.
+      </p>
+      <p class="lede">
+        So this page is not an argument. It is a list of facts and the independent places you can
+        check each one &mdash; SEBI&rsquo;s database, the exchange member directories, the depository
+        DP lists and the Ministry of Corporate Affairs. None of those are run by us.
+      </p>
+    </div>
+
+    <div class="notice">
+      <strong>How to read this page.</strong> Where a field shows
+      &ldquo;{{cfg:compliance.pendingLabel}}&rdquo;, that detail has not yet been confirmed and you
+      should treat it as unconfirmed. We have chosen to leave those fields visibly blank rather
+      than fill them with something plausible. A broker that has every field filled in but none of
+      them checkable is telling you less than this page is.
+    </div>
+
+    {{comp:regulatoryDetail}}
+
+    <div class="panel" id="official-channels">
+      <div class="panel__head"><h3 class="h4">Official addresses</h3></div>
+      <p class="muted small" style="margin-bottom:14px">
+        These are the only addresses we use. Note that our platform runs on a different domain from
+        this website &mdash; that is intentional, and it is listed here precisely so you can confirm
+        it rather than having to guess. If you are ever sent to an address that is not on this list,
+        it is not us, even if the page looks identical to ours.
+      </p>
+      <dl class="kvlist">
+        <div class="kv"><dt>Website</dt><dd>{{cfg:brand.domain}}</dd></div>
+        <div class="kv"><dt>Create an account</dt><dd>{{cfg:app.signupUrl}}</dd></div>
+        <div class="kv"><dt>Platform sign-in</dt><dd>{{cfg:app.webUrl}}</dd></div>
+        <div class="kv"><dt>Android app</dt><dd>{{cfg:app.androidUrl}}</dd></div>
+        <div class="kv"><dt>iOS app</dt><dd>{{cfg:app.iosUrl}}</dd></div>
+        <div class="kv"><dt>Support phone</dt><dd>{{cfg:support.phoneDisplay}}</dd></div>
+        <div class="kv"><dt>Support email</dt><dd>{{cfg:support.email}}</dd></div>
+      </dl>
+      <p class="muted small">
+        Before entering any detail, check the address bar character by character. We will never
+        send you an app file over WhatsApp, email or SMS, and you should never install a trading
+        app from a link in a message.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tint" id="how-to-verify">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Independent verification</p>
+      <h2 class="h2">How to verify us yourself, in about five minutes</h2>
+      <p class="lede">
+        These steps work for any Indian broker, not just us. We would genuinely encourage you to
+        run them on every platform you are considering.
+      </p>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <h3>Check the SEBI registration number</h3>
+        <p>
+          Open the SEBI intermediaries search and look up the registration number published above.
+          Confirm the entity name on SEBI&rsquo;s page matches the legal entity name we have published
+          &mdash; not just the brand name. Brand names are not registered; entities are.
+        </p>
+        <p style="margin-top:10px">
+          <a class="btn btn--ghost btn--sm" href="https://www.sebi.gov.in/intermediaries.html" target="_blank" rel="noopener noreferrer">Open SEBI intermediaries search</a>
+        </p>
+      </li>
+      <li>
+        <h3>Check exchange membership</h3>
+        <p>
+          Search the NSE and BSE member directories for the member code above. The exchange listing
+          should show the same legal entity and the segments we claim to operate in.
+        </p>
+        <p style="margin-top:10px">
+          <a class="btn btn--ghost btn--sm" href="https://www.nseindia.com/invest/find-a-stock-broker" target="_blank" rel="noopener noreferrer">NSE member search</a>
+          <a class="btn btn--ghost btn--sm" href="https://www.bseindia.com/members/MembersDirectory.html" target="_blank" rel="noopener noreferrer">BSE member directory</a>
+        </p>
+      </li>
+      <li>
+        <h3>Check the depository participant listing</h3>
+        <p>
+          Your shares sit in a demat account with CDSL or NSDL, not with the broker. Look up the DP ID
+          on the depository&rsquo;s own site and confirm it belongs to the same entity.
+        </p>
+        <p style="margin-top:10px">
+          <a class="btn btn--ghost btn--sm" href="https://www.cdslindia.com/DP/dplist.aspx" target="_blank" rel="noopener noreferrer">CDSL DP list</a>
+          <a class="btn btn--ghost btn--sm" href="https://nsdl.co.in/dpsch.php" target="_blank" rel="noopener noreferrer">NSDL DP search</a>
+        </p>
+      </li>
+      <li>
+        <h3>Check the company on the MCA portal</h3>
+        <p>
+          Search the CIN on the Ministry of Corporate Affairs master data page. You will see the
+          incorporation date, registered office and company status. A company incorporated last
+          month is not disqualifying &mdash; but you should know it.
+        </p>
+        <p style="margin-top:10px">
+          <a class="btn btn--ghost btn--sm" href="https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do" target="_blank" rel="noopener noreferrer">MCA company master data</a>
+        </p>
+      </li>
+      <li>
+        <h3>Check the app listing matches the entity</h3>
+        <p>
+          On Google Play or the App Store, look at the developer name on the listing &mdash; not the
+          app name. It should match the registered legal entity. A mismatch here is a serious warning sign.
+        </p>
+      </li>
+      <li>
+        <h3>Call the number published on the exchange page, not the one in a message</h3>
+        <p>
+          If someone contacted you claiming to be from Trade Grow, confirm the number against the
+          official contact published here and on the exchange member listing. Fraud almost always
+          starts with a number you were given rather than a number you looked up.
+        </p>
+      </li>
+      <li>
+        <h3>Ask us anything that is still unclear</h3>
+        <p>
+          If a detail on this page is blank and you need it before deciding, ask our Compliance
+          Officer directly. &ldquo;We will confirm and revert&rdquo; is an acceptable answer.
+          &ldquo;Don&rsquo;t worry about that&rdquo; is not.
+        </p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="documents">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Documentation</p>
+      <h2 class="h2">Published documents</h2>
+      <p class="lede">
+        Each document carries a version number and an effective date. If the version you were sent
+        does not match what is published here, use the version here.
+      </p>
+    </div>
+    {{comp:documents}}
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Status</p>
+      <h2 class="h2">Verification checklist</h2>
+    </div>
+    {{comp:checklist}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2 class="h2">Checked everything you wanted to check?</h2>
+      <p>
+        Then the next sensible step is cost, not commitment. Compare what a trade would actually
+        cost you here against what it costs you today.
+      </p>
+      <div class="cta-band__actions">
+        <a class="btn btn--primary btn--lg" href="/pricing/" data-ev="pricing_view">View Pricing</a>
+        <a class="btn btn--ghost btn--lg" href="/compare/" data-ev="comparison_view">Compare Brokers</a>
+        <a class="btn btn--ghost btn--lg" href="/support/">Ask a Question</a>
+      </div>
+    </div>
+  </div>
+</section>

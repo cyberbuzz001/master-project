@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Terminal - RELIANCE Technical Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --chart-up: #10B981;
+            --chart-down: #EF4444;
+        }
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .chart-grid-line {
+            stroke: rgba(66, 71, 84, 0.2);
+            stroke-width: 1;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0c1323;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #424754;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#8c909f",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "background": "#0c1323",
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#424754",
+                        "surface-container-highest": "#2e3446",
+                        "on-secondary-container": "#00311f",
+                        "surface-container-high": "#232a3b",
+                        "inverse-surface": "#dce2f9",
+                        "surface-container-lowest": "#070e1e",
+                        "on-primary": "#002e6a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-secondary-fixed": "#002113",
+                        "surface-variant": "#2e3446",
+                        "surface": "#0c1323",
+                        "on-tertiary": "#68000a",
+                        "tertiary-container": "#ff5451",
+                        "secondary-container": "#00a572",
+                        "inverse-primary": "#005ac2",
+                        "on-background": "#dce2f9",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container": "#191f30",
+                        "tertiary": "#ffb3ad",
+                        "secondary": "#4edea3",
+                        "on-tertiary-fixed-variant": "#930013",
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "on-surface": "#dce2f9",
+                        "surface-bright": "#32394b",
+                        "primary": "#adc6ff",
+                        "inverse-on-surface": "#293041",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-primary-container": "#00285d",
+                        "on-tertiary-fixed": "#410004",
+                        "on-secondary": "#003824",
+                        "surface-tint": "#adc6ff",
+                        "on-error": "#690005",
+                        "surface-container-low": "#141b2c",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-dim": "#0c1323",
+                        "on-primary-fixed": "#001a42",
+                        "primary-container": "#4d8eff",
+                        "on-tertiary-container": "#5c0008"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "2px",
+                        "lg": "4px",
+                        "xl": "8px",
+                        "full": "12px"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "unit": "4px",
+                        "cell-padding-y": "6px",
+                        "cell-padding-x": "8px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col h-screen select-none">
+<!-- Top App Bar (Shared Component Strategy) -->
+<header class="fixed top-0 w-full z-50 bg-surface-container/70 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-gutter py-unit h-14">
+<div class="flex items-center gap-3">
+<button class="active:scale-95 duration-150 p-1">
+<span class="material-symbols-outlined text-primary">analytics</span>
+</button>
+<div class="flex flex-col">
+<span class="font-display-lg text-title-sm font-bold text-primary">RELIANCE</span>
+<span class="font-label-caps text-[10px] text-secondary">NSE • LIVE</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-bright rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">add_alert</span>
+</button>
+<button class="p-2 hover:bg-surface-bright rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">save</span>
+</button>
+<button class="p-2 hover:bg-surface-bright rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+</button>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 mt-14 mb-16 relative flex overflow-hidden">
+<!-- Drawing Sidebar (Technical Tools) -->
+<aside class="w-12 bg-surface-container-low border-r border-outline-variant/20 flex flex-col items-center py-4 gap-4 z-40">
+<button class="p-2 text-primary bg-primary/10 rounded-lg" title="Cursor">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">near_me</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Trendline">
+<span class="material-symbols-outlined">timeline</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Fibonacci">
+<span class="material-symbols-outlined">grid_4x4</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Rectangle">
+<span class="material-symbols-outlined">rectangle</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Text">
+<span class="material-symbols-outlined">title</span>
+</button>
+<div class="mt-auto pb-4 flex flex-col gap-4">
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors" title="Delete">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</aside>
+<!-- Chart Canvas Container -->
+<section class="flex-1 relative flex flex-col overflow-hidden">
+<!-- Contextual Toolbar (Indicators & Timeframe) -->
+<div class="h-10 bg-surface-container-lowest/50 border-b border-outline-variant/10 flex items-center px-4 overflow-x-auto no-scrollbar gap-4 shrink-0">
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 text-label-caps text-primary bg-primary/10 rounded">1m</button>
+<button class="px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">5m</button>
+<button class="px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">15m</button>
+<button class="px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">1H</button>
+<button class="px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">1D</button>
+<button class="px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">1M</button>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1 px-2 py-1 text-label-caps text-on-surface-variant hover:bg-surface-bright rounded">
+<span class="material-symbols-outlined text-[16px]">show_chart</span>
+                        Indicators
+                    </button>
+<div class="flex gap-1">
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-[10px] rounded border border-outline-variant/30 text-on-surface-variant">SMA 20</span>
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-[10px] rounded border border-outline-variant/30 text-on-surface-variant">EMA 50</span>
+</div>
+</div>
+</div>
+<!-- Candlestick Chart Area (SVG Implementation for Precision) -->
+<div class="flex-1 relative bg-background overflow-hidden cursor-crosshair" id="chart-area">
+<!-- Background Grid -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<defs>
+<pattern height="40" id="grid" patternunits="userSpaceOnUse" width="60">
+<path class="chart-grid-line" d="M 60 0 L 0 0 0 40" fill="none"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+</svg>
+<!-- Floating Data Overlay -->
+<div class="absolute top-4 left-4 z-10 glass-panel bg-surface-container/60 p-3 rounded-xl border border-outline-variant/20 flex flex-col gap-1 min-w-[140px]">
+<div class="flex justify-between items-center">
+<span class="text-label-caps opacity-60">PRICE</span>
+<span class="font-data-mono text-title-sm text-secondary">2,942.45</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-label-caps opacity-60">CHANGE</span>
+<span class="font-data-mono text-body-sm text-secondary">+12.30 (+0.42%)</span>
+</div>
+</div>
+<!-- Price Axis -->
+<div class="absolute right-0 top-0 bottom-0 w-12 bg-surface-container-lowest/80 border-l border-outline-variant/20 flex flex-col justify-between py-8 text-[10px] font-data-mono text-outline z-20">
+<span>2980.00</span>
+<span>2960.00</span>
+<span class="bg-secondary text-on-secondary px-1 py-0.5 rounded-l-sm -ml-2">2942.45</span>
+<span>2920.00</span>
+<span>2900.00</span>
+<span>2880.00</span>
+</div>
+<!-- SVG Candles Simulation -->
+<svg class="absolute inset-0 w-full h-full px-12 py-8" preserveaspectratio="none" viewbox="0 0 1000 600">
+<!-- EMA/SMA Lines -->
+<path d="M0,450 C100,440 200,460 300,430 S500,380 700,400 T1000,350" fill="none" opacity="0.6" stroke="#3B82F6" stroke-dasharray="4,2" stroke-width="1.5"></path>
+<path d="M0,480 C150,470 350,490 550,450 S850,410 1000,390" fill="none" opacity="0.4" stroke="#adc6ff" stroke-width="2"></path>
+<!-- Simplified Candles -->
+<g opacity="0.8">
+<rect fill="#EF4444" height="30" width="8" x="100" y="440"></rect> <line stroke="#EF4444" x1="104" x2="104" y1="430" y2="480"></line>
+<rect fill="#EF4444" height="20" width="8" x="120" y="430"></rect> <line stroke="#EF4444" x1="124" x2="124" y1="420" y2="460"></line>
+<rect fill="#10B981" height="40" width="8" x="140" y="410"></rect> <line stroke="#10B981" x1="144" x2="144" y1="400" y2="460"></line>
+<rect fill="#10B981" height="30" width="8" x="160" y="390"></rect> <line stroke="#10B981" x1="164" x2="164" y1="380" y2="430"></line>
+<rect fill="#EF4444" height="15" width="8" x="180" y="400"></rect> <line stroke="#EF4444" x1="184" x2="184" y1="390" y2="425"></line>
+<rect fill="#10B981" height="45" width="8" x="200" y="380"></rect> <line stroke="#10B981" x1="204" x2="204" y1="370" y2="440"></line>
+<rect fill="#10B981" height="20" width="8" x="220" y="370"></rect> <line stroke="#10B981" x1="224" x2="224" y1="360" y2="400"></line>
+<!-- Current Set -->
+<rect fill="#10B981" height="40" width="8" x="850" y="380"></rect> <line stroke="#10B981" x1="854" x2="854" y1="370" y2="430"></line>
+<rect fill="#10B981" height="20" width="8" x="870" y="370"></rect> <line stroke="#10B981" x1="874" x2="874" y1="360" y2="400"></line>
+<rect fill="#EF4444" height="15" width="8" x="890" y="385"></rect> <line stroke="#EF4444" x1="894" x2="894" y1="375" y2="410"></line>
+<rect fill="#10B981" height="45" width="8" x="910" y="360"></rect> <line stroke="#10B981" x1="914" x2="914" y1="350" y2="420"></line>
+<rect fill="#10B981" height="25" width="8" x="930" y="350"></rect> <line stroke="#10B981" x1="934" x2="934" y1="340" y2="390"></line>
+</g>
+</svg>
+<!-- Buy/Sell Overlay Buttons (Center Focused for Mobile Execution) -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 z-30">
+<button class="bg-[#10B981] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-green-900/20 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">trending_up</span>
+                        BUY
+                    </button>
+<button class="bg-[#EF4444] text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">trending_down</span>
+                        SELL
+                    </button>
+</div>
+</div>
+<!-- Volume/Sub-indicator Area -->
+<div class="h-24 bg-surface-container-lowest/30 border-t border-outline-variant/10 shrink-0 relative">
+<div class="absolute top-1 left-2 text-[10px] text-outline font-data-mono">RSI(14) <span class="text-secondary">58.42</span></div>
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 100">
+<path d="M0,70 L100,65 L200,75 L300,50 L400,40 L500,45 L600,30 L700,35 L800,20 L900,25 L1000,10" fill="none" opacity="0.8" stroke="#4edea3" stroke-width="1"></path>
+<rect fill="rgba(78, 222, 163, 0.05)" height="40" width="1000" x="0" y="30"></rect>
+</svg>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation (Shared Component Strategy) -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-2xl rounded-t-xl h-16 flex justify-around items-center px-2 pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-[10px]">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary bg-secondary-container/10 rounded-xl px-3 py-1 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">show_chart</span>
+<span class="font-label-caps text-[10px]">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-caps text-[10px]">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-[10px]">Portfolio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-[10px]">Profile</span>
+</a>
+</nav>
+<!-- Crosshair Script -->
+<script>
+        const chartArea = document.getElementById('chart-area');
+        
+        // Simple crosshair simulation
+        const hLine = document.createElement('div');
+        const vLine = document.createElement('div');
+        
+        [hLine, vLine].forEach(line => {
+            line.className = 'absolute bg-outline-variant/40 pointer-events-none z-20';
+            chartArea.appendChild(line);
+        });
+        
+        hLine.style.height = '1px';
+        hLine.style.width = '100%';
+        vLine.style.width = '1px';
+        vLine.style.height = '100%';
+        
+        chartArea.addEventListener('mousemove', (e) => {
+            const rect = chartArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            hLine.style.top = `${y}px`;
+            vLine.style.left = `${x}px`;
+        });
+
+        // Touch events for mobile crosshair
+        chartArea.addEventListener('touchmove', (e) => {
+            const rect = chartArea.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            hLine.style.top = `${y}px`;
+            vLine.style.left = `${x}px`;
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body></html>

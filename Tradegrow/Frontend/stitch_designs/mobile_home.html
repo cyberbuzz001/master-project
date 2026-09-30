@@ -1,0 +1,262 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>StockSharp - Mobile Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00E676",
+                        danger: "#FF5252",
+                        info: "#448AFF",
+                        warning: "#FF6D00",
+                        background: "#0D1117",
+                        surface: "#161B22",
+                        surfaceHighlight: "#1C2128",
+                        textPrimary: "#FFFFFF",
+                        textSecondary: "#8B949E"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        lg: "1rem",
+                        xl: "1.5rem",
+                        "2xl": "2rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Geist", "sans-serif"],
+                        display: ["Geist", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Space Grotesk", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D1117;
+            color: #FFFFFF;
+        }
+        .glass-card {
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body antialiased pb-24">
+<!-- Top Section -->
+<header class="px-4 pt-12 pb-6 sticky top-0 z-40 bg-background/90 backdrop-blur-md">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h1 class="font-headline text-2xl font-bold tracking-tight text-white mb-1">Good afternoon, Nikhil 👋</h1>
+<div class="flex items-center text-primary text-sm font-medium">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="arrow_upward">arrow_upward</span>
+                    Your portfolio is up today
+                </div>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-surfaceHighlight">
+<img class="w-full h-full object-cover" data-alt="A professional close up portrait photo of an Indian man in his late 20s, sharp focus, cinematic lighting, corporate trading environment background. Cool tones with subtle green highlights reflecting a trading screen. High resolution, realistic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwAI18jLnnXFsgYN2gXplImedtzxCt8oKc-ybBAYhSvF7_jvaXQUPXx1-ljTUtjBqqlR_HC7B-MZgy1xd__VMBFGGvqn4Z4ANuI2h95F6kjBuarbTaKtkLj86hfBigDTRLu5yYevwwljO1V-dvbUJO3LgukYOxwcjenxQWKhkllRn2aCyl6amRcI-ejxXXU97LVV8DTHGNOu8l-VsaYiwmAURbEQ5D5aoqG0B7J6vs_plCt2O_XbkWYv8xkHWwyG1mzg3fcs_wL6SG">
+</div>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary" data-icon="search">search</span>
+<input class="w-full bg-surfaceHighlight/50 border border-white/10 rounded-full py-3 pl-12 pr-4 text-white placeholder:text-textSecondary focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-body text-sm" placeholder="Search stocks, ETFs..." type="text">
+</div>
+</header>
+<main class="px-4 space-y-8">
+<!-- Portfolio Summary Card -->
+<section>
+<div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+<!-- Gradient Border Effect -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/30 to-info/30 opacity-20 transition-opacity group-hover:opacity-30"></div>
+<div class="relative z-10">
+<p class="text-textSecondary text-sm font-medium mb-1">Total Portfolio Value</p>
+<h2 class="font-label text-4xl font-bold tracking-tight tabular-nums text-white mb-2">₹12,45,800</h2>
+<div class="flex items-center gap-2">
+<span class="bg-primary/10 text-primary px-2 py-1 rounded-md font-label text-sm font-semibold flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-1" data-icon="trending_up">trending_up</span>
+                            +₹15,230
+                        </span>
+<span class="text-primary font-label font-medium text-sm">+1.24% today</span>
+</div>
+</div>
+<!-- Abstract Chart representation -->
+<div class="mt-6 h-20 w-full relative">
+<svg class="w-full h-full preserve-3d" preserveAspectRatio="none" viewBox="0 0 100 30">
+<defs>
+<linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#00E676" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#00E676" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path d="M0 30 L0 15 Q 10 10, 20 20 T 40 10 T 60 15 T 80 5 T 100 10 L100 30 Z" fill="url(#chartGradient)"></path>
+<path d="M0 15 Q 10 10, 20 20 T 40 10 T 60 15 T 80 5 T 100 10" fill="none" stroke="#00E676" stroke-width="1.5"></path>
+</svg>
+</div>
+</div>
+</section>
+<!-- Live Market Indices -->
+<section>
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4">
+<!-- NIFTY 50 -->
+<div class="glass-card rounded-xl p-3 min-w-[160px] flex-shrink-0">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline text-sm font-semibold text-white">NIFTY 50</span>
+<span class="text-primary font-label text-xs">+0.85%</span>
+</div>
+<div class="font-label text-lg font-bold tabular-nums">22,453.30</div>
+</div>
+<!-- SENSEX -->
+<div class="glass-card rounded-xl p-3 min-w-[160px] flex-shrink-0">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline text-sm font-semibold text-white">SENSEX</span>
+<span class="text-primary font-label text-xs">+0.72%</span>
+</div>
+<div class="font-label text-lg font-bold tabular-nums">74,210.45</div>
+</div>
+<!-- BANK NIFTY -->
+<div class="glass-card rounded-xl p-3 min-w-[160px] flex-shrink-0">
+<div class="flex justify-between items-start mb-2">
+<span class="font-headline text-sm font-semibold text-white">BANK NIFTY</span>
+<span class="text-danger font-label text-xs">-0.15%</span>
+</div>
+<div class="font-label text-lg font-bold tabular-nums text-white">47,850.20</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions -->
+<section>
+<div class="grid grid-cols-2 gap-4">
+<button class="bg-gradient-to-br from-surface to-primary/10 border border-primary/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-primary/40 transition-colors">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="add_circle">add_circle</span>
+<span class="font-headline text-sm font-semibold text-white">Buy Stock</span>
+</button>
+<button class="bg-gradient-to-br from-surface to-danger/10 border border-danger/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-danger/40 transition-colors">
+<span class="material-symbols-outlined text-danger text-2xl" data-icon="remove_circle">remove_circle</span>
+<span class="font-headline text-sm font-semibold text-white">Sell Stock</span>
+</button>
+<button class="bg-gradient-to-br from-surface to-info/10 border border-info/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-info/40 transition-colors">
+<span class="material-symbols-outlined text-info text-2xl" data-icon="linked_services">linked_services</span>
+<span class="font-headline text-sm font-semibold text-white">Option Chain</span>
+</button>
+<button class="bg-gradient-to-br from-surface to-warning/10 border border-warning/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-warning/40 transition-colors">
+<span class="material-symbols-outlined text-warning text-2xl" data-icon="radar">radar</span>
+<span class="font-headline text-sm font-semibold text-white">Market Scanner</span>
+</button>
+</div>
+</section>
+<!-- Watchlist -->
+<section>
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline text-lg font-bold text-white">Your Watchlist</h3>
+<button class="text-info text-sm font-medium hover:text-info/80 flex items-center">
+                    See all <span class="material-symbols-outlined text-[16px] ml-1" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="space-y-3">
+<!-- Reliance -->
+<div class="glass-card rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center">
+<span class="text-background font-bold text-xs">REL</span>
+</div>
+<div>
+<h4 class="font-headline text-base font-bold text-white">RELIANCE</h4>
+<p class="text-textSecondary text-xs">Reliance Ind.</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label text-base font-bold tabular-nums text-white">₹2,954.20</div>
+<div class="text-primary font-label text-xs font-medium flex items-center justify-end">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_drop_up">arrow_drop_up</span>
+                            +1.5%
+                        </div>
+</div>
+</div>
+<!-- TCS -->
+<div class="glass-card rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-info/20 p-1 flex items-center justify-center text-info">
+<span class="material-symbols-outlined" data-icon="code">code</span>
+</div>
+<div>
+<h4 class="font-headline text-base font-bold text-white">TCS</h4>
+<p class="text-textSecondary text-xs">Tata Consultancy</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label text-base font-bold tabular-nums text-white">₹3,892.45</div>
+<div class="text-danger font-label text-xs font-medium flex items-center justify-end">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+                            -0.8%
+                        </div>
+</div>
+</div>
+<!-- HDFC -->
+<div class="glass-card rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-warning/20 p-1 flex items-center justify-center text-warning">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<h4 class="font-headline text-base font-bold text-white">HDFCBANK</h4>
+<p class="text-textSecondary text-xs">HDFC Bank Ltd.</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label text-base font-bold tabular-nums text-white">₹1,432.10</div>
+<div class="text-primary font-label text-xs font-medium flex items-center justify-end">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_drop_up">arrow_drop_up</span>
+                            +0.2%
+                        </div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 border-t border-white/5 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] bg-[#161B22]/90 backdrop-blur-xl flex justify-around items-center h-20 px-2 pb-4">
+<a class="flex flex-col items-center justify-center text-[#00E676] bg-[#00E676]/10 rounded-xl px-3 py-1 scale-110 transition-transform" href="#">
+<span class="material-symbols-outlined text-xl mb-1" data-icon="home" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Home</span>
+<div class="w-1 h-1 bg-primary rounded-full absolute bottom-1"></div>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B949E] px-3 py-1 hover:text-white transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined text-xl mb-1" data-icon="pie_chart">pie_chart</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Portfolio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B949E] px-3 py-1 hover:text-white transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined text-xl mb-1" data-icon="query_stats">query_stats</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Options</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B949E] px-3 py-1 hover:text-white transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined text-xl mb-1" data-icon="receipt_long">receipt_long</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8B949E] px-3 py-1 hover:text-white transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined text-xl mb-1" data-icon="person">person</span>
+<span class="font-label text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>

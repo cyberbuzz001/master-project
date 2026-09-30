@@ -1,0 +1,199 @@
+{
+  "info": {
+    "_postman_id": "stocksharp-paper-trading-api-collection",
+    "name": "StockSharp Paper Trading & Market Data API Collection",
+    "description": "Production-grade Postman Collection for StockSharp Multi-User Brokerage Simulation Platform, Option Chain Engine & Python FastAPI py_vollib Greeks service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. System Health & Diagnostics",
+      "item": [
+        {
+          "name": "System Health Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "Instrument Scrip Master Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/instruments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health", "instruments"]
+            }
+          }
+        },
+        {
+          "name": "Python FastAPI Engine Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication API",
+      "item": [
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"trader_postman\",\n  \"email\": \"postman@broker.sim\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set('jwt_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"trader1\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Market Data & Option Chain",
+      "item": [
+        {
+          "name": "Get Live NIFTY Option Chain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/market/option-chain?symbol=NIFTY&strikeRange=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "market", "option-chain"],
+              "query": [
+                { "key": "symbol", "value": "NIFTY" },
+                { "key": "strikeRange", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Calculate py_vollib Option Greeks (FastAPI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spot\": 24563.0,\n  \"strike\": 24500.0,\n  \"time_to_expiry_years\": 0.08,\n  \"is_call\": true,\n  \"iv\": 0.15,\n  \"target_ltp\": 495.50\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/v1/greeks/calculate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "v1", "greeks", "calculate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Order Execution & Virtual Ledger",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Submit Simulated Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instrumentToken\": \"NFO_NIFTY_24500_CE\",\n  \"symbol\": \"NIFTY 24500 CE\",\n  \"transactionType\": \"BUY\",\n  \"orderType\": \"MARKET\",\n  \"quantity\": 65,\n  \"price\": 495.50\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "submit"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

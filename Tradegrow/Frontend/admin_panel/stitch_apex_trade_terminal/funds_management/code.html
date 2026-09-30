@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Funds Management | Obsidian Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            scrollbar-width: thin;
+            scrollbar-color: #1E293B #0c1323;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0c1323; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 10px; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#4edea3",
+                      "surface-tint": "#adc6ff",
+                      "background": "#0c1323",
+                      "on-secondary-container": "#00311f",
+                      "error-container": "#93000a",
+                      "primary-container": "#4d8eff",
+                      "on-secondary-fixed": "#002113",
+                      "surface-container-lowest": "#070e1e",
+                      "surface": "#0c1323",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-container-high": "#232a3b",
+                      "outline-variant": "#424754",
+                      "tertiary-fixed-dim": "#ffb3ad",
+                      "surface-container": "#191f30",
+                      "on-tertiary-fixed-variant": "#930013",
+                      "on-surface-variant": "#c2c6d6",
+                      "secondary-fixed": "#6ffbbe",
+                      "secondary": "#4edea3",
+                      "inverse-surface": "#dce2f9",
+                      "tertiary": "#ffb3ad",
+                      "on-error": "#690005",
+                      "tertiary-fixed": "#ffdad7",
+                      "surface-bright": "#32394b",
+                      "primary": "#adc6ff",
+                      "primary-fixed": "#d8e2ff",
+                      "error": "#ffb4ab",
+                      "surface-container-low": "#141b2c",
+                      "on-background": "#dce2f9",
+                      "surface-dim": "#0c1323",
+                      "surface-container-highest": "#2e3446",
+                      "inverse-on-surface": "#293041",
+                      "on-secondary": "#003824",
+                      "inverse-primary": "#005ac2",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary-container": "#5c0008",
+                      "on-tertiary-fixed": "#410004",
+                      "on-primary-fixed": "#001a42",
+                      "surface-variant": "#2e3446",
+                      "on-surface": "#dce2f9",
+                      "secondary-container": "#00a572",
+                      "tertiary-container": "#ff5451",
+                      "on-primary-fixed-variant": "#004395",
+                      "on-primary": "#002e6a",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-primary-container": "#00285d",
+                      "outline": "#8c909f",
+                      "on-tertiary": "#68000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "cell-padding-x": "8px",
+                      "container-margin": "16px",
+                      "cell-padding-y": "6px",
+                      "gutter": "12px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "data-mono": ["JetBrains Mono"],
+                      "title-sm": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-gutter h-16 w-full max-w-full bg-surface/70 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+<h1 class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Obsidian Terminal</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-on-surface">CONNECTED</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-highlight transition-colors p-2 rounded-lg" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<!-- Navigation Drawer (Desktop) -->
+<aside class="hidden md:flex fixed left-0 top-16 bottom-0 w-72 flex-col h-full p-gutter bg-surface-container border-r border-outline-variant shadow-xl z-40">
+<div class="flex items-center gap-4 mb-8 p-4 bg-surface-container-highest rounded-xl">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">TU</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">Terminal User</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Institutional Tier</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="swap_horiz">swap_horiz</span>
+<span class="font-body-md text-body-md">Trade</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-body-md text-body-md">History</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 mt-16 md:ml-72 p-gutter md:p-8 overflow-y-auto pb-24 md:pb-8">
+<div class="max-w-6xl mx-auto space-y-8">
+<!-- Summary Section: Bento Grid Layout -->
+<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+<!-- Large Available Margin Card -->
+<div class="md:col-span-2 lg:col-span-2 glass-panel p-6 rounded-xl flex flex-col justify-between group hover:border-primary/50 transition-all">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Available Margin</span>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg text-on-surface">$</span>
+<span class="text-5xl font-extrabold text-on-surface tracking-tighter" id="available-margin">1,248,592.42</span>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined text-[16px]" data-icon="trending_up">trending_up</span>
+<span class="font-data-mono text-data-mono">+2.4% vs last session</span>
+</div>
+<span class="material-symbols-outlined text-primary/30 group-hover:text-primary transition-colors" data-icon="info">info</span>
+</div>
+</div>
+<!-- Small Stat Cards -->
+<div class="glass-panel p-6 rounded-xl space-y-4 hover:border-outline transition-all">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Used Margin</span>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface font-data-mono">$412,408.00</p>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[33%]"></div>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-xl space-y-4 hover:border-outline transition-all">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Collateral</span>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface font-data-mono">$1,661,000.42</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cash & Equity Mix</p>
+</div>
+<div class="md:col-span-full lg:col-span-1 glass-panel p-6 rounded-xl flex lg:flex-col justify-between hover:border-outline transition-all">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-surface-container-highest rounded-lg text-secondary">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Withdrawable</span>
+</div>
+<div class="mt-auto">
+<p class="font-headline-md text-headline-md text-on-surface font-data-mono">$836,184.42</p>
+<p class="font-body-sm text-body-sm text-secondary">Settled & Ready</p>
+</div>
+</div>
+</section>
+<!-- Actions Section -->
+<section class="flex flex-col sm:flex-row gap-4">
+<button class="flex-1 py-4 bg-primary text-on-primary font-bold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                    Add Funds
+                </button>
+<button class="flex-1 py-4 border border-outline text-on-surface font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-surface-variant active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="file_download">file_download</span>
+                    Withdraw Funds
+                </button>
+</section>
+<!-- Transaction History Section -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Transaction History</h2>
+<button class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline">
+                        VIEW ALL <span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high">
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Date</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Type</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Reference ID</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant">Status</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant text-right">Amount</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="p-4 font-body-md text-body-md text-on-surface">Oct 24, 2023 <span class="text-on-surface-variant block text-[11px]">14:20 PM</span></td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="input">input</span>
+<span class="font-body-md text-body-md text-on-surface">Deposit</span>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">TRX-9421-XB</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded uppercase">Success</span>
+</td>
+<td class="p-4 text-right font-data-mono text-title-sm text-secondary">+$25,000.00</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="p-4 font-body-md text-body-md text-on-surface">Oct 22, 2023 <span class="text-on-surface-variant block text-[11px]">09:15 AM</span></td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="output">output</span>
+<span class="font-body-md text-body-md text-on-surface">Withdrawal</span>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">TRX-8812-OP</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-on-surface-variant/10 text-on-surface-variant text-[11px] font-bold rounded uppercase">Pending</span>
+</td>
+<td class="p-4 text-right font-data-mono text-title-sm text-tertiary">-$10,000.00</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="p-4 font-body-md text-body-md text-on-surface">Oct 19, 2023 <span class="text-on-surface-variant block text-[11px]">16:45 PM</span></td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="input">input</span>
+<span class="font-body-md text-body-md text-on-surface">Deposit</span>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">TRX-7764-QQ</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded uppercase">Success</span>
+</td>
+<td class="p-4 text-right font-data-mono text-title-sm text-secondary">+$150,000.00</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="p-4 font-body-md text-body-md text-on-surface">Oct 15, 2023 <span class="text-on-surface-variant block text-[11px]">11:02 AM</span></td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="output">output</span>
+<span class="font-body-md text-body-md text-on-surface">Withdrawal</span>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface-variant">TRX-6112-RT</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded uppercase">Success</span>
+</td>
+<td class="p-4 text-right font-data-mono text-title-sm text-tertiary">-$50,000.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant shadow-lg z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary font-bold active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</a>
+</nav>
+<script>
+        // Simple counter animation for the available margin
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const val = (progress * (end - start)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                obj.innerHTML = val;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        const marginEl = document.getElementById('available-margin');
+        if (marginEl) {
+            // Slight delay before animation
+            setTimeout(() => {
+                animateValue(marginEl, 1248000, 1248592.42, 1200);
+            }, 500);
+        }
+
+        // Add interaction effect to glass panels
+        document.querySelectorAll('.glass-panel').forEach(panel => {
+            panel.addEventListener('mousemove', e => {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                panel.style.setProperty('--mouse-x', `${x}px`);
+                panel.style.setProperty('--mouse-y', `${y}px`);
+                panel.style.background = `radial-gradient(400px circle at ${x}px ${y}px, rgba(59, 130, 246, 0.05), rgba(18, 24, 38, 0.7))`;
+            });
+            panel.addEventListener('mouseleave', () => {
+                panel.style.background = 'rgba(18, 24, 38, 0.7)';
+            });
+        });
+    </script>
+</body></html>

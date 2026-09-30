@@ -1,0 +1,226 @@
+<!--meta {
+  "title": "Support & Grievance Redressal — Trade Grow",
+  "description": "Contact Trade Grow support, submit a ticket, track your existing request, and view the full 4-tier grievance escalation hierarchy."
+}-->
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Support</p>
+      <h1 class="h1">How to reach us, and what to do if we fail you</h1>
+      <p class="lede">
+        Both halves of that sentence matter. Support channels are easy to publish. An escalation
+        path that ends somewhere outside our control is the part that actually protects you.
+      </p>
+    </div>
+
+    <div class="cards">
+      <article class="card">
+        <h2 class="card__title">Phone</h2>
+        <p class="card__body">{{cfg:support.phoneDisplay}}</p>
+        <p class="card__body muted small">Hours: {{cfg:support.hours}}<br>Days: {{cfg:support.workingDays}}</p>
+      </article>
+      <article class="card">
+        <h2 class="card__title">Email</h2>
+        <p class="card__body">{{cfg:support.email}}</p>
+        <p class="card__body muted small">Use this for anything requiring a written record.</p>
+      </article>
+      <article class="card">
+        <h2 class="card__title">WhatsApp</h2>
+        <p class="card__body">{{cfg:support.whatsapp.number}}</p>
+        <p class="card__body muted small">
+          Official number only. We will never message you about your account from a personal number.
+        </p>
+      </article>
+      <article class="card">
+        <h2 class="card__title">Compliance Officer</h2>
+        <p class="card__body">{{cfg:officers.compliance.name}}</p>
+        <p class="card__body muted small">{{cfg:officers.compliance.email}}<br>{{cfg:officers.compliance.phone}}</p>
+      </article>
+    </div>
+
+    <div class="notice" style="margin-top:24px">
+      <strong>Check the number before you trust the caller.</strong>
+      These are our only official contact channels. If you were contacted from any other number
+      claiming to be Trade Grow, please tell us. See
+      <a href="/security-awareness/">Fraud Awareness</a>.
+    </div>
+  </div>
+</section>
+
+<section class="section section--tint" id="ticket">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Support Desk</p>
+      <h2 class="h2">Raise or Track a Support Ticket</h2>
+      <p class="lede">
+        Every request receives an immutable reference number. Quote it in any follow-up so you never
+        have to explain the issue twice.
+      </p>
+    </div>
+
+    <div class="ticket-portal">
+      <div class="portal__tabs" role="tablist" aria-label="Support options" style="margin-bottom:20px">
+        <button class="portal__tab is-active" id="tab-tkt-new" role="tab" aria-selected="true" aria-controls="panel-tkt-new">
+          Submit New Ticket
+        </button>
+        <button class="portal__tab" id="tab-tkt-track" role="tab" aria-selected="false" aria-controls="panel-tkt-track">
+          Track Existing Ticket
+        </button>
+      </div>
+
+      <!-- Tab 1: Submit Ticket -->
+      <div class="portal__panel is-active" id="panel-tkt-new" role="tabpanel" aria-labelledby="tab-tkt-new">
+        <div class="calc">
+          <form class="calc__form" id="ticket-form" data-endpoint="">
+            <div class="field--row">
+              <div class="field">
+                <label for="t-name">Your name</label>
+                <input type="text" id="t-name" name="name" required autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="t-phone">Mobile number</label>
+                <input type="tel" id="t-phone" name="phone" required autocomplete="tel" inputmode="tel">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="t-email">Email</label>
+              <input type="email" id="t-email" name="email" required autocomplete="email">
+            </div>
+
+            <div class="field">
+              <label for="t-client">Client code or application reference <span class="muted">(optional)</span></label>
+              <input type="text" id="t-client" name="clientCode" autocomplete="off" placeholder="e.g. TG-APP-2026-9142 or TG8421">
+            </div>
+
+            <div class="field">
+              <label for="t-cat">Category</label>
+              <select id="t-cat" name="category" required>
+                <option value="">Select a category</option>
+                <option value="Account opening">Account opening &amp; Onboarding</option>
+                <option value="KYC">KYC &amp; Aadhaar Verification</option>
+                <option value="Funds and withdrawals">Funds and Withdrawals</option>
+                <option value="Charges and contract notes">Charges and Contract Notes</option>
+                <option value="Platform or app issue">Platform or App Issue</option>
+                <option value="Report suspicious contact or fraud">Report Suspicious Contact or Fraud</option>
+                <option value="Grievance">Formal Investor Grievance</option>
+                <option value="Other">Other Query</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="t-msg">Describe the issue</label>
+              <textarea id="t-msg" name="message" rows="5" required placeholder="Please provide specific details including transaction dates, scrip names, or amounts if applicable..."></textarea>
+              <p class="field__hint">
+                Please include dates and reference numbers. Do not include your password, PIN, OTP or
+                full bank account number &mdash; we never need those, and this form is not the place for them.
+              </p>
+            </div>
+
+            <button class="btn btn--primary" type="submit">Submit Ticket</button>
+            <p class="form-status" id="ticket-status" role="status"></p>
+
+            <p class="field__hint" style="margin-top:14px">
+              By submitting you consent to us contacting you about this request. See our
+              <a href="/privacy/">Privacy Policy</a>.
+            </p>
+          </form>
+
+          <div class="calc__out">
+            <div class="calc__total">
+              <span>What happens next</span>
+              <strong style="font-size:1.15rem;line-height:1.4">You get a reference number</strong>
+            </div>
+            <dl class="calc__lines">
+              <div><dt>1. Acknowledgement</dt><dd>{{cfg:support.escalation.0.tat}}</dd></div>
+              <div><dt>2. First response</dt><dd>{{cfg:support.escalation.0.tat}}</dd></div>
+              <div><dt>3. Escalation if unresolved</dt><dd>Automatic</dd></div>
+            </dl>
+            <div class="calc__note">
+              <p>
+                If your issue is a grievance rather than a general query, select &ldquo;Formal Investor Grievance&rdquo; above.
+                Grievances carry defined statutory timelines and are monitored directly by the Compliance Officer.
+              </p>
+              <p>
+                You may approach the exchange or file on
+                <a href="https://scores.sebi.gov.in" style="color:#8FD6CE" target="_blank" rel="noopener noreferrer">SEBI SCORES</a>
+                at any point. You do not need our permission and you do not need to exhaust our process first.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Track Ticket -->
+      <div class="portal__panel" id="panel-tkt-track" role="tabpanel" aria-labelledby="tab-tkt-track">
+        <div style="max-width:620px">
+          <h3 class="h4">Check Your Ticket Status</h3>
+          <p class="muted small">Enter your ticket reference ID (e.g. TG-TKT-2026-9281) to view the current resolution stage.</p>
+
+          <form id="form-track-ticket" class="calc__form" style="margin-top:16px">
+            <div class="field">
+              <label for="tkt-ref-search">Ticket Reference Number</label>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="tkt-ref-search" placeholder="TG-TKT-2026-9281" style="text-transform:uppercase" required>
+                <button type="submit" class="btn btn--primary">Track Ticket</button>
+              </div>
+            </div>
+          </form>
+
+          <div id="tkt-track-result" style="margin-top:20px" hidden>
+            <div class="app-ref-card" style="text-align:left">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+                <div>
+                  <span class="muted small">Ticket Reference:</span>
+                  <strong class="h4" id="disp-tkt-id">TG-TKT-2026-XXXX</strong>
+                </div>
+                <div>
+                  <span class="pill pill--ok" id="disp-tkt-status">Under Review</span>
+                </div>
+              </div>
+
+              <dl class="kvlist" style="margin-top:14px">
+                <div class="kv"><dt>Category</dt><dd id="disp-tkt-cat">Account Opening</dd></div>
+                <div class="kv"><dt>Submitted By</dt><dd id="disp-tkt-name">User Name</dd></div>
+                <div class="kv"><dt>Created Date</dt><dd id="disp-tkt-date">Today</dd></div>
+                <div class="kv"><dt>Assigned Level</dt><dd>Level 1 &mdash; Customer Support</dd></div>
+                <div class="kv"><dt>Target TAT</dt><dd>{{cfg:support.escalation.0.tat}}</dd></div>
+              </dl>
+
+              <div class="notice notice--tint small" style="margin-top:14px" id="disp-tkt-msg">
+                Your ticket has been logged and assigned to our resolution queue. You will receive an email update shortly.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="escalation">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Grievance redressal</p>
+      <h2 class="h2">Escalation path</h2>
+      <p class="lede">
+        If your issue is not resolved at one level, it should move to the next without you having to
+        argue for it. The final level is deliberately outside Trade Grow.
+      </p>
+    </div>
+    {{comp:escalation}}
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="wrap">
+    <div class="section__head section__head--center">
+      <h2 class="h2">Looking for a quick answer?</h2>
+      <p class="lede">Most account, pricing and security questions are answered in detail on our FAQ.</p>
+    </div>
+    <div style="text-align:center">
+      <a class="btn btn--primary btn--lg" href="/faq/" data-ev="faq_view">Search FAQ</a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal - Markets</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#122f5f",
+                        "on-error": "#690005",
+                        "on-primary-fixed": "#001a42",
+                        "outline-variant": "#44474f",
+                        "surface-container-lowest": "#070e1e",
+                        "surface-container-low": "#141b2c",
+                        "surface-container-highest": "#2e3446",
+                        "surface-tint": "#adc6ff",
+                        "outline": "#8e909a",
+                        "outline-technical": "#1E293B",
+                        "on-surface-variant": "#c4c6d0",
+                        "primary": "#d8e2ff",
+                        "execution-sell": "#FFB4AB",
+                        "on-tertiary-container": "#7a433c",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-fixed": "#d8e2ff",
+                        "on-error-container": "#ffdad6",
+                        "error-container": "#93000a",
+                        "surface-variant": "#2e3446",
+                        "surface-container": "#191f30",
+                        "background": "#0c1323",
+                        "on-secondary": "#003824",
+                        "on-tertiary-fixed": "#360e0a",
+                        "surface": "#0c1323",
+                        "execution-buy": "#4EDEA3",
+                        "surface-dim": "#0c1323",
+                        "inverse-primary": "#455e90",
+                        "surface-bright": "#32394b",
+                        "secondary-container": "#00b47d",
+                        "on-tertiary-fixed-variant": "#6c3832",
+                        "tertiary-container": "#feb3aa",
+                        "on-background": "#dce2f9",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-high": "#232a3b",
+                        "secondary": "#4edea3",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-surface": "#dce2f9",
+                        "primary-container": "#adc6ff",
+                        "tertiary-fixed": "#ffdad5",
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#293041",
+                        "tertiary-fixed-dim": "#ffb4ab",
+                        "on-secondary-fixed": "#002114",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-primary-container": "#385283",
+                        "tertiary": "#ffd9d4",
+                        "on-primary-fixed-variant": "#2c4677",
+                        "on-tertiary": "#51221d",
+                        "on-surface": "#dce2f9",
+                        "status-pending": "#ADC6FF",
+                        "surface-glass": "rgba(18, 24, 38, 0.7)",
+                        "on-secondary-container": "#003e28"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "cell-padding-x": "8px",
+                        "cell-padding-y": "6px",
+                        "gutter": "12px",
+                        "unit": "4px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0c1323; color: #dce2f9; }
+        .glass-panel {
+            background-color: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        .data-cell {
+            padding: 6px 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            line-height: 16px;
+        }
+        .marquee-container { overflow: hidden; white-space: nowrap; }
+        .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #44474f; }
+        
+        /* Utility for sticky header shadow */
+        .sticky-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-body-md font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-outline-technical backdrop-blur-xl bg-surface-container dark:bg-surface-container text-primary dark:text-primary flex flex-col py-gutter px-2 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">terminal</span>
+</div>
+<div>
+<div class="text-title-sm font-title-sm font-bold text-primary dark:text-primary tracking-tight">Obsidian Terminal</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant">Institutional Grade</div>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-body-md font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary border-r-2 border-secondary bg-surface-container-highest/30 transition-colors scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="text-body-md font-body-md">Markets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-body-md font-body-md">Watchlist</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-body-md font-body-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-body-md font-body-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-body-md font-body-md">Funds</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-body-md font-body-md">Reports</span>
+</a>
+</div>
+<div class="mt-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors hover:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-64 flex flex-col h-full bg-background relative">
+<!-- TopNavBar -->
+<header class="h-16 w-[calc(100%-16rem)] fixed top-0 z-40 border-b border-outline-technical backdrop-blur-xl bg-surface-glass dark:bg-surface-glass shadow-sm flex items-center justify-between px-gutter">
+<!-- Search -->
+<div class="flex items-center bg-surface-container-lowest border border-outline-variant rounded px-3 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all w-96">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2">search</span>
+<input class="bg-transparent border-none text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant focus:ring-0 w-full p-0" placeholder="Search Symbol or Company" type="text"/>
+<div class="flex items-center gap-1 text-label-caps font-label-caps text-on-surface-variant bg-surface-container-highest px-1.5 py-0.5 rounded ml-2">
+<span class="material-symbols-outlined text-[12px]">keyboard_command_key</span>
+<span>K</span>
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors hover:opacity-80 relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined animate-pulse text-execution-buy" style="font-variation-settings: 'FILL' 1;">sensors</span>
+</button>
+<button class="hover:text-primary transition-colors hover:opacity-80 relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<button class="hover:text-primary transition-colors hover:opacity-80 flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of an abstract dark metallic texture with iridescent blue highlights. The texture is smooth yet complex, suggesting high-end technology and precision engineering. The lighting is focused, creating deep shadows and sharp reflections, typical of a modern, institutional dark mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUHYdOA-5A7CqDcYFHNQOpwHpiFZm6x6mZU5UDFJgTUD2kzrKrDlTUr6ZunAUWQk7-sHuPypRxbZ1KNFD-bpQ7r6J_GEbHpx967XC_WcNYbYCoMLC-5zVjRoShDT70wiaX-ExjdedWvPPVgf_iYPZFZOs2nN1vMS9slSiWpSQeRnBoJUnFQSJzhl44OVShxiRj3L-uzkJUmuKvCmnxu6aR9rS05GJQYAVnnHFoVaSdgBmMoLP_nf4"/>
+</button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 mt-16 overflow-y-auto p-gutter space-y-gutter relative">
+<!-- Index Marquee -->
+<div class="glass-panel rounded-lg py-2 px-4 flex items-center gap-4 border-b border-outline-technical overflow-hidden text-data-mono font-data-mono bg-surface-container-lowest">
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider shrink-0 flex items-center gap-2 border-r border-outline-technical pr-4">
+<span class="material-symbols-outlined text-sm">timeline</span>
+                    Indices
+                </div>
+<div class="marquee-container flex-1 relative">
+<div class="marquee-content flex gap-8">
+<!-- Items -->
+<div class="flex items-center gap-3">
+<span class="text-on-surface">NIFTY 50</span>
+<span class="text-execution-buy">22,456.70</span>
+<span class="text-execution-buy bg-execution-buy/10 px-1.5 py-0.5 rounded text-xs">+0.45%</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface">SENSEX</span>
+<span class="text-execution-buy">73,890.15</span>
+<span class="text-execution-buy bg-execution-buy/10 px-1.5 py-0.5 rounded text-xs">+0.38%</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface">BANK NIFTY</span>
+<span class="text-execution-sell">47,320.50</span>
+<span class="text-execution-sell bg-execution-sell/10 px-1.5 py-0.5 rounded text-xs">-0.12%</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface">NIFTY IT</span>
+<span class="text-execution-buy">35,120.80</span>
+<span class="text-execution-buy bg-execution-buy/10 px-1.5 py-0.5 rounded text-xs">+1.25%</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface">INDIA VIX</span>
+<span class="text-on-surface-variant">14.25</span>
+<span class="text-execution-sell bg-execution-sell/10 px-1.5 py-0.5 rounded text-xs">-2.40%</span>
+</div>
+<!-- Repeat for infinite feel -->
+<div class="flex items-center gap-3">
+<span class="text-on-surface">NIFTY 50</span>
+<span class="text-execution-buy">22,456.70</span>
+<span class="text-execution-buy bg-execution-buy/10 px-1.5 py-0.5 rounded text-xs">+0.45%</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface">SENSEX</span>
+<span class="text-execution-buy">73,890.15</span>
+<span class="text-execution-buy bg-execution-buy/10 px-1.5 py-0.5 rounded text-xs">+0.38%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Page Header & Tabs -->
+<div class="flex flex-col gap-4 mb-4">
+<h1 class="text-headline-md font-headline-md text-on-surface">Markets Overview</h1>
+<div class="flex border-b border-outline-technical">
+<button class="px-6 py-2 text-primary border-b-2 border-primary text-title-sm font-title-sm hover:bg-surface-container-highest transition-colors">Overview</button>
+<button class="px-6 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors text-title-sm font-title-sm">Stocks</button>
+<button class="px-6 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors text-title-sm font-title-sm">ETFs</button>
+<button class="px-6 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors text-title-sm font-title-sm">Futures</button>
+<button class="px-6 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors text-title-sm font-title-sm">Options</button>
+</div>
+</div>
+<!-- Main Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter h-[calc(100vh-280px)]">
+<!-- Left Content: Data Table -->
+<div class="col-span-8 glass-panel rounded-lg flex flex-col h-full overflow-hidden">
+<div class="px-4 py-3 border-b border-outline-technical flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">view_list</span>
+<h2 class="text-title-sm font-title-sm text-on-surface">Market Movers</h2>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded border border-outline-variant text-body-sm font-body-sm hover:bg-surface-container-highest transition-colors text-on-surface">Top Gainers</button>
+<button class="px-3 py-1 rounded bg-surface-container-highest text-body-sm font-body-sm hover:bg-surface-container-high transition-colors text-on-surface-variant border border-transparent">Top Losers</button>
+<button class="px-3 py-1 rounded bg-surface-container-highest text-body-sm font-body-sm hover:bg-surface-container-high transition-colors text-on-surface-variant border border-transparent">Most Active</button>
+</div>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container-highest z-10 sticky-shadow">
+<tr>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider cursor-pointer hover:text-on-surface">
+<div class="flex items-center gap-1">Symbol <span class="material-symbols-outlined text-[14px]">arrow_drop_down</span></div>
+</th>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider text-right cursor-pointer hover:text-on-surface">LTP</th>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider text-right cursor-pointer hover:text-on-surface">Chg %</th>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider text-right cursor-pointer hover:text-on-surface">Volume</th>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider text-right cursor-pointer hover:text-on-surface">Market Cap</th>
+<th class="py-2 px-4 text-label-caps font-label-caps text-on-surface-variant font-normal uppercase tracking-wider text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-technical font-data-mono text-data-mono">
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">RELIANCE</span>
+<span class="text-on-surface-variant text-[11px]">Reliance Industries</span>
+</div>
+</td>
+<td class="py-2 px-4 text-right text-on-surface">2,954.20</td>
+<td class="py-2 px-4 text-right text-execution-buy">+1.84%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">12.4M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹19.8T</td>
+<td class="py-2 px-4 text-center">
+<div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-execution-buy/10 hover:bg-execution-buy/20 text-execution-buy border border-execution-buy/30 px-2 py-0.5 rounded text-xs transition-colors">B</button>
+<button class="bg-execution-sell/10 hover:bg-execution-sell/20 text-execution-sell border border-execution-sell/30 px-2 py-0.5 rounded text-xs transition-colors">S</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">HDFCBANK</span>
+<span class="text-on-surface-variant text-[11px]">HDFC Bank Ltd.</span>
+</div>
+</td>
+<td class="py-2 px-4 text-right text-on-surface">1,450.75</td>
+<td class="py-2 px-4 text-right text-execution-sell">-0.52%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">28.1M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹11.0T</td>
+<td class="py-2 px-4 text-center">
+<div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-execution-buy/10 hover:bg-execution-buy/20 text-execution-buy border border-execution-buy/30 px-2 py-0.5 rounded text-xs transition-colors">B</button>
+<button class="bg-execution-sell/10 hover:bg-execution-sell/20 text-execution-sell border border-execution-sell/30 px-2 py-0.5 rounded text-xs transition-colors">S</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">TCS</span>
+<span class="text-on-surface-variant text-[11px]">Tata Consultancy Serv</span>
+</div>
+</td>
+<td class="py-2 px-4 text-right text-on-surface">4,120.30</td>
+<td class="py-2 px-4 text-right text-execution-buy">+2.15%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">3.2M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹15.2T</td>
+<td class="py-2 px-4 text-center">
+<div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-execution-buy/10 hover:bg-execution-buy/20 text-execution-buy border border-execution-buy/30 px-2 py-0.5 rounded text-xs transition-colors">B</button>
+<button class="bg-execution-sell/10 hover:bg-execution-sell/20 text-execution-sell border border-execution-sell/30 px-2 py-0.5 rounded text-xs transition-colors">S</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">INFY</span>
+<span class="text-on-surface-variant text-[11px]">Infosys Ltd.</span>
+</div>
+</td>
+<td class="py-2 px-4 text-right text-on-surface">1,620.10</td>
+<td class="py-2 px-4 text-right text-execution-buy">+1.10%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">8.5M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹6.7T</td>
+<td class="py-2 px-4 text-center">
+<div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-execution-buy/10 hover:bg-execution-buy/20 text-execution-buy border border-execution-buy/30 px-2 py-0.5 rounded text-xs transition-colors">B</button>
+<button class="bg-execution-sell/10 hover:bg-execution-sell/20 text-execution-sell border border-execution-sell/30 px-2 py-0.5 rounded text-xs transition-colors">S</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">ICICIBANK</span>
+<span class="text-on-surface-variant text-[11px]">ICICI Bank Ltd.</span>
+</div>
+</td>
+<td class="py-2 px-4 text-right text-on-surface">1,085.45</td>
+<td class="py-2 px-4 text-right text-execution-sell">-0.85%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">15.2M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹7.6T</td>
+<td class="py-2 px-4 text-center">
+<div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-execution-buy/10 hover:bg-execution-buy/20 text-execution-buy border border-execution-buy/30 px-2 py-0.5 rounded text-xs transition-colors">B</button>
+<button class="bg-execution-sell/10 hover:bg-execution-sell/20 text-execution-sell border border-execution-sell/30 px-2 py-0.5 rounded text-xs transition-colors">S</button>
+</div>
+</td>
+</tr>
+<!-- Filler rows to show scrolling -->
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4"><div class="flex flex-col"><span class="text-on-surface font-semibold">SBIN</span><span class="text-on-surface-variant text-[11px]">State Bank of India</span></div></td>
+<td class="py-2 px-4 text-right text-on-surface">765.20</td>
+<td class="py-2 px-4 text-right text-execution-buy">+0.25%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">20.1M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹6.8T</td>
+<td class="py-2 px-4 text-center"></td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4"><div class="flex flex-col"><span class="text-on-surface font-semibold">BHARTIARTL</span><span class="text-on-surface-variant text-[11px]">Bharti Airtel</span></div></td>
+<td class="py-2 px-4 text-right text-on-surface">1,120.60</td>
+<td class="py-2 px-4 text-right text-execution-sell">-1.15%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">6.4M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹6.5T</td>
+<td class="py-2 px-4 text-center"></td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors group">
+<td class="py-2 px-4"><div class="flex flex-col"><span class="text-on-surface font-semibold">ITC</span><span class="text-on-surface-variant text-[11px]">ITC Ltd.</span></div></td>
+<td class="py-2 px-4 text-right text-on-surface">410.85</td>
+<td class="py-2 px-4 text-right text-execution-buy">+0.10%</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">18.5M</td>
+<td class="py-2 px-4 text-right text-on-surface-variant">₹5.1T</td>
+<td class="py-2 px-4 text-center"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Content: Sector Heatmap -->
+<div class="col-span-4 glass-panel rounded-lg flex flex-col h-full overflow-hidden bg-surface-container-lowest">
+<div class="px-4 py-3 border-b border-outline-technical flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">grid_view</span>
+<h2 class="text-title-sm font-title-sm text-on-surface">Sector Performance</h2>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 p-3 grid grid-cols-2 gap-2 overflow-auto">
+<!-- Heatmap Blocks -->
+<div class="bg-execution-buy/20 border border-execution-buy/30 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">IT</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-buy text-lg">+1.8%</span>
+</div>
+</div>
+<div class="bg-execution-sell/20 border border-execution-sell/30 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">Financials</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-sell text-lg">-0.6%</span>
+</div>
+</div>
+<div class="bg-execution-buy/10 border border-execution-buy/20 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">Energy</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-buy text-lg">+0.9%</span>
+</div>
+</div>
+<div class="bg-surface-container-high border border-outline-variant rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">FMCG</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-on-surface-variant text-lg">0.0%</span>
+</div>
+</div>
+<div class="bg-execution-sell/30 border border-execution-sell/40 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24 col-span-2">
+<span class="text-body-sm font-body-sm text-on-surface">Auto</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-sell text-lg">-1.2%</span>
+<span class="text-body-sm text-on-surface-variant">High Volatility</span>
+</div>
+</div>
+<div class="bg-execution-buy/30 border border-execution-buy/40 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">Metals</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-buy text-lg">+2.1%</span>
+</div>
+</div>
+<div class="bg-execution-buy/10 border border-execution-buy/20 rounded p-3 flex flex-col justify-between hover:brightness-110 transition-all cursor-pointer h-24">
+<span class="text-body-sm font-body-sm text-on-surface">Pharma</span>
+<div class="flex justify-between items-end">
+<span class="text-data-mono font-data-mono text-execution-buy text-lg">+0.4%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,173 @@
+# ==============================================================================
+# Trade Grow — High-Load Production Docker Compose Configuration
+# Topology:
+#   - PostgreSQL 16 (TimescaleDB) with internal data volume
+#   - Redis 7 (Cache, Pub/Sub, Atomic Idempotency Locks)
+#   - Python 3.11+ FastAPI Options Math Engine
+#   - Multi-Instance Stateless Node.js App Cluster (app-1, app-2)
+#   - Dedicated Background Worker Instance
+# ==============================================================================
+
+networks:
+  trading-net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+  kyc_uploads:
+
+services:
+  # ── 1. PostgreSQL 16 Primary Database (TimescaleDB) ─────────────────────────
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: tradegrow_postgres
+    environment:
+      POSTGRES_DB:       ${PG_DATABASE:-tradegrow}
+      POSTGRES_USER:     ${PG_USER:-tradegrow}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-tradegrow} -d ${PG_DATABASE:-tradegrow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  # ── 2. Redis 7 (Cache, Pub/Sub, Atomic Idempotency Locks) ───────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: tradegrow_redis
+    command: redis-server --maxmemory 1024mb --maxmemory-policy volatile-lru --appendonly yes --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+
+  # ── 3. Python 3.11+ FastAPI Options Math Engine ─────────────────────────────
+  python-engine:
+    build:
+      context: ./python_engine
+      dockerfile: Dockerfile
+    container_name: tradegrow_python_engine
+    environment:
+      PYTHON_PORT: 8000
+      REDIS_URL:   redis://redis:6379
+      ANGELONE_API_KEY:       ${ANGELONE_API_KEY}
+      ANGELONE_CLIENT_ID:     ${ANGELONE_CLIENT_ID}
+      ANGELONE_CLIENT_SECRET: ${ANGELONE_CLIENT_SECRET}
+      ANGELONE_TOTP_SECRET:   ${ANGELONE_TOTP_SECRET}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ── 4. Trade Grow Application Node 1 (Stateless API & WS) ───────────────────
+  app-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradegrow_app_1
+    env_file:
+      - .env.production
+    environment:
+      PORT:                         5000
+      NODE_ENV:                     production
+      PROCESS_ROLE:                 "primary"
+      INSTANCE_ID:                  "app-1"
+      PG_HOST:                      postgres
+      PG_PORT:                      "5432"
+      PG_POOL_MAX:                  "20"
+      PG_POOL_MIN:                  "2"
+      REDIS_URL:                    redis://redis:6379
+      NODE_OPTIONS:                 "--max-old-space-size=3072"
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/health/live')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - kyc_uploads:/app/server/uploads/kyc
+    restart: unless-stopped
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  # ── 5. Trade Grow Application Node 2 (Stateless Expansion Replica) ──────────
+  app-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradegrow_app_2
+    env_file:
+      - .env.production
+    environment:
+      PORT:                         5001
+      NODE_ENV:                     production
+      PROCESS_ROLE:                 "worker"
+      INSTANCE_ID:                  "app-2"
+      PG_HOST:                      postgres
+      PG_PORT:                      "5432"
+      PG_POOL_MAX:                  "20"
+      PG_POOL_MIN:                  "2"
+      REDIS_URL:                    redis://redis:6379
+      NODE_OPTIONS:                 "--max-old-space-size=3072"
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/api/v1/health/live')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - kyc_uploads:/app/server/uploads/kyc
+    restart: unless-stopped
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+

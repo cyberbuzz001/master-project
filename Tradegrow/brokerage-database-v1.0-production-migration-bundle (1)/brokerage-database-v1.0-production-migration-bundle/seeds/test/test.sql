@@ -1,0 +1,1 @@
+-- Test fixture intentionally minimal; integration tests may create isolated records per test.

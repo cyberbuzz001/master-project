@@ -1,0 +1,171 @@
+<!--meta {
+  "title": "Pricing & Charges — Trade Grow",
+  "description": "Brokerage and statutory charges shown separately, with an interactive calculator for estimating the total cost of a trade including STT, GST, stamp duty, exchange and SEBI charges."
+}-->
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Pricing</p>
+      <h1 class="h1">What a trade actually costs</h1>
+      <p class="lede">
+        There are two kinds of charge on every Indian trade, and conflating them is the oldest
+        trick in broker marketing. We keep them apart on this page, in the calculator, and on
+        your contract note.
+      </p>
+    </div>
+
+    {{comp:pricingTable}}
+  </div>
+</section>
+
+<section class="section section--tint" id="calculator">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Cost calculator</p>
+      <h2 class="h2">Calculate your estimated trading cost</h2>
+      <p class="lede">
+        Enter a trade you are actually considering. The result splits out every charge so you can
+        see which part we set and which part is levied by law.
+      </p>
+    </div>
+
+    <div class="calc">
+      <form class="calc__form" id="calc-form" autocomplete="off">
+        <div class="field">
+          <label id="seg-label">Segment</label>
+          <div class="segbtns" role="radiogroup" aria-labelledby="seg-label">
+            <input type="radio" name="segment" id="seg-del" value="equity_delivery" checked>
+            <label for="seg-del">Equity Delivery</label>
+            <input type="radio" name="segment" id="seg-intra" value="equity_intraday">
+            <label for="seg-intra">Equity Intraday</label>
+            <input type="radio" name="segment" id="seg-fut" value="futures">
+            <label for="seg-fut">Futures</label>
+            <input type="radio" name="segment" id="seg-opt" value="options">
+            <label for="seg-opt">Options</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="side-label">Transaction</label>
+          <div class="segbtns" role="radiogroup" aria-labelledby="side-label">
+            <input type="radio" name="side" id="side-both" value="both" checked>
+            <label for="side-both">Buy &amp; Sell (round trip)</label>
+            <input type="radio" name="side" id="side-buy" value="buy">
+            <label for="side-buy">Buy only</label>
+            <input type="radio" name="side" id="side-sell" value="sell">
+            <label for="side-sell">Sell only</label>
+          </div>
+        </div>
+
+        <div class="field--row">
+          <div class="field">
+            <label for="calc-qty">Quantity</label>
+            <input type="number" id="calc-qty" name="quantity" value="100" min="1" step="1" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="calc-price" id="calc-price-label">Price per share (&#8377;)</label>
+            <input type="number" id="calc-price" name="price" value="500" min="0" step="0.05" inputmode="decimal">
+          </div>
+        </div>
+        <p class="field__hint" id="calc-price-hint">Enter the price at which you expect to transact.</p>
+
+        <div class="field" id="calc-scrips-field" hidden>
+          <label for="calc-scrips">Number of different scrips sold</label>
+          <input type="number" id="calc-scrips" name="scrips" value="1" min="1" step="1" inputmode="numeric">
+          <p class="field__hint">
+            DP charges are levied per scrip per day on delivery sells, regardless of quantity.
+            Selling five different stocks on one day costs five DP charges; selling 500 shares of
+            one stock costs one.
+          </p>
+        </div>
+
+        <p class="field__hint">
+          This calculator does not collect or transmit any information you enter here.
+          The calculation runs entirely in your browser.
+        </p>
+      </form>
+
+      <div class="calc__out" aria-live="polite">
+        <div class="calc__total">
+          <span>Estimated total charges</span>
+          <strong id="calc-total">&#8377;0.00</strong>
+          <em id="calc-turnover"></em>
+        </div>
+        <div id="calc-lines"></div>
+        <div class="calc__note" id="calc-note"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Other charges</p>
+      <h2 class="h2">Charges outside the trade itself</h2>
+      <p class="lede">
+        Account-level and service-level charges. These are the ones that quietly add up, so they
+        belong on the same page as everything else rather than in a PDF three clicks away.
+      </p>
+    </div>
+    {{comp:otherCharges}}
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="wrap">
+    <div class="grid-2">
+      <div class="prose">
+        <h2 class="h3">Why we will not print &ldquo;zero tax&rdquo;</h2>
+        <p>
+          Our marketing team, like every broker&rsquo;s marketing team, would prefer a shorter
+          headline. But taxes on securities transactions in India are set by law. A broker cannot
+          waive STT, GST or stamp duty any more than a shop can waive GST on a shirt.
+        </p>
+        <p>
+          If a brokerage plan genuinely offers nil brokerage, that is a real and worthwhile thing
+          and we will say so &mdash; with the conditions attached. What we will not do is let the
+          word &ldquo;zero&rdquo; quietly expand to cover charges we do not control.
+        </p>
+        <p>
+          The practical consequence for you: when comparing brokers, compare the total cost of a
+          trade, not the headline. The statutory part is identical everywhere.
+        </p>
+      </div>
+      <div class="prose">
+        <h2 class="h3">Where to check what you were charged</h2>
+        <p>
+          After every trading day on which you transact, you receive a contract note. It itemises
+          brokerage and each statutory charge as a separate line. That document, not this page and
+          not the calculator, is the authoritative record.
+        </p>
+        <p>
+          If a charge appears on your contract note that is not in our published Schedule of
+          Charges, please raise it through support. We will treat it as a grievance with a defined
+          response time, not as a general query.
+        </p>
+        <p><a class="btn btn--ghost btn--sm" href="/support/#escalation">See the escalation path</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2 class="h2">Now compare this against what you pay today</h2>
+      <p>
+        Run the same trade through your current broker&rsquo;s charge list. If we do not come out
+        better for how you actually trade, that is useful information too.
+      </p>
+      <div class="cta-band__actions">
+        <a class="btn btn--primary btn--lg" href="/compare/" data-ev="comparison_view">Compare Brokers</a>
+        <a class="btn btn--ghost btn--lg" href="/verify/" data-ev="verify_page_view">Verify Our Details</a>
+        <a class="btn btn--ghost btn--lg" href="/open-account/" data-ev="kyc_start">Start Account Opening</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="/assets/js/calculator.js" defer></script>

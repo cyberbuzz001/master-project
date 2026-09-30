@@ -1,0 +1,417 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Option Chain - StockSharp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#00E676' },
+                        danger: { DEFAULT: '#FF5252' },
+                        info: { DEFAULT: '#448AFF' },
+                        warning: { DEFAULT: '#FF6D00' },
+                        bg: { DEFAULT: '#0D1117', surface: '#161B22', elevated: '#1C2128' },
+                        text: { primary: '#FFFFFF', secondary: '#8B949E' }
+                    },
+                    borderRadius: { DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px" },
+                    fontFamily: {
+                        headline: ["Geist", "sans-serif"],
+                        display: ["Geist", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Space Grotesk", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .fill-icon { font-variation-settings: 'FILL' 1; }
+        .itm-call { background-color: rgba(0, 230, 118, 0.05); }
+        .itm-put { background-color: rgba(255, 82, 82, 0.05); }
+        .atm-row { border: 1px solid rgba(255, 109, 0, 0.5); box-shadow: 0 0 10px rgba(255, 109, 0, 0.2); }
+    </style>
+</head>
+<body class="bg-[#0D1117] text-white font-body h-screen flex overflow-hidden selection:bg-[#00E676] selection:text-[#0D1117]">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full w-64 bg-[#0D1117] border-r border-[#1C2128] p-4 gap-4 shrink-0 z-40">
+<div class="flex items-center gap-3 px-2 py-4">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00E676] to-[#0D1117] flex items-center justify-center p-0.5">
+<div class="w-full h-full bg-[#0D1117] rounded-md flex items-center justify-center">
+<span class="font-headline font-bold text-[#00E676] text-xl">S</span>
+</div>
+</div>
+<div>
+<h1 class="font-headline font-bold text-[#00E676] text-lg leading-tight">StockSharp</h1>
+<p class="text-[#8B949E] text-xs font-medium">Trading Terminal</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 mt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="explore">explore</span>
+<span class="font-label font-medium text-sm">Explore</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2">inventory_2</span>
+<span class="font-label font-medium text-sm">Holdings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="show_chart">show_chart</span>
+<span class="font-label font-medium text-sm">Positions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="assignment">assignment</span>
+<span class="font-label font-medium text-sm">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="list_alt">list_alt</span>
+<span class="font-label font-medium text-sm">Watchlist</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#161B22] text-[#00E676] font-bold transition-all duration-150 active:translate-x-1" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="table_chart">table_chart</span>
+<span class="font-label text-sm">Option Chain</span>
+</a>
+</div>
+<div class="mt-auto pb-4">
+<button class="w-full bg-[#00E676]/10 text-[#00E676] border border-[#00E676]/30 hover:bg-[#00E676] hover:text-[#0D1117] font-headline font-bold py-3 px-4 rounded-xl transition-all duration-200">
+                Quick Trade
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-6 h-16 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#1C2128] z-50 shrink-0 shadow-md">
+<!-- Mobile Menu & Brand -->
+<div class="flex items-center gap-4 md:hidden">
+<button class="text-[#8B949E] hover:text-white"><span class="material-symbols-outlined">menu</span></button>
+<span class="text-xl font-headline font-bold text-[#00E676]">StockSharp</span>
+</div>
+<!-- Search (Left) -->
+<div class="hidden md:flex flex-1 items-center gap-6 max-w-2xl">
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#8B949E] text-sm">search</span>
+<input class="w-full bg-[#161B22] border border-[#1C2128] rounded-lg pl-9 pr-4 py-1.5 text-sm font-label focus:outline-none focus:border-[#448AFF] focus:ring-1 focus:ring-[#448AFF] transition-colors placeholder:text-[#8B949E]/50" placeholder="Search scrip, contract..." type="text">
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+<kbd class="hidden lg:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-label text-[#8B949E] bg-[#0D1117] border border-[#1C2128] rounded rounded-sm">⌘</kbd>
+<kbd class="hidden lg:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-label text-[#8B949E] bg-[#0D1117] border border-[#1C2128] rounded rounded-sm">K</kbd>
+</div>
+</div>
+<nav class="hidden lg:flex items-center gap-6 font-label text-sm font-medium">
+<a class="text-[#8B949E] hover:text-white transition-colors" href="#">Stocks</a>
+<a class="text-[#8B949E] hover:text-white transition-colors" href="#">F&amp;O</a>
+<a class="text-[#8B949E] hover:text-white transition-colors" href="#">Mutual Funds</a>
+</nav>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4 ml-auto">
+<div class="hidden sm:flex flex-col items-end pr-4 border-r border-[#1C2128]">
+<span class="font-label tabular-nums text-[#00E676] font-semibold">₹1,45,200.50</span>
+<span class="text-[10px] font-label text-[#8B949E]">Available Margin</span>
+</div>
+<button class="hidden md:block px-3 py-1.5 rounded-lg text-xs font-label font-medium text-[#448AFF] bg-[#448AFF]/10 border border-[#448AFF]/20 hover:bg-[#448AFF]/20 transition-colors">
+                    Terminal Mode
+                </button>
+<div class="flex items-center gap-2 text-[#8B949E]">
+<button class="p-2 hover:bg-[#161B22] rounded-lg transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</button>
+<button class="p-2 hover:bg-[#161B22] rounded-lg transition-all active:scale-95 duration-200 relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-[#00E676] rounded-full"></span>
+</button>
+</div>
+<button class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-[#1C2128] hover:border-[#448AFF] transition-colors">
+<div class="w-full h-full bg-cover bg-center" data-alt="A macro shot of a sleek, dark metallic texture with subtle carbon fiber patterns, illuminated by a soft, directional green light that highlights the fine details and modern industrial aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAHgCq0poFV6Kz6ti3Nqrtk0W5dKqpj_u9RmWvlHU7zZr78loBdNlsa4ck9MEhBXdwZ9SQL-bsUHfdCef34CRxrDauvT3iH6q5IgUEXObpluKMhjZQrmpD7Bk4WI5bwc_Mf3BHapXXxIqJ98-d6hkVgotwAsoiVyKMJd3WOjAyapCeaZa5-7nVnOJAoWd3KK_PdiB3n8RTBrxh_yh2EmQ16ZlvMtHuVirWlQruw64FyyDYh70Lb7IWhas7fT3aVxBRCDGKi0TtjaN7K')"></div>
+</button>
+</div>
+</header>
+<!-- Option Chain Canvas -->
+<main class="flex-1 overflow-y-auto bg-[#0D1117] flex flex-col relative">
+<!-- Context & Controls Header -->
+<div class="bg-[#161B22] border-b border-[#1C2128] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 z-20">
+<div class="flex flex-wrap items-center gap-3 sm:gap-6">
+<!-- Index Selector -->
+<div class="relative">
+<button class="flex items-center gap-2 px-3 py-1.5 bg-[#0D1117] border border-[#1C2128] rounded-lg hover:border-[#448AFF] transition-colors text-sm font-label font-semibold">
+                            NIFTY
+                            <span class="material-symbols-outlined text-[16px] text-[#8B949E]">arrow_drop_down</span>
+</button>
+</div>
+<!-- Spot Display -->
+<div class="flex items-center gap-2 px-3 py-1.5 bg-[#0D1117]/50 rounded-lg">
+<span class="text-xs text-[#8B949E] font-label">SPOT:</span>
+<span class="font-label tabular-nums font-bold text-white">24,856.15</span>
+<span class="text-[10px] font-label font-medium px-1.5 py-0.5 rounded bg-[#00E676]/10 text-[#00E676] border border-[#00E676]/20">+0.42%</span>
+</div>
+</div>
+<!-- Expiry Tabs -->
+<div class="flex overflow-x-auto no-scrollbar gap-2 px-1">
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-label font-medium bg-[#1C2128] text-white border border-[#448AFF]/30">14 Aug 2026</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-label font-medium text-[#8B949E] hover:text-white hover:bg-[#1C2128]/50 transition-colors">21 Aug 2026</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-label font-medium text-[#8B949E] hover:text-white hover:bg-[#1C2128]/50 transition-colors">28 Aug 2026</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-label font-medium text-[#8B949E] hover:text-white hover:bg-[#1C2128]/50 transition-colors">11 Sep 2026</button>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-2 shrink-0">
+<button class="flex items-center gap-1.5 px-3 py-1.5 border border-[#448AFF] text-[#448AFF] rounded-lg text-xs font-label font-medium hover:bg-[#448AFF]/10 transition-colors">
+<span class="material-symbols-outlined text-[16px]">precision_manufacturing</span>
+                        Strategy Builder
+                    </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="flex-1 overflow-x-auto">
+<table class="w-full text-xs font-label text-right border-collapse min-w-[1000px]">
+<thead class="sticky top-0 bg-[#0D1117] z-10 border-b-2 border-[#1C2128] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]">
+<!-- Group Headers -->
+<tr>
+<th class="py-2 text-center text-[#448AFF] font-semibold border-b border-[#1C2128] bg-[#0D1117] relative" colspan="8">
+                                CALLS
+                                <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#448AFF]/50 to-transparent"></div>
+</th>
+<th class="w-24 bg-[#161B22] border-x border-[#1C2128]"></th>
+<th class="py-2 text-center text-[#FF6D00] font-semibold border-b border-[#1C2128] bg-[#0D1117] relative" colspan="8">
+                                PUTS
+                                <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF6D00]/50 to-transparent"></div>
+</th>
+</tr>
+<!-- Column Headers -->
+<tr class="text-[#8B949E] font-medium bg-[#0D1117]">
+<th class="py-2 px-2 font-normal">OI</th>
+<th class="py-2 px-2 font-normal">Chng OI</th>
+<th class="py-2 px-2 font-normal">Vol</th>
+<th class="py-2 px-2 font-normal">IV</th>
+<th class="py-2 px-2 font-normal">Bid</th>
+<th class="py-2 px-2 font-normal">Ask</th>
+<th class="py-2 px-2 font-normal">Chng</th>
+<th class="py-2 px-3 font-semibold text-white">LTP</th>
+<th class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128] shadow-[0_0_15px_rgba(0,0,0,0.5)] z-20">STRIKE</th>
+<th class="py-2 px-3 font-semibold text-white text-left">LTP</th>
+<th class="py-2 px-2 font-normal text-left">Chng</th>
+<th class="py-2 px-2 font-normal text-left">Bid</th>
+<th class="py-2 px-2 font-normal text-left">Ask</th>
+<th class="py-2 px-2 font-normal text-left">IV</th>
+<th class="py-2 px-2 font-normal text-left">Vol</th>
+<th class="py-2 px-2 font-normal text-left">Chng OI</th>
+<th class="py-2 px-2 font-normal text-left">OI</th>
+</tr>
+</thead>
+<tbody class="tabular-nums">
+<!-- Row 24700 (ITM Call, OTM Put) -->
+<tr class="border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E] itm-call">1,45,230</td>
+<td class="py-2 px-2 text-[#FF5252] itm-call">-12,400</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">8,95,120</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">14.2</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">195.40</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">196.10</td>
+<td class="py-2 px-2 text-[#00E676] itm-call">+15.40</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117] itm-call">195.80</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">24700</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left">32.40</td>
+<td class="py-2 px-2 text-[#FF5252] text-left">-8.20</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">32.10</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">32.60</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">15.8</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">12,45,800</td>
+<td class="py-2 px-2 text-[#00E676] text-left">+45,200</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">2,85,400</td>
+</tr>
+<!-- Row 24750 (ITM Call, OTM Put) -->
+<tr class="bg-[#161B22]/30 border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E] itm-call">85,400</td>
+<td class="py-2 px-2 text-[#FF5252] itm-call">-8,200</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">6,20,150</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">13.8</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">155.20</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">156.00</td>
+<td class="py-2 px-2 text-[#00E676] itm-call">+12.10</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117] itm-call">155.60</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">24750</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left">45.80</td>
+<td class="py-2 px-2 text-[#FF5252] text-left">-6.40</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">45.50</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">46.10</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">14.9</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">9,80,200</td>
+<td class="py-2 px-2 text-[#00E676] text-left">+22,100</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">1,95,000</td>
+</tr>
+<!-- Row 24800 (ITM Call, OTM Put) -->
+<tr class="border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E] itm-call">3,25,000</td>
+<td class="py-2 px-2 text-[#FF5252] itm-call">-45,000</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">18,50,000</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">13.5</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">118.50</td>
+<td class="py-2 px-2 text-[#8B949E] itm-call">119.20</td>
+<td class="py-2 px-2 text-[#00E676] itm-call">+9.80</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117] itm-call">118.90</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">24800</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left">62.10</td>
+<td class="py-2 px-2 text-[#FF5252] text-left">-4.50</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">61.90</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">62.40</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">14.2</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">22,10,000</td>
+<td class="py-2 px-2 text-[#00E676] text-left">+1,15,000</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">4,50,000</td>
+</tr>
+<!-- Row 24850 ATM (Spot: 24856) -->
+<tr class="bg-[#1C2128] atm-row relative z-10 transition-colors">
+<td class="py-2 px-2 text-[#8B949E]">1,15,000</td>
+<td class="py-2 px-2 text-[#00E676]">+12,500</td>
+<td class="py-2 px-2 text-[#white]">25,80,000</td>
+<td class="py-2 px-2 text-[#8B949E]">13.1</td>
+<td class="py-2 px-2 text-[#8B949E]">85.20</td>
+<td class="py-2 px-2 text-[#8B949E]">85.80</td>
+<td class="py-2 px-2 text-[#00E676] font-medium">+6.20</td>
+<td class="py-2 px-3 font-bold text-[#00E676] text-[13px]">85.60</td>
+<td class="py-2 px-3 text-center font-bold text-[#FF6D00] bg-[#161B22] border-x border-[#FF6D00]/30 shadow-[0_0_10px_rgba(255,109,0,0.1)] relative">
+                                24850
+                                <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#FF6D00] shadow-[0_0_5px_#FF6D00]"></div>
+<div class="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#FF6D00] shadow-[0_0_5px_#FF6D00]"></div>
+</td>
+<td class="py-2 px-3 font-bold text-[#00E676] text-[13px] text-left">78.20</td>
+<td class="py-2 px-2 text-[#00E676] font-medium text-left">+5.10</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">77.90</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">78.50</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">13.6</td>
+<td class="py-2 px-2 text-[#white] text-left">28,50,000</td>
+<td class="py-2 px-2 text-[#00E676] text-left">+85,000</td>
+<td class="py-2 px-2 text-[#8B949E] text-left">1,85,000</td>
+</tr>
+<!-- Row 24900 (OTM Call, ITM Put) -->
+<tr class="border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E]">4,85,000</td>
+<td class="py-2 px-2 text-[#00E676]">+1,25,000</td>
+<td class="py-2 px-2 text-[#8B949E]">32,10,000</td>
+<td class="py-2 px-2 text-[#8B949E]">12.8</td>
+<td class="py-2 px-2 text-[#8B949E]">58.40</td>
+<td class="py-2 px-2 text-[#8B949E]">58.90</td>
+<td class="py-2 px-2 text-[#00E676]">+3.50</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117]">58.60</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">24900</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left bg-[#0D1117] itm-put">102.40</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-2.10</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">102.10</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">102.80</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">13.2</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">15,20,000</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-12,000</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">2,15,000</td>
+</tr>
+<!-- Row 24950 (OTM Call, ITM Put) -->
+<tr class="bg-[#161B22]/30 border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E]">2,15,000</td>
+<td class="py-2 px-2 text-[#00E676]">+45,000</td>
+<td class="py-2 px-2 text-[#8B949E]">18,50,000</td>
+<td class="py-2 px-2 text-[#8B949E]">12.5</td>
+<td class="py-2 px-2 text-[#8B949E]">38.20</td>
+<td class="py-2 px-2 text-[#8B949E]">38.60</td>
+<td class="py-2 px-2 text-[#00E676]">+1.80</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117]">38.40</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">24950</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left bg-[#0D1117] itm-put">135.20</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-5.40</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">134.80</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">135.60</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">12.9</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">8,45,000</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-5,200</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">85,000</td>
+</tr>
+<!-- Row 25000 (OTM Call, ITM Put) -->
+<tr class="border-b border-[#1C2128]/50 hover:bg-[#1C2128]/40 transition-colors">
+<td class="py-2 px-2 text-[#8B949E]">6,50,000</td>
+<td class="py-2 px-2 text-[#00E676]">+2,10,000</td>
+<td class="py-2 px-2 text-[#8B949E]">45,20,000</td>
+<td class="py-2 px-2 text-[#8B949E]">12.2</td>
+<td class="py-2 px-2 text-[#8B949E]">24.50</td>
+<td class="py-2 px-2 text-[#8B949E]">24.80</td>
+<td class="py-2 px-2 text-[#00E676]">+0.50</td>
+<td class="py-2 px-3 font-semibold text-[#00E676] bg-[#0D1117]">24.60</td>
+<td class="py-2 px-3 text-center font-bold text-white bg-[#161B22] border-x border-[#1C2128]">25000</td>
+<td class="py-2 px-3 font-semibold text-[#FF5252] text-left bg-[#0D1117] itm-put">172.50</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-8.50</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">171.80</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">173.20</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">12.5</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">4,20,000</td>
+<td class="py-2 px-2 text-[#FF5252] text-left itm-put">-2,100</td>
+<td class="py-2 px-2 text-[#8B949E] text-left itm-put">42,000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Summary Bar (Sticky above bottom bar) -->
+<div class="sticky bottom-20 sm:bottom-[72px] w-full bg-[#161B22]/90 backdrop-blur-md border-t border-[#1C2128] py-2 px-4 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.2)]">
+<div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs font-label">
+<div class="flex items-center gap-2">
+<span class="text-[#8B949E]">PCR:</span>
+<span class="font-bold text-white tabular-nums">0.91</span>
+</div>
+<div class="w-px h-4 bg-[#1C2128] hidden sm:block"></div>
+<div class="flex items-center gap-2">
+<span class="text-[#8B949E]">Max Pain:</span>
+<span class="font-bold text-[#FF6D00] tabular-nums">24800</span>
+</div>
+<div class="w-px h-4 bg-[#1C2128] hidden sm:block"></div>
+<div class="flex items-center gap-2">
+<span class="text-[#8B949E]">Total CE OI:</span>
+<span class="font-bold text-white tabular-nums">2.45 Cr</span>
+<span class="material-symbols-outlined text-[14px] text-[#00E676]">arrow_upward</span>
+</div>
+<div class="w-px h-4 bg-[#1C2128] hidden sm:block"></div>
+<div class="flex items-center gap-2">
+<span class="text-[#8B949E]">Total PE OI:</span>
+<span class="font-bold text-white tabular-nums">2.23 Cr</span>
+<span class="material-symbols-outlined text-[14px] text-[#FF5252]">arrow_downward</span>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar -->
+<div class="sticky bottom-0 w-full bg-[#0D1117] border-t border-[#1C2128] p-3 sm:px-6 sm:py-4 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.4)]">
+<div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Call Actions -->
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<button class="flex-1 sm:flex-none px-6 py-2 bg-[#00E676] hover:bg-[#00E676]/90 text-[#0D1117] font-headline font-bold rounded-lg transition-colors shadow-[0_0_15px_rgba(0,230,118,0.2)]">
+                            Buy CE
+                        </button>
+<button class="flex-1 sm:flex-none px-6 py-2 bg-transparent border border-[#FF5252] text-[#FF5252] hover:bg-[#FF5252]/10 font-headline font-bold rounded-lg transition-colors">
+                            Sell CE
+                        </button>
+</div>
+<!-- Order Params -->
+<div class="flex items-center gap-3 w-full sm:w-auto justify-center bg-[#161B22] p-1.5 rounded-xl border border-[#1C2128]">
+<div class="flex items-center bg-[#0D1117] rounded-lg border border-[#1C2128] px-3 py-1">
+<span class="text-xs text-[#8B949E] font-label mr-2">Qty</span>
+<input class="w-16 bg-transparent text-white font-label font-bold text-center border-none focus:ring-0 p-0 tabular-nums" type="number" value="75">
+<span class="text-[10px] text-[#8B949E] font-label ml-1 border-l border-[#1C2128] pl-2">Lot</span>
+</div>
+<div class="flex items-center bg-[#0D1117] rounded-lg border border-[#1C2128] p-0.5">
+<button class="px-3 py-1 bg-[#1C2128] text-white text-xs font-label font-medium rounded-md">MARKET</button>
+<button class="px-3 py-1 text-[#8B949E] hover:text-white text-xs font-label font-medium rounded-md transition-colors">LIMIT</button>
+</div>
+</div>
+<!-- Put Actions -->
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<button class="flex-1 sm:flex-none px-6 py-2 bg-[#00E676] hover:bg-[#00E676]/90 text-[#0D1117] font-headline font-bold rounded-lg transition-colors shadow-[0_0_15px_rgba(0,230,118,0.2)]">
+                            Buy PE
+                        </button>
+<button class="flex-1 sm:flex-none px-6 py-2 bg-transparent border border-[#FF5252] text-[#FF5252] hover:bg-[#FF5252]/10 font-headline font-bold rounded-lg transition-colors">
+                            Sell PE
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

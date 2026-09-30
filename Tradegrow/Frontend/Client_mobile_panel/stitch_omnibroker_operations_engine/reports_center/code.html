@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reports Center | OBSIDIAN TERMINAL</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration Verbatim -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "surface-container-lowest": "#070e1e",
+                    "secondary": "#4edea3",
+                    "tertiary-container": "#ff5451",
+                    "on-primary-fixed-variant": "#004395",
+                    "inverse-on-surface": "#293041",
+                    "surface-dim": "#0c1323",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-secondary-container": "#00311f",
+                    "on-tertiary": "#68000a",
+                    "inverse-primary": "#005ac2",
+                    "tertiary": "#ffb3ad",
+                    "outline": "#8c909f",
+                    "on-tertiary-fixed": "#410004",
+                    "on-primary-container": "#00285d",
+                    "surface-bright": "#32394b",
+                    "surface": "#0c1323",
+                    "on-primary": "#002e6a",
+                    "inverse-surface": "#dce2f9",
+                    "surface-container-low": "#141b2c",
+                    "on-secondary": "#003824",
+                    "on-background": "#dce2f9",
+                    "primary-fixed": "#d8e2ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-surface": "#dce2f9",
+                    "on-primary-fixed": "#001a42",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "on-secondary-fixed": "#002113",
+                    "on-error": "#690005",
+                    "surface-container": "#191f30",
+                    "surface-container-high": "#232a3b",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#c2c6d6",
+                    "background": "#0c1323",
+                    "error-container": "#93000a",
+                    "error": "#ffb4ab",
+                    "secondary-container": "#00a572",
+                    "surface-variant": "#2e3446",
+                    "surface-container-highest": "#2e3446",
+                    "on-tertiary-container": "#5c0008",
+                    "on-error-container": "#ffdad6",
+                    "primary-container": "#4d8eff",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-tint": "#adc6ff",
+                    "primary": "#adc6ff",
+                    "outline-variant": "#424754"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "cell-padding-y": "6px",
+                    "gutter": "12px",
+                    "cell-padding-x": "8px",
+                    "unit": "4px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "title-sm": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0b1222;
+            color: #dce2f9;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 2px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-container-margin h-16 border-b border-outline-variant/30 bg-surface/70 backdrop-blur-xl">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="search">search</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">OBSIDIAN TERMINAL</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end hidden md:flex">
+<span class="font-title-sm text-title-sm text-on-surface">Rohan Sharma</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">IN88291</span>
+</div>
+<div class="w-10 h-10 rounded-full border border-primary/20 bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional high-resolution close-up studio portrait of a young male financial trader with a neutral expression, set against a dark moody architectural background. The lighting is dramatic cinematic rim lighting in shades of cool electric blue. The overall aesthetic is sharp, corporate, and sophisticated, mirroring the Obsidian terminal interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC44Ls8KSAuJyZOWkDFilqDNqL-rIAWHykaGqBs3yn5p3kuNC29WChG7rWUbVaRK9PlxgRT7zOZDe-PIgS8tVnxbMOeuOOF0lP_oEpZ1WWPpww7UXxJWXsx-MuEisaoZsTvi8yeqDajVvz_qfQcBwEKRpGB9eX5SzjR2WJOJSdzjHB2MxIUuytvmODQDeJFAV3CXUuKYjdZOim_ikPFbTp-G7PHlLE0M5dKIldWC6uRVjNw13_riPY"/>
+</div>
+</div>
+</header>
+<!-- Main Content Shell -->
+<main class="pt-16 pb-20 md:pb-0 h-screen overflow-y-auto custom-scrollbar bg-surface-container-lowest">
+<!-- Header Section with Title & Global Filters -->
+<section class="p-container-margin border-b border-outline-variant/20 bg-surface-container-low/50">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<h2 class="font-headline-md text-headline-md text-on-surface">Reports</h2>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-icon="filter_list">filter_list</span>
+</div>
+<!-- Global Filters Panel -->
+<div class="flex flex-wrap items-center gap-3">
+<div class="bg-surface-container-high rounded px-3 py-1.5 flex items-center gap-2 border border-outline-variant/30">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Date Range</span>
+<span class="font-body-sm text-body-sm text-primary">FY 2023-24</span>
+<span class="material-symbols-outlined text-xs" data-icon="keyboard_arrow_down" style="font-size: 14px;">keyboard_arrow_down</span>
+</div>
+<div class="bg-surface-container-high rounded px-3 py-1.5 flex items-center gap-2 border border-outline-variant/30">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Segment</span>
+<span class="font-body-sm text-body-sm text-primary">Equity, F&amp;O</span>
+<span class="material-symbols-outlined text-xs" data-icon="keyboard_arrow_down" style="font-size: 14px;">keyboard_arrow_down</span>
+</div>
+<div class="bg-surface-container-high rounded px-3 py-1.5 flex items-center gap-2 border border-outline-variant/30">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Exchange</span>
+<span class="font-body-sm text-body-sm text-primary">NSE, BSE</span>
+<span class="material-symbols-outlined text-xs" data-icon="keyboard_arrow_down" style="font-size: 14px;">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento-style Grid of Report Categories -->
+<section class="p-container-margin max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Category: Tax & Compliance -->
+<div class="md:col-span-4 glass-panel p-4 rounded-xl flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary" data-icon="gavel">gavel</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Tax &amp; Compliance</h3>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Report Item -->
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="description">description</span>
+<span class="font-body-md text-body-md text-on-surface">Tax Reports</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<!-- Report Item -->
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="trending_up">trending_up</span>
+<span class="font-body-md text-body-md text-on-surface">Capital Gains</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Trading Activity -->
+<div class="md:col-span-8 glass-panel p-4 rounded-xl flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary" data-icon="query_stats">query_stats</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Trading Activity</h3>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="receipt_long">receipt_long</span>
+<span class="font-body-md text-body-md text-on-surface">Contract Notes</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="menu_book">menu_book</span>
+<span class="font-body-md text-body-md text-on-surface">Trade Book</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all sm:col-span-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="list_alt">list_alt</span>
+<span class="font-body-md text-body-md text-on-surface">Order Book</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Asset Reports -->
+<div class="md:col-span-8 glass-panel p-4 rounded-xl flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance_wallet">account_balance_wallet</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Asset Reports</h3>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="pie_chart">pie_chart</span>
+<span class="font-body-md text-body-md text-on-surface">Holdings Statement</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="account_circle">account_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Account Statement</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all sm:col-span-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="security">security</span>
+<span class="font-body-md text-body-md text-on-surface">Margin Statement</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Financial Statements -->
+<div class="md:col-span-4 glass-panel p-4 rounded-xl flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary" data-icon="assessment">assessment</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Financial Statements</h3>
+</div>
+<div class="flex flex-col gap-2">
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="import_contacts">import_contacts</span>
+<span class="font-body-md text-body-md text-on-surface">Ledger</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="equalizer">equalizer</span>
+<span class="font-body-md text-body-md text-on-surface">P&amp;L Statement</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary px-3 py-1 text-on-primary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">VIEW</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1" onclick="toggleExport()"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Descriptive Image Card -->
+<div class="md:col-span-12 h-48 rounded-xl overflow-hidden relative border border-outline-variant/20 group">
+<img class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700" data-alt="A panoramic, ultra-high-definition digital artwork showing a futuristic data center with rows of sleek, obsidian-black servers and pulsing neon electric blue connectivity lines. The atmosphere is professional, quiet, and high-tech, reflecting institutional-grade security. The lighting is low-key with sharp cyan accents, emphasizing precision and data integrity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2yKN7sM2KRs3COpvxEvTv5-M2mX84j6ArU1At0HfHjL9I1SlUvYdSLqJpR7QQiuj8lM7i54Gcu74rOibdSNwg2iR4_c1f9HNw2WHVH4mU1tsuO1jNJyqveEw8AlSubLI6m1DEq0ou2lGlZm3XZUQ42wjJaLieQXkdDoT-2ec6aGvwcNonssx6WbM89FV9CQasuImZ0Q_UZ1s_5tRpAXn9T7gM-sSmUWKcajRoGNVgCRGedcK9nAk"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest to-transparent flex flex-col justify-center p-8">
+<h4 class="font-headline-md text-headline-md text-primary mb-1">Institutional Transparency</h4>
+<p class="text-on-surface-variant max-w-md">Access your complete financial footprint with zero-latency report generation and secure data handling.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Export Bottom Sheet Simulation -->
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] hidden opacity-0 transition-opacity duration-300" id="export-overlay" onclick="toggleExport()">
+<div class="fixed bottom-0 left-0 w-full glass-panel rounded-t-full p-6 transition-transform duration-300 translate-y-full" id="export-sheet" onclick="event.stopPropagation()">
+<div class="max-w-md mx-auto">
+<div class="w-12 h-1 bg-outline-variant/50 rounded-full mx-auto mb-6"></div>
+<h4 class="font-title-sm text-title-sm text-on-surface mb-4 text-center">Export Report</h4>
+<div class="grid grid-cols-3 gap-4">
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-outline-variant/30 transition-all group">
+<span class="material-symbols-outlined text-error text-3xl group-hover:scale-110 transition-transform" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span class="font-label-caps text-label-caps text-on-surface">PDF</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-outline-variant/30 transition-all group">
+<span class="material-symbols-outlined text-secondary text-3xl group-hover:scale-110 transition-transform" data-icon="csv">csv</span>
+<span class="font-label-caps text-label-caps text-on-surface">CSV</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-outline-variant/30 transition-all group">
+<span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform" data-icon="table_chart">table_chart</span>
+<span class="font-label-caps text-label-caps text-on-surface">EXCEL</span>
+</button>
+</div>
+<button class="w-full mt-6 py-3 font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors" onclick="toggleExport()">CANCEL</button>
+</div>
+</div>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe border-t border-outline-variant/30 bg-surface/70 backdrop-blur-xl z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-caps text-label-caps">Watchlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary font-bold scale-95 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="assessment" style="font-variation-settings: 'FILL' 1;">assessment</span>
+<span class="font-label-caps text-label-caps">Reports</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</a>
+</nav>
+<script>
+        function toggleExport() {
+            const overlay = document.getElementById('export-overlay');
+            const sheet = document.getElementById('export-sheet');
+            
+            if (overlay.classList.contains('hidden')) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.add('opacity-100');
+                    sheet.classList.remove('translate-y-full');
+                }, 10);
+            } else {
+                overlay.classList.remove('opacity-100');
+                sheet.classList.add('translate-y-full');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+    </script>
+</body></html>

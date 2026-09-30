@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Terminal | RELIANCE Instrument Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#8c909f",
+                    "error": "#ffb4ab",
+                    "error-container": "#93000a",
+                    "background": "#0c1323",
+                    "on-error-container": "#ffdad6",
+                    "outline-variant": "#424754",
+                    "surface-container-highest": "#2e3446",
+                    "on-secondary-container": "#00311f",
+                    "surface-container-high": "#232a3b",
+                    "inverse-surface": "#dce2f9",
+                    "surface-container-lowest": "#070e1e",
+                    "on-primary": "#002e6a",
+                    "primary-fixed-dim": "#adc6ff",
+                    "primary-fixed": "#d8e2ff",
+                    "on-secondary-fixed": "#002113",
+                    "surface-variant": "#2e3446",
+                    "surface": "#0c1323",
+                    "on-tertiary": "#68000a",
+                    "tertiary-container": "#ff5451",
+                    "secondary-container": "#00a572",
+                    "inverse-primary": "#005ac2",
+                    "on-background": "#dce2f9",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container": "#191f30",
+                    "tertiary": "#ffb3ad",
+                    "secondary": "#4edea3",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-surface": "#dce2f9",
+                    "surface-bright": "#32394b",
+                    "primary": "#adc6ff",
+                    "inverse-on-surface": "#293041",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#c2c6d6",
+                    "on-primary-container": "#00285d",
+                    "on-tertiary-fixed": "#410004",
+                    "on-secondary": "#003824",
+                    "surface-tint": "#adc6ff",
+                    "on-error": "#690005",
+                    "surface-container-low": "#141b2c",
+                    "tertiary-fixed": "#ffdad7",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-dim": "#0c1323",
+                    "on-primary-fixed": "#001a42",
+                    "primary-container": "#4d8eff",
+                    "on-tertiary-container": "#5c0008"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "unit": "4px",
+                    "cell-padding-y": "6px",
+                    "cell-padding-x": "8px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0b1222;
+            color: #dce2f9;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1e293b;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #070e1e; }
+        ::-webkit-scrollbar-thumb { background: #2e3446; border-radius: 2px; }
+        .ticker-up { color: #4edea3; }
+        .ticker-down { color: #ffb4ab; }
+        
+        .candlestick {
+            width: 8px;
+            position: relative;
+            margin: 0 2px;
+        }
+        .wick {
+            width: 1px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased selection:bg-primary/30">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 bg-surface-container/70 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-gutter py-unit">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary font-headline-md text-headline-md">analytics</span>
+<h1 class="font-display-lg text-headline-md font-bold text-primary tracking-tight">Terminal</h1>
+</div>
+<div class="hidden md:flex gap-6 items-center">
+<nav class="flex gap-4">
+<a class="font-label-caps text-label-caps text-primary px-3 py-2 rounded-lg bg-surface-bright transition-colors" href="#">Dashboard</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-bright px-3 py-2 rounded-lg transition-colors" href="#">Markets</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-bright px-3 py-2 rounded-lg transition-colors" href="#">Portfolio</a>
+</nav>
+<div class="h-6 w-px bg-outline-variant/30"></div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">search</button>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-secondary">CONNECTED</span>
+</div>
+</header>
+<main class="pt-[64px] pb-[100px] px-container-margin max-w-[1440px] mx-auto min-h-screen">
+<!-- Instrument Header -->
+<section class="mt-gutter mb-6 grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-4">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<h2 class="font-headline-md text-headline-md text-on-surface">Reliance Industries</h2>
+<span class="px-2 py-0.5 bg-surface-container-highest rounded font-data-mono text-xs text-outline">NSE:RELIANCE</span>
+</div>
+<div class="flex items-baseline gap-4 mt-2">
+<span class="font-data-mono text-display-lg text-on-surface">2,945.30</span>
+<div class="flex items-center gap-1 ticker-up">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">arrow_drop_up</span>
+<span class="font-data-mono text-title-sm">+34.20 (+1.17%)</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2">
+<button class="p-2 glass-panel rounded-lg hover:bg-surface-bright transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">star</span>
+</button>
+<button class="p-2 glass-panel rounded-lg hover:bg-surface-bright transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">notifications</span>
+</button>
+<button class="p-2 glass-panel rounded-lg hover:bg-surface-bright transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">ios_share</span>
+</button>
+</div>
+</section>
+<!-- Tabs Navigation -->
+<nav class="flex gap-8 border-b border-outline-variant/20 mb-6 overflow-x-auto no-scrollbar">
+<button class="pb-3 px-1 border-b-2 border-primary font-label-caps text-label-caps text-primary whitespace-nowrap">OVERVIEW</button>
+<button class="pb-3 px-1 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface whitespace-nowrap">CHART</button>
+<button class="pb-3 px-1 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface whitespace-nowrap">DEPTH</button>
+<button class="pb-3 px-1 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface whitespace-nowrap">FUNDAMENTALS</button>
+<button class="pb-3 px-1 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface whitespace-nowrap">TECHNICALS</button>
+<button class="pb-3 px-1 border-b-2 border-transparent font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface whitespace-nowrap">OPTIONS</button>
+</nav>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Main Chart Panel -->
+<div class="col-span-12 lg:col-span-8 glass-panel rounded-xl overflow-hidden flex flex-col h-[500px]">
+<div class="p-3 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+<div class="flex gap-2">
+<div class="flex p-1 bg-surface-container rounded-lg">
+<button class="px-2 py-1 text-[10px] font-bold bg-surface-bright text-primary rounded">1m</button>
+<button class="px-2 py-1 text-[10px] font-bold text-on-surface-variant hover:bg-surface-bright rounded">5m</button>
+<button class="px-2 py-1 text-[10px] font-bold text-on-surface-variant hover:bg-surface-bright rounded">15m</button>
+<button class="px-2 py-1 text-[10px] font-bold text-on-surface-variant hover:bg-surface-bright rounded">1H</button>
+<button class="px-2 py-1 text-[10px] font-bold text-on-surface-variant hover:bg-surface-bright rounded">1D</button>
+</div>
+<div class="h-6 w-px bg-outline-variant/30"></div>
+<button class="flex items-center gap-1 px-3 py-1 bg-surface-container rounded-lg text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">show_chart</span>
+<span class="font-label-caps text-label-caps">INDICATORS</span>
+</button>
+</div>
+<div class="flex gap-2">
+<span class="font-data-mono text-[10px] text-secondary">EMA(20): 2,941.05</span>
+<span class="font-data-mono text-[10px] text-tertiary">RSI(14): 64.22</span>
+</div>
+</div>
+<div class="flex-1 relative bg-surface-container-lowest overflow-hidden">
+<!-- Simulated Professional Chart Background -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#1e293b 1px, transparent 1px), linear-gradient(90deg, #1e293b 1px, transparent 1px); background-size: 40px 40px;"></div>
+<!-- Dynamic Chart Component Placeholder (SVG based) -->
+<div class="absolute inset-0 flex items-end justify-between px-8 pb-12 pt-8">
+<div class="flex items-end h-full w-full gap-1">
+<!-- Simulated Candlesticks & Volume Bars -->
+<div class="flex flex-col flex-1 h-full justify-end group">
+<div class="candlestick bg-error/40 h-24 mb-1">
+<div class="wick bg-error h-32 -top-4"></div>
+</div>
+<div class="w-full bg-error/20 h-8 rounded-t-sm"></div>
+</div>
+<div class="flex flex-col flex-1 h-full justify-end">
+<div class="candlestick bg-secondary/40 h-16 mb-1">
+<div class="wick bg-secondary h-20 -top-2"></div>
+</div>
+<div class="w-full bg-secondary/20 h-12 rounded-t-sm"></div>
+</div>
+<div class="flex flex-col flex-1 h-full justify-end">
+<div class="candlestick bg-secondary/40 h-28 mb-1">
+<div class="wick bg-secondary h-36 -top-4"></div>
+</div>
+<div class="w-full bg-secondary/20 h-14 rounded-t-sm"></div>
+</div>
+<div class="flex flex-col flex-1 h-full justify-end">
+<div class="candlestick bg-error/40 h-20 mb-1">
+<div class="wick bg-error h-24 -top-2"></div>
+</div>
+<div class="w-full bg-error/20 h-10 rounded-t-sm"></div>
+</div>
+<div class="flex flex-col flex-1 h-full justify-end">
+<div class="candlestick bg-secondary/40 h-40 mb-1">
+<div class="wick bg-secondary h-48 -top-4"></div>
+</div>
+<div class="w-full bg-secondary/20 h-18 rounded-t-sm"></div>
+</div>
+<!-- Current Price Indicator Line -->
+<div class="absolute left-0 right-0 border-t border-dashed border-primary/40 top-[40%] flex justify-end">
+<span class="bg-primary text-on-primary-container font-data-mono text-[10px] px-2 py-0.5 rounded-l ml-auto translate-x-8">2,945.30</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Order Depth Panel -->
+<div class="col-span-12 lg:col-span-4 glass-panel rounded-xl overflow-hidden flex flex-col h-[500px]">
+<div class="p-3 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
+<h3 class="font-label-caps text-label-caps text-on-surface">MARKET DEPTH</h3>
+<span class="text-[10px] font-data-mono text-outline">LIVE</span>
+</div>
+<div class="flex-1 p-2 flex flex-col gap-0.5">
+<div class="grid grid-cols-2 gap-4 px-2 py-1 text-[10px] font-label-caps text-outline border-b border-outline-variant/10">
+<div class="flex justify-between"><span>BID</span><span>QTY</span></div>
+<div class="flex justify-between"><span>OFFER</span><span>QTY</span></div>
+</div>
+<!-- Bid Rows -->
+<div class="flex-1 overflow-y-auto no-scrollbar py-2">
+<div class="grid grid-cols-2 gap-4 h-full">
+<div class="flex flex-col gap-1">
+<div class="relative flex justify-between px-2 py-1 rounded bg-secondary-container/5 hover:bg-secondary-container/10 transition-colors">
+<div class="absolute inset-y-0 left-0 bg-secondary/10 w-[70%]"></div>
+<span class="font-data-mono text-body-sm ticker-up relative z-10">2,945.25</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">1,240</span>
+</div>
+<div class="relative flex justify-between px-2 py-1 rounded bg-secondary-container/5 hover:bg-secondary-container/10">
+<div class="absolute inset-y-0 left-0 bg-secondary/10 w-[45%]"></div>
+<span class="font-data-mono text-body-sm ticker-up relative z-10">2,945.20</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">850</span>
+</div>
+<div class="relative flex justify-between px-2 py-1 rounded bg-secondary-container/5 hover:bg-secondary-container/10">
+<div class="absolute inset-y-0 left-0 bg-secondary/10 w-[90%]"></div>
+<span class="font-data-mono text-body-sm ticker-up relative z-10">2,945.15</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">2,110</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="relative flex justify-between px-2 py-1 rounded bg-error-container/5 hover:bg-error-container/10">
+<div class="absolute inset-y-0 right-0 bg-error/10 w-[60%]"></div>
+<span class="font-data-mono text-body-sm ticker-down relative z-10">2,945.35</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">920</span>
+</div>
+<div class="relative flex justify-between px-2 py-1 rounded bg-error-container/5 hover:bg-error-container/10">
+<div class="absolute inset-y-0 right-0 bg-error/10 w-[30%]"></div>
+<span class="font-data-mono text-body-sm ticker-down relative z-10">2,945.40</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">440</span>
+</div>
+<div class="relative flex justify-between px-2 py-1 rounded bg-error-container/5 hover:bg-error-container/10">
+<div class="absolute inset-y-0 right-0 bg-error/10 w-[80%]"></div>
+<span class="font-data-mono text-body-sm ticker-down relative z-10">2,945.50</span>
+<span class="font-data-mono text-body-sm text-on-surface relative z-10">1,890</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-3 border-t border-outline-variant/20 grid grid-cols-2 gap-4">
+<div class="text-center">
+<span class="block font-label-caps text-[9px] text-outline">TOTAL BID</span>
+<span class="font-data-mono text-body-md text-secondary">482,912</span>
+</div>
+<div class="text-center">
+<span class="block font-label-caps text-[9px] text-outline">TOTAL OFFER</span>
+<span class="font-data-mono text-body-md text-error">392,104</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Stats Grid Section -->
+<div class="col-span-12 glass-panel rounded-xl p-6">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">data_usage</span>
+<h3 class="font-title-sm text-title-sm text-on-surface">Market Statistics</h3>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-8 gap-x-12">
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OPEN</span>
+<span class="font-data-mono text-body-md text-on-surface">2,915.00</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">HIGH</span>
+<span class="font-data-mono text-body-md text-on-surface">2,965.80</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LOW</span>
+<span class="font-data-mono text-body-md text-on-surface">2,911.10</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PREV. CLOSE</span>
+<span class="font-data-mono text-body-md text-on-surface">2,911.10</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOLUME</span>
+<span class="font-data-mono text-body-md text-on-surface">4.82M</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">52W HIGH</span>
+<span class="font-data-mono text-body-md text-on-surface">3,024.90</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">52W LOW</span>
+<span class="font-data-mono text-body-md text-on-surface">2,220.30</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">AVG. VOLUME (20D)</span>
+<span class="font-data-mono text-body-md text-on-surface">5.12M</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">MARKET CAP (CR)</span>
+<span class="font-data-mono text-body-md text-on-surface">19,92,402.15</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">P/E RATIO</span>
+<span class="font-data-mono text-body-md text-on-surface">28.45</span>
+</div>
+</div>
+</div>
+<!-- Technical Summary Card -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 glass-panel rounded-xl p-6 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8 blur-2xl"></div>
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-sm text-title-sm text-on-surface">Technical Summary</h3>
+<span class="px-2 py-1 bg-secondary/10 text-secondary font-label-caps text-[9px] rounded">BULLISH</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="font-body-sm text-on-surface-variant">RSI (14)</span>
+<span class="font-data-mono text-body-sm text-on-surface">Neutral (52.4)</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="font-body-sm text-on-surface-variant">MACD (12, 26)</span>
+<span class="font-data-mono text-body-sm text-secondary">Buy (14.2)</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="font-body-sm text-on-surface-variant">SMA (50)</span>
+<span class="font-data-mono text-body-sm text-secondary">Above (2,890)</span>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-outline-variant/30 rounded-lg font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-bright transition-colors">FULL TECHNICAL REPORT</button>
+</div>
+<!-- Analyst Ratings Bento -->
+<div class="col-span-12 md:col-span-6 lg:col-span-8 glass-panel rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-sm text-title-sm text-on-surface">Analyst Consensus</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-label-caps text-[10px] text-on-surface-variant">72% BUY</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="font-label-caps text-[10px] text-on-surface-variant">18% HOLD</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="h-4 w-full bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary" style="width: 72%"></div>
+<div class="h-full bg-outline" style="width: 18%"></div>
+<div class="h-full bg-error" style="width: 10%"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+<div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant/10">
+<span class="block font-label-caps text-label-caps text-outline mb-1">UPSIDE POTENTIAL</span>
+<span class="font-data-mono text-title-sm text-secondary">+12.4%</span>
+<p class="mt-2 font-body-sm text-on-surface-variant leading-relaxed">Median target price of ₹3,310 based on 42 analysts in the last 3 months.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant/10">
+<span class="block font-label-caps text-label-caps text-outline mb-1">REVENUE GROWTH</span>
+<span class="font-data-mono text-title-sm text-on-surface">15.2% YoY</span>
+<p class="mt-2 font-body-sm text-on-surface-variant leading-relaxed">Driven by retail expansion and continued ARPU growth in O2C segments.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar (Fixed) -->
+<footer class="fixed bottom-0 w-full z-50 bg-surface-container/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-2xl h-18 px-4 pb-safe flex items-center justify-between gap-4">
+<div class="hidden md:flex items-center gap-6">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-outline">AVAIL. MARGIN</span>
+<span class="font-data-mono text-body-md text-on-surface">₹24,500.00</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-lg">info</span>
+<span class="font-body-sm text-on-surface-variant italic">Orders will be placed as Market by default.</span>
+</div>
+</div>
+<div class="flex flex-1 md:flex-none gap-3 max-w-md w-full md:w-auto">
+<button class="flex-1 md:w-40 py-3 bg-secondary text-on-secondary rounded-lg font-title-sm text-title-sm font-bold shadow-lg shadow-secondary/10 hover:brightness-110 active:scale-95 transition-all">BUY</button>
+<button class="flex-1 md:w-40 py-3 bg-error text-on-error-container rounded-lg font-title-sm text-title-sm font-bold shadow-lg shadow-error/10 hover:brightness-110 active:scale-95 transition-all">SELL</button>
+</div>
+<!-- Mobile Navigation Mini (Implicitly referenced in system instructions) -->
+<div class="md:hidden flex items-center justify-end">
+<button class="p-2 text-on-surface-variant">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</footer>
+<script>
+        // Micro-interaction for tabs
+        document.querySelectorAll('nav button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('nav button').forEach(b => {
+                    b.classList.remove('border-primary', 'text-primary');
+                    b.classList.add('border-transparent', 'text-on-surface-variant');
+                });
+                button.classList.add('border-primary', 'text-primary');
+                button.classList.remove('border-transparent', 'text-on-surface-variant');
+            });
+        });
+
+        // Simple ticker simulation
+        setInterval(() => {
+            const priceEl = document.querySelector('.font-display-lg');
+            const changeEl = document.querySelector('.ticker-up span:last-child');
+            let currentPrice = 2945.30;
+            const fluctuation = (Math.random() - 0.5) * 0.4;
+            currentPrice = (currentPrice + fluctuation).toFixed(2);
+            priceEl.innerText = currentPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }, 3000);
+    </script>
+</body></html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile Center - Obsidian Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#c4c6d0",
+                        "error-container": "#93000a",
+                        "outline-variant": "#44474f",
+                        "on-secondary-container": "#003e28",
+                        "secondary-fixed": "#6ffbbe",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary-fixed-variant": "#6c3832",
+                        "background": "#0c1323",
+                        "execution-buy": "#4EDEA3",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary": "#51221d",
+                        "secondary": "#4edea3",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary-fixed": "#ffdad5",
+                        "on-tertiary-container": "#7a433c",
+                        "execution-sell": "#FFB4AB",
+                        "status-pending": "#ADC6FF",
+                        "on-error-container": "#ffdad6",
+                        "tertiary": "#ffd9d4",
+                        "surface-container-lowest": "#070e1e",
+                        "surface-container-low": "#141b2c",
+                        "surface-container": "#191f30",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-container-highest": "#2e3446",
+                        "primary-container": "#adc6ff",
+                        "primary": "#d8e2ff",
+                        "surface-variant": "#2e3446",
+                        "secondary-container": "#00b47d",
+                        "outline": "#8e909a",
+                        "outline-technical": "#1E293B",
+                        "tertiary-container": "#feb3aa",
+                        "inverse-primary": "#455e90",
+                        "on-primary-fixed-variant": "#2c4677",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#d8e2ff",
+                        "tertiary-fixed-dim": "#ffb4ab",
+                        "surface-dim": "#0c1323",
+                        "on-secondary-fixed": "#002114",
+                        "on-secondary": "#003824",
+                        "on-tertiary-fixed": "#360e0a",
+                        "on-primary-container": "#385283",
+                        "inverse-on-surface": "#293041",
+                        "surface-bright": "#32394b",
+                        "on-background": "#dce2f9",
+                        "on-surface": "#dce2f9",
+                        "surface": "#0c1323",
+                        "inverse-surface": "#dce2f9",
+                        "surface-container-high": "#232a3b",
+                        "surface-glass": "rgba(18, 24, 38, 0.7)",
+                        "on-primary": "#122f5f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "container-margin": "16px",
+                        "cell-padding-y": "6px",
+                        "gutter": "12px",
+                        "cell-padding-x": "8px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 backdrop-blur-xl border-r border-outline-technical flex flex-col py-spacing-container-margin z-50 bg-surface-glass dark:bg-surface-glass">
+<div class="px-gutter mb-8">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">terminal</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tighter">Obsidian Terminal</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Institutional Grade</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span>Markets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">visibility</span>
+<span>Watchlist</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span>Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span>Funds</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-secondary bg-secondary-fixed-dim/10 border-r-2 border-secondary font-body-md text-body-md opacity-80" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="px-gutter mt-auto">
+<button class="w-full py-2 bg-primary-fixed-dim text-on-primary-fixed rounded font-body-md text-body-md font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> New Order
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-64 h-16 backdrop-blur-md border-b border-outline-technical shadow-sm z-40 bg-surface-glass/80 dark:bg-surface-glass/80 flex justify-between items-center px-gutter">
+<div class="flex-1 max-w-md relative focus-within:ring-1 focus-within:ring-primary rounded">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-technical rounded pl-10 pr-4 py-2 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors" placeholder="Search instruments, orders, or documentation..." type="text"/>
+</div>
+<nav class="flex items-center gap-6 mx-8">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all" href="#">Markets</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all" href="#">Liquidity</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all" href="#">Research</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="px-4 py-1.5 border border-outline-variant rounded font-body-sm text-body-sm text-primary hover:bg-primary/10 transition-colors">
+                    Connect Wallet
+                </button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-technical ml-2 cursor-pointer">
+<img alt="Executive Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an executive in a dark, high-end corporate setting, lit by cool blue ambient lighting, sharp focus, technical atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJBitHb_1zBkEw4IE3BrYSoCzmyB5_xa5jc5iWN1YeR_WMNNiUj3F8BitJbSGx9YOW6D41VFILp-3JBi6MVzgGAXFDoqRZQ8r7uUWPtEtBHUhNAVztPVwPCLEFz9IIkyMYt8wVI_hCYB-vrJ9-5GDdUpoTknns_CWRu14SLqZ4AueRyAivnF71kyQVTb1sdumWzEoVcVvafQkwbQYIbWI-OWsLg9yrOtFnUGKwu5emHWY7SrpRM3Q"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto pt-24 pb-8 px-8">
+<div class="max-w-6xl mx-auto space-y-6">
+<!-- Header -->
+<div class="flex items-end justify-between mb-8 border-b border-outline-technical pb-4">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-2">Profile Center</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your institutional account details and active segments.</p>
+</div>
+<div class="flex items-center gap-2 bg-secondary/10 px-3 py-1.5 rounded-full border border-secondary/20">
+<span class="w-2 h-2 rounded-full bg-execution-buy animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-execution-buy">KYC VERIFIED</span>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Personal & Bank Details -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- Personal Details Card -->
+<div class="bg-surface-glass backdrop-blur-md border border-outline-technical rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span>
+                                    Personal Identity
+                                </h3>
+<button class="text-primary hover:text-primary-fixed-dim transition-colors font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                                </button>
+</div>
+<div class="grid grid-cols-2 gap-y-6 gap-x-8">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">LEGAL NAME</p>
+<p class="font-body-md text-body-md text-on-surface">Alexander Vance</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">CLIENT ID</p>
+<p class="font-data-mono text-data-mono text-on-surface">OBS-993-281-A</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">EMAIL (PRIMARY)</p>
+<p class="font-body-md text-body-md text-on-surface">a.vance@obsidian-capital.io</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">PHONE</p>
+<p class="font-body-md text-body-md text-on-surface">+1 (555) 019-2834</p>
+</div>
+<div class="col-span-2">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">REGISTERED ADDRESS</p>
+<p class="font-body-md text-body-md text-on-surface">1500 Corporate Boulevard, Suite 3400, Chicago, IL 60601, United States</p>
+</div>
+</div>
+</div>
+<!-- Bank & Demat Accounts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Bank Account -->
+<div class="bg-surface-glass backdrop-blur-md border border-outline-technical rounded-xl p-6">
+<h3 class="font-title-sm text-title-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_balance</span>
+                                    Primary Bank
+                                </h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-surface-container-low p-4 rounded border border-outline-technical">
+<div class="w-10 h-10 rounded bg-white flex items-center justify-center p-1">
+<span class="font-headline-md text-headline-md text-black font-bold">CHASE</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-bold">JPMorgan Chase &amp; Co.</p>
+<p class="font-data-mono text-data-mono text-on-surface-variant text-xs">**** **** **** 8492</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-2">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">ROUTING</p>
+<p class="font-data-mono text-data-mono text-on-surface">111000614</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">STATUS</p>
+<p class="font-label-caps text-label-caps text-execution-buy">LINKED &amp; VERIFIED</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Demat Detail -->
+<div class="bg-surface-glass backdrop-blur-md border border-outline-technical rounded-xl p-6">
+<h3 class="font-title-sm text-title-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+                                    Demat Details
+                                </h3>
+<div class="space-y-4">
+<div class="grid grid-cols-1 gap-y-4">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">DEPOSITORY</p>
+<p class="font-body-md text-body-md text-on-surface">CDSL Institutional</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">DP ID</p>
+<p class="font-data-mono text-data-mono text-on-surface">12081900</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">BENEFICIARY ACCOUNT (BOID)</p>
+<p class="font-data-mono text-data-mono text-on-surface">12081900 84930211</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Active Segments & Quick Links -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Active Segments -->
+<div class="bg-surface-glass backdrop-blur-md border border-outline-technical rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">donut_small</span>
+                                    Active Segments
+                                </h3>
+</div>
+<div class="space-y-3">
+<!-- Segment Item -->
+<div class="flex items-center justify-between p-3 border border-outline-technical rounded bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim">candlestick_chart</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold">Cash Equity (NSE/BSE)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-execution-buy filled text-lg">check_circle</span>
+</div>
+<!-- Segment Item -->
+<div class="flex items-center justify-between p-3 border border-outline-technical rounded bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim">timeline</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold">Futures &amp; Options</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-execution-buy filled text-lg">check_circle</span>
+</div>
+<!-- Segment Item -->
+<div class="flex items-center justify-between p-3 border border-outline-technical rounded bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim">currency_exchange</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold">Currency Derivatives</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-execution-buy filled text-lg">check_circle</span>
+</div>
+<!-- Segment Item -->
+<div class="flex items-center justify-between p-3 border border-outline-technical rounded opacity-50 bg-transparent">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">diamond</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-semibold">Commodity Derivatives</p>
+</div>
+</div>
+<button class="font-label-caps text-label-caps text-primary hover:underline">ACTIVATE</button>
+</div>
+</div>
+</div>
+<!-- Quick Actions / Docs -->
+<div class="bg-surface-glass backdrop-blur-md border border-outline-technical rounded-xl p-6">
+<h3 class="font-title-sm text-title-sm text-on-surface mb-4">Account Administration</h3>
+<div class="flex flex-col gap-2">
+<button class="flex items-center justify-between p-3 hover:bg-surface-container-highest rounded transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">family_restroom</span>
+<span class="font-body-sm text-body-sm text-on-surface">Manage Nominees</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</button>
+<button class="flex items-center justify-between p-3 hover:bg-surface-container-highest rounded transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">description</span>
+<span class="font-body-sm text-body-sm text-on-surface">KYC Documents</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</button>
+<button class="flex items-center justify-between p-3 hover:bg-surface-container-highest rounded transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">gavel</span>
+<span class="font-body-sm text-body-sm text-on-surface">Power of Attorney (POA)</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

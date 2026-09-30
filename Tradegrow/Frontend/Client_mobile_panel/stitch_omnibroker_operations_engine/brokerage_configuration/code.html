@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Pricing Configuration Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#2e3132",
+                    "on-secondary-container": "#f9f7ff",
+                    "surface": "#f8f9fa",
+                    "surface-container-high": "#e7e8e9",
+                    "primary-fixed": "#d6e3ff",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "secondary-container": "#0266ff",
+                    "on-tertiary-fixed": "#001e2d",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#75777e",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-variant": "#e1e3e4",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "outline-variant": "#c5c6cd",
+                    "on-primary-fixed-variant": "#39475f",
+                    "secondary": "#0050cc",
+                    "tertiary-fixed": "#c8e7fd",
+                    "on-secondary-fixed": "#001849",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary": "#000000",
+                    "secondary-fixed": "#dae1ff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container": "#edeeef",
+                    "primary-container": "#0d1c32",
+                    "on-surface": "#191c1d",
+                    "primary": "#000000",
+                    "on-background": "#191c1d",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#44474d",
+                    "surface-tint": "#515f78",
+                    "inverse-primary": "#b9c7e4",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "background": "#f8f9fa",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-container": "#6a889b",
+                    "tertiary-container": "#001e2d",
+                    "on-primary-container": "#76849f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sidebar-collapsed": "64px",
+                    "gutter": "16px",
+                    "sidebar-width": "260px",
+                    "unit": "4px",
+                    "container-margin": "24px",
+                    "table-cell-padding": "8px 12px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "data-mono": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9FAFB; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container flex flex-col py-4 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container leading-none">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 font-label-md text-[10px] uppercase tracking-widest mt-1">Enterprise Suite</p>
+</div>
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span>Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span>RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span>Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Back Office</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 font-label-md text-label-md hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span>Compliance</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-3 border-t border-on-primary-container/10 pt-4">
+<button class="w-full flex items-center justify-center gap-2 bg-secondary text-on-secondary py-2 rounded mb-4 font-label-md text-label-md hover:bg-secondary/90 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                New Request
+            </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 text-on-primary-container/50 hover:text-on-primary-container p-2 text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+<span>Recently Visited</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface-container-lowest border-b border-outline-variant h-16 flex justify-between items-center px-gutter ml-[260px] shadow-sm">
+<div class="flex items-center gap-8">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px]" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded text-body-sm w-64 focus:ring-1 focus:ring-secondary transition-all" placeholder="Global search configurations..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md transition-all" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-secondary px-3 py-1 border border-secondary rounded font-label-md text-label-md hover:bg-secondary/5 transition-all">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                System Pulse
+            </button>
+<div class="flex items-center gap-2 text-on-surface-variant border-l border-outline-variant pl-4 ml-2">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 bg-surface-dim border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Corporate headshot of a professional operations manager in a clean, high-key office environment, reflecting a sense of institutional trust and systematic precision, cinematic lighting, modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWC8jdO7r2CKqMT7aUy4gATwkbdbP73kValu7g2D5oQQxBueinmlDdvowz910p5Aq7eN9x4Km_opeMoMDl0ibSrctgvLDEh_uqcdTp7_KohumTJavo5jqtlu3UVZ9puY5Zfd-vPliXmRHWOofvfm2GTjzL5uUE-leRwIXImsJ5IuVw-eHXCf7g-ao4jyGVCsOBCokbS7v395JwzABu-b45-A6Czd1b9qLg2-soQ2XCGuzruMGWFzBr"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[260px] pt-16 min-h-screen">
+<div class="p-gutter max-w-[1600px] mx-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<nav class="flex gap-2 text-body-sm text-outline mb-1">
+<span>System Config</span>
+<span>/</span>
+<span class="text-on-surface">Brokerage Engine</span>
+</nav>
+<h2 class="font-headline-xl text-headline-xl text-primary">Brokerage Configuration</h2>
+<p class="text-on-surface-variant text-body-md">Manage multi-tier pricing plans and statutory charge structures.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 bg-surface-container-high border border-outline-variant rounded font-label-md text-label-md hover:bg-surface-container-highest transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="save">save</span>
+                        Save Draft
+                    </button>
+<button class="px-6 py-2 bg-secondary text-on-secondary rounded font-label-md text-label-md shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="publish">publish</span>
+                        Publish Changes
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Configuration Form -->
+<div class="col-span-12 lg:col-span-9 space-y-gutter">
+<!-- Pricing Plan Selector -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="payments">payments</span>
+                                Active Pricing Plans
+                            </h3>
+<div class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant">
+<button class="px-4 py-1.5 bg-surface-container-lowest shadow-sm rounded text-label-md text-secondary font-semibold">Basic</button>
+<button class="px-4 py-1.5 rounded text-label-md text-on-surface-variant hover:text-on-surface">Standard</button>
+<button class="px-4 py-1.5 rounded text-label-md text-on-surface-variant hover:text-on-surface">Premium</button>
+<button class="px-4 py-1.5 rounded text-label-md text-on-surface-variant hover:text-on-surface flex items-center gap-1">
+                                    VIP
+                                    <span class="material-symbols-outlined text-[14px]" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-outline-variant pt-6">
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Effective Date</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline" data-icon="calendar_today">calendar_today</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-outline-variant rounded font-data-mono text-body-md focus:ring-secondary focus:border-secondary transition-all" type="date" value="2023-10-01"/>
+</div>
+<p class="text-[10px] text-on-surface-variant">Changes will propagate across all linked accounts on this date.</p>
+</div>
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Plan Status</label>
+<div class="flex items-center gap-4 h-[42px]">
+<span class="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-label-md">
+<span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                        Production
+                                    </span>
+<button class="text-secondary font-label-md text-label-md hover:underline">Schedule Phase-out</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Grid: Equity & F&O -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="px-6 py-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md">Brokerage Structure</h3>
+<div class="flex gap-2">
+<button class="p-1.5 rounded hover:bg-surface-container-high transition-all text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="file_download">file_download</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container-high transition-all text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<tr>
+<th class="px-6 py-4 border-b border-outline-variant">Asset Class</th>
+<th class="px-6 py-4 border-b border-outline-variant">Charge Type</th>
+<th class="px-6 py-4 border-b border-outline-variant">Brokerage (%)</th>
+<th class="px-6 py-4 border-b border-outline-variant">Cap (₹)</th>
+<th class="px-6 py-4 border-b border-outline-variant text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant font-data-mono text-body-md">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4 font-bold text-on-surface">Equity Delivery</td>
+<td class="px-6 py-4">Flat/Percentage</td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0 text-on-surface-variant italic" type="text" value="0.00"/></td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0 text-emerald-600 font-bold" type="text" value="Free"/></td>
+<td class="px-6 py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 text-secondary material-symbols-outlined transition-all" data-icon="edit">edit</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group maker-checker-verified">
+<td class="px-6 py-4 font-bold text-on-surface">Equity Intraday</td>
+<td class="px-6 py-4">Lower of Flat/%</td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="0.03"/></td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="20.00"/></td>
+<td class="px-6 py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 text-secondary material-symbols-outlined transition-all" data-icon="edit">edit</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group maker-checker-pending">
+<td class="px-6 py-4 font-bold text-on-surface">F&amp;O Futures</td>
+<td class="px-6 py-4">Flat Per Order</td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="0.00"/></td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="20.00"/></td>
+<td class="px-6 py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 text-secondary material-symbols-outlined transition-all" data-icon="edit">edit</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4 font-bold text-on-surface">F&amp;O Options</td>
+<td class="px-6 py-4">Flat Per Executed Order</td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="0.00"/></td>
+<td class="px-6 py-4"><input class="w-20 bg-transparent border-none p-0 focus:ring-0" type="text" value="20.00"/></td>
+<td class="px-6 py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 text-secondary material-symbols-outlined transition-all" data-icon="edit">edit</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Statutory & Other Charges -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-md text-headline-md mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="account_balance_wallet">account_balance_wallet</span>
+                                Statutory Dues
+                            </h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-surface-container-high">
+<span class="text-body-md text-on-surface-variant">STT (Delivery)</span>
+<span class="font-data-mono font-bold text-secondary">0.1%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container-high">
+<span class="text-body-md text-on-surface-variant">STT (Intraday)</span>
+<span class="font-data-mono font-bold text-secondary">0.025%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container-high">
+<span class="text-body-md text-on-surface-variant">GST on Brokerage</span>
+<span class="font-data-mono font-bold text-secondary">18%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-container-high">
+<span class="text-body-md text-on-surface-variant">Stamp Duty</span>
+<span class="font-data-mono font-bold text-secondary">As per State</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-md text-headline-md mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="recurring_updates">cloud_download</span>
+                                Account Maintenance (AMC)
+                            </h3>
+<div class="space-y-4">
+<div class="p-3 bg-surface-container-low rounded border border-dashed border-outline-variant">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-on-surface-variant font-bold uppercase">Basic Individual</span>
+<span class="text-on-surface-variant font-data-mono">₹ 300 / Year</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Charged quarterly. First year free for new accounts.</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded border border-dashed border-outline-variant opacity-60">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-on-surface-variant font-bold uppercase">Corporate / HNI</span>
+<span class="text-on-surface-variant font-data-mono">₹ 1,000 / Year</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Standardized rate for institutional trading desks.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Panel: Version History & Notifications -->
+<aside class="col-span-12 lg:col-span-3 space-y-gutter">
+<!-- Version History -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm flex flex-col h-full max-h-[800px]">
+<div class="px-6 py-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Version History</h3>
+<span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container rounded text-[10px] font-bold">v4.2.0</span>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+<!-- History Item -->
+<div class="relative pl-6 border-l-2 border-outline-variant">
+<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white"></div>
+<div class="mb-1 flex justify-between">
+<span class="font-label-md text-label-md text-on-surface">Current Active</span>
+<span class="text-[10px] text-on-surface-variant font-data-mono">Oct 01, 2023</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Updated Options Flat Fee to ₹20 for VIP accounts.</p>
+<div class="mt-2 text-[10px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="person">person</span>
+                                    By: admin_rajan
+                                </div>
+</div>
+<!-- History Item -->
+<div class="relative pl-6 border-l-2 border-outline-variant">
+<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-surface-dim border-2 border-white"></div>
+<div class="mb-1 flex justify-between">
+<span class="font-label-md text-label-md text-on-surface">Version 4.1.2</span>
+<span class="text-[10px] text-on-surface-variant font-data-mono">Aug 15, 2023</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Emergency adjustment for SEBI turnover charge revisions.</p>
+<div class="mt-2 text-[10px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="person">person</span>
+                                    By: compliance_team
+                                </div>
+</div>
+<!-- History Item -->
+<div class="relative pl-6 border-l-2 border-outline-variant">
+<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-surface-dim border-2 border-white"></div>
+<div class="mb-1 flex justify-between">
+<span class="font-label-md text-label-md text-on-surface">Version 4.0.0</span>
+<span class="text-[10px] text-on-surface-variant font-data-mono">Apr 01, 2023</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Major redesign of tiered pricing engine and AMC logic.</p>
+<div class="mt-2 text-[10px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="person">person</span>
+                                    By: admin_rajan
+                                </div>
+</div>
+<button class="w-full py-2 text-label-md text-secondary font-bold hover:bg-secondary/5 transition-colors border border-secondary/20 rounded">
+                                View Full Audit Log
+                            </button>
+</div>
+</div>
+<!-- Market Status Component -->
+<div class="bg-primary-container p-6 rounded-xl shadow-md text-on-primary-container relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-label-md text-label-md uppercase mb-4 opacity-70">Exchange Pulse</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-body-sm">NSE Connection</span>
+<span class="flex items-center gap-1 text-[11px] text-emerald-400">
+<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Active
+                                    </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm">BSE Connection</span>
+<span class="flex items-center gap-1 text-[11px] text-emerald-400">
+<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Active
+                                    </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm">MCX Connection</span>
+<span class="flex items-center gap-1 text-[11px] text-error">
+<span class="w-1.5 h-1.5 bg-error rounded-full"></span> Disconnected
+                                    </span>
+</div>
+</div>
+</div>
+<div class="absolute right-[-10px] bottom-[-20px] opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="query_stats">query_stats</span>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-transform duration-150 group">
+<span class="material-symbols-outlined text-[28px]" data-icon="support_agent">support_agent</span>
+<div class="absolute right-16 px-4 py-2 bg-inverse-surface text-on-background text-label-md rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                Compliance Helpdesk
+            </div>
+</button>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                // Clear active states
+                document.querySelectorAll('tr').forEach(r => r.classList.remove('bg-secondary-container/10'));
+                // Set active
+                row.classList.add('bg-secondary-container/10');
+            });
+        });
+
+        // Simple tab switching simulation
+        const planButtons = document.querySelectorAll('.bg-surface-container-low button');
+        planButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                planButtons.forEach(b => {
+                    b.classList.remove('bg-surface-container-lowest', 'shadow-sm', 'text-secondary', 'font-semibold');
+                    b.classList.add('text-on-surface-variant');
+                });
+                btn.classList.add('bg-surface-container-lowest', 'shadow-sm', 'text-secondary', 'font-semibold');
+                btn.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

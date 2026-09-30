@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Confirmation | Obsidian Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "surface-tint": "#adc6ff",
+                        "surface-dim": "#0c1323",
+                        "surface": "#0c1323",
+                        "on-surface": "#dce2f9",
+                        "surface-variant": "#2e3446",
+                        "on-secondary-container": "#00311f",
+                        "surface-container-low": "#141b2c",
+                        "secondary": "#4edea3",
+                        "secondary-container": "#00a572",
+                        "inverse-on-surface": "#293041",
+                        "inverse-surface": "#dce2f9",
+                        "on-tertiary-fixed-variant": "#930013",
+                        "inverse-primary": "#005ac2",
+                        "surface-container-lowest": "#070e1e",
+                        "on-error": "#690005",
+                        "tertiary-container": "#ff5451",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-bright": "#32394b",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container": "#191f30",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#002e6a",
+                        "surface-container-high": "#232a3b",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#003824",
+                        "on-secondary-fixed": "#002113",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed": "#410004",
+                        "primary": "#adc6ff",
+                        "on-primary-fixed": "#001a42",
+                        "primary-container": "#4d8eff",
+                        "surface-container-highest": "#2e3446",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "outline": "#8c909f",
+                        "on-tertiary": "#68000a",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary": "#ffb3ad",
+                        "on-primary-container": "#00285d",
+                        "error": "#ffb4ab",
+                        "background": "#0c1323",
+                        "error-container": "#93000a",
+                        "outline-variant": "#424754",
+                        "primary-fixed": "#d8e2ff",
+                        "on-background": "#dce2f9",
+                        "on-tertiary-container": "#5c0008"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-margin": "16px",
+                        "cell-padding-x": "8px",
+                        "gutter": "12px",
+                        "cell-padding-y": "6px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+        .pulse-emerald {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .bottom-sheet-transition {
+            transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary selection:text-on-primary overflow-hidden">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant shadow-sm flex items-center justify-between px-gutter h-16">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<h1 class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Obsidian Terminal</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-secondary">Connected</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">ms: 12ms</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-variant p-2 rounded-full transition-colors">account_circle</span>
+</div>
+</header>
+<!-- Main Content Canvas (The "Order Ticket" Context) -->
+<main class="pt-20 pb-16 px-gutter h-screen grid grid-cols-12 gap-gutter">
+<!-- Left Column: Chart Area (Visual Context) -->
+<div class="col-span-12 md:col-span-8 h-full flex flex-col gap-gutter">
+<div class="flex-1 bg-surface-container rounded-lg border border-outline-variant overflow-hidden relative">
+<div class="absolute top-4 left-4 z-10 flex gap-4">
+<div class="px-3 py-1.5 bg-surface/80 backdrop-blur rounded border border-outline-variant flex items-center gap-2">
+<span class="font-title-sm text-title-sm">RELIANCE</span>
+<span class="text-secondary font-data-mono">2,842.45</span>
+<span class="text-secondary text-body-sm font-data-mono">+1.24%</span>
+</div>
+</div>
+<div class="w-full h-full flex items-center justify-center bg-surface-dim opacity-50">
+<div class="w-full h-full bg-cover bg-center" data-alt="A professional trading terminal candlestick chart interface for Reliance stock in dark mode. The chart shows high-density financial data with glowing emerald green and rose red candlesticks against a deep charcoal background. Subtle grid lines and technical indicators are visible, creating an institutional-grade atmosphere with precise lighting and sharp UI elements." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwnm5L9cX9vlEqFpMunHS5trYK3TrYeP3B4mkIFb-gjoP411P43WmFh9lob9JUC7NFshym3e6I05dZgtQHvsIQyt5jkaJl6bsI2hK_YLtibcopxY5tmDNUk3LxzHDPTvPuZ4OHDK-n5kx0z2_ARLKileuuIRdp-y0fRj8e0pw9jHyD85zTWEY4swJuqlW_w60pKpaPi-PkoiU_HPOnPRpFlDuDZs5REkGuEr0IspzyXx7qRDWE4NM')"></div>
+</div>
+</div>
+<!-- Trade History Mini Panel -->
+<div class="h-48 bg-surface-container rounded-lg border border-outline-variant p-gutter overflow-hidden">
+<div class="flex justify-between mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Order History</span>
+<span class="material-symbols-outlined text-body-sm text-on-surface-variant">more_horiz</span>
+</div>
+<table class="w-full text-left">
+<thead class="border-b border-outline-variant">
+<tr>
+<th class="font-label-caps text-label-caps py-2 text-on-surface-variant">Time</th>
+<th class="font-label-caps text-label-caps py-2 text-on-surface-variant">Instrument</th>
+<th class="font-label-caps text-label-caps py-2 text-on-surface-variant">Side</th>
+<th class="font-label-caps text-label-caps py-2 text-on-surface-variant">Qty</th>
+<th class="font-label-caps text-label-caps py-2 text-on-surface-variant">Status</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono">
+<tr class="border-b border-outline-variant/30">
+<td class="py-2 text-on-surface-variant">14:22:10</td>
+<td class="py-2">RELIANCE</td>
+<td class="py-2 text-secondary">BUY</td>
+<td class="py-2">100</td>
+<td class="py-2"><span class="px-1.5 py-0.5 bg-secondary-container/20 text-secondary rounded text-[10px]">FILLED</span></td>
+</tr>
+<tr>
+<td class="py-2 text-on-surface-variant">14:15:04</td>
+<td class="py-2">TCS</td>
+<td class="py-2 text-error">SELL</td>
+<td class="py-2">25</td>
+<td class="py-2"><span class="px-1.5 py-0.5 bg-secondary-container/20 text-secondary rounded text-[10px]">FILLED</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Column: Order Ticket Panel -->
+<div class="col-span-12 md:col-span-4 flex flex-col gap-gutter">
+<div class="bg-surface-container rounded-lg border border-outline-variant p-6 flex flex-col gap-6">
+<h2 class="font-title-sm text-title-sm text-primary">New Order</h2>
+<div class="flex gap-2">
+<button class="flex-1 py-2 bg-secondary text-on-secondary font-label-caps text-label-caps rounded-lg">BUY</button>
+<button class="flex-1 py-2 bg-surface-variant text-on-surface-variant font-label-caps text-label-caps rounded-lg">SELL</button>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Instrument</label>
+<div class="h-10 bg-surface-dim border border-outline-variant px-3 flex items-center justify-between rounded">
+<span class="font-body-md text-body-md">RELIANCE</span>
+<span class="material-symbols-outlined text-body-sm">search</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Quantity</label>
+<input class="h-10 bg-surface-dim border border-outline-variant px-3 font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-0 rounded" type="text" value="50"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Order Type</label>
+<div class="h-10 bg-surface-dim border border-outline-variant px-3 flex items-center justify-between rounded">
+<span class="font-body-md text-body-md">Market</span>
+<span class="material-symbols-outlined text-body-sm">expand_more</span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant">
+<button class="w-full py-4 bg-primary text-on-primary font-headline-md text-headline-md rounded-lg shadow-lg active:scale-95 transition-transform">
+                        Review Order
+                    </button>
+</div>
+</div>
+<!-- Portfolio Summary -->
+<div class="bg-surface-container-high rounded-lg p-6 border border-outline-variant">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">Available Margin</span>
+<span class="font-display-lg text-display-lg font-bold text-on-surface">$12,450.00</span>
+<div class="mt-4 flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span class="font-label-caps text-label-caps">Instant Execution Enabled</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[60] bg-surface-container-lowest/80 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-gutter transition-opacity duration-300" id="modalOverlay">
+<!-- Order Confirmation Bottom Sheet / Modal -->
+<div class="w-full max-w-lg bg-surface-container-highest rounded-t-xl md:rounded-xl border border-outline-variant shadow-2xl overflow-hidden bottom-sheet-transition translate-y-0" id="confirmationSheet">
+<!-- Modal Header -->
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright/50">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary pulse-emerald"></div>
+<h3 class="font-title-sm text-title-sm text-on-surface">Order Confirmation</h3>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors" onclick="closeModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Content -->
+<div class="p-6 space-y-6">
+<!-- Summary Grid -->
+<div class="grid grid-cols-2 gap-y-4 gap-x-8 bg-surface-dim/50 p-4 rounded-lg border border-outline-variant/50">
+<div class="space-y-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Instrument</span>
+<div class="font-headline-md text-headline-md text-on-surface">RELIANCE</div>
+</div>
+<div class="space-y-1 text-right">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Order Side</span>
+<div class="font-headline-md text-headline-md text-secondary">BUY</div>
+</div>
+<div class="space-y-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Quantity</span>
+<div class="font-data-mono text-data-mono text-on-surface">50 Shares</div>
+</div>
+<div class="space-y-1 text-right">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Price</span>
+<div class="font-body-md text-body-md text-on-surface">Market</div>
+</div>
+</div>
+<!-- Financial Details -->
+<div class="space-y-2">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Estimated Value</span>
+<span class="font-data-mono text-on-surface">$142,122.50</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Estimated Charges</span>
+<span class="font-data-mono text-tertiary">$12.50</span>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface">Total Margin Required</span>
+<span class="font-title-sm text-title-sm text-primary">$142,135.00</span>
+</div>
+</div>
+<!-- Risk Warning Panel -->
+<div class="p-4 bg-tertiary-container/10 border border-tertiary/20 rounded-lg flex gap-4">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="space-y-1">
+<h4 class="font-label-caps text-label-caps text-tertiary">Risk Warning</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                            Market orders are subject to price volatility. Your final execution price may differ from the quoted price. Trading involves significant risk to capital.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="p-6 bg-surface-dim/80 backdrop-blur-sm border-t border-outline-variant flex flex-col gap-3">
+<button class="w-full py-4 bg-secondary text-on-secondary font-headline-md text-headline-md rounded-lg shadow-xl shadow-secondary/10 hover:brightness-110 active:scale-[0.98] transition-all" onclick="confirmOrder()">
+                    Confirm Order
+                </button>
+<button class="w-full py-3 text-on-surface-variant font-label-caps text-label-caps hover:text-on-surface transition-colors" onclick="closeModal()">
+                    Cancel Action
+                </button>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar (Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant z-50">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary font-bold active:scale-95 duration-100">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</div>
+</nav>
+<script>
+        function closeModal() {
+            const modal = document.getElementById('modalOverlay');
+            const sheet = document.getElementById('confirmationSheet');
+            
+            sheet.classList.add('translate-y-full');
+            modal.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function confirmOrder() {
+            const btn = document.querySelector('button[onclick="confirmOrder()"]');
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Executing...';
+            btn.disabled = true;
+            btn.classList.add('opacity-80');
+            
+            setTimeout(() => {
+                alert('Order Executed Successfully');
+                closeModal();
+                btn.innerHTML = 'Confirm Order';
+                btn.disabled = false;
+                btn.classList.remove('opacity-80');
+            }, 1500);
+        }
+
+        // Handle ESC key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body></html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Client 360 - Arjun Mehta</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b9c7e4",
+                        "surface-tint": "#515f78",
+                        "outline-variant": "#c5c6cd",
+                        "secondary": "#0050cc",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#c8e7fd",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "on-primary-fixed": "#0d1c32",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e7e8e9",
+                        "outline": "#75777e",
+                        "on-background": "#191c1d",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "primary": "#000000",
+                        "on-tertiary-container": "#6a889b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#f9f7ff",
+                        "background": "#f8f9fa",
+                        "secondary-fixed": "#dae1ff",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e1e3e4",
+                        "tertiary-container": "#001e2d",
+                        "on-surface": "#191c1d",
+                        "on-tertiary-fixed": "#001e2d",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "surface-bright": "#f8f9fa",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "surface": "#f8f9fa",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "on-secondary-fixed": "#001849",
+                        "tertiary": "#000000",
+                        "on-surface-variant": "#44474d",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#d6e3ff",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#76849f",
+                        "inverse-surface": "#2e3132",
+                        "secondary-container": "#0266ff",
+                        "on-primary-fixed-variant": "#39475f",
+                        "primary-container": "#0d1c32",
+                        "surface-container-low": "#f3f4f5",
+                        "inverse-primary": "#b9c7e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "container-margin": "24px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "gutter": "16px",
+                        "table-cell-padding": "8px 12px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container text-on-primary-container shadow-md flex flex-col py-4 z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 font-label-md text-[10px] uppercase tracking-widest">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Active Tab CRM -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 px-6 transition-transform duration-150 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-label-md text-label-md">Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-md text-label-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-md text-label-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Back Office</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md text-label-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">System Config</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-4">
+<button class="w-full bg-secondary-container text-on-secondary-container py-2 rounded-lg font-label-md flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Request
+            </button>
+<div class="border-t border-on-primary-container/10 pt-4">
+<div class="flex justify-around text-on-primary-container/50">
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container">star</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container">history</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-6 z-40 shadow-sm">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">BrokerOps</span>
+<div class="relative w-64">
+<input class="w-full bg-surface-container-low border-none rounded-full px-4 py-1.5 text-body-sm focus:ring-1 focus:ring-secondary" placeholder="Search Client ID or PAN..." type="text"/>
+</div>
+<nav class="flex gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-label-md font-semibold">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                System Pulse
+            </div>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-low p-2 rounded-full transition-all">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-low p-2 rounded-full transition-all">apps</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of an operations manager in their 40s, wearing business casual attire, against a clean studio background with soft directional lighting. The aesthetic is sharp, corporate, and highly trustworthy, matching a modern fintech dashboard's clean lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJMMz7AXIpwoCtzBzJb_btyzIXYPxIWEmnQk9BycDuFCGq2AViQvGwNTBQHYGjn1UOOPPLFYz47atx-MSxBCNDxP0TbRZMXCvbq51pcSdu-Kv2YyNs-TP6UL2bdK5dvjNuqV-yMXtMMwKEqMYKL6wlIFVD3P5fKMJc2Q32t052E4W8XVrpjZZn38Q2iHB-ikhzQEhYI5to0IY4tiqAIMq_qvvisx_hwEbMxwzc9Dh75xkWpvAY8kTf"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="ml-[260px] pt-16 min-h-screen">
+<!-- Client Profile Header Area -->
+<div class="bg-surface-container-lowest px-6 py-4 border-b border-outline-variant">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-headline-lg shadow-inner">AM</div>
+<div>
+<div class="flex items-center gap-3">
+<h2 class="font-headline-xl text-headline-xl text-primary">Arjun Mehta</h2>
+<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded uppercase tracking-wider">Medium Risk</span>
+<span class="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded uppercase tracking-wider">Active</span>
+</div>
+<div class="flex items-center gap-4 mt-1 text-on-surface-variant font-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">fingerprint</span> ID: #CLI-29384-90</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">cake</span> DOB: 14/05/1988</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Mumbai, MH</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-primary text-on-primary font-label-md rounded flex items-center gap-2 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+                        Modify Profile
+                    </button>
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container-low">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Tab Navigation -->
+<div class="flex gap-8 mt-6 border-b border-outline-variant">
+<button class="pb-3 text-secondary font-semibold border-b-2 border-secondary font-body-md transition-all">Overview</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">KYC</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Bank</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Demat</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Trading Accounts</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Orders</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Positions</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Funds</button>
+<button class="pb-3 text-on-surface-variant hover:text-on-surface font-body-md transition-all">Audit History</button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="p-6 grid grid-cols-12 gap-6">
+<!-- Left Sidebar: Personal & Security -->
+<div class="col-span-3 space-y-6">
+<!-- Personal Info Card -->
+<section class="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-outline-variant maker-checker-verified">
+<h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-widest mb-4">Personal Details</h3>
+<div class="space-y-4">
+<div>
+<p class="text-body-sm text-on-surface-variant">PAN Number</p>
+<p class="font-data-mono font-bold">ABCDE1234F</p>
+</div>
+<div>
+<p class="text-body-sm text-on-surface-variant">Registered Email</p>
+<p class="font-body-md font-medium">arjun.mehta@example.com</p>
+</div>
+<div>
+<p class="text-body-sm text-on-surface-variant">Mobile Number</p>
+<p class="font-body-md font-medium">+91 98765 43210</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/30">
+<p class="text-body-sm text-on-surface-variant">Last Successful Login</p>
+<p class="font-body-md">Oct 24, 2023 | 09:42 AM</p>
+<p class="text-[10px] text-on-surface-variant font-data-mono mt-1">IP: 192.168.1.1 (Chrome/MacOS)</p>
+</div>
+</div>
+</section>
+<!-- Protected Controls Card -->
+<section class="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-outline-variant">
+<h3 class="text-label-md font-bold text-error uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">gpp_maybe</span>
+                        Admin Controls
+                    </h3>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-between px-4 py-3 bg-error-container text-on-error-container rounded font-label-md hover:bg-error transition-all hover:text-white group">
+<span>Suspend Account</span>
+<span class="material-symbols-outlined text-[18px] opacity-50 group-hover:opacity-100">lock_open</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-3 border border-error text-error rounded font-label-md hover:bg-error/5 transition-all">
+<span>Freeze Funds</span>
+<span class="material-symbols-outlined text-[18px]">ac_unit</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-3 border border-outline text-on-surface-variant rounded font-label-md hover:bg-surface-container-low transition-all">
+<span>Reset 2FA/Password</span>
+<span class="material-symbols-outlined text-[18px]">key</span>
+</button>
+</div>
+</section>
+</div>
+<!-- Center Content: Stats & Segments -->
+<div class="col-span-9 space-y-6">
+<!-- KPI Dashboard Row -->
+<div class="grid grid-cols-4 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-body-sm text-on-surface-variant">Net Equity Portfolio</p>
+<p class="text-headline-md font-bold text-primary mt-1">₹42,84,000</p>
+<div class="flex items-center gap-1 mt-2 text-green-600 text-label-md font-bold">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                            +12.4%
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-body-sm text-on-surface-variant">Available Margin</p>
+<p class="text-headline-md font-bold text-primary mt-1">₹8,12,450</p>
+<div class="flex items-center gap-1 mt-2 text-on-surface-variant text-label-md">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                            Utilized: 18%
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-body-sm text-on-surface-variant">Open Positions</p>
+<p class="text-headline-md font-bold text-primary mt-1">14</p>
+<div class="flex items-center gap-1 mt-2 text-secondary text-label-md font-bold">
+                            MTM: +₹12,400
+                        </div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-body-sm text-on-surface-variant">MTD Volume</p>
+<p class="text-headline-md font-bold text-primary mt-1">₹1.24 Cr</p>
+<div class="flex items-center gap-1 mt-2 text-on-surface-variant text-label-md">
+                            Avg: ₹4.5L / Day
+                        </div>
+</div>
+</div>
+<!-- Segment Control Bento Card -->
+<div class="grid grid-cols-2 gap-6">
+<section class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm maker-checker-pending">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-headline-md font-bold text-primary">Trading Segments</h3>
+<span class="px-2 py-0.5 border border-yellow-500 text-yellow-600 text-[10px] font-bold rounded uppercase">Changes Pending</span>
+</div>
+<div class="space-y-4">
+<!-- Toggle Item -->
+<div class="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div>
+<p class="font-body-md font-bold">Equity Cash / Intraday</p>
+<p class="text-body-sm text-on-surface-variant">NSE, BSE</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<!-- Toggle Item -->
+<div class="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div>
+<p class="font-body-md font-bold">Equity Derivatives (F&amp;O)</p>
+<p class="text-body-sm text-on-surface-variant">NIFTY, BANKNIFTY, Stock F&amp;O</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<!-- Toggle Item -->
+<div class="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 opacity-60">
+<div>
+<p class="font-body-md font-bold">Currency Derivatives</p>
+<p class="text-body-sm text-on-surface-variant">USDINR, EURINR, JPYINR</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<!-- Toggle Item -->
+<div class="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 opacity-60">
+<div>
+<p class="font-body-md font-bold">Commodities (MCX)</p>
+<p class="text-body-sm text-on-surface-variant">Gold, Crude, Silver</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/30">
+<button class="text-secondary font-label-md flex items-center gap-2 hover:underline">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                                View Segment Activation History
+                            </button>
+</div>
+</section>
+<!-- Documents & Verification -->
+<section class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="text-headline-md font-bold text-primary mb-6">KYC Documents</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container border border-outline-variant rounded-lg relative overflow-hidden group">
+<span class="material-symbols-outlined absolute -right-2 -bottom-2 text-[64px] text-on-surface/5">badge</span>
+<p class="text-label-md font-bold uppercase text-on-surface-variant">Identity Proof</p>
+<p class="text-body-md font-medium mt-1">Aadhar Card</p>
+<div class="mt-4 flex items-center gap-2">
+<button class="p-1.5 bg-white text-secondary rounded shadow-sm hover:bg-secondary hover:text-white transition-all"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 bg-white text-on-surface-variant rounded shadow-sm hover:bg-surface-container-highest transition-all"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<span class="ml-auto text-green-600 flex items-center"><span class="material-symbols-outlined text-[18px]">verified</span></span>
+</div>
+</div>
+<div class="p-4 bg-surface-container border border-outline-variant rounded-lg relative overflow-hidden group">
+<span class="material-symbols-outlined absolute -right-2 -bottom-2 text-[64px] text-on-surface/5">home_pin</span>
+<p class="text-label-md font-bold uppercase text-on-surface-variant">Address Proof</p>
+<p class="text-body-md font-medium mt-1">Utility Bill</p>
+<div class="mt-4 flex items-center gap-2">
+<button class="p-1.5 bg-white text-secondary rounded shadow-sm hover:bg-secondary hover:text-white transition-all"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 bg-white text-on-surface-variant rounded shadow-sm hover:bg-surface-container-highest transition-all"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<span class="ml-auto text-green-600 flex items-center"><span class="material-symbols-outlined text-[18px]">verified</span></span>
+</div>
+</div>
+<div class="p-4 bg-surface-container border border-outline-variant rounded-lg relative overflow-hidden group">
+<span class="material-symbols-outlined absolute -right-2 -bottom-2 text-[64px] text-on-surface/5">signature</span>
+<p class="text-label-md font-bold uppercase text-on-surface-variant">Specimen</p>
+<p class="text-body-md font-medium mt-1">Digital Signature</p>
+<div class="mt-4 flex items-center gap-2">
+<button class="p-1.5 bg-white text-secondary rounded shadow-sm hover:bg-secondary hover:text-white transition-all"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 bg-white text-on-surface-variant rounded shadow-sm hover:bg-surface-container-highest transition-all"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<span class="ml-auto text-green-600 flex items-center"><span class="material-symbols-outlined text-[18px]">verified</span></span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low border border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center text-center opacity-60">
+<span class="material-symbols-outlined text-secondary text-[32px]">upload_file</span>
+<p class="text-body-sm font-bold mt-1 text-on-surface-variant">Add New Doc</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Recent Activity Table -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="text-headline-md font-bold text-primary">Recent Orders &amp; Transactions</h3>
+<button class="text-secondary font-label-md flex items-center gap-1">
+                            View All History <span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px]">Timestamp</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px]">Symbol</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px]">Type</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] text-right">Qty</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] text-right">Price</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px]">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-3 font-data-mono text-body-sm">24 Oct 14:12:05</td>
+<td class="px-6 py-3 font-bold">RELIANCE</td>
+<td class="px-6 py-3 text-blue-600 font-bold">BUY / CNC</td>
+<td class="px-6 py-3 font-data-mono text-right">45</td>
+<td class="px-6 py-3 font-data-mono text-right">₹2,450.00</td>
+<td class="px-6 py-3">
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded">Executed</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-3 font-data-mono text-body-sm">24 Oct 11:30:12</td>
+<td class="px-6 py-3 font-bold">NIFTY 19800 CE</td>
+<td class="px-6 py-3 text-red-600 font-bold">SELL / MIS</td>
+<td class="px-6 py-3 font-data-mono text-right">1500</td>
+<td class="px-6 py-3 font-data-mono text-right">₹84.20</td>
+<td class="px-6 py-3">
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded">Executed</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-3 font-data-mono text-body-sm">24 Oct 09:15:45</td>
+<td class="px-6 py-3 font-bold">TATASTEEL</td>
+<td class="px-6 py-3 text-blue-600 font-bold">BUY / CNC</td>
+<td class="px-6 py-3 font-data-mono text-right">100</td>
+<td class="px-6 py-3 font-data-mono text-right">₹128.40</td>
+<td class="px-6 py-3">
+<span class="px-2 py-1 bg-red-50 text-red-700 text-[10px] font-bold rounded">Rejected</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Floating Tooltip for Admin Quick-View (Simulated) -->
+<div class="fixed bottom-6 right-6 group" id="quick-action-fab">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]">support_agent</span>
+</button>
+<div class="absolute bottom-full right-0 mb-4 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity">
+<div class="bg-primary-container text-on-primary-container p-4 rounded-xl shadow-xl w-64 border border-on-primary-container/20">
+<p class="font-bold text-label-md mb-2 border-b border-on-primary-container/10 pb-1">Client Health Summary</p>
+<div class="space-y-2">
+<div class="flex justify-between text-body-sm">
+<span>Margin Usage</span>
+<span class="font-bold text-green-400">Low (18%)</span>
+</div>
+<div class="flex justify-between text-body-sm">
+<span>Failed Logins</span>
+<span class="font-bold">0 (24h)</span>
+</div>
+<div class="flex justify-between text-body-sm">
+<span>Withdrawal Lock</span>
+<span class="font-bold">None</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+        // Micro-interaction: Update UI on segment toggle
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const parent = e.target.closest('div.flex');
+                if (!e.target.checked) {
+                    parent.classList.add('opacity-60');
+                } else {
+                    parent.classList.remove('opacity-60');
+                }
+            });
+        });
+
+        // Simple feedback for admin buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.innerText.includes('Suspend') || btn.innerText.includes('Freeze')) {
+                    const confirmed = confirm(`Are you sure you want to perform this sensitive action: ${btn.innerText.trim()}?`);
+                    if (confirmed) {
+                        alert('Action initiated. Pending manager approval (Maker-Checker workflow).');
+                    }
+                }
+            });
+        });
+    </script>
+</body></html>

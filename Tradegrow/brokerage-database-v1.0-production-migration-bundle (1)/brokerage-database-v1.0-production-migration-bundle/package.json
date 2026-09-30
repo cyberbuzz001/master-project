@@ -1,0 +1,38 @@
+{
+  "name": "brokerage-database-v1",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:dev": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "bash scripts/reset.sh",
+    "db:validate": "bash scripts/validate-schema.sh",
+    "db:validate-migrations": "bash scripts/validate-migrations.sh",
+    "db:test": "bash scripts/test-db.sh",
+    "test": "jest --runInBand",
+    "test:integration": "jest tests/integration --runInBand",
+    "test:invariants": "jest tests/invariants --runInBand",
+    "build": "tsc -p apps/api/tsconfig.json",
+    "lint": "tsc --noEmit -p apps/api/tsconfig.json",
+    "ci:db": "bash scripts/ci-db-check.sh"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@prisma/client": "^6.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

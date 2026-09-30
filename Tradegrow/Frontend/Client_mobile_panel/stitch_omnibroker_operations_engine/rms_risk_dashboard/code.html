@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerAdmin | Risk Management System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#001e2d",
+                      "error": "#ba1a1a",
+                      "surface-container": "#edeeef",
+                      "surface-container-low": "#f3f4f5",
+                      "on-tertiary-fixed-variant": "#2c4a5c",
+                      "tertiary-fixed": "#c8e7fd",
+                      "secondary-fixed": "#dae1ff",
+                      "on-primary-container": "#76849f",
+                      "secondary-fixed-dim": "#b3c5ff",
+                      "surface-variant": "#e1e3e4",
+                      "primary": "#000000",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed": "#001849",
+                      "on-primary-fixed": "#0d1c32",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-container": "#0266ff",
+                      "inverse-primary": "#b9c7e4",
+                      "inverse-on-surface": "#f0f1f2",
+                      "background": "#f8f9fa",
+                      "on-surface-variant": "#44474d",
+                      "on-tertiary-fixed": "#001e2d",
+                      "inverse-surface": "#2e3132",
+                      "on-secondary-fixed-variant": "#003fa4",
+                      "outline": "#75777e",
+                      "primary-container": "#0d1c32",
+                      "surface-dim": "#d9dadb",
+                      "surface-bright": "#f8f9fa",
+                      "surface": "#f8f9fa",
+                      "secondary": "#0050cc",
+                      "on-error-container": "#93000a",
+                      "surface-tint": "#515f78",
+                      "on-primary-fixed-variant": "#39475f",
+                      "on-error": "#ffffff",
+                      "primary-fixed-dim": "#b9c7e4",
+                      "on-background": "#191c1d",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "on-tertiary-container": "#6a889b",
+                      "on-secondary-container": "#f9f7ff",
+                      "tertiary-fixed-dim": "#accbe0",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed": "#d6e3ff",
+                      "tertiary": "#000000",
+                      "surface-container-highest": "#e1e3e4",
+                      "outline-variant": "#c5c6cd",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "sidebar-width": "260px",
+                      "sidebar-collapsed": "64px",
+                      "container-margin": "24px",
+                      "gutter": "16px",
+                      "table-cell-padding": "8px 12px"
+              },
+              "fontFamily": {
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "data-mono": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container z-50 flex flex-col py-4 shadow-md">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="font-label-md text-label-md text-on-primary-container/60 uppercase tracking-widest">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1 overflow-y-auto px-3">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">group</span> CRM
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">verified_user</span> KYC
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">query_stats</span> Trading Ops
+            </a>
+<!-- RMS is active based on page intent -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security</span> RMS
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">account_balance</span> Settlements
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Back Office
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">gavel</span> Compliance
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span> System Config
+            </a>
+</nav>
+<div class="px-3 pt-4 mt-4 border-t border-on-primary-container/10">
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 rounded font-label-md text-label-md hover:bg-secondary active:scale-[0.98] transition-all">
+                New Request
+            </button>
+<div class="mt-4 flex justify-around text-on-primary-container/50">
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container transition-colors">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container transition-colors">star</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-on-primary-container transition-colors">history</span>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface-container-lowest border-b border-outline-variant h-16 px-gutter ml-[260px] flex justify-between items-center shadow-sm">
+<div class="flex items-center gap-8">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</h2>
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full bg-surface-container-low border-none rounded py-2 pl-10 text-body-md focus:ring-1 focus:ring-secondary" placeholder="Search RMS data..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6">
+<a class="font-body-md text-on-surface-variant hover:text-on-surface" href="#">Markets</a>
+<a class="font-body-md text-secondary font-semibold border-b-2 border-secondary pb-1" href="#">Risk</a>
+<a class="font-body-md text-on-surface-variant hover:text-on-surface" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-success-container/10 px-3 py-1 rounded text-success border border-green-200">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse-soft"></span>
+<span class="font-label-md text-[10px] uppercase font-bold text-green-700">System Pulse</span>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">apps</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+</button>
+</div>
+<img class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional corporate headshot of a middle-aged male operations manager with a sharp look, wearing a formal navy blazer over a light blue shirt. He is set against a clean, out-of-focus modern office background with soft daylight. The image has a high-quality, professional photography aesthetic with natural skin tones and sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE7npwI7tNHnHXK_Ok5smbBc0yO4ZdgPHdBj8OjPYK3TMwkukiUVPJ1Z3w3M7VijmswD-2V03PE6-YHwO7WDY5dagMKJPyc-sA2n2TEJNpWqaRJ5cskRiH8lI7tJhfYES-2oidfOdOkYl8It7LnVSTJKL0_AcE0kKp8X4m2iLMmkHHQ93x433IUbCsP1ERdR1zboEaF480lsoV3YusXAPRzquzaHFhJ6ouQlc6Mjb9ghYBwUvrmAKU"/>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="ml-[260px] mt-16 p-gutter h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
+<!-- KPI Dashboard Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-on-surface-variant uppercase">Total Exposure</span>
+<span class="material-symbols-outlined text-secondary-container">account_balance_wallet</span>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary">₹482.15 Cr</h3>
+<span class="text-green-600 font-label-md mb-1">↑ 2.4%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-low mt-3 rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full w-[65%]"></div>
+</div>
+<p class="font-body-sm text-on-surface-variant mt-2">Utilization: 65% of limits</p>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-on-surface-variant uppercase">Margin Utilization</span>
+<span class="material-symbols-outlined text-secondary-container">pie_chart</span>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary">82.4%</h3>
+<span class="text-error font-label-md mb-1">↑ 12%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-low mt-3 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[82%]"></div>
+</div>
+<p class="font-body-sm text-on-surface-variant mt-2">Critical threshold: 85%</p>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-on-surface-variant uppercase">Peak Margin Deficit</span>
+<span class="material-symbols-outlined text-secondary-container">warning</span>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary">₹12.80 Cr</h3>
+<span class="text-on-surface-variant font-label-md mb-1">42 Clients</span>
+</div>
+<div class="w-full h-1 bg-surface-container-low mt-3 rounded-full overflow-hidden">
+<div class="bg-on-secondary-fixed-variant h-full w-[30%]"></div>
+</div>
+<p class="font-body-sm text-on-surface-variant mt-2">Last updated 2m ago</p>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant rounded shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-on-surface-variant uppercase">Segment: Equity F&amp;O</span>
+<span class="material-symbols-outlined text-secondary-container">trending_up</span>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="font-headline-lg text-headline-lg text-primary">₹310.22 Cr</h3>
+<span class="text-green-600 font-label-md mb-1">↑ 0.8%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-low mt-3 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[55%]"></div>
+</div>
+<p class="font-body-sm text-on-surface-variant mt-2">VIX adjustment: 1.2x</p>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Risk Alerts Feed (Left) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col overflow-hidden h-full">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low/30">
+<h4 class="font-headline-md text-headline-md">Risk Alerts</h4>
+<span class="bg-error-container text-on-error-container px-2 py-0.5 rounded font-label-md text-[10px]">12 LIVE</span>
+</div>
+<div class="p-0 overflow-y-auto custom-scrollbar h-[500px]">
+<div class="border-b border-outline-variant p-4 hover:bg-surface-container-low transition-colors group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error mt-0.5">error</span>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="font-bold text-primary font-body-md">CLT-882910</span>
+<span class="text-body-sm text-on-surface-variant">14:02</span>
+</div>
+<p class="text-body-sm text-on-surface mb-2">Margin shortfall of ₹2.4L detected in Equity F&amp;O segment.</p>
+<div class="flex gap-2">
+<button class="bg-error text-white px-2 py-1 rounded font-label-md text-[10px] uppercase hover:bg-red-700 transition-colors">Square-off</button>
+<button class="border border-outline px-2 py-1 rounded font-label-md text-[10px] uppercase hover:bg-surface-container-high transition-colors">Block New</button>
+</div>
+</div>
+</div>
+</div>
+<div class="border-b border-outline-variant p-4 hover:bg-surface-container-low transition-colors group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-warning text-amber-500 mt-0.5" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="font-bold text-primary font-body-md">INFY-APR-2000-CE</span>
+<span class="text-body-sm text-on-surface-variant">13:58</span>
+</div>
+<p class="text-body-sm text-on-surface mb-2">Symbol concentration limit breached (92%). Max allowed: 90%.</p>
+<div class="flex gap-2">
+<button class="bg-secondary-container text-white px-2 py-1 rounded font-label-md text-[10px] uppercase">Alert Client</button>
+<button class="border border-outline px-2 py-1 rounded font-label-md text-[10px] uppercase">Details</button>
+</div>
+</div>
+</div>
+</div>
+<div class="border-b border-outline-variant p-4 hover:bg-surface-container-low transition-colors group border-l-4 border-l-amber-400">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-amber-500 mt-0.5">pending_actions</span>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="font-bold text-primary font-body-md">CLT-992102</span>
+<span class="text-body-sm text-on-surface-variant">13:45</span>
+</div>
+<p class="text-body-sm text-on-surface mb-1">High MTM loss threshold reached (₹1.5Cr).</p>
+<span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">MAKER-CHECKER PENDING</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex justify-center">
+<button class="text-secondary font-label-md text-label-md hover:underline">View All Alerts</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Center (Right Content) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+<!-- High-Risk Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded overflow-hidden">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low/30">
+<h4 class="font-headline-md text-headline-md">High-Risk Exposure Monitor</h4>
+<div class="flex gap-2">
+<button class="border border-outline-variant px-3 py-1.5 rounded font-label-md text-label-md flex items-center gap-1 hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-sm">filter_alt</span> Filter
+                            </button>
+<button class="border border-outline-variant px-3 py-1.5 rounded font-label-md text-label-md flex items-center gap-1 hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-sm">download</span> Export
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase">Client ID</th>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase">Net Exposure</th>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase">Utilization</th>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase">MTM P&amp;L</th>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase">Status</th>
+<th class="p-[8px_12px] font-label-md text-label-md text-on-surface-variant uppercase text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-[8px_12px] font-data-mono text-data-mono">CLT-100292</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono">₹14,22,10,000</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono">94%</span>
+<div class="flex-1 h-1.5 bg-surface-container-low w-12 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[94%]"></div>
+</div>
+</div>
+</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono text-error">- ₹82.40 L</td>
+<td class="p-[8px_12px]">
+<span class="inline-block w-2 h-2 rounded-full bg-error mr-2"></span>
+<span class="font-label-md text-[11px] text-error">CRITICAL</span>
+</td>
+<td class="p-[8px_12px] text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container/20">block</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary p-1 rounded hover:bg-secondary-container/20">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-[8px_12px] font-data-mono text-data-mono">CLT-449120</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono">₹8,10,00,000</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono">81%</span>
+<div class="flex-1 h-1.5 bg-surface-container-low w-12 rounded-full overflow-hidden">
+<div class="bg-amber-500 h-full w-[81%]"></div>
+</div>
+</div>
+</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono text-green-600">+ ₹12.10 L</td>
+<td class="p-[8px_12px]">
+<span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+<span class="font-label-md text-[11px] text-amber-600">WARNING</span>
+</td>
+<td class="p-[8px_12px] text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container/20">block</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary p-1 rounded hover:bg-secondary-container/20">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors border-l-4 border-l-green-500">
+<td class="p-[8px_12px] font-data-mono text-data-mono">CLT-221098</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono">₹2,45,00,000</td>
+<td class="p-[8px_12px]">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono">42%</span>
+<div class="flex-1 h-1.5 bg-surface-container-low w-12 rounded-full overflow-hidden">
+<div class="bg-green-500 h-full w-[42%]"></div>
+</div>
+</div>
+</td>
+<td class="p-[8px_12px] font-data-mono text-data-mono text-green-600">+ ₹1.45 L</td>
+<td class="p-[8px_12px]">
+<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+<span class="font-label-md text-[11px] text-green-600">VERIFIED</span>
+</td>
+<td class="p-[8px_12px] text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error p-1 rounded hover:bg-error-container/20">block</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary p-1 rounded hover:bg-secondary-container/20">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Concentration Risk & Settings -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Concentration Visualization -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 h-[300px] relative overflow-hidden">
+<div class="flex justify-between items-center mb-4">
+<h4 class="font-headline-md text-headline-md">Concentration Risk</h4>
+<span class="font-body-sm text-on-surface-variant">Top 5 Symbols</span>
+</div>
+<!-- Placeholder for Data Viz -->
+<div class="absolute inset-x-4 bottom-8 flex items-end justify-around gap-2 h-40">
+<div class="w-full bg-secondary/80 rounded-t h-[90%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-label-md opacity-0 group-hover:opacity-100 transition-opacity">RELIANCE</div>
+</div>
+<div class="w-full bg-secondary/60 rounded-t h-[75%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-label-md opacity-0 group-hover:opacity-100 transition-opacity">HDFC</div>
+</div>
+<div class="w-full bg-secondary/50 rounded-t h-[60%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-label-md opacity-0 group-hover:opacity-100 transition-opacity">INFY</div>
+</div>
+<div class="w-full bg-secondary/40 rounded-t h-[40%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-label-md opacity-0 group-hover:opacity-100 transition-opacity">TCS</div>
+</div>
+<div class="w-full bg-secondary/20 rounded-t h-[25%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 font-label-md opacity-0 group-hover:opacity-100 transition-opacity">ICICI</div>
+</div>
+</div>
+<div class="absolute bottom-4 inset-x-4 flex justify-between font-label-md text-[10px] text-on-surface-variant border-t border-outline-variant pt-2">
+<span>Sectoral Diversity: 42.1%</span>
+<span>HHI Index: 0.18</span>
+</div>
+</div>
+<!-- Risk Settings / Limits -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 h-[300px]">
+<h4 class="font-headline-md text-headline-md mb-4">Global Limit Config</h4>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-on-surface-variant uppercase mb-1">Max Intraday Leverage</label>
+<div class="flex items-center gap-3">
+<input class="flex-1 accent-secondary" max="20" min="1" type="range" value="5"/>
+<span class="font-data-mono bg-surface-container-low px-2 py-1 rounded">5.0x</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant uppercase mb-1">Symbol MTM Alert (%)</label>
+<div class="flex items-center gap-3">
+<input class="flex-1 bg-surface-container-low border border-outline-variant rounded p-1.5 font-data-mono" type="number" value="80"/>
+<span class="text-body-sm">%</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant uppercase mb-1">Auto-Square Off (Global)</label>
+<div class="flex items-center justify-between p-3 bg-error-container/10 border border-error/20 rounded">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error">gavel</span>
+<span class="font-body-sm text-on-error-container">Enable Auto-Liquidation</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-outline peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</div>
+<button class="w-full border border-secondary text-secondary py-2 rounded font-label-md hover:bg-secondary-container/5 transition-colors">Apply Global Changes</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB Action (Contextual to Dashboard) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center hover:bg-secondary hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 40;">add</span>
+</button>
+<script>
+        // Micro-interactions for the Dashboard
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                row.classList.add('bg-secondary-container/10');
+                setTimeout(() => row.classList.remove('bg-secondary-container/10'), 300);
+            });
+        });
+
+        // Simulating Live Data Updates
+        const exposureVal = document.querySelector('h3');
+        setInterval(() => {
+            if(Math.random() > 0.7) {
+                const current = 482.15;
+                const change = (Math.random() * 0.1).toFixed(2);
+                exposureVal.innerText = `₹${(current + parseFloat(change)).toFixed(2)} Cr`;
+            }
+        }, 3000);
+    </script>
+</body></html>

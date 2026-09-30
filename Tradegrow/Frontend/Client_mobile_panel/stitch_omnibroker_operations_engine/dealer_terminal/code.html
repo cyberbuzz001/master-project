@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Dealer Terminal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#001e2d",
+                    "error": "#ba1a1a",
+                    "surface-container": "#edeeef",
+                    "surface-container-low": "#f3f4f5",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "tertiary-fixed": "#c8e7fd",
+                    "secondary-fixed": "#dae1ff",
+                    "on-primary-container": "#76849f",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "surface-variant": "#e1e3e4",
+                    "primary": "#000000",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#001849",
+                    "on-primary-fixed": "#0d1c32",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "secondary-container": "#0266ff",
+                    "inverse-primary": "#b9c7e4",
+                    "inverse-on-surface": "#f0f1f2",
+                    "background": "#f8f9fa",
+                    "on-surface-variant": "#44474d",
+                    "on-tertiary-fixed": "#001e2d",
+                    "inverse-surface": "#2e3132",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "outline": "#75777e",
+                    "primary-container": "#0d1c32",
+                    "surface-dim": "#d9dadb",
+                    "surface-bright": "#f8f9fa",
+                    "surface": "#f8f9fa",
+                    "secondary": "#0050cc",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#515f78",
+                    "on-primary-fixed-variant": "#39475f",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "on-background": "#191c1d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "on-tertiary-container": "#6a889b",
+                    "on-secondary-container": "#f9f7ff",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#d6e3ff",
+                    "tertiary": "#000000",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c5c6cd",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "sidebar-width": "260px",
+                    "sidebar-collapsed": "64px",
+                    "container-margin": "24px",
+                    "gutter": "16px",
+                    "table-cell-padding": "8px 12px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6cd; border-radius: 10px; }
+        
+        /* Pulse for Live Data */
+        .live-pulse {
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .maker-checker-pending { border-left: 4px dashed #f59e0b; }
+        .maker-checker-verified { border-left: 4px solid #10b981; }
+
+        /* Trading specific visuals */
+        .price-up { color: #10b981; }
+        .price-down { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<!-- Top Navigation Shell (Anchor: TopNavBar) -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] z-40 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center h-16 px-gutter ml-[260px] shadow-sm">
+<div class="flex items-center gap-6">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</h1>
+<div class="flex gap-4">
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md text-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md text-body-md" href="#">Reports</a>
+</div>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 py-2 text-body-md focus:ring-2 focus:ring-secondary" placeholder="Search Global Symbols, Clients, or Orders..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-secondary-container/10 px-3 py-1.5 rounded-full text-secondary font-semibold text-body-sm">
+<span class="live-pulse"></span>
+                System Pulse: Normal
+            </div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all">apps</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a financial operations manager wearing a crisp navy blazer in a high-tech trading room setting. The lighting is bright and clean, emphasizing a corporate light-mode aesthetic with soft blurs of monitors in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBN-lgbZtPzCQN5hTLo7tkLouqavqkwkF7DFpi9CNLEBUg9DGLvx91CzvuuY6kIlAnXmHnFqs-V_XsoxWCJeeIpko2qN5naKFMLqfkYwlG9i1twMXpKnOYx15hNGAgn8Q0xjd0x2CUYQz-Hvg0-5x3mQU4soYehA4UlDyULRmVfTNX_Xak57Th6rnOrmjfLFhbEg4c_uu6AjromgZa0Mbk28llCWwcj1vIUFdnzKqdGjX8tkyvSJnF8"/>
+</div>
+</div>
+</header>
+<!-- Sidebar Shell (Anchor: SideNavBar) -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container text-on-primary-container flex flex-col py-4 shadow-md z-50">
+<div class="px-6 mb-8">
+<h2 class="font-headline-lg text-headline-lg text-on-primary-container font-bold tracking-tight">BrokerAdmin</h2>
+<p class="text-on-primary-container/60 font-label-md text-[10px] uppercase tracking-widest">Enterprise Suite</p>
+</div>
+<nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">group</span> CRM
+            </a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 rounded-r-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">query_stats</span> Trading Ops
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span> KYC
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">security</span> RMS
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance</span> Settlements
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Back Office
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">gavel</span> Compliance
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 rounded-lg font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span> System Config
+            </a>
+</nav>
+<div class="px-3 mt-4 space-y-4">
+<button class="w-full py-2.5 bg-secondary text-on-primary rounded font-label-md text-label-md hover:brightness-110 active:scale-[0.98] transition-all">
+                New Request
+            </button>
+<div class="pt-4 border-t border-on-primary-container/10 flex justify-around text-on-primary-container/60">
+<span class="material-symbols-outlined cursor-pointer hover:text-white">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-white">star</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-white">history</span>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-[260px] mt-16 h-[calc(100vh-64px)] grid grid-cols-12 overflow-hidden bg-background">
+<!-- Left: Client Selector (Part of Layout) -->
+<section class="col-span-2 border-r border-outline-variant bg-surface-container-low flex flex-col">
+<div class="p-4 border-b border-outline-variant">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase mb-3">Client Terminal</h3>
+<div class="relative">
+<input class="w-full bg-white border border-outline-variant rounded p-2 text-body-sm focus:ring-1 focus:ring-secondary" placeholder="CID or Name..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Client Card List -->
+<div class="p-1">
+<div class="p-3 bg-white mb-1 shadow-sm border-l-4 border-secondary flex flex-col gap-1 cursor-pointer">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md">R. KAPOOR</span>
+<span class="text-[10px] bg-secondary-container/20 text-secondary px-1 rounded">HNI</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">CID: 992831</span>
+<div class="flex justify-between mt-2">
+<span class="text-[10px] text-on-surface-variant">Margin:</span>
+<span class="text-body-sm font-semibold">₹1.24 Cr</span>
+</div>
+</div>
+<div class="p-3 hover:bg-surface-container-high transition-colors border-b border-outline-variant/30 flex flex-col gap-1 cursor-pointer">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md">S. MEHTA</span>
+<span class="text-[10px] bg-outline-variant text-on-surface-variant px-1 rounded">RETAIL</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">CID: 455201</span>
+<div class="flex justify-between mt-2">
+<span class="text-[10px] text-on-surface-variant">Margin:</span>
+<span class="text-body-sm font-semibold">₹8.5 L</span>
+</div>
+</div>
+<!-- Repeat placeholders -->
+<div class="p-3 opacity-60 flex flex-col gap-1 grayscale">
+<span class="font-label-md text-label-md">A. VERMA</span>
+<span class="text-body-sm text-on-surface-variant">CID: 102948</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Center: Watchlist and Market Data -->
+<section class="col-span-7 flex flex-col bg-white overflow-hidden">
+<!-- Market Tabs -->
+<div class="flex bg-surface-container border-b border-outline-variant">
+<button class="px-6 py-3 bg-white border-r border-outline-variant font-label-md text-label-md text-secondary border-t-2 border-t-secondary">NIFTY 50</button>
+<button class="px-6 py-3 hover:bg-surface-container-high border-r border-outline-variant font-label-md text-label-md text-on-surface-variant">BANK NIFTY</button>
+<button class="px-6 py-3 hover:bg-surface-container-high border-r border-outline-variant font-label-md text-label-md text-on-surface-variant">COMMODITIES</button>
+<div class="flex-1"></div>
+<button class="p-3 material-symbols-outlined text-on-surface-variant">add</button>
+</div>
+<!-- Market Data Table -->
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container-low z-10 shadow-sm">
+<tr>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">SYMBOL</th>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">LTP</th>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">CHG%</th>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">VOLUME</th>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-center">TREND</th>
+<th class="p-table-cell-padding font-label-md text-label-md text-on-surface-variant border-b border-outline-variant"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-secondary-container/5 transition-colors group">
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary">RELIANCE</span>
+<span class="text-[10px] text-on-surface-variant">NSE | EQUITY</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono font-bold">2,456.80</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono price-up">+1.45%</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono text-on-surface-variant">1.2M</td>
+<td class="p-table-cell-padding flex justify-center py-4">
+<div class="w-20 h-8 flex items-end gap-1 px-2">
+<div class="bg-emerald-500 w-1 h-[20%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[40%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[30%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[60%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[80%] rounded-full"></div>
+</div>
+</td>
+<td class="p-table-cell-padding text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-secondary text-white text-[10px] px-2 py-1 rounded">TRADE</button>
+</td>
+</tr>
+<tr class="hover:bg-secondary-container/5 transition-colors group">
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary">HDFC BANK</span>
+<span class="text-[10px] text-on-surface-variant">NSE | EQUITY</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono font-bold">1,620.15</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono price-down">-0.32%</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono text-on-surface-variant">4.8M</td>
+<td class="p-table-cell-padding flex justify-center py-4">
+<div class="w-20 h-8 flex items-end gap-1 px-2">
+<div class="bg-red-500 w-1 h-[80%] rounded-full"></div>
+<div class="bg-red-500 w-1 h-[70%] rounded-full"></div>
+<div class="bg-red-500 w-1 h-[50%] rounded-full"></div>
+<div class="bg-red-500 w-1 h-[60%] rounded-full"></div>
+<div class="bg-red-500 w-1 h-[30%] rounded-full"></div>
+</div>
+</td>
+<td class="p-table-cell-padding text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-secondary text-white text-[10px] px-2 py-1 rounded">TRADE</button>
+</td>
+</tr>
+<!-- Repeat Rows -->
+<tr class="hover:bg-secondary-container/5 transition-colors group">
+<td class="p-table-cell-padding">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary">TCS</span>
+<span class="text-[10px] text-on-surface-variant">NSE | EQUITY</span>
+</div>
+</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono font-bold">3,541.20</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono price-up">+0.88%</td>
+<td class="p-table-cell-padding text-right font-data-mono text-data-mono text-on-surface-variant">0.9M</td>
+<td class="p-table-cell-padding flex justify-center py-4">
+<div class="w-20 h-8 flex items-end gap-1 px-2">
+<div class="bg-emerald-500 w-1 h-[40%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[45%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[50%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[55%] rounded-full"></div>
+<div class="bg-emerald-500 w-1 h-[70%] rounded-full"></div>
+</div>
+</td>
+<td class="p-table-cell-padding text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-secondary text-white text-[10px] px-2 py-1 rounded">TRADE</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Bottom Table Area (Orders/Positions) -->
+<div class="h-1/3 border-t-4 border-surface-container-high flex flex-col bg-surface-container-low">
+<div class="flex bg-surface-container-high border-b border-outline-variant px-2">
+<button class="px-4 py-2 font-label-md text-[11px] text-secondary border-b-2 border-secondary bg-white">ACTIVE ORDERS (12)</button>
+<button class="px-4 py-2 font-label-md text-[11px] text-on-surface-variant hover:text-on-surface">OPEN POSITIONS (4)</button>
+<button class="px-4 py-2 font-label-md text-[11px] text-on-surface-variant hover:text-on-surface">CLIENT MARGIN</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<table class="w-full text-[12px]">
+<thead class="bg-surface-container sticky top-0">
+<tr>
+<th class="p-2 text-left text-on-surface-variant">TIME</th>
+<th class="p-2 text-left text-on-surface-variant">SYMBOL</th>
+<th class="p-2 text-left text-on-surface-variant">SIDE</th>
+<th class="p-2 text-right text-on-surface-variant">QTY</th>
+<th class="p-2 text-right text-on-surface-variant">PRICE</th>
+<th class="p-2 text-center text-on-surface-variant">STATUS</th>
+<th class="p-2 text-center text-on-surface-variant">ACTION</th>
+</tr>
+</thead>
+<tbody>
+<tr class="maker-checker-pending border-b border-outline-variant/20">
+<td class="p-2 font-data-mono">11:42:01</td>
+<td class="p-2 font-bold">RELIANCE</td>
+<td class="p-2"><span class="text-emerald-600 bg-emerald-50 px-1 font-bold">BUY</span></td>
+<td class="p-2 text-right font-data-mono">500</td>
+<td class="p-2 text-right font-data-mono">2,455.00</td>
+<td class="p-2 text-center"><span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">PENDING</span></td>
+<td class="p-2 text-center"><span class="material-symbols-outlined text-sm cursor-pointer hover:text-error">close</span></td>
+</tr>
+<tr class="maker-checker-verified border-b border-outline-variant/20">
+<td class="p-2 font-data-mono">11:40:15</td>
+<td class="p-2 font-bold">INFY</td>
+<td class="p-2"><span class="text-red-600 bg-red-50 px-1 font-bold">SELL</span></td>
+<td class="p-2 text-right font-data-mono">100</td>
+<td class="p-2 text-right font-data-mono">1,420.00</td>
+<td class="p-2 text-center"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">EXECUTED</span></td>
+<td class="p-2 text-center">--</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Right: Order Ticket -->
+<section class="col-span-3 border-l border-outline-variant bg-surface-container-low p-4 flex flex-col gap-4 overflow-y-auto">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-headline-md text-headline-md">Order Ticket</h3>
+<span class="text-body-sm font-semibold bg-emerald-50 text-emerald-600 px-2 py-1 rounded">LIVE</span>
+</div>
+<div class="bg-white p-4 rounded shadow-sm flex flex-col gap-4 border border-outline-variant">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-[11px] text-on-surface-variant">SYMBOL</label>
+<div class="p-2 bg-surface-container-lowest border border-outline font-bold text-lg rounded">
+                        RELIANCE <span class="text-sm font-normal text-on-surface-variant">NSE</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button class="py-3 rounded bg-emerald-600 text-white font-bold text-body-md transition-all active:scale-[0.95] ring-2 ring-emerald-600 ring-offset-2">BUY</button>
+<button class="py-3 rounded bg-surface-container-high text-on-surface-variant font-bold text-body-md transition-all active:scale-[0.95]">SELL</button>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-[11px] text-on-surface-variant">PRODUCT TYPE</label>
+<select class="w-full border-outline-variant rounded text-body-sm bg-surface-container-lowest">
+<option>INTRADAY (MIS)</option>
+<option>DELIVERY (CNC)</option>
+<option>MTF</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-[11px] text-on-surface-variant">QUANTITY</label>
+<input class="border-outline-variant rounded text-data-mono bg-surface-container-lowest" type="number" value="100"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-[11px] text-on-surface-variant">PRICE</label>
+<input class="border-outline-variant rounded text-data-mono bg-surface-container-lowest" step="0.05" type="number" value="2456.80"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="rounded text-secondary border-outline-variant" id="market-order" type="checkbox"/>
+<label class="text-body-sm text-on-surface-variant" for="market-order">Market Order</label>
+</div>
+<div class="mt-2 pt-4 border-t border-outline-variant">
+<div class="flex justify-between text-body-sm mb-1">
+<span class="text-on-surface-variant">Required Margin:</span>
+<span class="font-semibold">₹49,136.00</span>
+</div>
+<div class="flex justify-between text-body-sm mb-4">
+<span class="text-on-surface-variant">Available Margin:</span>
+<span class="text-emerald-600 font-bold">₹1,24,00,000</span>
+</div>
+<button class="w-full py-4 bg-secondary text-white font-bold rounded-lg shadow-lg hover:shadow-secondary/20 transition-all active:scale-[0.98]" onclick="document.getElementById('confirm-modal').style.display='flex'">
+                        PLACE BUY ORDER
+                    </button>
+</div>
+</div>
+<!-- Contextual KPI Cards -->
+<div class="grid grid-cols-1 gap-2 mt-auto">
+<div class="bg-white p-3 border border-outline-variant rounded flex justify-between items-center">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Client Exposure</p>
+<p class="font-headline-md text-headline-md">24.5%</p>
+</div>
+<div class="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin-slow"></div>
+</div>
+<div class="bg-white p-3 border border-outline-variant rounded">
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Real-time P&amp;L</p>
+<p class="font-headline-md text-headline-md price-up">+ ₹12,450.00</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Confirmation Dialog (Modal) -->
+<div class="fixed inset-0 bg-primary/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-gutter" id="confirm-modal">
+<div class="bg-white max-w-md w-full rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+<div class="p-6 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+<h4 class="font-headline-md text-headline-md text-primary">Confirm Order Placement</h4>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary" onclick="document.getElementById('confirm-modal').style.display='none'">close</button>
+</div>
+<div class="p-6">
+<p class="text-body-md text-on-surface-variant mb-6">You are about to place a <span class="font-bold text-emerald-600">BUY</span> order for <span class="font-bold">500 x RELIANCE</span> at <span class="font-bold">₹2,455.00</span> for Client <span class="font-bold">R. KAPOOR</span>.</p>
+<div class="bg-secondary-container/5 p-4 rounded border border-secondary-container/20 space-y-2 mb-6">
+<div class="flex justify-between text-body-sm">
+<span>Product</span>
+<span class="font-bold">INTRADAY (MIS)</span>
+</div>
+<div class="flex justify-between text-body-sm">
+<span>Total Consideration</span>
+<span class="font-bold">₹12,27,500.00</span>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 py-3 border border-outline-variant rounded font-semibold text-on-surface hover:bg-surface-container transition-colors" onclick="document.getElementById('confirm-modal').style.display='none'">CANCEL</button>
+<button class="flex-1 py-3 bg-secondary text-white rounded font-bold shadow-lg hover:brightness-110 active:scale-[0.98] transition-all" onclick="handleConfirm()">CONFIRM &amp; EXECUTE</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Notification Toast (Hidden by default) -->
+<div class="fixed bottom-10 right-10 bg-inverse-surface text-inverse-on-surface px-6 py-4 rounded-lg shadow-2xl z-[110] transform translate-y-20 opacity-0 transition-all duration-500 flex items-center gap-3" id="toast">
+<span class="material-symbols-outlined text-emerald-400">check_circle</span>
+<div>
+<p class="font-bold text-sm">Order Placed Successfully</p>
+<p class="text-[11px] opacity-70">Order ID: #ORD-99812-XPR</p>
+</div>
+</div>
+<script>
+        function handleConfirm() {
+            const modal = document.getElementById('confirm-modal');
+            const toast = document.getElementById('toast');
+            
+            modal.style.display = 'none';
+            
+            // Show toast
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(20px)';
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        // Simulating some live price movement
+        setInterval(() => {
+            const prices = document.querySelectorAll('.font-data-mono');
+            prices.forEach(p => {
+                if(Math.random() > 0.8) {
+                    const current = parseFloat(p.innerText.replace(/,/g, ''));
+                    if(!isNaN(current)) {
+                        const change = (Math.random() - 0.5) * 2;
+                        const newVal = (current + change).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        p.innerText = newVal;
+                        
+                        // Flash effect
+                        p.classList.add('transition-colors', 'duration-300', change > 0 ? 'text-emerald-500' : 'text-red-500');
+                        setTimeout(() => {
+                            p.classList.remove('text-emerald-500', 'text-red-500');
+                        }, 500);
+                    }
+                }
+            });
+        }, 1000);
+    </script>
+</body></html>

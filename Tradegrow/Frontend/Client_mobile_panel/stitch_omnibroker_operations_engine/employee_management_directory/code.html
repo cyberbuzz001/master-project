@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Employee Management | BrokerOps Enterprise</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#f8f9fa",
+                    "on-tertiary-fixed": "#001e2d",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "secondary-container": "#0266ff",
+                    "surface-container-highest": "#e1e3e4",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "secondary-fixed": "#dae1ff",
+                    "on-primary-fixed-variant": "#39475f",
+                    "on-primary-container": "#76849f",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "inverse-surface": "#2e3132",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container": "#edeeef",
+                    "outline-variant": "#c5c6cd",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "inverse-primary": "#b9c7e4",
+                    "tertiary-fixed": "#c8e7fd",
+                    "on-secondary-fixed": "#001849",
+                    "tertiary": "#000000",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "primary-fixed": "#d6e3ff",
+                    "secondary": "#0050cc",
+                    "primary": "#000000",
+                    "outline": "#75777e",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "surface-bright": "#f8f9fa",
+                    "on-tertiary-container": "#6a889b",
+                    "surface-variant": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d9dadb",
+                    "on-error": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#001e2d",
+                    "surface-tint": "#515f78",
+                    "surface": "#f8f9fa",
+                    "on-secondary-container": "#f9f7ff",
+                    "on-surface-variant": "#44474d",
+                    "on-primary": "#ffffff",
+                    "on-background": "#191c1d",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-container": "#0d1c32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sidebar-collapsed": "64px",
+                    "unit": "4px",
+                    "sidebar-width": "260px",
+                    "gutter": "16px",
+                    "table-cell-padding": "8px 12px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+        .data-table-row:hover {
+            background-color: rgba(2, 102, 255, 0.04);
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container flex flex-col py-4 z-50 shadow-md">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container/50 font-bold">Enterprise Suite</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<!-- Active Tab: CRM (as requested for employee management context) -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span class="font-label-md text-label-md">KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-md text-label-md">Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="font-label-md text-label-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-label-md text-label-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Back Office</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span class="font-label-md text-label-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-4 border-t border-on-primary-container/10 pt-4 space-y-2">
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 rounded font-label-md text-label-md flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Request
+            </button>
+<div class="flex justify-between px-2 pt-2 text-on-primary-container/60">
+<span class="material-symbols-outlined cursor-pointer hover:text-white" data-icon="search">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-white" data-icon="star">star</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-white" data-icon="history">history</span>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-gutter z-40 shadow-sm">
+<div class="flex items-center gap-8">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="search">search</span>
+</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none focus:ring-1 focus:ring-secondary rounded text-body-md font-body-md w-64" placeholder="Global Search (Alt + S)" type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface" href="#">Markets</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface" href="#">Risk</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-secondary/10 px-3 py-1 rounded-full text-secondary">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-md text-label-md">System Pulse</span>
+</div>
+<div class="flex items-center gap-3 border-l border-outline-variant pl-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a senior operations manager in a corporate office environment, soft cinematic lighting, neutral business attire, high resolution corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkZPsn2ZTBpVXk0ulKXaXh0kElOE5ljn_rM1zxdagnse30S-eeTX97VNf4pjq_NSszBPoqiq8SArbjkOYUjJy6bGEjZWQO2DuVXh0TJsgP0fuQQ7cPEPYhftAoqPAd9xYqWdDlJB6jL0ngoEFy1xdO9aCOBTPMrdtkPgCv3-XszSGBvt2Nnw1ayzQI-f082nP6gEBwo_EVy4K-_BcaWhOd0impjlE7Igj_pAVXyOIfRSu2q-7ACIcE"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Workspace -->
+<main class="ml-[260px] pt-24 px-gutter pb-gutter min-h-screen">
+<!-- Header & Action Row -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-xl text-headline-xl tracking-tight">Employee Directory</h2>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-sm text-body-sm">
+<span>BrokerOps</span>
+<span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
+<span>Human Capital</span>
+<span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-secondary font-semibold">Directory</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface px-4 py-2 flex items-center gap-2 font-label-md text-label-md hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="file_download">file_download</span>
+                    Export CSV
+                </button>
+<button class="bg-primary text-on-primary px-4 py-2 flex items-center gap-2 font-label-md text-label-md active:opacity-80 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="person_add">person_add</span>
+                    New Employee
+                </button>
+</div>
+</div>
+<!-- Filter Bento Box -->
+<div class="grid grid-cols-12 gap-4 mb-6">
+<div class="col-span-12 lg:col-span-9 bg-surface-container-lowest p-4 border border-outline-variant shadow-sm flex flex-wrap gap-6 items-center">
+<div class="space-y-1">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-wider block">Department</label>
+<select class="bg-surface-container-low border-none rounded py-1.5 px-3 font-body-md text-body-md focus:ring-secondary w-48">
+<option>All Departments</option>
+<option>Operations</option>
+<option>Compliance</option>
+<option>Risk Management</option>
+<option>Technology</option>
+<option>Trading Desk</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-wider block">Branch</label>
+<select class="bg-surface-container-low border-none rounded py-1.5 px-3 font-body-md text-body-md focus:ring-secondary w-48">
+<option>All Locations</option>
+<option>Mumbai HQ</option>
+<option>Bangalore Hub</option>
+<option>Delhi Regional</option>
+<option>Gift City (IFSC)</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-wider block">Status</label>
+<div class="flex gap-1 bg-surface-container-low p-1 rounded">
+<button class="px-3 py-1 text-label-md font-label-md bg-surface-container-lowest shadow-sm rounded text-secondary">All</button>
+<button class="px-3 py-1 text-label-md font-label-md text-on-surface-variant hover:text-on-surface">Active</button>
+<button class="px-3 py-1 text-label-md font-label-md text-on-surface-variant hover:text-on-surface">Inactive</button>
+</div>
+</div>
+<div class="ml-auto">
+<button class="text-secondary font-label-md text-label-md hover:underline">Clear All Filters</button>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-3 bg-secondary-container/5 p-4 border border-secondary/20 shadow-sm flex items-center justify-between">
+<div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-wider">Total Headcount</p>
+<p class="font-headline-lg text-headline-lg text-secondary">1,248</p>
+</div>
+<div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest border border-outline-variant shadow-sm overflow-hidden">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Emp ID</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Full Name</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Department</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Designation</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Reporting Manager</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase">Status</th>
+<th class="px-gutter py-3 font-label-md text-label-md text-on-surface-variant uppercase text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/50">
+<!-- Table Row 1 -->
+<tr class="data-table-row transition-colors border-l-4 border-l-transparent">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">#EMP-0941</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim text-on-primary-fixed flex items-center justify-center font-bold text-xs">AK</div>
+<span class="font-body-md text-body-md font-semibold">Arjun Khanna</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="bg-surface-container px-2 py-0.5 rounded text-xs font-medium">Operations</span>
+</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Senior Settlement Associate</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Priyanka Sharma</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-semibold text-emerald-700">Active</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding text-right">
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 2 (Pending Maker/Checker style) -->
+<tr class="data-table-row transition-colors border-l-4 border-amber-400 bg-amber-50/20">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">#EMP-1022</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed-dim text-on-tertiary-fixed flex items-center justify-center font-bold text-xs">SM</div>
+<span class="font-body-md text-body-md font-semibold">Sanjay Mehra</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="bg-surface-container px-2 py-0.5 rounded text-xs font-medium">Compliance</span>
+</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Audit Officer</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Vikram Sethi</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+<span class="text-xs font-semibold text-amber-700">Pending Review</span>
+</div>
+<span class="text-[10px] text-amber-600 font-medium">New Joiner</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding text-right">
+<button class="text-xs bg-secondary text-on-secondary px-3 py-1 rounded">Verify</button>
+</td>
+</tr>
+<!-- Table Row 3 -->
+<tr class="data-table-row transition-colors border-l-4 border-l-transparent">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">#EMP-0833</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed-dim text-on-secondary-fixed flex items-center justify-center font-bold text-xs">RA</div>
+<span class="font-body-md text-body-md font-semibold">Riya Adani</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="bg-surface-container px-2 py-0.5 rounded text-xs font-medium">Risk Management</span>
+</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Portfolio Analyst</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Vikram Sethi</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-semibold text-emerald-700">Active</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding text-right">
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 4 -->
+<tr class="data-table-row transition-colors border-l-4 border-l-transparent opacity-60 grayscale">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">#EMP-0412</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-dim text-on-surface-variant flex items-center justify-center font-bold text-xs">KV</div>
+<span class="font-body-md text-body-md font-semibold">Karan Varma</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="bg-surface-container px-2 py-0.5 rounded text-xs font-medium">Trading Desk</span>
+</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Derivatives Trader</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Aditya Chopra</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="text-xs font-semibold text-error">Inactive</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding text-right">
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="settings_backup_restore">settings_backup_restore</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 5 -->
+<tr class="data-table-row transition-colors border-l-4 border-l-transparent">
+<td class="px-gutter py-table-cell-padding font-data-mono text-data-mono">#EMP-1104</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-on-tertiary-container text-white flex items-center justify-center font-bold text-xs">DP</div>
+<span class="font-body-md text-body-md font-semibold">Deepika Patel</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding">
+<span class="bg-surface-container px-2 py-0.5 rounded text-xs font-medium">Technology</span>
+</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">System Architect</td>
+<td class="px-gutter py-table-cell-padding font-body-sm text-body-sm">Rahul Dravid</td>
+<td class="px-gutter py-table-cell-padding">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-semibold text-emerald-700">Active</span>
+</div>
+</td>
+<td class="px-gutter py-table-cell-padding text-right">
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="px-gutter py-3 bg-surface-container-low flex justify-between items-center border-t border-outline-variant">
+<div class="text-body-sm text-on-surface-variant">
+                    Showing <span class="font-semibold">1-5</span> of <span class="font-semibold">1,248</span> employees
+                </div>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-secondary text-on-secondary font-label-md">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high text-on-surface-variant font-label-md">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high text-on-surface-variant font-label-md">3</button>
+<span class="text-on-surface-variant px-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high text-on-surface-variant font-label-md">25</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- System Stats / Asymmetric Footer Elements -->
+<div class="mt-8 grid grid-cols-12 gap-6">
+<div class="col-span-12 md:col-span-4 bg-surface-container-lowest border border-outline-variant p-4">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+                    Recent Onboarding
+                </h3>
+<div class="space-y-4">
+<div class="flex gap-3">
+<div class="w-2 h-auto bg-emerald-400 rounded-full"></div>
+<div>
+<p class="font-body-md text-body-md font-semibold">Preeti Rao</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Joined Operations · Mumbai</p>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 uppercase">2 hours ago</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-2 h-auto bg-emerald-400 rounded-full"></div>
+<div>
+<p class="font-body-md text-body-md font-semibold">Manish Malhotra</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Joined Trading · Bangalore</p>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 uppercase">5 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-8 bg-primary-container p-6 flex items-center justify-between overflow-hidden relative group cursor-pointer">
+<div class="relative z-10">
+<h3 class="text-white font-headline-md text-headline-md mb-2">Automated Compliance Sync</h3>
+<p class="text-on-primary-container/80 font-body-md text-body-md max-w-md">Next system-wide credential audit and department sync scheduled for midnight. Ensure all reporting managers are updated.</p>
+<button class="mt-4 px-6 py-2 bg-on-secondary-container text-secondary font-label-md text-label-md">Launch Audit Trail</button>
+</div>
+<div class="absolute right-0 top-0 h-full w-1/3 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[200px]" data-icon="monitoring">monitoring</span>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for active states
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.parentElement.tagName === 'NAV') {
+                    document.querySelectorAll('nav a').forEach(l => {
+                        l.className = 'flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 hover:bg-on-primary-container/10 transition-colors';
+                    });
+                    this.className = 'flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 transition-colors';
+                }
+            });
+        });
+
+        // Search Bar Focus Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.key === 's') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    </script>
+</body></html>

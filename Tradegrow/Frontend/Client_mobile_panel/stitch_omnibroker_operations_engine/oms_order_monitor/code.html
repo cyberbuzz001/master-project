@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Enterprise OMS Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#001e2d",
+                        "error": "#ba1a1a",
+                        "surface-container": "#edeeef",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#2c4a5c",
+                        "tertiary-fixed": "#c8e7fd",
+                        "secondary-fixed": "#dae1ff",
+                        "on-primary-container": "#76849f",
+                        "secondary-fixed-dim": "#b3c5ff",
+                        "surface-variant": "#e1e3e4",
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#001849",
+                        "on-primary-fixed": "#0d1c32",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-container": "#0266ff",
+                        "inverse-primary": "#b9c7e4",
+                        "inverse-on-surface": "#f0f1f2",
+                        "background": "#f8f9fa",
+                        "on-surface-variant": "#44474d",
+                        "on-tertiary-fixed": "#001e2d",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed-variant": "#003fa4",
+                        "outline": "#75777e",
+                        "primary-container": "#0d1c32",
+                        "surface-dim": "#d9dadb",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "secondary": "#0050cc",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#515f78",
+                        "on-primary-fixed-variant": "#39475f",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "on-background": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "on-tertiary-container": "#6a889b",
+                        "on-secondary-container": "#f9f7ff",
+                        "tertiary-fixed-dim": "#accbe0",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c5c6cd",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "table-cell-padding": "8px 12px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+        .order-row:hover .row-actions {
+            opacity: 1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c5c6cd;
+            border-radius: 10px;
+        }
+        .pulsing-live {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+        /* Sticky header fix */
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container flex flex-col py-4 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container/50 font-bold">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- CRM -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">group</span> CRM
+            </a>
+<!-- KYC -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">verified_user</span> KYC
+            </a>
+<!-- Trading Ops (Active) -->
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3 px-6 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">query_stats</span> Trading Ops
+            </a>
+<!-- RMS -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">security</span> RMS
+            </a>
+<!-- Settlements -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">account_balance</span> Settlements
+            </a>
+<!-- Back Office -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Back Office
+            </a>
+<!-- Compliance -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">gavel</span> Compliance
+            </a>
+<!-- System Config -->
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-on-primary-container/10 p-3 px-6 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span> System Config
+            </a>
+</nav>
+<div class="mt-auto px-4 space-y-4">
+<button class="w-full bg-secondary text-on-secondary py-2 px-4 rounded font-label-md flex items-center justify-center gap-2 hover:bg-on-secondary-fixed-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span> New Request
+            </button>
+<div class="pt-4 border-t border-on-primary-container/10">
+<div class="flex items-center gap-3 px-2">
+<img class="w-8 h-8 rounded-full bg-on-primary-container/20 object-cover" data-alt="Professional headshot of a financial operations manager with a confident expression, wearing professional corporate attire, soft cinematic lighting, corporate office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC929lXMFF3_XnMW7Fh1lnCwsbjoPTv0kQ3ZbXhc65v-Y4RN8bXydOeSKcOmgITaq9lWLsofuRgf2-DrlaCjuF0J0Z5P91EpHY90BxmZwLRn8X3oDtN2NLgdyTvoOrUG4al50QUBSAx8XJ16_8f3-GeYDauqmcboVwIRGzQNnVTc0cwu4vl15HG5gboeRZ989s77xNuoQl6ocgbj2P-moMLDp_fQeiB086qcjj1ptsSRdTDREan7HEC"/>
+<div class="overflow-hidden">
+<p class="text-on-secondary-container font-semibold truncate text-[13px]">Admin User</p>
+<p class="text-on-primary-container/50 text-[11px] truncate">Ops Manager</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[260px] min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-6 z-40 shadow-sm">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded focus:outline-none focus:ring-1 focus:ring-secondary text-body-md font-body-md" placeholder="Search orders, clients, symbols..." type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Markets</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md" href="#">Risk</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[12px] font-bold">
+<span class="w-2 h-2 bg-green-500 rounded-full pulsing-live"></span>
+                    System Pulse
+                </div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Monitoring Content -->
+<section class="mt-16 p-6 flex flex-col gap-6 flex-1 overflow-hidden">
+<!-- Dashboard KPIs -->
+<div class="grid grid-cols-5 gap-4">
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-on-surface-variant text-body-sm font-body-sm mb-1">Total Orders</p>
+<div class="flex items-end justify-between">
+<h2 class="text-headline-md font-headline-md">12,842</h2>
+<span class="text-green-600 text-[11px] font-bold flex items-center"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> 12%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-on-surface-variant text-body-sm font-body-sm mb-1">Filled</p>
+<div class="flex items-end justify-between">
+<h2 class="text-headline-md font-headline-md">8,214</h2>
+<span class="text-green-600 text-[11px] font-bold">64% rate</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-on-surface-variant text-body-sm font-body-sm mb-1">Pending/Open</p>
+<div class="flex items-end justify-between">
+<h2 class="text-headline-md font-headline-md">421</h2>
+<span class="text-amber-600 text-[11px] font-bold">Action Req.</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-on-surface-variant text-body-sm font-body-sm mb-1">Rejected</p>
+<div class="flex items-end justify-between">
+<h2 class="text-headline-md font-headline-md">108</h2>
+<span class="text-error text-[11px] font-bold flex items-center"><span class="material-symbols-outlined text-[14px]">warning</span> 0.8%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded shadow-sm hover:shadow-md transition-shadow border-l-4 border-secondary-container">
+<p class="text-on-surface-variant text-body-sm font-body-sm mb-1">Queue Health</p>
+<div class="flex items-end justify-between">
+<h2 class="text-headline-md font-headline-md">Optimal</h2>
+<span class="text-secondary text-[11px] font-bold">12ms avg</span>
+</div>
+</div>
+</div>
+<!-- Filters & Controls -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3 rounded flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 border-r border-outline-variant pr-4 mr-2">
+<span class="material-symbols-outlined text-on-surface-variant">filter_alt</span>
+<span class="text-label-md font-label-md">Filters</span>
+</div>
+<select class="text-body-sm font-body-sm bg-surface-container-low border border-outline-variant rounded px-3 py-1.5 focus:ring-1 focus:ring-secondary">
+<option>Exchange: All</option>
+<option>NSE</option>
+<option>BSE</option>
+<option>MCX</option>
+</select>
+<select class="text-body-sm font-body-sm bg-surface-container-low border border-outline-variant rounded px-3 py-1.5 focus:ring-1 focus:ring-secondary">
+<option>Segment: All</option>
+<option>Equity</option>
+<option>F&amp;O</option>
+<option>Currency</option>
+</select>
+<select class="text-body-sm font-body-sm bg-surface-container-low border border-outline-variant rounded px-3 py-1.5 focus:ring-1 focus:ring-secondary">
+<option>Dealer: All Dealers</option>
+<option>Direct Client</option>
+<option>HNI Desk</option>
+<option>Algo</option>
+</select>
+<div class="flex bg-surface-container-low rounded p-0.5 border border-outline-variant">
+<button class="px-3 py-1 text-[11px] font-bold bg-white shadow-sm rounded text-primary">Live</button>
+<button class="px-3 py-1 text-[11px] font-bold text-on-surface-variant hover:text-primary transition-colors">Historical</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant px-3 py-1.5 hover:bg-surface-container-low rounded transition-colors">
+<span class="material-symbols-outlined">download</span> Export CSV
+                    </button>
+<button class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant px-3 py-1.5 hover:bg-surface-container-low rounded transition-colors">
+<span class="material-symbols-outlined">refresh</span> Refresh
+                    </button>
+</div>
+</div>
+<!-- Order Table Container -->
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-auto custom-scrollbar flex-1">
+<table class="w-full text-left border-collapse min-w-[1200px]">
+<thead class="bg-surface-container-high text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<tr>
+<th class="p-[8px_12px] border-b border-outline-variant">Order ID</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Client ID</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Symbol</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Exch</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Side</th>
+<th class="p-[8px_12px] border-b border-outline-variant text-right">Qty</th>
+<th class="p-[8px_12px] border-b border-outline-variant text-right">Price</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Type</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Product</th>
+<th class="p-[8px_12px] border-b border-outline-variant">Status</th>
+<th class="p-[8px_12px] border-b border-outline-variant text-right">Time</th>
+<th class="p-[8px_12px] border-b border-outline-variant text-center w-24">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-md font-data-mono">
+<!-- Row 1: Filled -->
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50">
+<td class="p-[8px_12px]">20230914-001</td>
+<td class="p-[8px_12px] text-secondary font-bold">ZR9821</td>
+<td class="p-[8px_12px] font-bold">RELIANCE</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-[8px_12px] text-right">500</td>
+<td class="p-[8px_12px] text-right">2,450.25</td>
+<td class="p-[8px_12px] text-[12px]">LIMIT</td>
+<td class="p-[8px_12px] text-[12px]">MIS</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Filled</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:22:01</td>
+<td class="p-[8px_12px]">
+<div class="row-actions opacity-0 flex justify-center gap-1 transition-opacity">
+<button class="p-1 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">visibility</span></button>
+<button class="p-1 hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Rejected -->
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50">
+<td class="p-[8px_12px]">20230914-002</td>
+<td class="p-[8px_12px] text-secondary font-bold">AB1104</td>
+<td class="p-[8px_12px] font-bold">HDFCBANK</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-error font-bold">SELL</span></td>
+<td class="p-[8px_12px] text-right">1,200</td>
+<td class="p-[8px_12px] text-right">1,642.10</td>
+<td class="p-[8px_12px] text-[12px]">MARKET</td>
+<td class="p-[8px_12px] text-[12px]">CNC</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] font-bold uppercase border border-error/20">Rejected</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:21:45</td>
+<td class="p-[8px_12px]">
+<div class="row-actions opacity-0 flex justify-center gap-1 transition-opacity">
+<button class="p-1 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">visibility</span></button>
+<button class="p-1 hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Open (Maker-Checker Highlight) -->
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50 border-l-4 border-amber-400">
+<td class="p-[8px_12px]">20230914-003</td>
+<td class="p-[8px_12px] text-secondary font-bold">GH4552</td>
+<td class="p-[8px_12px] font-bold">TCS</td>
+<td class="p-[8px_12px] text-[11px] font-bold">BSE</td>
+<td class="p-[8px_12px]"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-[8px_12px] text-right">25</td>
+<td class="p-[8px_12px] text-right">3,510.00</td>
+<td class="p-[8px_12px] text-[12px]">LIMIT</td>
+<td class="p-[8px_12px] text-[12px]">MIS</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase border border-amber-200">Open</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:21:30</td>
+<td class="p-[8px_12px]">
+<div class="row-actions opacity-100 flex justify-center gap-1">
+<button class="p-1 hover:text-secondary" title="Modify"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 hover:text-error" title="Cancel"><span class="material-symbols-outlined text-[18px]">block</span></button>
+</div>
+</td>
+</tr>
+<!-- Repeat data rows for density effect -->
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50">
+<td class="p-[8px_12px]">20230914-004</td>
+<td class="p-[8px_12px] text-secondary font-bold">ZR9821</td>
+<td class="p-[8px_12px] font-bold">INFY</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-error font-bold">SELL</span></td>
+<td class="p-[8px_12px] text-right">150</td>
+<td class="p-[8px_12px] text-right">1,480.00</td>
+<td class="p-[8px_12px] text-[12px]">LIMIT</td>
+<td class="p-[8px_12px] text-[12px]">MIS</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Filled</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:21:12</td>
+<td class="p-[8px_12px]"></td>
+</tr>
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50">
+<td class="p-[8px_12px]">20230914-005</td>
+<td class="p-[8px_12px] text-secondary font-bold">XY2020</td>
+<td class="p-[8px_12px] font-bold">SBIN</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-[8px_12px] text-right">2,000</td>
+<td class="p-[8px_12px] text-right">588.40</td>
+<td class="p-[8px_12px] text-[12px]">MARKET</td>
+<td class="p-[8px_12px] text-[12px]">CNC</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Filled</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:20:55</td>
+<td class="p-[8px_12px]"></td>
+</tr>
+<!-- Simulated many rows -->
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50 border-l-4 border-green-400">
+<td class="p-[8px_12px]">20230914-006</td>
+<td class="p-[8px_12px] text-secondary font-bold">AB1104</td>
+<td class="p-[8px_12px] font-bold">WIPRO</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-green-600 font-bold">BUY</span></td>
+<td class="p-[8px_12px] text-right">300</td>
+<td class="p-[8px_12px] text-right">420.15</td>
+<td class="p-[8px_12px] text-[12px]">LIMIT</td>
+<td class="p-[8px_12px] text-[12px]">MIS</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Filled</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:20:10</td>
+<td class="p-[8px_12px]"></td>
+</tr>
+<tr class="order-row group hover:bg-surface-container-low transition-colors border-b border-outline-variant/50">
+<td class="p-[8px_12px]">20230914-007</td>
+<td class="p-[8px_12px] text-secondary font-bold">ZR9821</td>
+<td class="p-[8px_12px] font-bold">ICICIBANK</td>
+<td class="p-[8px_12px] text-[11px] font-bold">NSE</td>
+<td class="p-[8px_12px]"><span class="text-error font-bold">SELL</span></td>
+<td class="p-[8px_12px] text-right">100</td>
+<td class="p-[8px_12px] text-right">955.50</td>
+<td class="p-[8px_12px] text-[12px]">LIMIT</td>
+<td class="p-[8px_12px] text-[12px]">CNC</td>
+<td class="p-[8px_12px]">
+<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase border border-amber-200">Pending Approval</span>
+</td>
+<td class="p-[8px_12px] text-right text-on-surface-variant">14:19:40</td>
+<td class="p-[8px_12px]"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer -->
+<div class="p-3 bg-surface-container-high border-t border-outline-variant flex items-center justify-between text-label-md font-label-md">
+<div class="flex items-center gap-4">
+<span>Showing 1-25 of 12,842 orders</span>
+<div class="flex items-center gap-2">
+<span>Rows per page:</span>
+<select class="bg-transparent border-none focus:ring-0 text-label-md py-0">
+<option>25</option>
+<option>50</option>
+<option>100</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 hover:bg-surface-container-low rounded disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-secondary text-on-secondary rounded">1</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface-container-low rounded">2</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface-container-low rounded">3</button>
+<button class="p-1 hover:bg-surface-container-low rounded">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Contextual Status Bar -->
+<footer class="h-8 bg-primary-container text-on-primary-container flex items-center justify-between px-6 text-[11px] font-medium z-40">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[12px] text-green-500">check_circle</span>
+                    OMS Core: Online
+                </div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[12px] text-green-500">check_circle</span>
+                    Risk Engine: Latency 4ms
+                </div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[12px] text-on-primary-container/40">cloud</span>
+                    AWS ap-south-1 (Mumbai)
+                </div>
+</div>
+<div class="flex items-center gap-4">
+<span>Last Updated: 14:22:15</span>
+<span class="text-on-primary-container/40">|</span>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-[14px]">settings_ethernet</span>
+<span class="material-symbols-outlined text-[14px]">security</span>
+</div>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interactions for table rows
+        document.querySelectorAll('.order-row').forEach(row => {
+            row.addEventListener('mousedown', () => {
+                row.style.transform = 'scale(0.998)';
+                row.style.transition = 'transform 0.1s';
+            });
+            row.addEventListener('mouseup', () => {
+                row.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simulate live data update every 5 seconds
+        setInterval(() => {
+            const timeElements = document.querySelectorAll('tbody td:nth-last-child(2)');
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                          now.getMinutes().toString().padStart(2, '0') + ':' + 
+                          now.getSeconds().toString().padStart(2, '0');
+            
+            // Randomly update the top row to show "activity"
+            const firstRowTime = timeElements[0];
+            firstRowTime.classList.add('text-secondary', 'font-bold');
+            setTimeout(() => {
+                firstRowTime.classList.remove('text-secondary', 'font-bold');
+            }, 1000);
+        }, 5000);
+    </script>
+</body></html>

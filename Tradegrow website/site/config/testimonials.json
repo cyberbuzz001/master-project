@@ -1,0 +1,55 @@
+{
+  "_README": [
+    "TESTIMONIAL STORE. Ships EMPTY on purpose. A new broker with glowing testimonials on day one is the single clearest signal of a fake platform.",
+    "PUBLISH GATE - all five must be true before 'published': true:",
+    "  1. consent.obtained = true, with a dated written consent record referenced in consent.recordRef",
+    "  2. verification.status = 'verified' (the person is a real, identifiable, activated client)",
+    "  3. The text contains NO profit figure, return percentage, or earnings claim",
+    "  4. The text is the customer's own words, not written or edited by Trade Grow beyond typo correction",
+    "  5. Compliance has signed off in approvals.complianceApprovedBy",
+    "If the section has no published entries, the website renders an honest empty state instead of the section. Do not fabricate to fill it."
+  ],
+
+  "sectionCopy": {
+    "emptyStateHeading": "We have no customer testimonials to show yet.",
+    "emptyStateBody": "Trade Grow is new. Rather than fill this space with stock photos and invented quotes, we have left it empty. When real customers agree to be quoted, their testimonials will appear here with the date and the product they used. Until then, please judge us on what you can verify instead.",
+    "emptyStateCta": { "label": "Verify Our Details", "href": "/verify/" }
+  },
+
+  "bannedPhrases": [
+    "guaranteed", "assured returns", "profit", "doubled", "multibagger",
+    "risk-free", "sure shot", "jackpot", "tip", "100% safe", "lakhs in"
+  ],
+
+  "schema": {
+    "id": "string, unique",
+    "customerName": "string, as consented (may be first name + initial if the customer prefers)",
+    "location": "string, optional",
+    "date": "YYYY-MM-DD, the date the testimonial was given",
+    "productUsed": "string, e.g. Equity Delivery",
+    "clientSince": "YYYY-MM, optional",
+    "text": "string, the customer's own words",
+    "media": { "photoUrl": "string|null", "videoUrl": "string|null" },
+    "consent": {
+      "obtained": "boolean",
+      "obtainedOn": "YYYY-MM-DD",
+      "channel": "written | email | signed form | recorded video consent",
+      "recordRef": "internal reference to the stored consent record",
+      "mediaConsent": "boolean, separate consent for photo/video use",
+      "withdrawable": true
+    },
+    "verification": {
+      "status": "verified | pending | rejected",
+      "verifiedBy": "string",
+      "verifiedOn": "YYYY-MM-DD",
+      "clientIdRef": "internal client reference, never rendered publicly"
+    },
+    "approvals": {
+      "complianceApprovedBy": "string",
+      "complianceApprovedOn": "YYYY-MM-DD"
+    },
+    "published": "boolean"
+  },
+
+  "items": []
+}

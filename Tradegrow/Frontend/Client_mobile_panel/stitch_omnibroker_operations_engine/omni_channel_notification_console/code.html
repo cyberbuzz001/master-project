@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BrokerOps | Notification Management Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#0d1c32",
+                    "tertiary-fixed": "#c8e7fd",
+                    "surface-container-low": "#f3f4f5",
+                    "error": "#ba1a1a",
+                    "surface-container": "#edeeef",
+                    "surface-bright": "#f8f9fa",
+                    "outline-variant": "#c5c6cd",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#b3c5ff",
+                    "secondary": "#0050cc",
+                    "on-primary-container": "#76849f",
+                    "on-surface-variant": "#44474d",
+                    "on-secondary-fixed": "#001849",
+                    "tertiary-container": "#001e2d",
+                    "primary-fixed": "#d6e3ff",
+                    "outline": "#75777e",
+                    "on-secondary-fixed-variant": "#003fa4",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#d9dadb",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#515f78",
+                    "on-tertiary-container": "#6a889b",
+                    "on-background": "#191c1d",
+                    "surface": "#f8f9fa",
+                    "on-tertiary-fixed-variant": "#2c4a5c",
+                    "inverse-surface": "#2e3132",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-primary-fixed-variant": "#39475f",
+                    "secondary-fixed": "#dae1ff",
+                    "on-secondary-container": "#f9f7ff",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "tertiary-fixed-dim": "#accbe0",
+                    "surface-variant": "#e1e3e4",
+                    "background": "#f8f9fa",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "inverse-primary": "#b9c7e4",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#000000",
+                    "secondary-container": "#0266ff",
+                    "primary": "#000000",
+                    "on-tertiary-fixed": "#001e2d",
+                    "primary-container": "#0d1c32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "table-cell-padding": "8px 12px",
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "sidebar-width": "260px",
+                    "sidebar-collapsed": "64px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .sidebar-active { border-left: 4px solid #0266ff; background: rgba(2, 102, 255, 0.1); color: #f9f7ff; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c5c6cd; border-radius: 10px; }
+        .template-card:hover .actions { opacity: 1; }
+        .dashed-border-amber { border: 1px dashed #d97706; }
+        .solid-border-green { border-left: 4px solid #16a34a; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-fixed selection:text-on-secondary-fixed overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-primary-container flex flex-col py-4 shadow-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-primary-container tracking-tight">BrokerAdmin</h1>
+<p class="text-on-primary-container/60 font-label-md text-label-md uppercase tracking-widest">Enterprise Suite</p>
+</div>
+<nav class="flex-1 space-y-1 overflow-y-auto px-3">
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md">KYC</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-label-md">Trading Ops</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label-md">RMS</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-md">Settlements</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md">Back Office</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container/20 border-l-4 border-secondary-container text-on-secondary-container p-3" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md">Compliance</span>
+</a>
+<a class="flex items-center gap-3 text-on-primary-container/70 hover:text-on-primary-container p-3 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">System Config</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-4">
+<button class="w-full bg-secondary text-white py-2 px-4 rounded font-label-md flex items-center justify-center gap-2 hover:bg-secondary/90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Request
+            </button>
+<div class="border-t border-on-primary-container/10 pt-4">
+<div class="flex items-center gap-3 px-3">
+<img class="w-8 h-8 rounded-full bg-surface-container-high object-cover" data-alt="Close-up professional portrait of a financial operations manager with a confident expression, wearing a tailored navy suit against a soft-focus modern corporate office background. The lighting is crisp and natural, highlighting an authoritative yet approachable executive presence suitable for a high-stakes brokerage platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPyd7Eseli5xHHk0Vl7-VfU6BmSCObP5vYSmwjf8rXX4HaHlMifyMmUo1LAvle9RyyNtGtpLK8uRXfIXLKoY6rsXlzqUUA13mU82gM8xHhM219FTvZh6yZ9ffKHSyKydYS5yKzD5Ris55F3h_KQcl6b3pUZkQvvq72TPbAOsEmcXqUdbv8MfS-8DQBm0UL9Cq99eCQOUjCHstDoSDkgeioFGQwEXtaTdjE7Lw6po05g-W9PMmZ9TZm"/>
+<div class="flex flex-col">
+<span class="text-on-primary-container font-label-md leading-none">Admin User</span>
+<span class="text-on-primary-container/50 text-[10px]">Super Admin</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="ml-[260px] min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="h-16 flex items-center justify-between px-6 bg-surface-container-lowest border-b border-outline-variant z-40">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-primary">BrokerOps</span>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Markets</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-md" href="#">Risk</a>
+<a class="text-secondary font-semibold border-b-2 border-secondary pb-1 font-body-md" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-secondary/20 w-64 transition-all" placeholder="Search templates..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-all">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<button class="bg-primary text-white px-4 py-1.5 rounded font-label-md flex items-center gap-2 hover:opacity-90 transition-all active:opacity-80">
+<span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    System Pulse
+                </button>
+</div>
+</header>
+<!-- Notification Console Content -->
+<div class="flex-1 p-6 overflow-y-auto bg-surface-container-low/30">
+<!-- Page Header -->
+<div class="mb-8 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Notification Console</h2>
+<p class="text-on-surface-variant">Configure omni-channel alerts and template workflows</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-outline text-primary font-label-md rounded flex items-center gap-2 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[20px]">history</span>
+                        Version History
+                    </button>
+<button class="px-4 py-2 bg-secondary text-white font-label-md rounded flex items-center gap-2 shadow-sm hover:shadow-md transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Create Template
+                    </button>
+</div>
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-12 gap-6 h-[calc(100vh-250px)]">
+<!-- Left Sidebar: Library & Channels -->
+<div class="col-span-3 flex flex-col gap-6">
+<!-- Channels -->
+<div class="bg-surface-container-lowest p-4 rounded border border-outline-variant shadow-sm">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant mb-4">Active Channels</h3>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low border border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">mail</span>
+<span class="font-label-md">Email</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">sms</span>
+<span class="font-label-md">SMS</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-600">chat</span>
+<span class="font-label-md">WhatsApp</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">notifications_active</span>
+<span class="font-label-md">Push</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+</div>
+</div>
+</div>
+<!-- Categories -->
+<div class="bg-surface-container-lowest p-4 rounded border border-outline-variant shadow-sm flex-1 overflow-y-auto">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant mb-4">Library Categories</h3>
+<ul class="space-y-1">
+<li><button class="w-full text-left p-2 rounded bg-secondary/5 text-secondary font-semibold flex items-center justify-between">
+<span>KYC Verification</span>
+<span class="text-[10px] bg-secondary/10 px-1.5 rounded">12</span>
+</button></li>
+<li><button class="w-full text-left p-2 rounded text-on-surface-variant hover:bg-surface-container transition-colors flex items-center justify-between">
+<span>Order Updates</span>
+<span class="text-[10px] bg-surface-container-high px-1.5 rounded">24</span>
+</button></li>
+<li><button class="w-full text-left p-2 rounded text-on-surface-variant hover:bg-surface-container transition-colors flex items-center justify-between">
+<span>Trade Confirmation</span>
+<span class="text-[10px] bg-surface-container-high px-1.5 rounded">8</span>
+</button></li>
+<li><button class="w-full text-left p-2 rounded text-on-surface-variant hover:bg-surface-container transition-colors flex items-center justify-between">
+<span>Funds & Payouts</span>
+<span class="text-[10px] bg-surface-container-high px-1.5 rounded">15</span>
+</button></li>
+<li><button class="w-full text-left p-2 rounded text-on-surface-variant hover:bg-surface-container transition-colors flex items-center justify-between">
+<span>Security Alerts</span>
+<span class="text-[10px] bg-surface-container-high px-1.5 rounded">5</span>
+</button></li>
+</ul>
+</div>
+</div>
+<!-- Center: Visual Editor -->
+<div class="col-span-6 flex flex-col gap-6">
+<div class="bg-surface-container-lowest rounded border border-outline-variant shadow-sm flex-1 flex flex-col overflow-hidden">
+<div class="flex items-center justify-between p-4 border-b border-outline-variant bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<span class="font-headline-md text-headline-md text-primary">Template: KYC_SUBMITTED_SUCCESS</span>
+<span class="px-2 py-0.5 rounded-full border border-secondary text-[10px] font-bold text-secondary bg-secondary/5 uppercase">Draft v2.4</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1.5 hover:bg-surface-container rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">undo</span>
+</button>
+<button class="p-1.5 hover:bg-surface-container rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">redo</span>
+</button>
+</div>
+</div>
+<!-- Editor Toolbar -->
+<div class="flex items-center gap-4 px-4 py-2 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex gap-1 border-r border-outline-variant pr-4">
+<button class="p-1 hover:bg-surface-container rounded transition-all"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1 hover:bg-surface-container rounded transition-all"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1 hover:bg-surface-container rounded transition-all"><span class="material-symbols-outlined text-[18px]">link</span></button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-on-surface-variant font-label-md">Variables:</span>
+<button class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded hover:bg-secondary/20 transition-all border border-secondary/20">{{client_name}}</button>
+<button class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded hover:bg-secondary/20 transition-all border border-secondary/20">{{ref_id}}</button>
+<button class="px-2 py-1 bg-secondary/10 text-secondary text-[11px] font-bold rounded hover:bg-secondary/20 transition-all border border-secondary/20">{{date}}</button>
+</div>
+</div>
+<!-- Editor Area -->
+<div class="flex-1 p-6 font-data-mono text-sm overflow-y-auto leading-relaxed focus:outline-none" contenteditable="true">
+<div class="mb-4 text-on-surface-variant font-body-md italic border-l-2 border-outline-variant pl-4 py-1">
+                                Subject: KYC Documents Received Successfully - {{ref_id}}
+                            </div>
+<p>Hi <span class="bg-secondary/10 text-secondary px-1 rounded">{{client_name}}</span>,</p>
+<br/>
+<p>We're pleased to inform you that we have successfully received your KYC documents for your trading account application.</p>
+<br/>
+<p>Your reference ID is <strong>{{ref_id}}</strong>. Our compliance team will review the documents within 24-48 business hours. You will receive an update on <span class="bg-secondary/10 text-secondary px-1 rounded">{{date}}</span> via WhatsApp and Email.</p>
+<br/>
+<p>If you have any questions, please reach out to our 24/7 support desk.</p>
+<br/>
+<p>Regards,<br/>Compliance Team<br/>BrokerOps Enterprise</p>
+</div>
+<div class="p-4 border-t border-outline-variant flex justify-between items-center">
+<div class="flex gap-2">
+<div class="flex items-center gap-1 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span>Last edited 2m ago by Rajiv K.</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-1.5 border border-outline text-primary font-label-md rounded hover:bg-surface-container transition-all">Save Draft</button>
+<button class="px-4 py-1.5 bg-primary text-white font-label-md rounded hover:opacity-90 transition-all">Submit for Approval</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Preview & Workflow -->
+<div class="col-span-3 flex flex-col gap-6">
+<!-- Approval Workflow -->
+<div class="bg-surface-container-lowest p-4 rounded border border-outline-variant shadow-sm dashed-border-amber">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant">Approval Workflow</h3>
+<span class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase">Pending Checker</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+<div class="w-[1px] h-6 bg-outline-variant my-1"></div>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-primary">Maker Created</p>
+<p class="text-[10px] text-on-surface-variant">Anjali Sharma • Oct 24, 10:30 AM</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">radio_button_unchecked</span>
+<div class="w-[1px] h-6 bg-outline-variant my-1"></div>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-on-surface-variant">Checker Approval</p>
+<p class="text-[10px] text-on-surface-variant">Assigned to: Compliance Manager</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">lock</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-on-surface-variant opacity-50">Publish to Production</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Multi-device Preview -->
+<div class="bg-surface-container-lowest p-4 rounded border border-outline-variant shadow-sm flex-1 flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant">Preview Mode</h3>
+<div class="flex gap-1">
+<button class="p-1 text-secondary bg-secondary/10 rounded"><span class="material-symbols-outlined text-[18px]">smartphone</span></button>
+<button class="p-1 text-on-surface-variant hover:bg-surface-container rounded"><span class="material-symbols-outlined text-[18px]">desktop_windows</span></button>
+</div>
+</div>
+<!-- Simulated Mobile Frame -->
+<div class="flex-1 bg-surface-container border-4 border-primary/10 rounded-2xl p-2 flex flex-col gap-2 overflow-hidden max-h-[350px]">
+<div class="bg-white rounded-xl p-3 shadow-sm border border-outline-variant text-[11px] relative">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">bolt</span>
+</div>
+<span class="font-bold text-primary">BrokerOps</span>
+<span class="ml-auto text-[9px] text-on-surface-variant">Now</span>
+</div>
+<p class="font-bold mb-0.5 text-primary">KYC Submission Successful</p>
+<p class="text-on-surface-variant line-clamp-3">Hi Rahul, we've received your documents for Ref ID: BKR-9921. Our team will verify them within 24h.</p>
+</div>
+<div class="mt-auto h-1 w-1/3 bg-primary/20 rounded-full self-center mb-1"></div>
+</div>
+<button class="mt-4 w-full py-2 border border-outline-variant text-primary font-label-md rounded flex items-center justify-center gap-2 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[18px]">send</span>
+                            Send Test Notification
+                        </button>
+</div>
+</div>
+</div>
+<!-- Recently Visited / Footer Tabs -->
+<div class="mt-8 grid grid-cols-12 gap-6">
+<div class="col-span-12 bg-surface-container-lowest rounded border border-outline-variant shadow-sm p-4 overflow-x-auto">
+<h3 class="font-label-md text-label-md uppercase text-on-surface-variant mb-4 px-2">Recently Modified Templates</h3>
+<div class="flex gap-4 min-w-max px-2">
+<!-- Template Card 1 -->
+<div class="template-card w-72 p-4 bg-surface-container-low/50 rounded border border-outline-variant relative group transition-all hover:bg-surface-container hover:shadow-md cursor-pointer solid-border-green">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-secondary text-[24px]">contact_mail</span>
+<span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">LIVE</span>
+</div>
+<p class="font-bold text-primary mb-1">KYC_APPROVAL_SUCCESS</p>
+<p class="text-[11px] text-on-surface-variant mb-4">Final confirmation sent after compliace checks...</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-tertiary-container flex items-center justify-center text-[10px] text-white">MK</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-on-primary-container flex items-center justify-center text-[10px] text-white">JS</div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-data-mono">v3.2.1</span>
+</div>
+</div>
+<!-- Template Card 2 -->
+<div class="template-card w-72 p-4 bg-surface-container-low/50 rounded border border-outline-variant relative group transition-all hover:bg-surface-container hover:shadow-md cursor-pointer dashed-border-amber">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-secondary text-[24px]">payments</span>
+<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">PENDING</span>
+</div>
+<p class="font-bold text-primary mb-1">PAYOUT_REJECTED_ALERT</p>
+<p class="text-[11px] text-on-surface-variant mb-4">Informs user why withdrawal request was denied...</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-secondary flex items-center justify-center text-[10px] text-white">AK</div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-data-mono">v1.0.4</span>
+</div>
+</div>
+<!-- Template Card 3 -->
+<div class="template-card w-72 p-4 bg-surface-container-low/50 rounded border border-outline-variant relative group transition-all hover:bg-surface-container hover:shadow-md cursor-pointer border-l-4 border-outline">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-secondary text-[24px]">show_chart</span>
+<span class="text-[10px] bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded font-bold">ARCHIVED</span>
+</div>
+<p class="font-bold text-primary mb-1">MARKET_CLOSE_SUMMARY</p>
+<p class="text-[11px] text-on-surface-variant mb-4">Daily EOD report of indices and top movers...</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-outline flex items-center justify-center text-[10px] text-white">+4</div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-data-mono">v4.0.0</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual Footer (Simplified BottomNav equivalent for internal tools) -->
+<footer class="ml-[260px] h-10 border-t border-outline-variant bg-surface-container-lowest px-6 flex items-center justify-between text-[11px] text-on-surface-variant">
+<div class="flex gap-6">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Engine: Connected</span>
+<span class="flex items-center gap-1 font-data-mono">Uptime: 99.98%</span>
+</div>
+<div class="flex gap-4 uppercase font-label-md tracking-wider">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#"><span class="material-symbols-outlined text-[14px]">search</span> Search</a>
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#"><span class="material-symbols-outlined text-[14px]">star</span> Favorites</a>
+<a class="text-primary transition-colors flex items-center gap-1" href="#"><span class="material-symbols-outlined text-[14px]">history</span> Recently Visited</a>
+</div>
+</footer>
+<script>
+        // Micro-interaction for template variable highlighting
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple text editor placeholder simulation logic
+        const editor = document.querySelector('[contenteditable="true"]');
+        editor.addEventListener('focus', () => {
+           if(editor.innerText.trim() === 'Start typing your template here...') {
+               editor.innerText = '';
+           }
+        });
+    </script>
+</body></html>

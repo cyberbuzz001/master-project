@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Monitoring Hub | Option Chain Infrastructure</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#b9c7e4",
+                    "on-primary-container": "#74829d",
+                    "tertiary-fixed-dim": "#e7bf99",
+                    "surface-container": "#151f37",
+                    "inverse-primary": "#515f78",
+                    "secondary-fixed-dim": "#b5c7ea",
+                    "surface-bright": "#2f3952",
+                    "inverse-surface": "#d9e2ff",
+                    "on-secondary-container": "#a3b6d8",
+                    "outline": "#8f9097",
+                    "error": "#ffb4ab",
+                    "surface-dim": "#07122a",
+                    "secondary": "#b5c7ea",
+                    "surface-container-highest": "#2a344e",
+                    "on-tertiary": "#432b10",
+                    "surface-container-low": "#101b33",
+                    "on-tertiary-fixed": "#2b1701",
+                    "on-error-container": "#ffdad6",
+                    "on-surface": "#d9e2ff",
+                    "secondary-fixed": "#d5e3ff",
+                    "surface-variant": "#2a344e",
+                    "primary-container": "#0a192f",
+                    "secondary-container": "#354764",
+                    "primary": "#b9c7e4",
+                    "on-primary": "#233148",
+                    "on-error": "#690005",
+                    "on-surface-variant": "#c5c6cd",
+                    "tertiary-fixed": "#ffdcbd",
+                    "on-secondary-fixed": "#071c36",
+                    "inverse-on-surface": "#263049",
+                    "on-tertiary-container": "#9d7b5a",
+                    "tertiary": "#e7bf99",
+                    "on-tertiary-fixed-variant": "#5d4124",
+                    "on-secondary-fixed-variant": "#354764",
+                    "error-container": "#93000a",
+                    "surface-container-high": "#1f2942",
+                    "outline-variant": "#44474d",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "surface": "#07122a",
+                    "tertiary-container": "#281400",
+                    "primary-fixed": "#d6e3ff",
+                    "on-primary-fixed": "#0d1c32",
+                    "on-primary-fixed-variant": "#39475f",
+                    "on-secondary": "#1e314c",
+                    "on-background": "#d9e2ff",
+                    "background": "#07122a",
+                    "surface-container-lowest": "#030d25"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "unit": "4px",
+                    "density-compact": "4px",
+                    "density-default": "8px",
+                    "margin-page": "24px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-lg": ["JetBrains Mono"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "body-sm": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #07122a;
+            color: #d9e2ff;
+            -webkit-font-smoothing: antialiased;
+        }
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+        .data-table-row:hover {
+            background-color: rgba(42, 52, 78, 0.4);
+        }
+        .outline-15 {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030d25;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #354764;
+        }
+        .ticker-animate {
+            animation: ticker 30s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface text-primary font-headline-sm text-headline-sm font-data-mono docked full-width top-0 border-b border-outline-variant/15 flex justify-between items-center w-full px-gutter h-12 z-50 fixed">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Apex Monitoring Hub</span>
+<div class="hidden md:flex items-center bg-primary-container px-3 py-1 rounded-lg border border-outline-variant/20">
+<span class="material-symbols-outlined text-[16px] mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48 p-0" placeholder="Search systems..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors cursor-pointer p-1 rounded">notifications</span>
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors cursor-pointer p-1 rounded">settings</span>
+<span class="material-symbols-outlined hover:bg-surface-container-highest transition-colors cursor-pointer p-1 rounded">help</span>
+</div>
+<button class="bg-error-container text-on-error-container px-3 py-1 rounded-lg text-label-caps font-bold transition-all active:opacity-80">
+                Emergency Stop
+            </button>
+<div class="flex items-center gap-2 border-l border-outline-variant/20 pl-4">
+<img class="w-7 h-7 rounded-full object-cover grayscale brightness-110" data-alt="Close up profile picture of a professional system administrator in a high-tech control room environment with subtle blue screen reflections on their face. Minimalist, corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsG9mVErKxw_mUik-UgKhr9REpWdsm14ZoSJmb3XZV2I3EWOsBwCXeTDhkjtT6W5mX98q042mtRa2vl2T7K_5F-12zuAAlr0re--WKxeWkeXALt__Pc6YuPgRosGxeMFt1Ux1j8S2yvV503jEbb3yyOmtcMmrChTHySxFdD6nSnhMq4Z92b2_aYrRqa3Lza0IOrvfjWgBgp_wB2nEismz1Yj2KjDJShRZbYLWFx2UxNrOkfrkAb5RY"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="bg-surface-container text-secondary font-label-caps text-label-caps font-body-md text-body-md docked left-0 h-full w-64 border-r border-outline-variant/15 flex flex-col h-screen fixed left-0 top-0 z-40 pt-16">
+<div class="px-6 mb-8">
+<div class="text-secondary font-headline-sm text-headline-sm font-black mb-1">APEX HUB</div>
+<div class="text-on-surface-variant text-body-sm opacity-60">Operational Node 01</div>
+</div>
+<div class="flex-1 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container border-l-4 border-secondary transition-all duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span>Order Book</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Ledger</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span>Exchanges</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150" href="#">
+<span class="material-symbols-outlined">security</span>
+<span>Risk Manager</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="p-4 border-t border-outline-variant/10">
+<button class="w-full py-3 bg-secondary text-on-secondary font-bold rounded mb-4">
+                New Terminal
+            </button>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-error transition-all duration-150" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 mt-12 h-[calc(100vh-3rem)] overflow-hidden flex flex-col">
+<!-- Real-time Tickers -->
+<div class="h-8 bg-surface-container-lowest border-b border-outline-variant/10 flex items-center overflow-hidden whitespace-nowrap">
+<div class="flex items-center ticker-animate gap-12 px-gutter">
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">FED_MSG_LATENCY:</span>
+<span class="text-primary font-data-mono">1.2ms</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">TOTAL_CONTRACTS:</span>
+<span class="text-primary font-data-mono">24,592</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">GREEKS_ENGINE:</span>
+<span class="text-primary font-data-mono">NOMINAL</span>
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">WS_SUBS:</span>
+<span class="text-primary font-data-mono">128/128</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">API_AUTH_STATUS:</span>
+<span class="text-primary font-data-mono">VERIFIED</span>
+</div>
+<!-- Repeat for infinite loop effect -->
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">FED_MSG_LATENCY:</span>
+<span class="text-primary font-data-mono">1.2ms</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-body-sm">TOTAL_CONTRACTS:</span>
+<span class="text-primary font-data-mono">24,592</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-gutter overflow-y-auto grid grid-cols-12 gap-unit gap-y-4">
+<!-- LEFT COLUMN: Infrastructure Overview & Alerts -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+<!-- Infrastructure Monitor Card -->
+<section class="bg-surface-container border border-outline-variant/15 p-4 flex flex-col gap-4">
+<div class="flex justify-between items-center border-b border-outline-variant/10 pb-2">
+<h2 class="text-label-caps font-bold text-secondary uppercase">Infrastructure Overview</h2>
+<span class="text-body-sm text-on-surface-variant font-data-mono">v4.2.0-STABLE</span>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-primary-container/30 border border-outline-variant/10 p-3 flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-body-sm opacity-70">Data Freshness</span>
+<span class="text-data-mono text-primary">99.98%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 99.98%"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-primary-container/30 border border-outline-variant/10 p-3 flex flex-col">
+<span class="text-label-caps text-on-surface-variant opacity-60">WS Subscriptions</span>
+<span class="text-headline-sm font-data-mono text-primary mt-1">128</span>
+<span class="text-[10px] text-green-400 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> ALL ACTIVE
+                                </span>
+</div>
+<div class="bg-primary-container/30 border border-outline-variant/10 p-3 flex flex-col">
+<span class="text-label-caps text-on-surface-variant opacity-60">Greeks Update Rate</span>
+<span class="text-headline-sm font-data-mono text-primary mt-1">2.4ms</span>
+<span class="text-[10px] text-on-surface-variant mt-1">AVG. PER BATCH</span>
+</div>
+</div>
+</div>
+<!-- Health Indicator Visual -->
+<div class="relative h-24 border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
+
+<div class="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
+<span class="text-label-caps text-secondary font-bold">Network Throughput</span>
+<span class="text-data-mono text-primary">14.8 GB/s</span>
+</div>
+</div>
+</section>
+<!-- System Alerts Panel -->
+<section class="bg-surface-container border border-outline-variant/15 p-4 flex-1">
+<div class="flex justify-between items-center border-b border-outline-variant/10 pb-2 mb-4">
+<h2 class="text-label-caps font-bold text-error uppercase">System Alerts</h2>
+<span class="bg-error-container/20 text-error px-2 py-0.5 rounded text-[10px] font-bold">3 ACTIVE</span>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Alert Item -->
+<div class="bg-error-container/10 border-l-4 border-error p-3 flex gap-3">
+<span class="material-symbols-outlined text-error">warning</span>
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">Stale Data: ETH-SEP-24</span>
+<span class="text-body-sm text-on-surface-variant">Last update &gt; 500ms. checking feeder 04.</span>
+<span class="text-data-mono text-[10px] mt-2 opacity-50">TS: 14:22:01.442</span>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="bg-surface-container-highest/50 border-l-4 border-primary p-3 flex gap-3">
+<span class="material-symbols-outlined text-primary">info</span>
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">API Latency Spike</span>
+<span class="text-body-sm text-on-surface-variant">Regional node 'asia-east1' reporting +120ms lag.</span>
+<span class="text-data-mono text-[10px] mt-2 opacity-50">TS: 14:19:44.211</span>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="bg-error-container/10 border-l-4 border-error p-3 flex gap-3">
+<span class="material-symbols-outlined text-error">error</span>
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-on-surface">Missing Token Metadata</span>
+<span class="text-body-sm text-on-surface-variant">Contract ID: BTC-W-181024-65000-C failed validation.</span>
+<span class="text-data-mono text-[10px] mt-2 opacity-50">TS: 14:15:33.001</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN: Contract Grid (Data Intensive) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+<section class="bg-surface-container border border-outline-variant/15 flex flex-col flex-1 overflow-hidden">
+<div class="p-4 flex justify-between items-center border-b border-outline-variant/15 bg-surface-container-high/50">
+<div class="flex gap-4">
+<h2 class="text-label-caps font-bold text-secondary uppercase">Contract Infrastructure Grid</h2>
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-secondary-container/30 text-secondary text-[10px] rounded border border-secondary/20">LIVE FEED</span>
+<span class="px-2 py-0.5 bg-primary-container/30 text-primary text-[10px] rounded border border-primary/20">AUTO-SCALE ON</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-body-sm text-on-surface-variant">Filter by Symbol:</span>
+<select class="bg-primary-container border border-outline-variant/20 rounded text-body-sm px-2 py-1 text-on-surface">
+<option>ALL UNDERLYING</option>
+<option>BTC-USD</option>
+<option>ETH-USD</option>
+<option>SOL-USD</option>
+</select>
+</div>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 z-10 bg-surface-container-high shadow-md">
+<tr class="text-label-caps text-on-surface-variant opacity-60 border-b border-outline-variant/15">
+<th class="px-4 py-3 font-bold">Symbol</th>
+<th class="px-4 py-3 font-bold">Expiry</th>
+<th class="px-4 py-3 font-bold text-right">Active Ctrcts</th>
+<th class="px-4 py-3 font-bold text-right">WS Latency</th>
+<th class="px-4 py-3 font-bold">Health Status</th>
+<th class="px-4 py-3 font-bold text-right">OI Update</th>
+<th class="px-4 py-3 font-bold text-center">Node</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-data-mono">
+<!-- Row 1 -->
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">BTC-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-OCT-25</td>
+<td class="px-4 py-1 text-right">1,244</td>
+<td class="px-4 py-1 text-right text-green-400">0.85ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">12s ago</td>
+<td class="px-4 py-1 text-center opacity-50">US-E1</td>
+</tr>
+<!-- Row 2 -->
+<tr class="data-table-row border-b border-outline-variant/5 h-8 bg-error-container/5">
+<td class="px-4 py-1 text-primary font-bold">ETH-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-SEP-27</td>
+<td class="px-4 py-1 text-right">4,592</td>
+<td class="px-4 py-1 text-right text-error">512.4ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="text-[10px] text-error font-bold">LATENCY WARNING</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right text-error font-bold">STALE (4m)</td>
+<td class="px-4 py-1 text-center opacity-50">EU-W1</td>
+</tr>
+<!-- Row 3 -->
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">SOL-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-SEP-27</td>
+<td class="px-4 py-1 text-right">892</td>
+<td class="px-4 py-1 text-right text-green-400">1.12ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">3s ago</td>
+<td class="px-4 py-1 text-center opacity-50">US-W1</td>
+</tr>
+<!-- Row 4 -->
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">AVAX-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-OCT-11</td>
+<td class="px-4 py-1 text-right">310</td>
+<td class="px-4 py-1 text-right text-green-400">2.44ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">45s ago</td>
+<td class="px-4 py-1 text-center opacity-50">AS-E2</td>
+</tr>
+<!-- Repeating rows for visual density -->
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">BTC-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-DEC-27</td>
+<td class="px-4 py-1 text-right">12,410</td>
+<td class="px-4 py-1 text-right text-green-400">0.92ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">1s ago</td>
+<td class="px-4 py-1 text-center opacity-50">US-E1</td>
+</tr>
+<tr class="data-table-row border-b border-outline-variant/5 h-8 bg-surface-container-highest/20">
+<td class="px-4 py-1 text-primary font-bold">ETH-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-DEC-27</td>
+<td class="px-4 py-1 text-right">22,192</td>
+<td class="px-4 py-1 text-right text-secondary">42.8ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="text-[10px] text-secondary">RECONNECTING...</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">STALE (1m)</td>
+<td class="px-4 py-1 text-center opacity-50">US-E1</td>
+</tr>
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">SOL-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2025-MAR-28</td>
+<td class="px-4 py-1 text-right">512</td>
+<td class="px-4 py-1 text-right text-green-400">1.40ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">22s ago</td>
+<td class="px-4 py-1 text-center opacity-50">AS-W1</td>
+</tr>
+<tr class="data-table-row border-b border-outline-variant/5 h-8">
+<td class="px-4 py-1 text-primary font-bold">LNK-USD</td>
+<td class="px-4 py-1 text-on-surface-variant">2024-SEP-27</td>
+<td class="px-4 py-1 text-right">45</td>
+<td class="px-4 py-1 text-right text-green-400">3.1ms</td>
+<td class="px-4 py-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+<span class="text-[10px] text-green-400">SYNCHRONIZED</span>
+</div>
+</td>
+<td class="px-4 py-1 text-right">59s ago</td>
+<td class="px-4 py-1 text-center opacity-50">EU-N1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer of Grid -->
+<div class="p-3 border-t border-outline-variant/15 flex justify-between items-center bg-surface-container-high/30">
+<div class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                            Showing 1-12 of 124 contract sets
+                        </div>
+<div class="flex gap-2">
+<button class="p-1 border border-outline-variant/20 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-3 text-data-mono text-[11px] border border-outline-variant/20 bg-secondary-container text-on-secondary-container">1</button>
+<button class="px-3 text-data-mono text-[11px] border border-outline-variant/20 hover:bg-surface-container-highest transition-colors">2</button>
+<button class="px-3 text-data-mono text-[11px] border border-outline-variant/20 hover:bg-surface-container-highest transition-colors">3</button>
+<button class="p-1 border border-outline-variant/20 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- System Logs (Quick View) -->
+<section class="bg-surface-container border border-outline-variant/15 h-48 flex flex-col">
+<div class="p-2 px-4 border-b border-outline-variant/15 flex justify-between items-center">
+<span class="text-label-caps font-bold text-on-surface-variant">System Runtime Logs</span>
+<div class="flex gap-4">
+<span class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> ENGINE_OK</span>
+<span class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> DB_COMMIT_ACTIVE</span>
+</div>
+</div>
+<div class="flex-1 bg-surface-container-lowest font-data-mono text-[11px] p-3 overflow-y-auto text-on-surface-variant leading-relaxed">
+<p><span class="text-primary">[14:25:01.002]</span> INFO: Re-scaling Greeks calculation matrix for expiry 2024-OCT-25</p>
+<p><span class="text-primary">[14:25:01.442]</span> <span class="text-error">WARN:</span> Feeder cluster 'US-E1' reported temporary socket pressure (dropped 2 pkts)</p>
+<p><span class="text-primary">[14:25:02.110]</span> INFO: Heartbeat received from 'Node-Admin-01'</p>
+<p><span class="text-primary">[14:25:03.441]</span> INFO: Successfully pushed 1,244 contract updates to WebSocket stream: #00421</p>
+<p><span class="text-primary">[14:25:05.122]</span> <span class="text-secondary">DEBUG:</span> Cache invalidated for symbol BTC-USD in memcached.region:asia</p>
+<p><span class="text-primary">[14:25:06.001]</span> INFO: Automatic health check passed for 4,212/4,212 active connections</p>
+<p><span class="text-primary">[14:25:06.882]</span> INFO: Re-balancing shard-42 on node clusters EU-W1 and EU-N1</p>
+</div>
+</section>
+</div>
+</div>
+<!-- Footer Metric Bar -->
+<footer class="h-8 bg-surface-container border-t border-outline-variant/20 flex items-center justify-between px-gutter">
+<div class="flex gap-6 items-center">
+<div class="flex items-center gap-2">
+<span class="text-label-caps opacity-50">Core Load:</span>
+<span class="text-data-mono text-primary">12%</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-caps opacity-50">RAM:</span>
+<span class="text-data-mono text-primary">4.2/64GB</span>
+</div>
+<div class="flex items-center gap-2 border-l border-outline-variant/15 pl-4">
+<span class="text-label-caps opacity-50">Session Time:</span>
+<span class="text-data-mono text-primary" id="session-timer">02:14:55</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-label-caps text-green-500">SYSTEMS NOMINAL</span>
+</div>
+<div class="text-[10px] text-on-surface-variant font-data-mono">
+                    LOC: ASHBURN-VA-01
+                </div>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interaction for Flash State Simulation
+        setInterval(() => {
+            const rows = document.querySelectorAll('.data-table-row');
+            const randomRow = rows[Math.floor(Math.random() * rows.length)];
+            const isIncrease = Math.random() > 0.5;
+            
+            const flashColor = isIncrease ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            
+            randomRow.style.transition = 'background-color 0s';
+            randomRow.style.backgroundColor = flashColor;
+            
+            setTimeout(() => {
+                randomRow.style.transition = 'background-color 500ms';
+                randomRow.style.backgroundColor = '';
+            }, 50);
+        }, 3000);
+
+        // Simple timer update
+        let seconds = 8095; // 02:14:55
+        setInterval(() => {
+            seconds++;
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            document.getElementById('session-timer').textContent = `${h}:${m}:${s}`;
+        }, 1000);
+    </script>
+</body></html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page:title}}</title>
+<meta name="description" content="{{page:description}}">
+<link rel="canonical" href="{{page:canonical}}">
+<meta name="theme-color" content="#0A2540">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Trade Grow">
+<meta property="og:title" content="{{page:title}}">
+<meta property="og:description" content="{{page:description}}">
+<meta property="og:url" content="{{page:canonical}}">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+
+<script>window.TG_BASE="{{page:base}}";</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FinancialService",
+  "name": "Trade Grow",
+  "url": "{{page:siteUrl}}",
+  "legalName": "{{raw:entity.legalName|}}",
+  "telephone": "{{raw:support.phone|}}",
+  "email": "{{raw:support.email|}}",
+  "areaServed": "IN",
+  "disambiguatingDescription": "Registration and membership details are published at {{page:siteUrl}}/verify/. Fields that are not yet confirmed are shown as unverified rather than asserted."
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+{{> header}}
+
+<main id="main">
+{{content}}
+</main>
+
+{{> footer}}
+
+{{comp:stickyCta}}
+{{comp:whatsappFab}}
+
+<script src="/assets/js/app.js" defer></script>
+</body>
+</html>

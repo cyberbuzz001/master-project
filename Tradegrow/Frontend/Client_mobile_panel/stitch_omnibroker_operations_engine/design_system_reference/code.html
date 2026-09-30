@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal — Design System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "surface-tint": "#adc6ff",
+                    "surface-dim": "#0c1323",
+                    "surface": "#0c1323",
+                    "on-surface": "#dce2f9",
+                    "surface-variant": "#2e3446",
+                    "on-secondary-container": "#00311f",
+                    "surface-container-low": "#141b2c",
+                    "secondary": "#4edea3",
+                    "secondary-container": "#00a572",
+                    "inverse-on-surface": "#293041",
+                    "inverse-surface": "#dce2f9",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "inverse-primary": "#005ac2",
+                    "surface-container-lowest": "#070e1e",
+                    "on-error": "#690005",
+                    "tertiary-container": "#ff5451",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-bright": "#32394b",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-container": "#191f30",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-primary": "#002e6a",
+                    "surface-container-high": "#232a3b",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#003824",
+                    "on-secondary-fixed": "#002113",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-tertiary-fixed": "#410004",
+                    "primary": "#adc6ff",
+                    "on-primary-fixed": "#001a42",
+                    "primary-container": "#4d8eff",
+                    "surface-container-highest": "#2e3446",
+                    "on-surface-variant": "#c2c6d6",
+                    "primary-fixed-dim": "#adc6ff",
+                    "outline": "#8c909f",
+                    "on-tertiary": "#68000a",
+                    "on-secondary-fixed-variant": "#005236",
+                    "tertiary": "#ffb3ad",
+                    "on-primary-container": "#00285d",
+                    "error": "#ffb4ab",
+                    "background": "#0c1323",
+                    "error-container": "#93000a",
+                    "outline-variant": "#424754",
+                    "primary-fixed": "#d8e2ff",
+                    "on-background": "#dce2f9",
+                    "on-tertiary-container": "#5c0008"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "container-margin": "16px",
+                    "cell-padding-x": "8px",
+                    "gutter": "12px",
+                    "cell-padding-y": "6px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1E293B;
+        }
+
+        .pulse-emerald {
+            animation: pulse-emerald 2s infinite;
+        }
+
+        @keyframes pulse-emerald {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
+        }
+
+        /* Material Symbols weight configuration */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-20 md:pb-0">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant shadow-sm flex items-center justify-between px-gutter h-16">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+<h1 class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">Obsidian Terminal</h1>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<nav class="flex gap-4">
+<a class="font-label-caps text-label-caps text-primary hover:bg-surface-highlight transition-colors px-3 py-2 cursor-pointer active:opacity-80" href="#">Documentation</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-highlight transition-colors px-3 py-2 cursor-pointer active:opacity-80" href="#">Components</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-highlight transition-colors px-3 py-2 cursor-pointer active:opacity-80" href="#">Guidelines</a>
+</nav>
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<main class="pt-24 px-gutter max-w-7xl mx-auto mb-12">
+<!-- Header Section -->
+<section class="mb-12">
+<div class="flex items-center gap-2 mb-2">
+<span class="text-primary font-data-mono text-data-mono">01 — VISUAL LANGUAGE</span>
+</div>
+<h2 class="font-display-lg text-display-lg mb-4 text-on-surface">Design System</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+                The visual language for the Obsidian Terminal is engineered for precision and rapid decision-making. 
+                Utilizing a high-density grid system and deep tonal layering to maintain clarity in high-stakes environments.
+            </p>
+</section>
+<!-- Bento Grid Layout for Documentation -->
+<div class="terminal-grid">
+<!-- Color Palette Panel -->
+<div class="col-span-12 md:col-span-8 glass-panel p-6 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Primary Palette</h3>
+<span class="material-symbols-outlined text-outline" data-icon="palette">palette</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="space-y-2">
+<div class="h-20 bg-primary rounded-lg border border-white/10"></div>
+<p class="font-label-caps text-label-caps text-on-surface">Primary (Electric Blue)</p>
+<p class="font-data-mono text-data-mono text-outline">#ADC6FF</p>
+</div>
+<div class="space-y-2">
+<div class="h-20 bg-surface-dim rounded-lg border border-outline-variant"></div>
+<p class="font-label-caps text-label-caps text-on-surface">Canvas</p>
+<p class="font-data-mono text-data-mono text-outline">#0C1323</p>
+</div>
+<div class="space-y-2">
+<div class="h-20 bg-secondary rounded-lg border border-white/10"></div>
+<p class="font-label-caps text-label-caps text-on-surface">Execution (Buy)</p>
+<p class="font-data-mono text-data-mono text-outline">#4EDEA3</p>
+</div>
+<div class="space-y-2">
+<div class="h-20 bg-error rounded-lg border border-white/10"></div>
+<p class="font-label-caps text-label-caps text-on-surface">Execution (Sell)</p>
+<p class="font-data-mono text-data-mono text-outline">#FFB4AB</p>
+</div>
+</div>
+</div>
+<!-- Typography Panel -->
+<div class="col-span-12 md:col-span-4 glass-panel p-6 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Typography</h3>
+<span class="material-symbols-outlined text-outline" data-icon="text_fields">text_fields</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="font-display-lg text-display-lg text-primary">Inter Bold</p>
+<p class="font-label-caps text-label-caps text-outline">Display Large / 32px</p>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">Standard Heading</p>
+<p class="font-label-caps text-label-caps text-outline">Headline Medium / 24px</p>
+</div>
+<div>
+<p class="font-data-mono text-data-mono text-secondary">1,240.50 BTC</p>
+<p class="font-label-caps text-label-caps text-outline">JetBrains Mono / Data 13px</p>
+</div>
+</div>
+</div>
+<!-- Component Showcase: Buttons -->
+<div class="col-span-12 md:col-span-6 glass-panel p-6 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Button States</h3>
+<span class="material-symbols-outlined text-outline" data-icon="smart_button">smart_button</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="bg-primary text-on-primary py-2 px-4 rounded font-body-md text-body-md hover:bg-primary-container transition-colors">Default</button>
+<button class="bg-primary-container text-on-primary-container py-2 px-4 rounded font-body-md text-body-md">Hover State</button>
+<button class="bg-primary text-on-primary py-2 px-4 rounded font-body-md text-body-md opacity-80 scale-95 transition-transform">Active State</button>
+<button class="bg-outline-variant text-outline py-2 px-4 rounded font-body-md text-body-md cursor-not-allowed">Disabled</button>
+<button class="border border-outline py-2 px-4 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-variant transition-colors">Ghost Action</button>
+<button class="bg-primary text-on-primary py-2 px-4 rounded font-body-md text-body-md flex items-center justify-center gap-2">
+<span class="animate-spin w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full"></span>
+                        Loading
+                    </button>
+</div>
+</div>
+<!-- Component Showcase: Execution & Inputs -->
+<div class="col-span-12 md:col-span-6 glass-panel p-6 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Inputs &amp; Execution</h3>
+<span class="material-symbols-outlined text-outline" data-icon="input">input</span>
+</div>
+<div class="space-y-4">
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-outline uppercase">Limit Order Price</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded p-3 font-data-mono text-data-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" type="text" value="42,000.00"/>
+<span class="absolute right-3 top-3 font-label-caps text-label-caps text-outline">USD</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-secondary text-on-secondary py-3 rounded font-display-lg text-display-lg flex flex-col items-center justify-center h-20 transition-transform active:scale-95">
+<span class="font-label-caps text-label-caps">BUY</span>
+<span>LONG</span>
+</button>
+<button class="bg-error text-on-error py-3 rounded font-display-lg text-display-lg flex flex-col items-center justify-center h-20 transition-transform active:scale-95">
+<span class="font-label-caps text-label-caps">SELL</span>
+<span>SHORT</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Status & Badges -->
+<div class="col-span-12 glass-panel p-6 rounded-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Indicators &amp; Badges</h3>
+<span class="material-symbols-outlined text-outline" data-icon="info">info</span>
+</div>
+<div class="flex flex-wrap gap-8 items-center">
+<!-- Connectivity Statuses -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary pulse-emerald"></div>
+<span class="font-body-md text-body-md text-on-surface">Live Network</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-error"></div>
+<span class="font-body-md text-body-md text-on-surface">Disconnected</span>
+</div>
+</div>
+<!-- Badges -->
+<div class="flex gap-3">
+<span class="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded font-label-caps text-label-caps">FILLED</span>
+<span class="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-label-caps text-label-caps">PENDING</span>
+<span class="bg-error/10 text-error border border-error/20 px-2 py-0.5 rounded font-label-caps text-label-caps">CANCELLED</span>
+</div>
+<!-- Chip States -->
+<div class="flex gap-2">
+<div class="bg-surface-container-highest px-3 py-1 rounded-full flex items-center gap-2 border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[16px]" data-icon="bolt">bolt</span>
+<span class="font-label-caps text-label-caps text-on-surface">MARKET</span>
+</div>
+<div class="bg-surface-container-highest px-3 py-1 rounded-full flex items-center gap-2 border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[16px]" data-icon="timer">timer</span>
+<span class="font-label-caps text-label-caps text-on-surface">LIMIT</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Atmospheric Visual Representation -->
+<div class="col-span-12 relative h-80 rounded-lg overflow-hidden border border-outline-variant mt-4">
+<div class="absolute inset-0 z-0">
+
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent flex flex-col justify-end p-10 z-10">
+<h4 class="font-display-lg text-display-lg text-white mb-2">Institutional-Tier Infrastructure</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl">
+                        Our design approach leverages GPU-accelerated visualizations and real-time data streaming patterns to ensure no latency in decision making.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shell (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 backdrop-blur-xl border-t border-outline-variant z-50">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary font-bold active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</div>
+</nav>
+<script>
+        // Micro-interaction for clicking on color tiles to copy hex (simulated)
+        document.querySelectorAll('.font-data-mono').forEach(el => {
+            el.addEventListener('click', function() {
+                const text = this.innerText;
+                const originalText = text;
+                if(text.startsWith('#')) {
+                    this.innerText = 'COPIED';
+                    this.style.color = '#4EDEA3';
+                    setTimeout(() => {
+                        this.innerText = originalText;
+                        this.style.color = '';
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,119 @@
+<!--meta {
+  "title": "Security — Trade Grow",
+  "description": "How Trade Grow secures accounts: login controls, OTP, session and device management, data protection, alerts and withdrawal controls. We list only controls that are actually implemented."
+}-->
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Security</p>
+      <h1 class="h1">What we actually do, and what we don&rsquo;t claim</h1>
+      <p class="lede">
+        Financial websites tend to describe security with adjectives &mdash; bank-grade, military-grade,
+        fully secure. Those words are unregulated and mean nothing in particular. This page lists
+        specific controls instead, and marks the ones not yet live as not yet live.
+      </p>
+    </div>
+
+    <div class="notice">
+      <strong>We do not claim that Trade Grow is completely safe from every risk.</strong>
+      No platform holding money and market access can honestly say that. What we can tell you is
+      which controls exist, which are still being built, and what part of your account&rsquo;s safety
+      depends on you rather than on us.
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="h4">Login and authentication</h2></div>
+      <dl class="kvlist">
+        <div class="kv"><dt>Password policy</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>OTP on login</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Two-factor authentication</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Biometric unlock on mobile</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Failed-attempt lockout</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+      </dl>
+      <p class="muted small">
+        Each row above is filled in from configuration once the control is live in production and
+        confirmed by our engineering and compliance teams. A blank row means the control is not yet
+        confirmed &mdash; not that it is secret.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="h4">Sessions and devices</h2></div>
+      <dl class="kvlist">
+        <div class="kv"><dt>View active sessions</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Log out all devices</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>New-device login alert</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Session timeout</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="h4">Money movement controls</h2></div>
+      <dl class="kvlist">
+        <div class="kv"><dt>Payouts to registered bank account only</dt><dd><span class="pill pill--ok">&#10003; Enforced</span></dd></div>
+        <div class="kv"><dt>Third-party transfers</dt><dd><span class="pill pill--ok">&#10003; Not permitted</span></dd></div>
+        <div class="kv"><dt>Bank account change process</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Withdrawal alerts</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+      </dl>
+      <p class="muted small">
+        The first two rows are marked as enforced because they are regulatory requirements applying
+        to every SEBI-registered broker, not features we invented. Money can leave your trading
+        account only to a bank account in your own name.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="h4">Data protection</h2></div>
+      <dl class="kvlist">
+        <div class="kv"><dt>Transport encryption (HTTPS/TLS)</dt><dd><span class="pill pill--ok">&#10003; In use on this website</span></dd></div>
+        <div class="kv"><dt>Encryption of stored personal data</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Access control and audit logging</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Third-party security assessment</dt><dd>{{cfg:compliance.pendingLabel}}</dd></div>
+        <div class="kv"><dt>Data retention policy</dt><dd>See Privacy Policy on the <a href="/verify/#documents">Verify</a> page</dd></div>
+      </dl>
+      <p class="muted small">
+        We will not list a certification, audit or standard here until it has been completed and we
+        can name the assessor and the date. An unearned security badge on a broker website is a
+        reason for less confidence, not more.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tint">
+  <div class="wrap">
+    <div class="section__head">
+      <h2 class="h2">The part that depends on you</h2>
+      <p class="lede">
+        Most account compromises in Indian broking do not involve breaking into the broker.
+        They involve persuading the customer to hand over a credential. That makes these the highest-
+        value controls in the entire system, and they are yours.
+      </p>
+    </div>
+    <ul class="flags">
+      <li><span class="flags__x" aria-hidden="true">1</span><div><strong>Never share an OTP, password or PIN with anyone</strong><p>Including anyone claiming to be from Trade Grow, your bank, or a regulator.</p></div></li>
+      <li><span class="flags__x" aria-hidden="true">2</span><div><strong>Never install a screen-sharing or remote-access app on request</strong><p>There is no support scenario at Trade Grow that requires it.</p></div></li>
+      <li><span class="flags__x" aria-hidden="true">3</span><div><strong>Use a password you do not use anywhere else</strong><p>Credential reuse is how a breach at an unrelated website becomes a problem for your trading account.</p></div></li>
+      <li><span class="flags__x" aria-hidden="true">4</span><div><strong>Keep your registered mobile and email current</strong><p>Alerts are only useful if they reach you. Update them if you change numbers.</p></div></li>
+      <li><span class="flags__x" aria-hidden="true">5</span><div><strong>Read your contract notes and ledger</strong><p>An unfamiliar trade or debit is far easier to resolve in days than in months.</p></div></li>
+      <li><span class="flags__x" aria-hidden="true">6</span><div><strong>Download the app only from the official store listing</strong><p>Check the developer name matches our registered entity. Never install an APK sent in a message.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2 class="h2">Know the warning signs</h2>
+      <p>
+        Our fraud awareness page lists the specific scripts used against trading customers in India,
+        so you can recognise one when it reaches you.
+      </p>
+      <div class="cta-band__actions">
+        <a class="btn btn--primary btn--lg" href="/security-awareness/">Read the red-flag checklist</a>
+        <a class="btn btn--ghost btn--lg" href="/support/">Report something suspicious</a>
+      </div>
+    </div>
+  </div>
+</section>

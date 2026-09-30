@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Obsidian Terminal - Universal Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#0c1323",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container-low": "#141b2c",
+                    "outline-variant": "#424754",
+                    "on-surface-variant": "#c2c6d6",
+                    "surface-bright": "#32394b",
+                    "inverse-on-surface": "#293041",
+                    "surface-container-high": "#232a3b",
+                    "on-tertiary-container": "#5c0008",
+                    "surface-container": "#191f30",
+                    "on-surface": "#dce2f9",
+                    "on-tertiary": "#68000a",
+                    "inverse-surface": "#dce2f9",
+                    "tertiary": "#ffb3ad",
+                    "outline": "#8c909f",
+                    "on-error": "#690005",
+                    "error-container": "#93000a",
+                    "inverse-primary": "#005ac2",
+                    "on-primary": "#002e6a",
+                    "tertiary-container": "#ff5451",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "on-primary-fixed": "#001a42",
+                    "secondary-container": "#00a572",
+                    "primary-fixed": "#d8e2ff",
+                    "on-secondary": "#003824",
+                    "primary": "#adc6ff",
+                    "on-background": "#dce2f9",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-tint": "#adc6ff",
+                    "background": "#0c1323",
+                    "primary-fixed-dim": "#adc6ff",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-container-highest": "#2e3446",
+                    "on-secondary-container": "#00311f",
+                    "secondary": "#4edea3",
+                    "on-primary-container": "#00285d",
+                    "surface": "#0c1323",
+                    "primary-container": "#4d8eff",
+                    "surface-container-lowest": "#070e1e",
+                    "on-tertiary-fixed": "#410004",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-error-container": "#ffdad6",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-variant": "#2e3446",
+                    "on-secondary-fixed": "#002113"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "container-margin": "16px",
+                    "cell-padding-y": "6px",
+                    "cell-padding-x": "8px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0c1323;
+            color: #dce2f9;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: contain;
+        }
+        .glass-header {
+            background: rgba(12, 19, 35, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(66, 71, 84, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-emerald {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md selection:bg-primary/30">
+<!-- TOP APP BAR (SEARCH HEADER) -->
+<header class="fixed top-0 w-full z-50 glass-header flex items-center px-container-margin h-16 gap-3">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none transition-colors group-focus-within:text-primary">search</span>
+<input autofocus="" class="w-full h-10 bg-surface-container-highest/50 border border-outline-variant/30 rounded-lg pl-10 pr-16 font-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" placeholder="Search stocks, indices, ETFs..." type="text"/>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-1.5 py-0.5 rounded border border-outline-variant/50 bg-surface-container">
+<span class="font-data-mono text-[10px] text-on-surface-variant">CMD K</span>
+</div>
+</div>
+<button class="text-primary font-title-sm text-title-sm hover:text-primary-fixed transition-colors active:scale-95">Cancel</button>
+</header>
+<main class="pt-20 pb-20 px-container-margin max-w-4xl mx-auto space-y-8">
+<!-- QUICK FILTERS (CATEGORY CHIPS) -->
+<section>
+<div class="flex items-center justify-between mb-3">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant tracking-widest">CATEGORIES</h2>
+</div>
+<div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+<button class="flex-none px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-body-sm text-body-sm transition-all active:scale-95 border border-primary/20">Stocks</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">ETFs</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">Futures</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">Options</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">Indices</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">Mutual Funds</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/30 font-body-sm text-body-sm hover:bg-surface-bright transition-all active:scale-95">IPOs</button>
+</div>
+</section>
+<!-- RECENT SEARCHES -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Recent Searches</h2>
+<button class="font-label-caps text-label-caps text-tertiary hover:underline">Clear All</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<!-- Item 1 -->
+<div class="group flex items-center justify-between p-3 rounded-lg bg-surface-container border border-outline-variant/10 hover:border-outline-variant/50 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">history</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface leading-tight">RELIANCE</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant/70">Reliance Industries Ltd.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-tertiary transition-colors">close</span>
+</div>
+<!-- Item 2 -->
+<div class="group flex items-center justify-between p-3 rounded-lg bg-surface-container border border-outline-variant/10 hover:border-outline-variant/50 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">history</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface leading-tight">NIFTY 50</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant/70">NSE Benchmark Index</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-tertiary transition-colors">close</span>
+</div>
+<!-- Item 3 -->
+<div class="group flex items-center justify-between p-3 rounded-lg bg-surface-container border border-outline-variant/10 hover:border-outline-variant/50 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">history</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface leading-tight">AAPL</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant/70">Apple Inc.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-tertiary transition-colors">close</span>
+</div>
+</div>
+</section>
+<!-- POPULAR SEARCHES (TRENDING) -->
+<section>
+<div class="flex items-center gap-2 mb-4">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Popular Searches</h2>
+<div class="w-2 h-2 rounded-full bg-secondary pulse-emerald"></div>
+</div>
+<div class="space-y-1">
+<!-- Trending Row 1 -->
+<div class="flex items-center justify-between py-3 px-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-highest border border-outline-variant/30 p-1">
+<img class="w-full h-full object-contain" data-alt="Official corporate logo for a major global banking corporation, minimalist geometric vector style, primary colors of blue and white, set against a dark glassmorphic background of the Obsidian Terminal interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTlrziGq5enrJQT0xxXYFM_0_jdgEDxhyIBy_9yr3jgH0w9u-CNzQq542POLwF69w7bYP7kWvPUGPP4IKFZaq1UEn__a_C1lsfV5URmpm7nwQKG0Ovm-2XnkMhfYAAWbZ1CZmK3xnmdeON1yPTDrvnEFtXKidrDK6hZ5mWQxwAoRjSZCGMFi2X1A_aIxircTG-fdOa9mPvoUHNyjl9YQFn0dEDeoFhxPFgKFrXBDZ9rQkoxJe6ABE"/>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">HDFC Bank</p>
+<span class="font-label-caps text-label-caps bg-secondary-container/20 text-secondary px-1.5 py-0.5 rounded">BANKING</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono text-data-mono text-on-surface">1,642.45</p>
+<p class="font-data-mono text-data-mono text-secondary">+1.24%</p>
+</div>
+</div>
+<!-- Trending Row 2 -->
+<div class="flex items-center justify-between py-3 px-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-highest border border-outline-variant/30 p-1">
+<img class="w-full h-full object-contain" data-alt="Corporate logo for an automotive and electric vehicle manufacturer, sharp metallic design, clean typography, minimalist aesthetic suitable for a high-density financial trading terminal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwaTieqg6OiwGKJFOJn2ihXJFZDSF8GMJyzBPez2ElCBtCfmPqDrpTJpPs_Z4mUSYYILahrI2_Yzg8T-zlHBt_qm5q3vJYQc-IbdWKgXuGrRCqWbdNBy8kFyUIonOiU7iHDZMev4_cb4Wtcy4u0_iyzl9PlfqYxSA_Lr4faRiVmY8yxjqei_5yjFJwBmsyaw_UZx96hhAsXXO91hdymkntCn8iKHjG9cB3QsKlMulmq3hsLtZLZJo"/>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">TATA MOTORS</p>
+<span class="font-label-caps text-label-caps bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded">AUTO</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono text-data-mono text-on-surface">923.10</p>
+<p class="font-data-mono text-data-mono text-error">-0.45%</p>
+</div>
+</div>
+<!-- Trending Row 3 -->
+<div class="flex items-center justify-between py-3 px-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-highest border border-outline-variant/30 p-1">
+<img class="w-full h-full object-contain" data-alt="Corporate logo for an information technology services leader, sleek modern branding, vibrant accent colors, high-resolution vector style for a dark professional UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5wubfvKaweQXWIqC1bE9bJC4Yvy-15YtLD8Z50vFQiXp7mN2HKavF3WYQLT6L1wdXJ7ycnhr7YcziJvqkVqOnutPJCm__yhuBnFMz7jASfQYO-fEHLyn4EsAWFF53rIoDF6sw3eMNie-TZwMVH9rog_1HqPNhD4z4-rUD3AoLwQaDbXM0ImYZ70ec0LO5l9HOlW5RtbGlMYEOIth31E26TErg6aNF1WXW6BcAaGe1yrsnoSaYfV4"/>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">INFY</p>
+<span class="font-label-caps text-label-caps bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded">IT SERVICES</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono text-data-mono text-on-surface">1,504.00</p>
+<p class="font-data-mono text-data-mono text-secondary">+0.88%</p>
+</div>
+</div>
+<!-- Trending Row 4 -->
+<div class="flex items-center justify-between py-3 px-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-highest border border-outline-variant/30 p-1 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">show_chart</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-on-surface">BANK NIFTY</p>
+<span class="font-label-caps text-label-caps bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded">INDEX</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-mono text-data-mono text-on-surface">48,210.55</p>
+<p class="font-data-mono text-data-mono text-secondary">+2.15%</p>
+</div>
+</div>
+</div>
+</section>
+<!-- BENTO CARD: ADVISORY/INSIGHT -->
+<section class="mt-8">
+<div class="bg-gradient-to-br from-surface-container-low to-surface-dim border border-outline-variant/30 rounded-xl p-6 relative overflow-hidden group">
+<div class="relative z-10 space-y-2 max-w-[70%]">
+<h3 class="font-title-sm text-title-sm text-primary">Looking for IPOs?</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">There are 3 active IPOs open for subscription. Check details and apply directly.</p>
+<button class="mt-4 px-4 py-2 bg-primary text-on-primary font-title-sm text-title-sm rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]">View IPO Center</button>
+</div>
+<!-- Abstract graphical element -->
+<div class="absolute top-0 right-0 w-1/3 h-full opacity-20 pointer-events-none transition-transform group-hover:scale-110">
+
+</div>
+</div>
+</section>
+</main>
+<!-- BOTTOM NAVIGATION (BOTTOMNAVBAR) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 pb-safe bg-surface/70 dark:bg-surface/70 backdrop-blur-xl border-t border-outline-variant/30 z-50 rounded-t-full shadow-2xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="font-label-caps text-label-caps">Markets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps">Watchlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Portfolio</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Keyboard shortcut listener
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input').focus();
+            }
+        });
+
+        // Simple input clear functionality
+        const input = document.querySelector('input');
+        const clearBtn = document.querySelector('.material-symbols-outlined.group-hover\\:text-tertiary'); // Mocking interaction for first item
+        
+        input.addEventListener('input', (e) => {
+            if(e.target.value.length > 0) {
+                // Logic to filter categories or show results
+            }
+        });
+
+        // Tab selection behavior
+        const filterBtns = document.querySelectorAll('.flex-none.px-4');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-primary-container', 'text-on-primary-container', 'border-primary/20');
+                    b.classList.add('bg-surface-container-high', 'text-on-surface-variant', 'border-outline-variant/30');
+                });
+                btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'border-outline-variant/30');
+                btn.classList.add('bg-primary-container', 'text-on-primary-container', 'border-primary/20');
+            });
+        });
+    </script>
+</body></html>

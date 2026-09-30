@@ -1,0 +1,107 @@
+{
+  "_README": [
+    "PRICING ENGINE CONFIG. Two clearly separated things live here:",
+    "  1. brokerage.*        = set by Trade Grow. Null until Commercial + Compliance sign off.",
+    "  2. statutory.*        = set by Govt / Exchanges / Depositories / SEBI. Trade Grow only collects and remits.",
+    "NEVER advertise 'Zero Tax'. Statutory charges apply on every trade regardless of brokerage plan.",
+    "'ratesVerified' MUST stay false until Compliance confirms each rate against the current circular.",
+    "While false, the pricing page shows an 'unverified rates' banner and the calculator labels output as indicative."
+  ],
+
+  "verification": {
+    "ratesVerified": false,
+    "lastVerifiedOn": null,
+    "verifiedBy": null,
+    "nextReviewDue": null,
+    "sourceNote": "Rates must be reconciled against: SEBI circulars, NSE/BSE transaction charge circulars, Finance Act (STT/CTT), Indian Stamp Act schedule, CDSL/NSDL DP tariff, and the prevailing GST rate."
+  },
+
+  "brokerage": {
+    "planName": null,
+    "planStatus": "pending",
+    "offerConditionsUrl": null,
+    "claimText": null,
+    "claimTextGuidance": "If and only if Legal confirms a genuine nil-brokerage offer, set claimText to the exact approved wording, e.g. 'Rs.0 brokerage under applicable plan/offer terms.' Never 'Zero brokerage, zero tax'.",
+    "segments": {
+      "equity_delivery":  { "type": "percent", "value": null, "min": null, "max": null },
+      "equity_intraday":  { "type": "percent", "value": null, "min": null, "max": null },
+      "futures":          { "type": "percent", "value": null, "min": null, "max": null },
+      "options":          { "type": "flat_per_lot_order", "value": null, "min": null, "max": null }
+    }
+  },
+
+  "gst": {
+    "ratePercent": 18,
+    "appliesTo": ["brokerage", "exchange_txn", "sebi_fees", "dp_charges"],
+    "label": "GST",
+    "note": "GST is levied on brokerage and on certain regulatory charges, not on the trade value itself."
+  },
+
+  "segments": [
+    {
+      "key": "equity_delivery",
+      "label": "Equity Delivery",
+      "inputs": ["quantity", "price", "side"],
+      "charges": [
+        { "key": "stt",          "label": "STT",                  "basis": "turnover",       "side": "both", "type": "percent", "value": 0.1,        "roundTo": 0 },
+        { "key": "exchange_txn", "label": "Exchange Transaction", "basis": "turnover",       "side": "both", "type": "percent", "value": 0.00297,    "roundTo": 2 },
+        { "key": "sebi_fees",    "label": "SEBI Turnover Fees",   "basis": "turnover",       "side": "both", "type": "percent", "value": 0.0001,     "roundTo": 2 },
+        { "key": "stamp_duty",   "label": "Stamp Duty",           "basis": "turnover",       "side": "buy",  "type": "percent", "value": 0.015,      "roundTo": 2 },
+        { "key": "dp_charges",   "label": "DP Charges",           "basis": "per_scrip_sell", "side": "sell", "type": "flat",    "value": null,       "roundTo": 2, "note": "Levied by the Depository + DP per scrip per day on sell. Set from the approved DP tariff." }
+      ]
+    },
+    {
+      "key": "equity_intraday",
+      "label": "Equity Intraday",
+      "inputs": ["quantity", "price", "side"],
+      "charges": [
+        { "key": "stt",          "label": "STT",                  "basis": "turnover", "side": "sell", "type": "percent", "value": 0.025,   "roundTo": 0 },
+        { "key": "exchange_txn", "label": "Exchange Transaction", "basis": "turnover", "side": "both", "type": "percent", "value": 0.00297, "roundTo": 2 },
+        { "key": "sebi_fees",    "label": "SEBI Turnover Fees",   "basis": "turnover", "side": "both", "type": "percent", "value": 0.0001,  "roundTo": 2 },
+        { "key": "stamp_duty",   "label": "Stamp Duty",           "basis": "turnover", "side": "buy",  "type": "percent", "value": 0.003,   "roundTo": 2 }
+      ]
+    },
+    {
+      "key": "futures",
+      "label": "Equity Futures",
+      "inputs": ["quantity", "price", "side"],
+      "charges": [
+        { "key": "stt",          "label": "STT",                  "basis": "turnover", "side": "sell", "type": "percent", "value": 0.02,    "roundTo": 0 },
+        { "key": "exchange_txn", "label": "Exchange Transaction", "basis": "turnover", "side": "both", "type": "percent", "value": 0.00173, "roundTo": 2 },
+        { "key": "sebi_fees",    "label": "SEBI Turnover Fees",   "basis": "turnover", "side": "both", "type": "percent", "value": 0.0001,  "roundTo": 2 },
+        { "key": "stamp_duty",   "label": "Stamp Duty",           "basis": "turnover", "side": "buy",  "type": "percent", "value": 0.002,   "roundTo": 2 }
+      ]
+    },
+    {
+      "key": "options",
+      "label": "Equity Options",
+      "inputs": ["quantity", "premium", "side"],
+      "turnoverBasis": "premium",
+      "charges": [
+        { "key": "stt",          "label": "STT (on sell premium)", "basis": "premium", "side": "sell", "type": "percent", "value": 0.1,   "roundTo": 0 },
+        { "key": "exchange_txn", "label": "Exchange Transaction",  "basis": "premium", "side": "both", "type": "percent", "value": 0.03503, "roundTo": 2 },
+        { "key": "sebi_fees",    "label": "SEBI Turnover Fees",    "basis": "premium", "side": "both", "type": "percent", "value": 0.0001, "roundTo": 2 },
+        { "key": "stamp_duty",   "label": "Stamp Duty",            "basis": "premium", "side": "buy",  "type": "percent", "value": 0.003,  "roundTo": 2 }
+      ],
+      "note": "On exercised/assigned options, STT is levied on intrinsic value at a different rate. Configure separately once confirmed."
+    }
+  ],
+
+  "otherCharges": [
+    { "key": "amc",              "label": "Demat AMC",                    "value": null, "unit": "per year",    "status": "pending" },
+    { "key": "account_opening",  "label": "Account Opening",              "value": null, "unit": "one time",    "status": "pending" },
+    { "key": "call_trade",       "label": "Call & Trade",                 "value": null, "unit": "per order",   "status": "pending" },
+    { "key": "auto_squareoff",   "label": "Auto Square-off",              "value": null, "unit": "per order",   "status": "pending" },
+    { "key": "payment_gateway",  "label": "Payment Gateway",              "value": null, "unit": "per transfer","status": "pending" },
+    { "key": "physical_stmt",    "label": "Physical Statement / Courier", "value": null, "unit": "per request", "status": "pending" },
+    { "key": "pledge",           "label": "Pledge / Unpledge",            "value": null, "unit": "per request", "status": "pending" },
+    { "key": "dis_book",         "label": "DIS Booklet",                  "value": null, "unit": "per booklet", "status": "pending" }
+  ],
+
+  "footnotes": [
+    "Charges may vary according to applicable regulations, segment and transaction type.",
+    "Statutory and regulatory charges are levied by the Government, Exchanges, Depositories and SEBI. Trade Grow collects and remits them; it does not retain them.",
+    "GST is applied on brokerage and on applicable regulatory charges.",
+    "Calculator output is indicative. The contract note issued after your trade is the authoritative record of charges."
+  ]
+}

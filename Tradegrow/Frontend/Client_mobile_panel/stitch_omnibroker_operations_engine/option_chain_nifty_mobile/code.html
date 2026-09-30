@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Terminal | NIFTY Option Chain</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#232a3b",
+                    "outline-variant": "#424754",
+                    "on-primary": "#002e6a",
+                    "surface-bright": "#32394b",
+                    "on-tertiary-fixed-variant": "#930013",
+                    "inverse-surface": "#dce2f9",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-tertiary-fixed": "#410004",
+                    "on-secondary-container": "#00311f",
+                    "background": "#0c1323",
+                    "primary-container": "#4d8eff",
+                    "on-tertiary": "#68000a",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#ffdad7",
+                    "primary-fixed-dim": "#adc6ff",
+                    "tertiary-container": "#ff5451",
+                    "surface-container-highest": "#2e3446",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "surface-container-low": "#141b2c",
+                    "secondary-container": "#00a572",
+                    "on-secondary-fixed": "#002113",
+                    "on-surface": "#dce2f9",
+                    "surface-dim": "#0c1323",
+                    "on-error-container": "#ffdad6",
+                    "secondary": "#4edea3",
+                    "primary-fixed": "#d8e2ff",
+                    "on-surface-variant": "#c2c6d6",
+                    "surface": "#0c1323",
+                    "surface-container": "#191f30",
+                    "on-tertiary-container": "#5c0008",
+                    "on-primary-fixed-variant": "#004395",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-primary-fixed": "#001a42",
+                    "error-container": "#93000a",
+                    "surface-tint": "#adc6ff",
+                    "surface-container-lowest": "#070e1e",
+                    "secondary-fixed-dim": "#4edea3",
+                    "inverse-primary": "#005ac2",
+                    "inverse-on-surface": "#293041",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffb3ad",
+                    "on-primary-container": "#00285d",
+                    "primary": "#adc6ff",
+                    "surface-variant": "#2e3446",
+                    "on-secondary": "#003824",
+                    "outline": "#8c909f",
+                    "on-background": "#dce2f9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "12px",
+                    "cell-padding-x": "8px",
+                    "unit": "4px",
+                    "cell-padding-y": "6px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0b1222;
+            color: #dce2f9;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        .glass-header {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .strike-gradient {
+            background: linear-gradient(90deg, rgba(12,19,35,0) 0%, rgba(25,31,48,1) 50%, rgba(12,19,35,0) 100%);
+        }
+        .transition-max-height {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+        }
+        .pulse-green {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .bottom-sheet {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .bottom-sheet.open {
+            transform: translateY(0);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md select-none">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container/70 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-gutter py-unit h-14">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md leading-none text-primary">Terminal</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant tracking-wider uppercase">Institutional Grade</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end">
+<span class="font-data-mono text-secondary">22,453.15</span>
+<span class="text-[10px] text-secondary font-bold">+124.50 (0.56%)</span>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant active:scale-95 duration-150" data-icon="search">search</button>
+</div>
+</header>
+<main class="pt-14 pb-20">
+<!-- Index Info & Filters -->
+<div class="px-gutter py-3 bg-surface-container-low flex items-center justify-between sticky top-14 z-40 border-b border-outline-variant/10">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="font-label-caps text-on-surface-variant">UNDERLYING</span>
+<span class="font-title-sm text-on-surface font-bold">NIFTY 50</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/20 mx-1"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-on-surface-variant">EXPIRY</span>
+<select class="bg-transparent border-none p-0 font-title-sm text-primary focus:ring-0">
+<option>28 MAR 2024</option>
+<option>04 APR 2024</option>
+</select>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+</button>
+</div>
+<!-- Option Chain Header -->
+<div class="grid grid-cols-[1fr_80px_1fr] bg-surface-container-highest/50 border-b border-outline-variant/30 sticky top-[110px] z-40">
+<div class="text-center py-2 font-label-caps text-on-surface-variant border-r border-outline-variant/10">CALLS (CE)</div>
+<div class="text-center py-2 font-label-caps text-primary">STRIKE</div>
+<div class="text-center py-2 font-label-caps text-on-surface-variant border-l border-outline-variant/10">PUTS (PE)</div>
+</div>
+<!-- Option Chain Body (The High Density List) -->
+<div class="flex flex-col">
+<!-- Strike Row 1 -->
+<div class="option-row border-b border-outline-variant/10" onclick="toggleExpand('strike-22300')">
+<div class="grid grid-cols-[1fr_80px_1fr] items-center h-12">
+<div class="px-2 flex justify-between items-center bg-secondary-container/5 h-full">
+<span class="font-data-mono text-on-surface">184.20</span>
+<span class="text-[10px] text-secondary font-medium">+12%</span>
+</div>
+<div class="flex items-center justify-center font-data-mono font-bold text-on-surface-variant bg-surface-container h-full">
+                        22300
+                    </div>
+<div class="px-2 flex justify-between items-center h-full">
+<span class="text-[10px] text-tertiary font-medium">-4%</span>
+<span class="font-data-mono text-on-surface">42.15</span>
+</div>
+</div>
+<!-- Expanded Content -->
+<div class="transition-max-height max-height-0 bg-surface-container-low hidden" id="strike-22300">
+<div class="p-3 grid grid-cols-2 gap-4">
+<!-- CE Greeks -->
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Δ Delta</span><span class="font-data-mono">0.68</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Θ Theta</span><span class="font-data-mono">-12.4</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>IV</span><span class="font-data-mono text-primary">14.2%</span></div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-secondary text-on-secondary py-1.5 rounded-lg font-label-caps active:scale-95 transition-transform" onclick="openOrder('CE', '22300', 'BUY', event)">BUY</button>
+<button class="flex-1 border border-secondary/30 text-secondary py-1.5 rounded-lg font-label-caps active:scale-95 transition-transform" onclick="openOrder('CE', '22300', 'SELL', event)">SELL</button>
+</div>
+</div>
+<!-- PE Greeks -->
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Δ Delta</span><span class="font-data-mono">-0.32</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Θ Theta</span><span class="font-data-mono">-9.2</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>IV</span><span class="font-data-mono text-primary">15.8%</span></div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-tertiary text-on-tertiary py-1.5 rounded-lg font-label-caps active:scale-95 transition-transform" onclick="openOrder('PE', '22300', 'BUY', event)">BUY</button>
+<button class="flex-1 border border-tertiary/30 text-tertiary py-1.5 rounded-lg font-label-caps active:scale-95 transition-transform" onclick="openOrder('PE', '22300', 'SELL', event)">SELL</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ATM Strike Row (Highlighted) -->
+<div class="option-row border-b border-outline-variant/30 relative" onclick="toggleExpand('strike-22450')">
+<div class="absolute -left-1 top-0 bottom-0 w-1 bg-primary pulse-green"></div>
+<div class="grid grid-cols-[1fr_80px_1fr] items-center h-14 bg-surface-container-high/40">
+<div class="px-2 flex justify-between items-center h-full">
+<span class="font-data-mono text-on-surface font-bold">102.50</span>
+<span class="text-[10px] text-secondary font-medium">+18%</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container h-full relative z-10">
+<span class="font-data-mono font-bold">22450</span>
+<span class="text-[8px] font-bold tracking-tighter">ATM</span>
+</div>
+<div class="px-2 flex justify-between items-center h-full">
+<span class="text-[10px] text-tertiary font-medium">-15%</span>
+<span class="font-data-mono text-on-surface font-bold">88.35</span>
+</div>
+</div>
+<div class="transition-max-height max-height-0 bg-surface-container-low hidden" id="strike-22450">
+<div class="p-3 grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>OI</span><span class="font-data-mono">1.2M</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Volume</span><span class="font-data-mono">45K</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>IV</span><span class="font-data-mono text-primary">16.1%</span></div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-secondary text-on-secondary py-1.5 rounded-lg font-label-caps" onclick="openOrder('CE', '22450', 'BUY', event)">BUY</button>
+<button class="flex-1 border border-secondary/30 text-secondary py-1.5 rounded-lg font-label-caps" onclick="openOrder('CE', '22450', 'SELL', event)">SELL</button>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>OI</span><span class="font-data-mono">1.8M</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>Volume</span><span class="font-data-mono">112K</span></div>
+<div class="flex justify-between font-label-caps text-[10px] opacity-60"><span>IV</span><span class="font-data-mono text-primary">16.9%</span></div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 bg-tertiary text-on-tertiary py-1.5 rounded-lg font-label-caps" onclick="openOrder('PE', '22450', 'BUY', event)">BUY</button>
+<button class="flex-1 border border-tertiary/30 text-tertiary py-1.5 rounded-lg font-label-caps" onclick="openOrder('PE', '22450', 'SELL', event)">SELL</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Strike Row 3 -->
+<div class="option-row border-b border-outline-variant/10" onclick="toggleExpand('strike-22500')">
+<div class="grid grid-cols-[1fr_80px_1fr] items-center h-12">
+<div class="px-2 flex justify-between items-center h-full">
+<span class="font-data-mono text-on-surface">64.10</span>
+<span class="text-[10px] text-secondary font-medium">+22%</span>
+</div>
+<div class="flex items-center justify-center font-data-mono font-bold text-on-surface-variant bg-surface-container h-full">
+                        22500
+                    </div>
+<div class="px-2 flex justify-between items-center bg-secondary-container/5 h-full">
+<span class="text-[10px] text-tertiary font-medium">-24%</span>
+<span class="font-data-mono text-on-surface">112.45</span>
+</div>
+</div>
+<div class="transition-max-height max-height-0 bg-surface-container-low hidden" id="strike-22500">
+<div class="p-3 grid grid-cols-2 gap-4">
+<div class="space-y-2 text-center col-span-2 py-4 text-on-surface-variant/40 italic text-[11px]">
+                            Detailed Data Terminal...
+                        </div>
+</div>
+</div>
+</div>
+<!-- Additional Rows for Scroll demo -->
+<div class="option-row border-b border-outline-variant/10 h-12 flex items-center">
+<div class="grid grid-cols-[1fr_80px_1fr] items-center w-full h-full">
+<div class="px-2 flex justify-between items-center h-full"><span class="font-data-mono text-on-surface">42.30</span><span class="text-[10px] text-secondary">+15%</span></div>
+<div class="flex items-center justify-center font-data-mono font-bold text-on-surface-variant bg-surface-container h-full">22550</div>
+<div class="px-2 flex justify-between items-center bg-secondary-container/5 h-full"><span class="text-[10px] text-tertiary">-18%</span><span class="font-data-mono text-on-surface">144.20</span></div>
+</div>
+</div>
+<div class="option-row border-b border-outline-variant/10 h-12 flex items-center">
+<div class="grid grid-cols-[1fr_80px_1fr] items-center w-full h-full">
+<div class="px-2 flex justify-between items-center h-full"><span class="font-data-mono text-on-surface">24.50</span><span class="text-[10px] text-secondary">+8%</span></div>
+<div class="flex items-center justify-center font-data-mono font-bold text-on-surface-variant bg-surface-container h-full">22600</div>
+<div class="px-2 flex justify-between items-center bg-secondary-container/5 h-full"><span class="text-[10px] text-tertiary">-31%</span><span class="font-data-mono text-on-surface">182.90</span></div>
+</div>
+</div>
+<div class="option-row border-b border-outline-variant/10 h-12 flex items-center">
+<div class="grid grid-cols-[1fr_80px_1fr] items-center w-full h-full">
+<div class="px-2 flex justify-between items-center h-full"><span class="font-data-mono text-on-surface">12.10</span><span class="text-[10px] text-secondary">+2%</span></div>
+<div class="flex items-center justify-center font-data-mono font-bold text-on-surface-variant bg-surface-container h-full">22650</div>
+<div class="px-2 flex justify-between items-center bg-secondary-container/5 h-full"><span class="text-[10px] text-tertiary">-42%</span><span class="font-data-mono text-on-surface">210.15</span></div>
+</div>
+</div>
+</div>
+<div class="p-6 text-center text-[11px] text-on-surface-variant/40 font-label-caps tracking-widest">
+            END OF LIST · MARCH 2024
+        </div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-2xl rounded-t-xl flex justify-around items-center h-16 px-2 pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary active:scale-90 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-[9px] mt-1">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim bg-secondary-container/10 rounded-xl px-3 py-1 active:scale-90 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="show_chart">show_chart</span>
+<span class="font-label-caps text-[9px] mt-1">Markets</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary active:scale-90 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-[9px] mt-1">Orders</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary active:scale-90 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-caps text-[9px] mt-1">Portfolio</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary active:scale-90 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-[9px] mt-1">Profile</span>
+</button>
+</nav>
+<!-- Order Sheet Overlay -->
+<div class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm" id="overlay" onclick="closeOrder()"></div>
+<div class="bottom-sheet fixed bottom-0 left-0 right-0 z-[70] bg-surface-container-high rounded-t-3xl shadow-[0_-8px_40px_-10px_rgba(0,0,0,0.5)] p-container-margin border-t border-white/5" id="order-sheet">
+<div class="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mb-6"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface" id="order-title">NIFTY 22450 CE</h3>
+<p class="text-on-surface-variant text-body-sm" id="order-subtitle">28 MAR 2024 · LOT SIZE: 50</p>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-title-sm text-secondary" id="order-price">102.50</span>
+<p class="text-[10px] text-on-surface-variant font-label-caps">LTP</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 mb-6">
+<div class="bg-surface-container-low p-3 rounded-xl border border-outline-variant/10">
+<label class="font-label-caps text-[10px] text-on-surface-variant block mb-1">QUANTITY (LOTS)</label>
+<div class="flex items-center justify-between">
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center material-symbols-outlined text-on-surface" data-icon="remove">remove</button>
+<span class="font-data-mono text-on-surface font-bold">1</span>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center material-symbols-outlined text-on-surface" data-icon="add">add</button>
+</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-xl border border-outline-variant/10">
+<label class="font-label-caps text-[10px] text-on-surface-variant block mb-1">PRICE</label>
+<div class="flex items-center justify-between">
+<span class="font-data-mono text-on-surface font-bold">102.50</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[10px] font-bold">LMT</span>
+</div>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Margin Required</span>
+<span class="font-data-mono text-on-surface">₹5,125.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Available Margin</span>
+<span class="font-data-mono text-secondary">₹1,45,200.00</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 duration-150 transition-all uppercase tracking-widest" id="execute-btn">
+            PLACE BUY ORDER
+        </button>
+</div>
+<script>
+        function toggleExpand(id) {
+            const el = document.getElementById(id);
+            const allExpanded = document.querySelectorAll('.transition-max-height');
+            
+            allExpanded.forEach(item => {
+                if(item.id !== id) {
+                    item.classList.add('hidden');
+                }
+            });
+
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function openOrder(type, strike, action, event) {
+            if(event) event.stopPropagation();
+            
+            const sheet = document.getElementById('order-sheet');
+            const overlay = document.getElementById('overlay');
+            const title = document.getElementById('order-title');
+            const executeBtn = document.getElementById('execute-btn');
+            
+            title.innerText = `NIFTY ${strike} ${type}`;
+            executeBtn.innerText = `PLACE ${action} ORDER`;
+            
+            if(action === 'BUY') {
+                executeBtn.className = 'w-full py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 duration-150 transition-all uppercase tracking-widest bg-secondary text-on-secondary';
+            } else {
+                executeBtn.className = 'w-full py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 duration-150 transition-all uppercase tracking-widest bg-tertiary text-on-tertiary';
+            }
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('opacity-100');
+                sheet.classList.add('open');
+            }, 10);
+        }
+
+        function closeOrder() {
+            const sheet = document.getElementById('order-sheet');
+            const overlay = document.getElementById('overlay');
+            
+            sheet.classList.remove('open');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body></html>

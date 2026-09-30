@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal - Security Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#c4c6d0",
+                      "error-container": "#93000a",
+                      "outline-variant": "#44474f",
+                      "on-secondary-container": "#003e28",
+                      "secondary-fixed": "#6ffbbe",
+                      "primary-fixed-dim": "#adc6ff",
+                      "surface-tint": "#adc6ff",
+                      "on-tertiary-fixed-variant": "#6c3832",
+                      "background": "#0c1323",
+                      "execution-buy": "#4EDEA3",
+                      "on-error": "#690005",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-tertiary": "#51221d",
+                      "secondary": "#4edea3",
+                      "on-primary-fixed": "#001a42",
+                      "tertiary-fixed": "#ffdad5",
+                      "on-tertiary-container": "#7a433c",
+                      "execution-sell": "#FFB4AB",
+                      "status-pending": "#ADC6FF",
+                      "on-error-container": "#ffdad6",
+                      "tertiary": "#ffd9d4",
+                      "surface-container-lowest": "#070e1e",
+                      "surface-container-low": "#141b2c",
+                      "surface-container": "#191f30",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-container-highest": "#2e3446",
+                      "primary-container": "#adc6ff",
+                      "primary": "#d8e2ff",
+                      "surface-variant": "#2e3446",
+                      "secondary-container": "#00b47d",
+                      "outline": "#8e909a",
+                      "outline-technical": "#1E293B",
+                      "tertiary-container": "#feb3aa",
+                      "inverse-primary": "#455e90",
+                      "on-primary-fixed-variant": "#2c4677",
+                      "error": "#ffb4ab",
+                      "primary-fixed": "#d8e2ff",
+                      "tertiary-fixed-dim": "#ffb4ab",
+                      "surface-dim": "#0c1323",
+                      "on-secondary-fixed": "#002114",
+                      "on-secondary": "#003824",
+                      "on-tertiary-fixed": "#360e0a",
+                      "on-primary-container": "#385283",
+                      "inverse-on-surface": "#293041",
+                      "surface-bright": "#32394b",
+                      "on-background": "#dce2f9",
+                      "on-surface": "#dce2f9",
+                      "surface": "#0c1323",
+                      "inverse-surface": "#dce2f9",
+                      "surface-container-high": "#232a3b",
+                      "surface-glass": "rgba(18, 24, 38, 0.7)",
+                      "on-primary": "#122f5f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "container-margin": "16px",
+                      "cell-padding-y": "6px",
+                      "gutter": "12px",
+                      "cell-padding-x": "8px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Inter"],
+                      "title-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "data-mono": ["JetBrains Mono"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "data-mono": ["13px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for Terminal aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070e1e; /* surface-container-lowest */
+            border-left: 1px solid #1E293B; /* outline-technical */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e3446; /* surface-container-highest */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #44474f; /* outline-variant */
+        }
+        
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm antialiased h-screen w-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-glass dark:bg-surface-glass h-screen w-64 fixed left-0 top-0 backdrop-blur-xl border-r border-outline-technical flex flex-col py-spacing-container-margin z-50">
+<!-- Brand / Header -->
+<div class="px-6 mb-8 flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-technical flex items-center justify-center overflow-hidden">
+<img class="object-cover w-full h-full" data-alt="A sleek, minimalist vector logo of a geometric obsidian shard in dark blue and execution emerald colors, set against a dark background, representing an institutional trading terminal, clinical and precise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8pl-B6q4uGiDUrl6TDTXN59sPrr3e7vzX4LyEwA52JuoXgDSTOPrtf7FeWamQPZ7Sq86a9AYHQr-SaUPrVBKVlIa7aIHTd33IcWFJiVOcRwL4t0ajMPiFwVDOtZBIWILwahmpqIpUtGJYXGNp2xZQ5MMhDOGCbTlWRzMcxkCA5PLmsixayfYW2LlLQ0PNP-oXd4NuOh3Va6ZdncnWxPZNoKPTQuLsM_JSib0zAr8pQce0B8SiYo4"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tighter">Obsidian Terminal</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Institutional Grade</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">show_chart</span>
+<span class="font-body-md text-body-md">Markets</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">visibility</span>
+<span class="font-body-md text-body-md">Watchlist</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">receipt_long</span>
+<span class="font-body-md text-body-md">Orders</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Portfolio</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">payments</span>
+<span class="font-body-md text-body-md">Funds</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-highest transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">assessment</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+<!-- Active Tab: Settings (as this is a Security Center within settings) -->
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-secondary bg-secondary-fixed-dim/10 border-r-2 border-secondary opacity-80 group" href="#">
+<span class="material-symbols-outlined text-[20px] text-secondary">settings</span>
+<span class="font-body-md text-body-md font-semibold">Settings</span>
+</a>
+</div>
+<!-- CTA Action -->
+<div class="px-4 mt-6">
+<button class="w-full bg-primary-container text-on-primary-container hover:bg-primary-fixed transition-colors font-body-sm text-body-sm font-semibold py-2 rounded-DEFAULT flex items-center justify-center space-x-2 border border-outline-technical">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Order</span>
+</button>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="bg-surface-glass/80 dark:bg-surface-glass/80 fixed top-0 right-0 left-64 h-16 backdrop-blur-md border-b border-outline-technical shadow-sm z-40 flex justify-between items-center px-gutter w-[calc(100%-16rem)]">
+<!-- Search Bar (on_left logic implemented as horizontal nav links next to it) -->
+<div class="flex items-center space-x-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] group-focus-within:text-primary">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm rounded-DEFAULT py-1.5 pl-9 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 w-64 placeholder-on-surface-variant/50 transition-all" placeholder="Search instrument..." type="text"/>
+</div>
+<nav class="hidden lg:flex space-x-4">
+<a class="text-on-surface-variant font-body-sm text-body-sm hover:text-primary transition-all pb-1" href="#">Markets</a>
+<a class="text-on-surface-variant font-body-sm text-body-sm hover:text-primary transition-all pb-1" href="#">Liquidity</a>
+<a class="text-on-surface-variant font-body-sm text-body-sm hover:text-primary transition-all pb-1" href="#">Research</a>
+<!-- Adding a contextual active link for the current sub-section -->
+<a class="text-primary font-body-sm text-body-sm border-b-2 border-primary pb-1 font-medium" href="#">Security</a>
+</nav>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center space-x-4">
+<div class="flex space-x-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-DEFAULT hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-DEFAULT hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+</div>
+<button class="border border-outline-variant text-on-surface hover:text-primary hover:border-primary font-label-caps text-label-caps px-3 py-1.5 rounded-DEFAULT transition-colors">
+                Connect Wallet
+            </button>
+<div class="h-8 w-8 rounded-full border border-outline-technical overflow-hidden bg-surface-container-highest cursor-pointer">
+<img alt="Executive Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an executive trader, dramatic studio lighting, dark background, sharp focus, cinematic corporate portrait style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNFI_OdMQjPqFrGSv7qlCqZEvfQTZaOk-DDQbDbgqDFRGRTRWL8RHmJ_c7ZzrWZtu0xJxsujwFE-m0dy_gK8c8Iz3OiCDMCBADoXg4lSvBe4wkaPeWkl8faLonCF1utUC1lNeRLJ1eHi6zXX3R-VMKBZg1muYprJp-CmKdJCbJr-PNBskczq8bOApPH19nAEdDYOmNBTRCQrJiZqIZSUr8WuiP7sW-DEVkbCfGq9JBLVDdP7CV8No"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-64 mt-16 p-6 h-[calc(100vh-4rem)] w-[calc(100%-16rem)] overflow-y-auto bg-background">
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-end border-b border-outline-technical pb-4">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface">Security Center</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage authentication, session controls, and access logs.</p>
+</div>
+<!-- Global Health Status -->
+<div class="flex items-center space-x-3 bg-surface-container-low border border-outline-technical rounded-DEFAULT px-4 py-2">
+<div class="flex items-center space-x-2">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-execution-buy opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-execution-buy"></span>
+</span>
+<span class="font-data-mono text-data-mono text-on-surface">Health: Optimal</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="font-data-mono text-data-mono text-on-surface-variant text-xs">Score: 98/100</div>
+</div>
+</div>
+<!-- Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Security Controls (Left Column) -->
+<div class="col-span-12 xl:col-span-8 flex flex-col space-y-gutter">
+<!-- Authentication Panel -->
+<div class="bg-surface-glass border border-outline-technical rounded-lg p-6 glass-panel relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed-dim/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center space-x-2 mb-6">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">shield_locked</span>
+<span>Authentication &amp; Credentials</span>
+</h3>
+<div class="space-y-4">
+<!-- Password Row -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT hover:border-outline-variant/80 transition-colors">
+<div class="flex items-start space-x-4">
+<div class="bg-surface-container h-10 w-10 rounded-DEFAULT flex items-center justify-center border border-outline-technical">
+<span class="material-symbols-outlined text-on-surface-variant">password</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md text-on-surface font-medium">Master Password</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Last updated 42 days ago. <span class="text-error">Recommendation: Update soon.</span></p>
+</div>
+</div>
+<button class="border border-outline-variant text-on-surface hover:text-primary hover:border-primary font-label-caps text-label-caps px-4 py-2 rounded-DEFAULT transition-colors">
+                                Update
+                            </button>
+</div>
+<!-- 2FA Row -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT hover:border-outline-variant/80 transition-colors">
+<div class="flex items-start space-x-4">
+<div class="bg-surface-container h-10 w-10 rounded-DEFAULT flex items-center justify-center border border-outline-technical">
+<span class="material-symbols-outlined text-execution-buy" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md text-on-surface font-medium">Two-Factor Authentication (2FA)</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Enabled via Authenticator App (TOTP). Backup codes active.</p>
+</div>
+</div>
+<button class="border border-outline-variant text-on-surface hover:text-primary hover:border-primary font-label-caps text-label-caps px-4 py-2 rounded-DEFAULT transition-colors">
+                                Manage
+                            </button>
+</div>
+<!-- Trading PIN Row -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT hover:border-outline-variant/80 transition-colors">
+<div class="flex items-start space-x-4">
+<div class="bg-surface-container h-10 w-10 rounded-DEFAULT flex items-center justify-center border border-outline-technical">
+<span class="material-symbols-outlined text-on-surface-variant">dialpad</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md text-on-surface font-medium">Execution PIN</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Required for orders exceeding $100,000 NOTIONAL.</p>
+</div>
+</div>
+<button class="border border-outline-variant text-on-surface hover:text-primary hover:border-primary font-label-caps text-label-caps px-4 py-2 rounded-DEFAULT transition-colors">
+                                Reset PIN
+                            </button>
+</div>
+</div>
+</div>
+<!-- Active Sessions Table/Panel -->
+<div class="bg-surface-glass border border-outline-technical rounded-lg p-6 glass-panel flex-1">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center space-x-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">devices</span>
+<span>Active Sessions</span>
+</h3>
+<button class="bg-surface-container-highest border border-error-container text-error hover:bg-error-container/20 font-label-caps text-label-caps px-4 py-2 rounded-DEFAULT transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px]">logout</span>
+<span>Revoke All Other Sessions</span>
+</button>
+</div>
+<div class="overflow-x-auto border border-outline-technical rounded-DEFAULT">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-technical">
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant">Device / OS</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant">IP Address</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant">Location (Est.)</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant">Last Active</th>
+<th class="py-cell-padding-y px-cell-padding-x font-label-caps text-label-caps text-on-surface-variant text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono divide-y divide-outline-technical">
+<tr class="bg-surface-container-highest/20 hover:bg-surface-container-highest/40 transition-colors">
+<td class="py-cell-padding-y px-cell-padding-x flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">computer</span>
+<div>
+<span class="text-on-surface block">Obsidian Desktop v4.2</span>
+<span class="text-on-surface-variant text-[11px]">macOS 14.3.1</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-cell-padding-x text-on-surface-variant">192.168.1.104</td>
+<td class="py-cell-padding-y px-cell-padding-x text-on-surface-variant">New York, US</td>
+<td class="py-cell-padding-y px-cell-padding-x text-execution-buy flex items-center space-x-1">
+<span class="h-1.5 w-1.5 rounded-full bg-execution-buy inline-block"></span>
+<span>Current Session</span>
+</td>
+<td class="py-cell-padding-y px-cell-padding-x text-right">
+<span class="text-outline-variant font-body-sm text-body-sm">N/A</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/40 transition-colors">
+<td class="py-cell-padding-y px-cell-padding-x flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">smartphone</span>
+<div>
+<span class="text-on-surface block">Obsidian Mobile</span>
+<span class="text-on-surface-variant text-[11px]">iOS 17.4</span>
+</div>
+</td>
+<td class="py-cell-padding-y px-cell-padding-x text-on-surface-variant">104.28.10.15</td>
+<td class="py-cell-padding-y px-cell-padding-x text-on-surface-variant">London, UK</td>
+<td class="py-cell-padding-y px-cell-padding-x text-on-surface-variant">2 hours ago</td>
+<td class="py-cell-padding-y px-cell-padding-x text-right">
+<button class="text-error hover:text-error-container font-label-caps text-label-caps transition-colors underline decoration-error/50 underline-offset-2">Revoke</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Side Information / Logs (Right Column) -->
+<div class="col-span-12 xl:col-span-4 flex flex-col space-y-gutter">
+<!-- Security Alert Box -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 flex items-start space-x-3">
+<span class="material-symbols-outlined text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">info</span>
+<div>
+<h4 class="font-body-md text-body-md text-on-surface font-medium">API Key Deprecation</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 mb-2">Legacy API keys (v1) will be deprecated in 14 days. Please migrate to v2 keys to maintain algorithmic trading access.</p>
+<a class="font-label-caps text-label-caps text-primary hover:underline underline-offset-2" href="#">Go to API Management →</a>
+</div>
+</div>
+<!-- Recent Login History -->
+<div class="bg-surface-glass border border-outline-technical rounded-lg p-5 glass-panel flex-1 flex flex-col">
+<h3 class="font-title-sm text-title-sm text-on-surface flex items-center space-x-2 mb-4 border-b border-outline-technical pb-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">history</span>
+<span>Recent Login History</span>
+</h3>
+<div class="flex-1 overflow-y-auto space-y-3 pr-2">
+<!-- Log Item -->
+<div class="flex items-start justify-between border-l-2 border-execution-buy pl-3">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Successful Login</p>
+<p class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">IP: 192.168.1.104 • Desktop</p>
+</div>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant">Today, 08:14 UTC</span>
+</div>
+<!-- Log Item -->
+<div class="flex items-start justify-between border-l-2 border-execution-buy pl-3">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Successful Login</p>
+<p class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">IP: 104.28.10.15 • Mobile</p>
+</div>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant">Yesterday, 14:22 UTC</span>
+</div>
+<!-- Log Item (Failed) -->
+<div class="flex items-start justify-between border-l-2 border-error pl-3">
+<div>
+<p class="font-body-sm text-body-sm text-error">Failed Attempt</p>
+<p class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">IP: 45.33.22.11 • Unknown</p>
+</div>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant">Oct 24, 23:41 UTC</span>
+</div>
+<!-- Log Item -->
+<div class="flex items-start justify-between border-l-2 border-outline-variant pl-3">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Session Expiry</p>
+<p class="font-data-mono text-data-mono text-[11px] text-on-surface-variant">System Automated</p>
+</div>
+<span class="font-data-mono text-data-mono text-[10px] text-on-surface-variant">Oct 24, 12:00 UTC</span>
+</div>
+</div>
+<div class="pt-4 mt-2 border-t border-outline-technical text-center">
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors">
+                            View Full Audit Log
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

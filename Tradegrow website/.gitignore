@@ -1,0 +1,26 @@
+# Build output — regenerate with: node build/build.js
+dist/
+
+# Dependencies (none currently, but keep the guard)
+node_modules/
+
+# Secrets — never commit these
+.env
+.env.*
+*.pem
+*.key
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Lighthouse CI output
+.lighthouseci/

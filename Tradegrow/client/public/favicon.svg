@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="32" height="32" rx="8" ry="8" fill="url(#bg)"/>
+  <!-- Upward trending arrow chart line -->
+  <polyline points="5,24 11,14 16,18 26,8"
+    fill="none" stroke="white" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#glow)"/>
+  <!-- Arrowhead -->
+  <polyline points="21,8 26,8 26,13"
+    fill="none" stroke="white" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sprout leaf at arrow tip -->
+  <path d="M24 6 C24 6 28.5 5.5 28.5 10 C28.5 10 24 10 24 6Z"
+    fill="#A7F3D0" opacity="0.85"/>
+</svg>

@@ -1,0 +1,192 @@
+{
+  "_README": [
+    "SINGLE SOURCE OF TRUTH for every company / regulatory / contact fact on the website.",
+    "RULE: Leave a value as null or \"\" until Compliance has verified it in writing.",
+    "Any null/empty value renders on the site as 'Information to be verified' — never as an invented fact.",
+    "After editing this file run: node build/build.js"
+  ],
+
+  "brand": {
+    "name": "Trade Grow",
+    "legalName": null,
+    "tagline": "Trade Smarter. Understand Your Costs. Grow With Confidence.",
+    "domain": "https://www.tradegrow.in",
+    "logoText": "Trade Grow"
+  },
+
+  "entity": {
+    "legalName": null,
+    "entityType": null,
+    "cin": null,
+    "gstin": null,
+    "pan": null,
+    "incorporationDate": null,
+    "registeredOffice": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "pincode": null
+    },
+    "correspondenceOffice": {
+      "line1": null,
+      "line2": null,
+      "city": null,
+      "state": null,
+      "pincode": null
+    }
+  },
+
+  "regulatory": {
+    "sebi": {
+      "status": "pending",
+      "registrationNumber": null,
+      "registrationType": null,
+      "validFrom": null,
+      "validTo": null,
+      "verifyUrl": "https://www.sebi.gov.in/intermediaries.html",
+      "verifyLabel": "SEBI Intermediaries Search",
+      "certificateDoc": null
+    },
+    "exchanges": [
+      {
+        "name": "NSE",
+        "status": "pending",
+        "memberCode": null,
+        "segments": [],
+        "verifyUrl": "https://www.nseindia.com/invest/find-a-stock-broker",
+        "verifyLabel": "NSE Member Search",
+        "certificateDoc": null
+      },
+      {
+        "name": "BSE",
+        "status": "pending",
+        "memberCode": null,
+        "segments": [],
+        "verifyUrl": "https://www.bseindia.com/members/MembersDirectory.html",
+        "verifyLabel": "BSE Member Directory",
+        "certificateDoc": null
+      }
+    ],
+    "depositories": [
+      {
+        "name": "CDSL",
+        "status": "pending",
+        "dpId": null,
+        "relationship": null,
+        "verifyUrl": "https://www.cdslindia.com/DP/dplist.aspx",
+        "verifyLabel": "CDSL DP List",
+        "certificateDoc": null
+      },
+      {
+        "name": "NSDL",
+        "status": "pending",
+        "dpId": null,
+        "relationship": null,
+        "verifyUrl": "https://nsdl.co.in/dpsch.php",
+        "verifyLabel": "NSDL DP Search",
+        "certificateDoc": null
+      }
+    ],
+    "amfi": {
+      "status": "not_applicable",
+      "arnNumber": null,
+      "verifyUrl": "https://www.amfiindia.com/locate-your-nearest-mutual-fund-distributor-details",
+      "verifyLabel": "AMFI Distributor Search"
+    },
+    "_disclaimerIfPending": "Trade Grow does not claim any registration, membership or depository relationship that is not published on this page with a verifiable number. Where a field reads 'Information to be verified', treat it as not yet confirmed."
+  },
+
+  "officers": {
+    "compliance": {
+      "name": null,
+      "designation": "Compliance Officer",
+      "email": null,
+      "phone": null
+    },
+    "grievance": {
+      "name": null,
+      "designation": "Grievance Redressal Officer",
+      "email": null,
+      "phone": null
+    },
+    "principal": {
+      "name": null,
+      "designation": "Principal Officer / Director",
+      "email": null,
+      "phone": null
+    }
+  },
+
+  "support": {
+    "phone": null,
+    "phoneDisplay": null,
+    "email": null,
+    "whatsapp": {
+      "enabled": false,
+      "number": null,
+      "prefilledMessage": "Hi Trade Grow, I would like to know more about your platform."
+    },
+    "hours": null,
+    "workingDays": null,
+    "escalation": [
+      { "level": "Level 1", "channel": "Customer Support", "contact": null, "tat": null },
+      { "level": "Level 2", "channel": "Head of Customer Service", "contact": null, "tat": null },
+      { "level": "Level 3", "channel": "Compliance Officer", "contact": null, "tat": null },
+      { "level": "Level 4", "channel": "Exchange / SEBI SCORES", "contact": "https://scores.sebi.gov.in", "tat": null }
+    ]
+  },
+
+  "app": {
+    "androidUrl": null,
+    "iosUrl": null,
+    "webUrl": "https://tradegrowx.in/profile/account",
+    "signupUrl": "https://tradegrowx.in/register",
+    "packageName": null,
+    "screenshotsAreIllustrative": true,
+    "demoVideoUrl": null
+  },
+
+  "documents": [
+    { "key": "terms",            "title": "Terms & Conditions",        "url": "/terms/",            "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "privacy",          "title": "Privacy Policy",            "url": "/privacy/",          "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "risk",             "title": "Risk Disclosure Document",  "url": "/risk-disclosure/",  "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "investor-charter", "title": "Investor Charter",          "url": "/investor-charter/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "charges",          "title": "Schedule of Charges",       "url": "/pricing/",          "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "grievance",        "title": "Grievance Redressal Policy","url": "/grievance-policy/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "aof",              "title": "Account Opening Form & Annexures", "url": "/open-account/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
+    { "key": "pmla",             "title": "AML / PMLA Policy",         "url": "/pmla-policy/",      "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" }
+  ],
+
+  "cta": {
+    "primary":   { "label": "Explore Trade Grow", "href": "/platform/" },
+    "secondary": { "label": "Verify Our Details", "href": "/verify/" },
+    "pricing":   { "label": "View Pricing",       "href": "/pricing/" },
+    "platform":  { "label": "See Platform",       "href": "/platform/" },
+    "account":   { "label": "Start Account Opening", "href": "/open-account/" }
+  },
+
+  "headlineVariants": [
+    "Trade Smarter. Understand Your Costs. Grow With Confidence.",
+    "Don't Just Trust a New Broker. Verify One.",
+    "Transparent Costs. Digital Onboarding. Investor-First Support.",
+    "Know Exactly What Every Trade Costs You.",
+    "A New Platform. An Open Rulebook."
+  ],
+
+  "compliance": {
+    "pendingLabel": "Information to be verified",
+    "illustrativeLabel": "Illustrative interface — not a live screenshot",
+    "marketRiskDisclaimer": "Investments in securities market are subject to market risks. Read all the related documents carefully before investing.",
+    "noAdviceDisclaimer": "Trade Grow does not provide investment advice, assured returns, or profit guarantees. Nothing on this website should be construed as a recommendation to buy or sell any security.",
+    "chargesDisclaimer": "Brokerage is set by Trade Grow. Statutory and regulatory charges (STT/CTT, GST, Stamp Duty, Exchange Transaction Charges, SEBI Turnover Fees, DP charges and any other applicable levies) are set by the Government, Exchanges, Depositories and SEBI — they are collected by the broker and passed on. These are payable irrespective of the brokerage plan.",
+    "otpWarning": "Trade Grow will never ask for your OTP, password, PIN, UPI PIN or card PIN. Enter your OTP only on the official Trade Grow app or website."
+  },
+
+  "analytics": {
+    "provider": null,
+    "siteId": null,
+    "endpoint": null,
+    "respectDoNotTrack": true
+  }
+}

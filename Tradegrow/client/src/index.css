@@ -1,0 +1,1115 @@
+@import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* UI/UX Pro Max Design System Tokens — TradeGrow Pro Light Theme (Default) */
+  --bg-body: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-inset: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  --bg-glass-card: rgba(255, 255, 255, 0.98);
+
+  /* text-muted/text-tertiary: darkened from #64748b/#94a3b8 (4.34:1 and
+     2.34-2.56:1 against --bg-surface-elevated, both below WCAG AA's 4.5:1
+     for normal text — text-tertiary was badly failing). Both now clear
+     4.5:1 against every surface token, which necessarily compresses the
+     two tiers closer together than before — an accepted tradeoff of
+     enforcing AA on a 3-tier gray scale; lean on weight/size, not just
+     color, to keep tertiary reading as lower-emphasis. */
+  --text-main: #0f172a;
+  --text-muted: #5c6a80;
+  --text-tertiary: #5d718d;
+
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* primary/gain: darkened from #16a34a (3.01-3.30:1 against surface
+     tokens, failing AA) to #11803a (4.59-5.10:1), same hue. */
+  --primary: #11803a;
+  --primary-hover: #15803d;
+  --primary-light: #dcfce7;
+  --primary-glow: rgba(22, 163, 74, 0.2);
+
+  /* Text color for solid accent-colored buttons/pills (bg-[var(--primary
+     |warning|loss|gogrow-blue)] with light-theme-strength fill): white
+     text passes AA against every light-theme accent color at this
+     strength, black does not — this is the opposite of --text-main's own
+     light/dark direction, which is why it's a separate token. */
+  --text-on-accent: #ffffff;
+
+  --groww-green: #16a34a;
+  --groww-green-hover: #15803d;
+  --groww-green-light: #dcfce7;
+  --groww-red: #dc2626;
+  --groww-red-light: #fee2e2;
+
+  --gogrow-blue: #4f46e5;
+  --gogrow-blue-hover: #4338ca;
+  --gogrow-blue-light: #e0e7ff;
+
+  --gain: #11803a;
+  --gain-light: #dcfce7;
+  /* loss: darkened from #dc2626 (4.41:1 against --bg-surface-elevated,
+     4.14:1 against --loss-light — both failing AA) to #ca2121 (4.58-5.60:1
+     against every surface and its own -light badge background). */
+  --loss: #ca2121;
+  --loss-light: #fee2e2;
+
+  /* Option Chain Color Accents */
+  /* Was #0891b2 (3.36-3.68:1 against --bg-surface/--bg-surface-elevated,
+     below WCAG AA's 4.5:1) — real option-premium text color in
+     OptionChainRow, not decoration. Darkened to 4.72:1 minimum, same hue. */
+  --call-accent: #077792;
+  --call-bg-itm: #ecfeff;
+  --call-bg-hover: #cffafe;
+  --put-accent: #9333ea;
+  --put-bg-itm: #faf5ff;
+  --put-bg-hover: #f3e8ff;
+  --atm-glow: rgba(234, 179, 8, 0.25);
+
+  /* Spacing Scale (Mobile Density Optimized) */
+  --space-xs: 2px;
+  --space-sm: 4px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-2xl: 20px;
+  --space-3xl: 28px;
+
+  /* Consolidated Elevation Scale */
+  --elevation-flat: none;
+  --elevation-raised: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --elevation-overlay: 0 4px 14px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --elevation-modal: 0 20px 45px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.08);
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Typography Scale (new — previously only font-family existed as a token;
+     every size/weight/line-height in the app was ad hoc Tailwind defaults) */
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 38px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.04em;
+
+  /* Spacing Scale — Page/Section Layout (extends the dense scale above,
+     which stays as-is for tables/rows; these are for page padding, section
+     gaps, and empty-state spacing where the brief calls for "generous
+     whitespace") */
+  --space-4xl: 36px;
+  --space-5xl: 48px;
+  --space-6xl: 64px;
+
+  /* Layout Widths (new — no documented max-width existed anywhere) */
+  --max-width-content: 640px;
+  --max-width-wide: 1120px;
+  --max-width-page: 1440px;
+
+  /* Motion (new — durations previously existed only as magic numbers inside
+     individual @keyframes/transition declarations scattered through this
+     file; new components reference these, existing animations can adopt
+     them opportunistically when their component is next touched) */
+  --duration-instant: 50ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-in: cubic-bezier(0.4, 0, 1, 1);
+  --easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Status colors beyond gain/loss (new — needed for RMS restriction
+     banners, KYC pending/rejected states, and general warning/info
+     messaging that isn't a gain/loss value) */
+  /* warning: darkened from #d97706 (2.91-3.19:1 against surface tokens,
+     failing AA) to #a75b05 (4.55-5.07:1), same hue. */
+  --warning: #a75b05;
+  --warning-light: #fef3c7;
+  --info: var(--gogrow-blue);
+  --info-light: var(--gogrow-blue-light);
+
+  /* Overlay & Focus — accessibility (new). Also resolves a real conflict
+     found in this file: .mobile-bottom-sheet-backdrop, .sheet-backdrop-light
+     and .sheet-backdrop-dark each hardcoded a different, disagreeing
+     backdrop color/opacity. This is the one canonical value the new Dialog/
+     Sheet primitive uses; the old classes are superseded once it ships. */
+  --overlay-backdrop: rgba(15, 23, 42, 0.4);
+  --shadow-focus: 0 0 0 3px var(--primary-glow);
+}
+
+[data-theme="dark"],
+.dark {
+  --bg-body: #020617;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --bg-surface-inset: #020617;
+  --bg-glass: rgba(15, 23, 42, 0.85);
+  --bg-glass-card: rgba(30, 41, 59, 0.75);
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  /* text-tertiary: lightened from #64748b (3.07-4.24:1 against surface
+     tokens, failing AA) to #8291a5 (4.56-6.28:1), same hue. Necessarily
+     compresses toward --text-muted — see the light-theme note above. */
+  --text-tertiary: #8291a5;
+
+  --border-color: #334155;
+  --border-light: #1e293b;
+
+  --primary: #22c55e;
+  --primary-hover: #16a34a;
+  --primary-light: rgba(34, 197, 94, 0.12);
+  --primary-glow: rgba(34, 197, 94, 0.25);
+
+  /* Text color for solid accent-colored buttons/pills in dark mode:
+     near-black passes AA against every dark-theme accent color at this
+     strength, near-white does not (same rationale as the light-theme
+     --text-on-accent definition — this is the opposite of --text-main's
+     own direction in this theme). */
+  --text-on-accent: #020617;
+
+  --groww-green: #22c55e;
+  --groww-green-hover: #16a34a;
+  --groww-green-light: rgba(34, 197, 94, 0.12);
+  --groww-red: #ef4444;
+  --groww-red-light: rgba(239, 68, 68, 0.12);
+
+  /* gogrow-blue: lightened from #6366f1 (3.27-4.00:1 against
+     --bg-surface/--bg-surface-elevated, failing AA) to #8184f4
+     (4.56-6.28:1), same hue. */
+  --gogrow-blue: #8184f4;
+  --gogrow-blue-hover: #4f46e5;
+  --gogrow-blue-light: rgba(99, 102, 241, 0.12);
+
+  --gain: #22c55e;
+  --gain-light: rgba(34, 197, 94, 0.12);
+  /* loss: lightened from #ef4444 (3.89:1 against --bg-surface-elevated,
+     failing AA) to #f15f5f (4.56-6.28:1), same hue. */
+  --loss: #f15f5f;
+  --loss-light: rgba(239, 68, 68, 0.12);
+
+  --call-accent: #06b6d4;
+  --call-bg-itm: rgba(6, 182, 212, 0.08);
+  --call-bg-hover: rgba(6, 182, 212, 0.15);
+  /* Was #a855f7 (3.70:1 against --bg-surface-elevated, below WCAG AA's 4.5:1
+     for normal text) — this is real option-premium text in OptionChainRow,
+     not decoration. Lightened to 4.52:1 while keeping the same hue. */
+  --put-accent: #b46df8;
+  --put-bg-itm: rgba(168, 85, 247, 0.08);
+  --put-bg-hover: rgba(168, 85, 247, 0.15);
+  --atm-glow: rgba(234, 179, 8, 0.3);
+
+  /* Consolidated Elevation Scale */
+  --elevation-flat: none;
+  --elevation-raised: 0 2px 5px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --elevation-overlay: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --elevation-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.8);
+
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.14);
+  --info: var(--gogrow-blue);
+  --info-light: var(--gogrow-blue-light);
+
+  --overlay-backdrop: rgba(2, 6, 23, 0.6);
+  --shadow-focus: 0 0 0 3px var(--primary-glow);
+}
+
+[data-theme="light"],
+.light {
+  --bg-body: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-inset: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  --bg-glass-card: rgba(255, 255, 255, 0.98);
+
+  --text-main: #0f172a;
+  --text-muted: #5c6a80;
+  --text-tertiary: #5d718d;
+
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  --primary: #11803a;
+  --primary-hover: #15803d;
+  --primary-light: #dcfce7;
+  --primary-glow: rgba(22, 163, 74, 0.2);
+
+  --text-on-accent: #ffffff;
+
+  --groww-green: #16a34a;
+  --groww-green-hover: #15803d;
+  --groww-green-light: #dcfce7;
+  --groww-red: #dc2626;
+  --groww-red-light: #fee2e2;
+
+  --gain: #11803a;
+  --gain-light: #dcfce7;
+  --loss: #ca2121;
+  --loss-light: #fee2e2;
+
+  /* Was #0891b2 (3.36-3.68:1 against --bg-surface/--bg-surface-elevated,
+     below WCAG AA's 4.5:1) — real option-premium text color in
+     OptionChainRow, not decoration. Darkened to 4.72:1 minimum, same hue. */
+  --call-accent: #077792;
+  --call-bg-itm: #ecfeff;
+  --call-bg-hover: #cffafe;
+  --put-accent: #9333ea;
+  --put-bg-itm: #faf5ff;
+  --put-bg-hover: #f3e8ff;
+  --atm-glow: rgba(234, 179, 8, 0.25);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+
+  --warning: #a75b05;
+  --warning-light: #fef3c7;
+  --info: var(--gogrow-blue);
+  --info-light: var(--gogrow-blue-light);
+
+  --overlay-backdrop: rgba(15, 23, 42, 0.4);
+  --shadow-focus: 0 0 0 3px var(--primary-glow);
+}
+
+/* LIGHT THEME GLOBAL OVERRIDES FOR SLATE CLASSES */
+[data-theme="light"] .bg-slate-950,
+[data-theme="light"] .bg-slate-900,
+[data-theme="light"] .bg-slate-900\/90,
+[data-theme="light"] .bg-slate-900\/95,
+[data-theme="light"] .bg-slate-900\/80,
+[data-theme="light"] .bg-slate-900\/60,
+[data-theme="light"] .bg-slate-850,
+[data-theme="light"] .bg-slate-850\/60 {
+  background-color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-slate-950\/80,
+[data-theme="light"] .bg-slate-950\/70,
+[data-theme="light"] .bg-slate-950\/60,
+[data-theme="light"] .bg-slate-800,
+[data-theme="light"] .bg-slate-800\/80,
+[data-theme="light"] .bg-slate-800\/50,
+[data-theme="light"] .bg-slate-800\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .bg-gradient-to-br.from-slate-900,
+[data-theme="light"] .bg-gradient-to-r.from-slate-900,
+[data-theme="light"] .bg-gradient-to-tr.from-slate-900 {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+
+[data-theme="light"] .border-slate-800,
+[data-theme="light"] .border-slate-800\/80,
+[data-theme="light"] .border-slate-800\/60,
+[data-theme="light"] .border-slate-850,
+[data-theme="light"] .border-slate-700,
+[data-theme="light"] .border-slate-750 {
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .text-slate-100,
+[data-theme="light"] .text-slate-200 {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .text-slate-300 {
+  color: #334155 !important;
+}
+
+[data-theme="light"] .text-slate-400 {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .hover\:bg-slate-800\/50:hover,
+[data-theme="light"] .hover\:bg-slate-800\/60:hover,
+[data-theme="light"] .hover\:bg-slate-800\/80:hover,
+[data-theme="light"] .hover\:bg-slate-800:hover {
+  background-color: #f8fafc !important;
+}
+
+[data-theme="light"] .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .hover\:border-slate-700:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* Ensure buttons with colored backgrounds keep white text */
+[data-theme="light"] .bg-emerald-600,
+[data-theme="light"] .bg-emerald-600 .text-white,
+[data-theme="light"] .bg-emerald-500,
+[data-theme="light"] .bg-rose-600,
+[data-theme="light"] .bg-rose-600 .text-white,
+[data-theme="light"] .bg-rose-500,
+[data-theme="light"] .bg-indigo-600,
+[data-theme="light"] .bg-indigo-600 .text-white,
+[data-theme="light"] .bg-blue-600,
+[data-theme="light"] .bg-blue-600 .text-white,
+[data-theme="light"] .bg-gradient-to-tr.from-emerald-600.to-indigo-600,
+[data-theme="light"] .bg-gradient-to-tr.from-emerald-600.to-indigo-600 .text-white {
+  color: #ffffff !important;
+}
+
+
+@layer base {
+  * {
+    border-color: var(--border-color);
+  }
+
+  body {
+    font-family: var(--font-main);
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button, a, input, select, textarea {
+    cursor: pointer;
+  }
+
+  /* App-wide keyboard focus ring. The shared `Button` component already sets
+     this per-instance via Tailwind classes, but most icon-only utility
+     buttons across the app (close/clear/stepper controls) are plain <button>
+     elements that never went through it — without this, tabbing to them
+     shows no visible focus indicator at all (WCAG 2.4.7). One rule here
+     covers every focusable element regardless of which component built it. */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.num-font {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Glassmorphism & Card Styles */
+.glass-card {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+}
+
+.glass-header {
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tg-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.tg-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.tg-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.tg-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.tg-pill-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+
+.tg-pill-btn:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.tg-pill-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 10px var(--primary-glow);
+}
+
+/* Ticker Bar */
+.ticker-wrap {
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.ticker-move {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker 40s linear infinite;
+}
+
+.ticker-move:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Bento Grid System Utilities */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.bento-col-4 { grid-column: span 4; }
+.bento-col-6 { grid-column: span 6; }
+.bento-col-8 { grid-column: span 8; }
+.bento-col-12 { grid-column: span 12; }
+
+@media (max-width: 1024px) {
+  .bento-col-4, .bento-col-6, .bento-col-8 { grid-column: span 12; }
+}
+
+/* Real-Time Price Flash Keyframes */
+@keyframes priceFlashUp {
+  0% {
+    background-color: rgba(34, 197, 94, 0.4);
+    color: #22c55e;
+    box-shadow: inset 0 0 12px rgba(34, 197, 94, 0.25);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@keyframes priceFlashDown {
+  0% {
+    background-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    box-shadow: inset 0 0 12px rgba(239, 68, 68, 0.25);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.price-flash-up {
+  animation: priceFlashUp 0.35s ease-out;
+}
+
+.price-flash-down {
+  animation: priceFlashDown 0.35s ease-out;
+}
+
+/* Option Chain Highlights */
+.itm-call {
+  background-color: var(--call-bg-itm);
+}
+
+.itm-put {
+  background-color: var(--put-bg-itm);
+}
+
+.atm-strike-row {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.12) 0%, rgba(234, 179, 8, 0.18) 50%, rgba(168, 85, 247, 0.12) 100%);
+  border-top: 1px solid rgba(234, 179, 8, 0.5);
+  border-bottom: 1px solid rgba(234, 179, 8, 0.5);
+}
+
+/* Mobile Utilities & Navigation */
+@media (max-width: 768px) {
+  .mobile-hide { display: none !important; }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 50;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    padding: 6px 0;
+    transition: color 0.15s ease;
+    min-height: 48px;
+  }
+
+  .mobile-nav-btn.active {
+    color: var(--primary);
+  }
+}
+
+.mobile-bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.mobile-bottom-sheet-content {
+  background: var(--bg-surface);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  border-top: 1px solid var(--border-color);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PREMIUM TRADEGROW ANIMATION & MOTION SYSTEM
+   GPU-only properties: transform + opacity
+   All animations respect prefers-reduced-motion
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Live Pulse Dot (Real-time indicator) ─────────────────── */
+@keyframes livePulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+.live-dot {
+  animation: livePulse 1.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Skeleton Shimmer (Premium Loading State) ─────────────── */
+@keyframes shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-elevated) 25%,
+    rgba(148,163,184,0.15) 50%,
+    var(--bg-surface-elevated) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Price Flash (Improved: only animates color, not layout) ─ */
+@keyframes priceFlashUp {
+  0%   { background-color: rgba(22, 163, 74, 0.25); color: #15803d; }
+  70%  { background-color: rgba(22, 163, 74, 0.10); }
+  100% { background-color: transparent; color: inherit; }
+}
+
+@keyframes priceFlashDown {
+  0%   { background-color: rgba(220, 38, 38, 0.22); color: #b91c1c; }
+  70%  { background-color: rgba(220, 38, 38, 0.08); }
+  100% { background-color: transparent; color: inherit; }
+}
+
+.price-flash-up {
+  animation: priceFlashUp 0.40s ease-out forwards;
+}
+.price-flash-down {
+  animation: priceFlashDown 0.40s ease-out forwards;
+}
+
+/* Dark theme variants */
+.dark .price-flash-up {
+  animation: priceFlashUpDark 0.40s ease-out forwards;
+}
+.dark .price-flash-down {
+  animation: priceFlashDownDark 0.40s ease-out forwards;
+}
+
+@keyframes priceFlashUpDark {
+  0%   { background-color: rgba(34, 197, 94, 0.28); color: #22c55e; }
+  70%  { background-color: rgba(34, 197, 94, 0.10); }
+  100% { background-color: transparent; color: inherit; }
+}
+@keyframes priceFlashDownDark {
+  0%   { background-color: rgba(239, 68, 68, 0.28); color: #ef4444; }
+  70%  { background-color: rgba(239, 68, 68, 0.10); }
+  100% { background-color: transparent; color: inherit; }
+}
+
+/* ── P&L Number update flash ──────────────────────────────── */
+@keyframes pnlGain {
+  0%   { color: #15803d; }
+  100% { color: inherit; }
+}
+@keyframes pnlLoss {
+  0%   { color: #b91c1c; }
+  100% { color: inherit; }
+}
+.pnl-gain-flash { animation: pnlGain 0.5s ease-out forwards; }
+.pnl-loss-flash { animation: pnlLoss 0.5s ease-out forwards; }
+
+/* ── Staggered Card Entrance ──────────────────────────────── */
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-enter {
+  animation: cardEnter 0.25s ease-out both;
+  will-change: transform, opacity;
+}
+.card-enter-1 { animation-delay: 0ms; }
+.card-enter-2 { animation-delay: 40ms; }
+.card-enter-3 { animation-delay: 80ms; }
+.card-enter-4 { animation-delay: 120ms; }
+.card-enter-5 { animation-delay: 160ms; }
+
+/* ── Nav icon micro-lift on active ───────────────────────── */
+@keyframes navActivate {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
+.nav-icon-active {
+  animation: navActivate 0.20s ease-out;
+}
+
+/* ── Shake (error feedback, applied to component only) ───── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.shake { animation: shake 0.35s ease-out; }
+
+/* ── Spinner → Checkmark ──────────────────────────────────── */
+@keyframes checkPop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.check-pop { animation: checkPop 0.30s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+/* ── Bottom Nav floating elevation ────────────────────────── */
+.mobile-nav-glass {
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(226,232,240,0.8);
+  box-shadow: 0 -4px 20px rgba(15,23,42,0.07), 0 -1px 4px rgba(15,23,42,0.04);
+}
+.dark .mobile-nav-glass {
+  background: rgba(15,23,42,0.94);
+  border-top: 1px solid rgba(51,65,85,0.6);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.40), 0 -1px 4px rgba(0,0,0,0.25);
+}
+
+/* ── Background depth for home page ──────────────────────── */
+.home-bg-depth {
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 0%,   rgba(22,163,74,0.055) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 80% 100%, rgba(99,102,241,0.04) 0%, transparent 70%),
+    var(--bg-body);
+}
+.dark .home-bg-depth {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%,   rgba(34,197,94,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 30% at 80% 100%, rgba(99,102,241,0.05) 0%, transparent 65%),
+    var(--bg-body);
+}
+
+/* ── Bottom sheet backdrop (light/dark auto) ──────────────── */
+.sheet-backdrop-light {
+  background: rgba(248,250,252,0.18);
+}
+.sheet-backdrop-dark {
+  background: rgba(2,6,23,0.22);
+}
+
+/* ── Reconnecting spin (icon only, restrained) ────────────── */
+@keyframes gentleSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.reconnect-spin {
+  animation: gentleSpin 1.2s linear infinite;
+  display: inline-block;
+}
+
+/* ════════════════════════════════════════════════════════════
+   AUTH PAGE — the one place a richer entrance is warranted.
+   Only transform/opacity/stroke are animated (never width/height/
+   top/left), so nothing here can cause layout shift or CLS.
+   ════════════════════════════════════════════════════════════ */
+
+/* Card lifts in from slightly below and behind */
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.auth-card {
+  animation: authCardIn var(--duration-slow, 400ms) var(--easing-out) both;
+  will-change: transform, opacity;
+}
+
+/* Ambient brand-panel wash. Very slow and low-contrast on purpose —
+   it should register as depth, not as a moving element competing with
+   the form for attention. */
+@keyframes authGlowDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(6%, -4%, 0) scale(1.12); }
+}
+.auth-glow {
+  position: absolute;
+  top: -25%;
+  right: -20%;
+  width: 75%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+  filter: blur(48px);
+  pointer-events: none;
+  animation: authGlowDrift 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Sparkline draws itself once, then the area fill washes in behind it */
+@keyframes authSparkDraw {
+  from { stroke-dashoffset: 420; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes authSparkFillIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.auth-spark-line {
+  stroke-dasharray: 420;
+  animation: authSparkDraw 1.5s var(--easing-out) 250ms both;
+}
+.auth-spark-fill {
+  animation: authSparkFillIn 700ms var(--easing-default) 1s both;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TABULAR NUMERALS & FINANCIAL NUMBER FORMATTING
+   Applied to all LTPs, P&L, Margin, and Currency quantities to
+   prevent layout shifts/column jitter during real-time streaming.
+   ════════════════════════════════════════════════════════════ */
+.tabular-nums,
+.num-tabular,
+[data-tabular-nums="true"] {
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   REAL-TIME LIVE TICK MICRO-ANIMATION FLASHES
+   250-300ms subtle background flash upon real-time price updates
+   ════════════════════════════════════════════════════════════ */
+@keyframes priceFlashUp {
+  0% {
+    background-color: rgba(34, 197, 94, 0.22);
+    color: var(--gain);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes priceFlashDown {
+  0% {
+    background-color: rgba(239, 68, 68, 0.22);
+    color: var(--loss);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pnlGainFlash {
+  0% {
+    background-color: var(--primary-light);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pnlLossFlash {
+  0% {
+    background-color: var(--loss-light);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.price-flash-up,
+.animate-tick-up {
+  animation: priceFlashUp 350ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.price-flash-down,
+.animate-tick-down {
+  animation: priceFlashDown 350ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pnl-gain-flash {
+  animation: pnlGainFlash 400ms ease-out;
+}
+
+.pnl-loss-flash {
+  animation: pnlLossFlash 400ms ease-out;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SKELETON SHIMMER LOADERS
+   ════════════════════════════════════════════════════════════ */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-elevated) 0%,
+    var(--border-color) 50%,
+    var(--bg-surface-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════════
+   REDUCED MOTION — Disable / simplify all animations
+   ════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .skeleton-shimmer,
+  .price-flash-up,
+  .price-flash-down,
+  .pnl-gain-flash,
+  .pnl-loss-flash,
+  .card-enter,
+  .nav-icon-active,
+  .shake,
+  .check-pop,
+  .reconnect-spin,
+  .auth-card,
+  .auth-glow,
+  .auth-spark-line,
+  .auth-spark-fill {
+    animation: none !important;
+    transition: none !important;
+  }
+  .skeleton-shimmer {
+    background: var(--bg-surface-elevated) !important;
+  }
+  /* These two are hidden by their animation's `both` fill — with the
+     animation off they must be forced to their finished state, or the
+     sparkline simply never appears for reduced-motion users. */
+  .auth-spark-line { stroke-dashoffset: 0 !important; }
+  .auth-spark-fill { opacity: 1 !important; }
+}
+
+/* ── @supports fallback for backdrop-filter ──────────────── */
+/* ── Mobile Input Autofill & High Contrast Text Rules ────────────── */
+input, select, textarea {
+  color: var(--text-main);
+  background-color: var(--bg-surface);
+}
+
+/* Chrome & Mobile Safari Autofill Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input,
+[data-theme="dark"] input,
+.dark select,
+[data-theme="dark"] select,
+.dark textarea,
+[data-theme="dark"] textarea {
+  color: #f8fafc !important;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+[data-theme="dark"] input:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0d1117 inset !important;
+}
+
+/* ── Toast Countdown Animation ──────────────── */
+@keyframes toastCountdown {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+

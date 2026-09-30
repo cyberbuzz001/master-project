@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obsidian Terminal - Orders</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#122f5f",
+                      "on-error": "#690005",
+                      "on-primary-fixed": "#001a42",
+                      "outline-variant": "#44474f",
+                      "surface-container-lowest": "#070e1e",
+                      "surface-container-low": "#141b2c",
+                      "surface-container-highest": "#2e3446",
+                      "surface-tint": "#adc6ff",
+                      "outline": "#8e909a",
+                      "outline-technical": "#1E293B",
+                      "on-surface-variant": "#c4c6d0",
+                      "primary": "#d8e2ff",
+                      "execution-sell": "#FFB4AB",
+                      "on-tertiary-container": "#7a433c",
+                      "secondary-fixed-dim": "#4edea3",
+                      "primary-fixed": "#d8e2ff",
+                      "on-error-container": "#ffdad6",
+                      "error-container": "#93000a",
+                      "surface-variant": "#2e3446",
+                      "surface-container": "#191f30",
+                      "background": "#0c1323",
+                      "on-secondary": "#003824",
+                      "on-tertiary-fixed": "#360e0a",
+                      "surface": "#0c1323",
+                      "execution-buy": "#4EDEA3",
+                      "surface-dim": "#0c1323",
+                      "inverse-primary": "#455e90",
+                      "surface-bright": "#32394b",
+                      "secondary-container": "#00b47d",
+                      "on-tertiary-fixed-variant": "#6c3832",
+                      "tertiary-container": "#feb3aa",
+                      "on-background": "#dce2f9",
+                      "primary-fixed-dim": "#adc6ff",
+                      "surface-container-high": "#232a3b",
+                      "secondary": "#4edea3",
+                      "on-secondary-fixed-variant": "#005236",
+                      "inverse-surface": "#dce2f9",
+                      "primary-container": "#adc6ff",
+                      "tertiary-fixed": "#ffdad5",
+                      "error": "#ffb4ab",
+                      "inverse-on-surface": "#293041",
+                      "tertiary-fixed-dim": "#ffb4ab",
+                      "on-secondary-fixed": "#002114",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-primary-container": "#385283",
+                      "tertiary": "#ffd9d4",
+                      "on-primary-fixed-variant": "#2c4677",
+                      "on-tertiary": "#51221d",
+                      "on-surface": "#dce2f9",
+                      "status-pending": "#ADC6FF",
+                      "surface-glass": "rgba(18, 24, 38, 0.7)",
+                      "on-secondary-container": "#003e28"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "cell-padding-x": "8px",
+                      "cell-padding-y": "6px",
+                      "gutter": "12px",
+                      "unit": "4px",
+                      "container-margin": "16px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "title-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .glass-panel {
+            background-color: theme('colors.surface-glass');
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.outline-technical');
+        }
+        
+        /* Pulse Animation for Connectivity */
+        @keyframes pulse-emerald {
+            0% { box-shadow: 0 0 0 0 rgba(78, 222, 163, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(78, 222, 163, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(78, 222, 163, 0); }
+        }
+        .pulse-emerald {
+            animation: pulse-emerald 2s infinite;
+        }
+        
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.background');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.surface-container-highest');
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+        
+        .table-row-hover:hover {
+            background-color: theme('colors.surface-container-high');
+            cursor: pointer;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (from JSON) -->
+<nav class="bg-surface-container dark:bg-surface-container h-screen w-64 fixed left-0 top-0 border-r border-outline-technical backdrop-blur-xl flex flex-col py-gutter px-2 z-50 flat no shadows">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center shrink-0 pulse-emerald relative">
+<span class="material-symbols-outlined text-on-primary-container text-[18px]">terminal</span>
+<div class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface-container"></div>
+</div>
+<div>
+<h1 class="text-title-sm font-title-sm font-bold text-primary dark:text-primary tracking-tight">Obsidian Terminal</h1>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Institutional Grade</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto overflow-x-hidden space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">grid_view</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">monitoring</span>
+<span class="font-body-md">Markets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">analytics</span>
+<span class="font-body-md">Watchlist</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary border-r-2 border-secondary bg-surface-container-highest/30 scale-95 transition-transform duration-100 group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-body-md font-semibold">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">account_balance_wallet</span>
+<span class="font-body-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">payments</span>
+<span class="font-body-md">Funds</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">description</span>
+<span class="font-body-md">Reports</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-technical">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+<div class="px-4 py-3 mt-2 flex items-center gap-3 bg-surface-container-low rounded-lg border border-outline-technical">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A macro shot of a sleek, dark metallic server rack with a glowing blue LED light indicating power, shot with a shallow depth of field, high contrast, industrial dark mode aesthetic, highly detailed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWsAIekM0H4puf1nEjSR4EzYifkuEZXa5arWAY2YyV8YYJ9tYTXPX75v17YdtElRl2XaoQSckJj_JSZUDbQir9ESKHs7atkuSj2GzoRC0f-l0MXPMWMQmTGjWWJbtNazY9N1vVxujSR6_wGhTFB89hvjVwp-Aooebsod9M1h7x35NtgkwzTjxD6K3XuCvCqyKyh4wLPyXz6wzQt9TNCjXQMxdTaY6EjTAbYAZO665IFCrxf1iLlLw"/>
+<div class="overflow-hidden">
+<p class="text-body-sm font-title-sm text-on-surface truncate">Trader_04</p>
+<p class="text-[10px] text-on-surface-variant truncate">Desk Alpha</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopNavBar (from JSON) -->
+<header class="bg-surface-glass dark:bg-surface-glass h-16 w-full fixed top-0 z-40 border-b border-outline-technical backdrop-blur-xl shadow-sm flex items-center justify-between px-gutter ml-64 w-[calc(100%-16rem)]">
+<div class="flex items-center flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-[#070E1E] border border-outline-variant rounded text-body-sm text-on-surface py-1.5 pl-9 pr-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search Symbol, Order ID..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors Click: opacity-80 transition-opacity">
+<span class="material-symbols-outlined">sensors</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors Click: opacity-80 transition-opacity relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors Click: opacity-80 transition-opacity">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 h-screen flex flex-col p-container-margin gap-gutter relative">
+<!-- Abstract Background Shader -->
+
+<!-- Header & Controls -->
+<div class="flex items-center justify-between shrink-0 glass-panel p-4 rounded-lg">
+<div class="flex flex-col gap-1">
+<h2 class="text-headline-md font-headline-md text-on-surface">Order Management</h2>
+<div class="flex gap-2 items-center text-body-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary pulse-emerald"></span>
+<span>System Connected</span>
+<span class="mx-2 text-outline-variant">|</span>
+<span class="font-data-mono">14:02:45 UTC</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 bg-surface-container-low border border-outline-variant text-on-surface rounded text-body-sm font-semibold hover:border-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                    Filter
+                </button>
+<button class="px-4 py-2 bg-surface-container-low border border-outline-variant text-on-surface rounded text-body-sm font-semibold hover:border-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export
+                </button>
+<button class="px-6 py-2 bg-primary-container text-on-primary-container rounded text-body-sm font-bold hover:bg-primary-fixed transition-colors shadow-[0_0_15px_rgba(173,198,255,0.2)]">
+                    + New Order
+                </button>
+</div>
+</div>
+<!-- Main Layout: Table + Detail Panel -->
+<div class="flex flex-1 gap-gutter min-h-0 relative">
+<!-- Left: Order List / Table -->
+<div class="flex-1 glass-panel rounded-lg flex flex-col min-h-0 overflow-hidden" id="order-list-container">
+<!-- Tabs -->
+<div class="flex border-b border-outline-technical shrink-0 px-2 pt-2">
+<button class="px-6 py-3 text-body-sm font-semibold text-primary border-b-2 border-primary relative z-10 transition-colors">
+                        Open <span class="ml-2 bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded text-[10px]">12</span>
+</button>
+<button class="px-6 py-3 text-body-sm font-semibold text-on-surface-variant border-b-2 border-transparent hover:text-on-surface transition-colors">
+                        Executed
+                    </button>
+<button class="px-6 py-3 text-body-sm font-semibold text-on-surface-variant border-b-2 border-transparent hover:text-on-surface transition-colors">
+                        GTT
+                    </button>
+<button class="px-6 py-3 text-body-sm font-semibold text-on-surface-variant border-b-2 border-transparent hover:text-on-surface transition-colors flex items-center gap-1">
+                        Baskets
+                    </button>
+</div>
+<!-- Table Header -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-3 border-b border-outline-technical bg-surface-container-lowest/50 shrink-0">
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Time</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Symbol</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Side</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase text-right">Qty</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase text-right">Price</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase text-center">Status</div>
+</div>
+<!-- Table Body (Scrollable) -->
+<div class="flex-1 overflow-y-auto">
+<!-- Row 1 - Active -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-2 border-b border-outline-technical/50 items-center bg-surface-container-highest/30 border-l-2 border-l-primary cursor-pointer hover:bg-surface-container-high transition-colors" onclick="toggleDetail(true)">
+<div class="font-data-mono text-data-mono text-on-surface-variant">14:01:22</div>
+<div class="font-data-mono text-data-mono text-on-surface font-semibold flex items-center gap-2">
+                            AAPL
+                            <span class="text-[10px] text-outline px-1 border border-outline-technical rounded">NASDAQ</span>
+</div>
+<div><span class="text-execution-buy font-data-mono text-data-mono bg-execution-buy/10 px-2 py-0.5 rounded border border-execution-buy/20">BUY</span></div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">10,000</div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">175.42 LMT</div>
+<div class="flex justify-center">
+<span class="text-status-pending font-data-mono text-[11px] bg-status-pending/10 px-2 py-0.5 rounded border border-status-pending/20 uppercase tracking-wider">Working</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-2 border-b border-outline-technical/50 items-center table-row-hover">
+<div class="font-data-mono text-data-mono text-on-surface-variant">13:58:10</div>
+<div class="font-data-mono text-data-mono text-on-surface font-semibold flex items-center gap-2">
+                            MSFT
+                            <span class="text-[10px] text-outline px-1 border border-outline-technical rounded">NASDAQ</span>
+</div>
+<div><span class="text-execution-sell font-data-mono text-data-mono bg-execution-sell/10 px-2 py-0.5 rounded border border-execution-sell/20">SELL</span></div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">5,500</div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">320.15 LMT</div>
+<div class="flex justify-center">
+<span class="text-status-pending font-data-mono text-[11px] bg-status-pending/10 px-2 py-0.5 rounded border border-status-pending/20 uppercase tracking-wider">Working</span>
+</div>
+</div>
+<!-- Row 3 - Partially Filled -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-2 border-b border-outline-technical/50 items-center table-row-hover relative overflow-hidden">
+<!-- Progress bar background -->
+<div class="absolute top-0 left-0 bottom-0 bg-secondary/5 w-[60%] -z-10 border-r border-secondary/20"></div>
+<div class="font-data-mono text-data-mono text-on-surface-variant">13:45:00</div>
+<div class="font-data-mono text-data-mono text-on-surface font-semibold flex items-center gap-2">
+                            NVDA
+                            <span class="text-[10px] text-outline px-1 border border-outline-technical rounded">NASDAQ</span>
+</div>
+<div><span class="text-execution-buy font-data-mono text-data-mono bg-execution-buy/10 px-2 py-0.5 rounded border border-execution-buy/20">BUY</span></div>
+<div class="font-data-mono text-data-mono text-on-surface text-right flex flex-col items-end">
+<span>15,000</span>
+<span class="text-[10px] text-secondary">9,000 Filled</span>
+</div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">450.00 LMT</div>
+<div class="flex justify-center">
+<span class="text-secondary font-data-mono text-[11px] bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20 uppercase tracking-wider">P.Filled</span>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-2 border-b border-outline-technical/50 items-center table-row-hover opacity-50">
+<div class="font-data-mono text-data-mono text-on-surface-variant">13:10:05</div>
+<div class="font-data-mono text-data-mono text-on-surface font-semibold flex items-center gap-2 line-through decoration-error">
+                            TSLA
+                            <span class="text-[10px] text-outline px-1 border border-outline-technical rounded">NASDAQ</span>
+</div>
+<div><span class="text-execution-sell font-data-mono text-data-mono bg-execution-sell/10 px-2 py-0.5 rounded border border-execution-sell/20">SELL</span></div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">2,000</div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">245.50 MKT</div>
+<div class="flex justify-center">
+<span class="text-error font-data-mono text-[11px] bg-error/10 px-2 py-0.5 rounded border border-error/20 uppercase tracking-wider">Cancelled</span>
+</div>
+</div>
+<!-- Row 5 -->
+<div class="grid grid-cols-[100px_minmax(120px,1fr)_80px_100px_120px_100px] gap-2 px-4 py-2 border-b border-outline-technical/50 items-center table-row-hover">
+<div class="font-data-mono text-data-mono text-on-surface-variant">12:30:00</div>
+<div class="font-data-mono text-data-mono text-on-surface font-semibold flex items-center gap-2">
+                            AMZN
+                            <span class="text-[10px] text-outline px-1 border border-outline-technical rounded">NASDAQ</span>
+</div>
+<div><span class="text-execution-buy font-data-mono text-data-mono bg-execution-buy/10 px-2 py-0.5 rounded border border-execution-buy/20">BUY</span></div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">8,000</div>
+<div class="font-data-mono text-data-mono text-on-surface text-right">135.20 LMT</div>
+<div class="flex justify-center">
+<span class="text-status-pending font-data-mono text-[11px] bg-status-pending/10 px-2 py-0.5 rounded border border-status-pending/20 uppercase tracking-wider">Working</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Detail Panel (Execution Logs) - Initially Visible for demo -->
+<div class="w-[400px] glass-panel rounded-lg flex flex-col shrink-0 min-h-0 overflow-hidden transform transition-all duration-300 translate-x-0" id="detail-panel">
+<!-- Panel Header -->
+<div class="flex items-center justify-between p-4 border-b border-outline-technical bg-surface-container-lowest/50 shrink-0">
+<h3 class="text-title-sm font-title-sm text-on-surface font-bold">Order Details</h3>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors" onclick="toggleDetail(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<!-- Top Summary Card -->
+<div class="bg-surface-container rounded border border-outline-technical p-4 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<div class="text-headline-md font-headline-md text-on-surface font-bold">AAPL</div>
+<div class="text-body-sm text-on-surface-variant">Apple Inc.</div>
+</div>
+<span class="text-status-pending font-data-mono text-[11px] bg-status-pending/10 px-2 py-0.5 rounded border border-status-pending/20 uppercase tracking-wider">Working</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-1">Side</div>
+<div class="text-execution-buy font-data-mono text-data-mono bg-execution-buy/10 px-2 py-0.5 rounded border border-execution-buy/20 inline-block">BUY</div>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-1">Order Type</div>
+<div class="text-on-surface font-data-mono text-data-mono">LIMIT (DAY)</div>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-1">Quantity</div>
+<div class="text-on-surface font-data-mono text-data-mono">10,000</div>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-1">Limit Price</div>
+<div class="text-on-surface font-data-mono text-data-mono">175.42</div>
+</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden mt-2">
+<div class="bg-primary h-full w-[0%]"></div>
+</div>
+<div class="flex justify-between text-[10px] font-data-mono text-on-surface-variant">
+<span>0 Filled</span>
+<span>10,000 Remaining</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex gap-2">
+<button class="flex-1 py-2 bg-surface-container border border-outline-variant text-on-surface rounded text-body-sm font-semibold hover:bg-surface-container-high transition-colors">
+                            Modify
+                        </button>
+<button class="flex-1 py-2 bg-error/10 border border-error/30 text-error rounded text-body-sm font-semibold hover:bg-error/20 transition-colors">
+                            Cancel Order
+                        </button>
+</div>
+<!-- Execution Logs (Timeline) -->
+<div>
+<h4 class="text-label-caps font-label-caps text-on-surface-variant uppercase mb-4 border-b border-outline-technical pb-2">Execution Logs</h4>
+<div class="relative border-l border-outline-technical ml-3 space-y-6">
+<!-- Log Item 1 (Latest) -->
+<div class="relative pl-6">
+<div class="absolute -left-1.5 top-1.5 w-3 h-3 bg-background border-2 border-primary rounded-full"></div>
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-body-sm font-semibold text-on-surface">Route to Exchange</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">14:01:23.104</span>
+</div>
+<p class="text-[12px] text-on-surface-variant font-data-mono p-2 bg-surface-container-lowest rounded border border-outline-technical mt-2">
+                                    MSG_ID: 9832104<br/>
+                                    DEST: NSDQ<br/>
+                                    STAT: ACKNOWLEDGED
+                                </p>
+</div>
+<!-- Log Item 2 -->
+<div class="relative pl-6">
+<div class="absolute -left-1.5 top-1.5 w-3 h-3 bg-surface-container-highest rounded-full border border-outline-technical"></div>
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-body-sm text-on-surface-variant">Compliance Check Passed</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">14:01:22.450</span>
+</div>
+</div>
+<!-- Log Item 3 -->
+<div class="relative pl-6">
+<div class="absolute -left-1.5 top-1.5 w-3 h-3 bg-surface-container-highest rounded-full border border-outline-technical"></div>
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-body-sm text-on-surface-variant">Order Received</span>
+<span class="text-[10px] font-data-mono text-on-surface-variant">14:01:22.001</span>
+</div>
+<p class="text-[12px] text-on-surface-variant font-data-mono">Source: API (Trader_04)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple toggle for the detail panel to show interaction
+        function toggleDetail(show) {
+            const panel = document.getElementById('detail-panel');
+            if (show) {
+                panel.classList.remove('hidden', 'translate-x-[110%]');
+                panel.classList.add('flex', 'translate-x-0');
+            } else {
+                panel.classList.add('hidden', 'translate-x-[110%]');
+                panel.classList.remove('flex', 'translate-x-0');
+            }
+        }
+    </script>
+</body></html>
