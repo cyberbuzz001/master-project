@@ -29,9 +29,27 @@ async function getPublic<T>(path: string, revalidate = 300): Promise<Result<T>> 
   }
 }
 
-export const getSiteData = () => getPublic<SiteData>("/public/site");
-export const getTrustCenter = () => getPublic<TrustCenterData>("/public/trust-center");
-export const getPolicy = (slug: string) => getPublic<PolicyData>(`/public/policies/${encodeURIComponent(slug)}`);
+import { FALLBACK_POLICY_MAP, FALLBACK_SITE_DATA, FALLBACK_TRUST_CENTER } from "./fallback-data";
+
+export const getSiteData = async (): Promise<Result<SiteData>> => {
+  const result = await getPublic<SiteData>("/public/site");
+  if (result.ok) return result;
+  return { ok: true, data: FALLBACK_SITE_DATA };
+};
+
+export const getTrustCenter = async (): Promise<Result<TrustCenterData>> => {
+  const result = await getPublic<TrustCenterData>("/public/trust-center");
+  if (result.ok) return result;
+  return { ok: true, data: FALLBACK_TRUST_CENTER };
+};
+
+export const getPolicy = async (slug: string): Promise<Result<PolicyData>> => {
+  const result = await getPublic<PolicyData>(`/public/policies/${encodeURIComponent(slug)}`);
+  if (result.ok) return result;
+  const fallback = FALLBACK_POLICY_MAP[slug];
+  if (fallback) return { ok: true, data: fallback };
+  return result;
+};
 
 export type DocumentVerification =
   | { found: false }

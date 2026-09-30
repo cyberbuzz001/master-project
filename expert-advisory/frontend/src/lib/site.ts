@@ -7,11 +7,11 @@ export const SITE = {
 };
 
 export const PRIMARY_NAV = [
+  { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
+  { href: "/pricing", label: "Plans & Pricing" },
   { href: "/research", label: "Research" },
-  { href: "/methodology", label: "Methodology" },
-  { href: "/risk-assessment", label: "Risk assessment" },
-  { href: "/resources", label: "Resources" },
+  { href: "/testimonials", label: "Portfolio & Reviews" },
   { href: "/trust-center", label: "Trust Center" },
 ] as const;
 
