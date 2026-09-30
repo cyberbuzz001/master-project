@@ -330,6 +330,25 @@ router.post('/auth/register', authLimiter, validateBody(RegisterSchema), async (
     const token = jwt.sign(newUser, getJwtSecret(), { expiresIn: '24h' });
     const refreshToken = jwt.sign(newUser, getRefreshSecret(), { expiresIn: '30d' });
 
+    // Super Admin Alert: New Client Registered
+    try {
+      EmailService.getInstance().sendSuperAdminAlert({
+        subject: `New Client Registered: ${result.user.username} (${result.user.clientId || 'Client'})`,
+        eventType: 'NEW_REGISTRATION',
+        summary: `A new client has registered on TradeGrow Platform.`,
+        details: [
+          { label: 'Username', value: result.user.username },
+          { label: 'Client ID', value: result.user.clientId || 'Pending' },
+          { label: 'Email', value: result.user.email },
+          { label: 'Phone', value: result.user.phoneNumber || 'Not provided' },
+          { label: 'User ID', value: result.user.id },
+          { label: 'Client IP', value: getClientIp(req) }
+        ],
+        actionUrl: `https://tradegrowx.in/admin?search=${encodeURIComponent(result.user.username)}`,
+        actionLabel: 'View in Admin'
+      });
+    } catch (_) {}
+
     res.status(201).json({
       success: true,
       token,
@@ -2245,6 +2264,31 @@ router.post('/funds/request', authenticateToken, async (req: AuthenticatedReques
       severity: 'MEDIUM', requestId, requestType, amount: reqAmount,
     });
 
+    // Super Admin Alert: New Deposit / Withdrawal Request
+    (async () => {
+      try {
+        const userRow = await queryOne<any>('SELECT username, email, client_id FROM users WHERE id = $1', [req.user!.userId]);
+        const { EmailService } = await import('../services/EmailService');
+        EmailService.getInstance().sendSuperAdminAlert({
+          subject: `New ${requestType} Request: ₹${reqAmount.toLocaleString('en-IN')} by ${userRow?.username || req.user!.username}`,
+          eventType: 'FUND_REQUEST',
+          summary: `A client has submitted a ${requestType.toLowerCase()} request for ₹${reqAmount.toLocaleString('en-IN')}. Pending administrator review and approval.`,
+          details: [
+            { label: 'Request Type', value: requestType },
+            { label: 'Amount', value: `₹${reqAmount.toLocaleString('en-IN')}` },
+            { label: 'Client Name', value: userRow?.username || req.user!.username },
+            { label: 'Client ID', value: userRow?.client_id || 'Client' },
+            { label: 'Email', value: userRow?.email || 'N/A' },
+            { label: 'Payment Method', value: paymentMethod || 'BANK_TRANSFER' },
+            { label: 'Request ID', value: requestId },
+            { label: 'Reference Note', value: referenceNote || 'None' }
+          ],
+          actionUrl: `https://tradegrowx.in/admin?tab=funds`,
+          actionLabel: 'Review Fund Request in Admin'
+        });
+      } catch (_) {}
+    })();
+
     res.json({
       success: true,
       requestId,
@@ -2654,6 +2698,7 @@ router.get('/admin/dashboard', authenticateToken, checkRole(['SUPER_ADMIN', 'ADM
       totalUsers:           parseInt(totalUsersRow?.c || '0'),
       activeOrdersToday:    parseInt(activeOrdersRow?.c || '0'),
       totalExecutionsToday: parseInt(totalExecRow?.c || '0'),
+      totalCapital:         parseFloat(capitalRow?.s || '0'),
       totalVirtualCapital:  parseFloat(capitalRow?.s || '0'),
       marketDataProvider:   MarketDataEngine.getInstance().getActiveProviderName(),
       systemHealth:         'OPERATIONAL',
@@ -2986,6 +3031,31 @@ router.post(
       }
 
       await logAuditAction(req.user!.userId, req.user!.role, 'SUBMIT_KYC', 'KYC_APPLICATION', appId, null, { panNumber, aadhaarNumber }, getClientIp(req));
+
+      // Super Admin Alert: New KYC Application Submitted
+      (async () => {
+        try {
+          const userRow = await queryOne<any>('SELECT username, email, client_id, phone_number FROM users WHERE id = $1', [req.user!.userId]);
+          const { EmailService } = await import('../services/EmailService');
+          EmailService.getInstance().sendSuperAdminAlert({
+            subject: `New KYC Application: ${userRow?.username || req.user!.username} (${userRow?.client_id || 'Client'})`,
+            eventType: 'KYC_SUBMITTED',
+            summary: `A client has uploaded identity documents and submitted their KYC application for review.`,
+            details: [
+              { label: 'Client Name', value: userRow?.username || req.user!.username },
+              { label: 'Client ID', value: userRow?.client_id || 'Client' },
+              { label: 'Email', value: userRow?.email || 'N/A' },
+              { label: 'Phone', value: userRow?.phone_number || 'N/A' },
+              { label: 'PAN Masked', value: panNumber ? `${panNumber.slice(0, 2)}XXXXX${panNumber.slice(-2)}` : 'Submitted' },
+              { label: 'Aadhaar Masked', value: aadhaarNumber ? `XXXXXXXX${aadhaarNumber.slice(-4)}` : 'Submitted' },
+              { label: 'Bank Name', value: bankName || 'Not specified' },
+              { label: 'Application ID', value: appId }
+            ],
+            actionUrl: `https://tradegrowx.in/admin?tab=kyc`,
+            actionLabel: 'Review KYC in Admin'
+          });
+        } catch (_) {}
+      })();
 
       res.json({ success: true, message: 'KYC application and documents submitted successfully for review.' });
     } catch (err: any) {

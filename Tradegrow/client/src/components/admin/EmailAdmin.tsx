@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Mail, Server, CheckCircle2, AlertCircle, Send, Key, ShieldCheck,
-  RefreshCw, Settings, Sliders, Eye, EyeOff, Bell, Sparkles, Check, Info
+  RefreshCw, Settings, Sliders, Eye, EyeOff, Bell, Sparkles, Check, Info, Users, Megaphone
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
@@ -20,6 +20,8 @@ interface EmailConfig {
   notifyKyc: boolean;
   notifySecurity: boolean;
   hasPassword?: boolean;
+  superAdminAlertEmail?: string;
+  superAdminNotificationsEnabled?: boolean;
 }
 
 interface EmailLog {
@@ -39,9 +41,9 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
     smtpHost: 'smtp.hostinger.com',
     smtpPort: 465,
     smtpSecure: true,
-    smtpUser: 'notifications@tradegrowx.in',
+    smtpUser: 'info@tradegrowx.in',
     smtpPass: '',
-    emailFrom: '"TradeGrow" <notifications@tradegrowx.in>',
+    emailFrom: '"TradeGrow" <info@tradegrowx.in>',
     enabled: true,
     highPriorityOnly: true,
     requireRegistrationOtp: true,
@@ -49,6 +51,8 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
     notifyFunds: true,
     notifyKyc: true,
     notifySecurity: true,
+    superAdminAlertEmail: 'cyberbuzz.mail@gmail.com',
+    superAdminNotificationsEnabled: true,
   });
 
   const [loading, setLoading] = useState(true);
@@ -60,6 +64,17 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
   const [sendingTest, setSendingTest] = useState(false);
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Broadcast & Manual Campaigns State
+  const [broadcastAudience, setBroadcastAudience] = useState<'KYC_PENDING' | 'ACTIVE_USERS' | 'ALL'>('KYC_PENDING');
+  const [broadcastType, setBroadcastType] = useState<'KYC_REMINDER' | 'OFFER' | 'BONUS' | 'CUSTOM'>('KYC_REMINDER');
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastBody, setBroadcastBody] = useState('');
+  const [broadcastOfferTitle, setBroadcastOfferTitle] = useState('Exclusive Margin Bonus & Zero Brokerage');
+  const [broadcastPromoCode, setBroadcastPromoCode] = useState('TRADEGROW100');
+  const [broadcastBonusAmount, setBroadcastBonusAmount] = useState('1000');
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<{ success: boolean; message: string; count?: number } | null>(null);
 
   useEffect(() => {
     fetchConfig();
@@ -182,6 +197,47 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
     }
   };
 
+  const handleSendBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!window.confirm(`Are you sure you want to broadcast this email to ${broadcastAudience === 'KYC_PENDING' ? 'all KYC pending clients' : broadcastAudience === 'ACTIVE_USERS' ? 'all active clients' : 'all registered clients'}?`)) {
+      return;
+    }
+    setBroadcasting(true);
+    setBroadcastResult(null);
+    try {
+      const res = await fetch('/api/v1/admin/email/broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          type: broadcastType,
+          targetAudience: broadcastAudience,
+          customSubject: broadcastSubject,
+          customBody: broadcastBody,
+          offerTitle: broadcastOfferTitle,
+          promoCode: broadcastPromoCode,
+          bonusAmount: parseFloat(broadcastBonusAmount) || 1000
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBroadcastResult({ success: true, message: data.message, count: data.count });
+        toast.success('Broadcast Queued', data.message);
+        fetchLogs();
+      } else {
+        setBroadcastResult({ success: false, message: data.error?.message || data.message || 'Failed to dispatch broadcast' });
+        toast.error('Broadcast Failed', data.error?.message || data.message);
+      }
+    } catch (err: any) {
+      setBroadcastResult({ success: false, message: err.message });
+      toast.error('Broadcast Error', err.message);
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12 text-[var(--text-muted)] text-xs">
@@ -301,7 +357,7 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
                   type="email"
                   value={config.smtpUser}
                   onChange={e => setConfig({ ...config, smtpUser: e.target.value })}
-                  placeholder="notifications@tradegrowx.in"
+                  placeholder="info@tradegrowx.in"
                   className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
                 />
               </div>
@@ -339,7 +395,7 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
                   type="text"
                   value={config.emailFrom}
                   onChange={e => setConfig({ ...config, emailFrom: e.target.value })}
-                  placeholder='"TradeGrow" <notifications@tradegrowx.in>'
+                  placeholder='"TradeGrow" <info@tradegrowx.in>'
                   className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
                 />
               </div>
@@ -462,6 +518,55 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
               </label>
             </div>
           </div>
+
+          {/* Super Admin Alert System Notifications */}
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl p-5 space-y-4">
+            <h3 className="text-xs font-bold text-[var(--text-main)] flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Super Admin Instant Alerts ({config.superAdminAlertEmail || 'cyberbuzz.mail@gmail.com'})</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${config.superAdminNotificationsEnabled !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}`}>
+                {config.superAdminNotificationsEnabled !== false ? 'ACTIVE' : 'MUTED'}
+              </span>
+            </h3>
+
+            <div className="space-y-3">
+              <label className="flex items-center justify-between p-3.5 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] cursor-pointer hover:border-emerald-500/40 transition">
+                <div>
+                  <div className="text-xs font-semibold text-[var(--text-main)]">Enable Super Admin Automated Alerts</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">
+                    Dispatches high-priority system alerts whenever a client registers, submits KYC documents, or submits a fund deposit/withdrawal request.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.superAdminNotificationsEnabled !== false}
+                  onChange={e => setConfig({ ...config, superAdminNotificationsEnabled: e.target.checked })}
+                  className="w-4 h-4 accent-emerald-500"
+                />
+              </label>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--text-muted)] mb-1">
+                  Super Admin Alert Recipient Email
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={config.superAdminAlertEmail ?? 'cyberbuzz.mail@gmail.com'}
+                    onChange={e => setConfig({ ...config, superAdminAlertEmail: e.target.value })}
+                    placeholder="cyberbuzz.mail@gmail.com"
+                    className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[var(--text-main)] font-mono focus:outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+                <span className="text-[10px] text-[var(--text-tertiary)] mt-1 block">
+                  Alerts automatically sent to: <strong>cyberbuzz.mail@gmail.com</strong> on registration, KYC submission &amp; fund requests.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Col: Send Test Email & Hostinger Info */}
@@ -527,10 +632,246 @@ export const EmailAdmin: React.FC<{ token: string }> = ({ token }) => {
             </div>
 
             <div className="mt-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300">
-              💡 Create mailboxes in Hostinger hPanel under <strong>Emails → tradegrowx.in</strong> (e.g. <code>notifications@tradegrowx.in</code>), then enter the password here.
+              💡 Create mailboxes in Hostinger hPanel under <strong>Emails → tradegrowx.in</strong> (e.g. <code>info@tradegrowx.in</code>), then enter the password here.
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── MANUAL CAMPAIGNS & BULK EMAIL BROADCAST ────────────────────────── */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <Megaphone className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-main)]">Manual Campaigns &amp; Email Broadcast</h3>
+              <p className="text-xs text-[var(--text-muted)]">Dispatch KYC Pending reminders, offer promotions, and trade bonuses across client segments.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[var(--text-muted)] font-medium">Target Segment:</span>
+            <div className="flex p-0.5 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-color)]">
+              <button
+                type="button"
+                onClick={() => setBroadcastAudience('KYC_PENDING')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                  broadcastAudience === 'KYC_PENDING'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                📋 KYC Pending
+              </button>
+              <button
+                type="button"
+                onClick={() => setBroadcastAudience('ACTIVE_USERS')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                  broadcastAudience === 'ACTIVE_USERS'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                👥 Active Users
+              </button>
+              <button
+                type="button"
+                onClick={() => setBroadcastAudience('ALL')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                  broadcastAudience === 'ALL'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                🌐 All Clients
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSendBroadcast} className="space-y-4">
+          {/* Campaign Template Select */}
+          <div>
+            <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1.5">
+              Select Campaign Template
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setBroadcastType('KYC_REMINDER')}
+                className={`p-3 rounded-xl border text-left font-semibold transition cursor-pointer flex flex-col gap-1 ${
+                  broadcastType === 'KYC_REMINDER'
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-sm'
+                    : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                <span className="text-base">📋</span>
+                <span className="font-bold">KYC Pending Reminder</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-normal">Prompt users to complete verification</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBroadcastType('OFFER')}
+                className={`p-3 rounded-xl border text-left font-semibold transition cursor-pointer flex flex-col gap-1 ${
+                  broadcastType === 'OFFER'
+                    ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-sm'
+                    : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                <span className="text-base">🎁</span>
+                <span className="font-bold">Offer Broadcast</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-normal">Margin discounts &amp; promo codes</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBroadcastType('BONUS')}
+                className={`p-3 rounded-xl border text-left font-semibold transition cursor-pointer flex flex-col gap-1 ${
+                  broadcastType === 'BONUS'
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
+                    : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                <span className="text-base">🚀</span>
+                <span className="font-bold">First Trade Bonus</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-normal">Welcome credits &amp; activations</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBroadcastType('CUSTOM')}
+                className={`p-3 rounded-xl border text-left font-semibold transition cursor-pointer flex flex-col gap-1 ${
+                  broadcastType === 'CUSTOM'
+                    ? 'bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-sm'
+                    : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                <span className="text-base">✉️</span>
+                <span className="font-bold">Custom Broadcast</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-normal">Freeform announcement</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Template Details */}
+          {broadcastType === 'KYC_REMINDER' && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed">
+              💡 <strong>KYC Pending Reminder Template:</strong> Automatically generates and dispatches high-priority branded emails to all clients in the selected segment who have not completed KYC verification. Includes secure 1-click KYC upload links. (Respects individual client email preference toggles).
+            </div>
+          )}
+
+          {broadcastType === 'OFFER' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Offer Title</label>
+                <input
+                  type="text"
+                  value={broadcastOfferTitle}
+                  onChange={e => setBroadcastOfferTitle(e.target.value)}
+                  placeholder="e.g. Exclusive Margin Bonus & Zero Brokerage"
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Promo Code (Optional)</label>
+                <input
+                  type="text"
+                  value={broadcastPromoCode}
+                  onChange={e => setBroadcastPromoCode(e.target.value)}
+                  placeholder="TRADEGROW100"
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs font-mono uppercase text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Offer Details / Message</label>
+                <textarea
+                  rows={3}
+                  value={broadcastBody}
+                  onChange={e => setBroadcastBody(e.target.value)}
+                  placeholder="Get enhanced intraday margins on Sensex and Bank Nifty contracts..."
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {broadcastType === 'BONUS' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Bonus Amount (₹)</label>
+                <input
+                  type="number"
+                  value={broadcastBonusAmount}
+                  onChange={e => setBroadcastBonusAmount(e.target.value)}
+                  placeholder="1000"
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Custom Message / Description (Optional)</label>
+                <textarea
+                  rows={2}
+                  value={broadcastBody}
+                  onChange={e => setBroadcastBody(e.target.value)}
+                  placeholder="Welcome to TradeGrow! Your account activation bonus is ready for your first trade..."
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {broadcastType === 'CUSTOM' && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Subject Line</label>
+                <input
+                  type="text"
+                  required
+                  value={broadcastSubject}
+                  onChange={e => setBroadcastSubject(e.target.value)}
+                  placeholder="Important System Announcement from TradeGrow"
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Message Content (HTML / Plain text)</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={broadcastBody}
+                  onChange={e => setBroadcastBody(e.target.value)}
+                  placeholder="Write your broadcast announcement..."
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {broadcastResult && (
+            <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+              broadcastResult.success ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+            }`}>
+              {broadcastResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+              <span>{broadcastResult.message}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
+            <span className="text-[11px] text-[var(--text-tertiary)]">
+              ⚠️ Emails are sent in background batches to prevent rate limits.
+            </span>
+            <button
+              type="submit"
+              disabled={broadcasting}
+              className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs transition shadow-md shadow-purple-600/30 cursor-pointer flex items-center gap-1.5"
+            >
+              {broadcasting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Megaphone className="w-3.5 h-3.5" />}
+              <span>{broadcasting ? 'Initiating Broadcast...' : 'Dispatch Broadcast Now'}</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Delivery Logs Table */}

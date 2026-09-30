@@ -1,44 +1,68 @@
-#!/bin/bash
-# ============================================================
-# Trade Grow — Deploy / Update Script
-# Run on VPS to pull latest code and redeploy:
-#   cd /opt/tradegrow && ./scripts/deploy.sh
-# ============================================================
+#!/usr/bin/env bash
+set -eo pipefail
 
-set -e
+echo "=========================================================="
+echo "🚀 [TradeGrow] Starting Production Zero-Downtime Deploy"
+echo "📅 $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+echo "=========================================================="
 
 APP_DIR="/opt/tradegrow"
-cd "$APP_DIR"
+BACKUP_DIR="/opt/backups"
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 
-echo "============================================="
-echo "  Trade Grow — Deploying Update"
-echo "  $(date '+%Y-%m-%d %H:%M:%S IST')"
-echo "============================================="
+mkdir -p "$BACKUP_DIR"
 
-# Pull latest code from GitHub
-echo "[1/4] Pulling latest code from GitHub..."
-git pull origin main
+# 1. Automatic Pre-Deployment Safety Snapshot
+echo "📦 [1/6] Creating pre-deployment PostgreSQL safety backup..."
+docker exec tradegrow_postgres pg_dump -U tradegrow tradegrow | gzip > "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz"
+echo "✅ Safety snapshot created: ${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz ($(du -h "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz" | cut -f1))"
 
-# Build and restart containers (zero downtime: build first, then swap)
-echo "[2/4] Building Docker images..."
-docker compose build --no-cache app
+# 2. Sync migrations into container
+echo "🔄 [2/6] Syncing database migrations..."
+docker exec -i tradegrow_app mkdir -p /app/server/dist/db/migrations /app/server/src/db/migrations
+docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/src/db/migrations/
+docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/dist/db/migrations/
 
-echo "[3/4] Restarting application container..."
-docker compose up -d --no-deps app
-
-echo "[4/4] Checking container health..."
-sleep 10
-docker ps --filter name=tradegrow
-
-# Check application health endpoint
-HEALTH=$(curl -sf http://localhost:5000/api/v1/health/live 2>/dev/null || echo "FAILED")
-if echo "$HEALTH" | grep -q "ok\|healthy\|true"; then
-  echo ""
-  echo "✅ Deployment successful! Trade Grow is running."
-else
-  echo ""
-  echo "⚠️  Health check uncertain. Check logs:"
-  echo "   docker logs tradegrow_app --tail 50"
+# 3. Sync compiled code bundles into container
+echo "📦 [3/6] Syncing compiled server and client bundles..."
+if [ -d "${APP_DIR}/server/dist" ]; then
+  docker cp "${APP_DIR}/server/dist/." tradegrow_app:/app/server/dist/
+fi
+if [ -d "${APP_DIR}/client/dist" ]; then
+  docker cp "${APP_DIR}/client/dist/." tradegrow_app:/app/client/dist/
 fi
 
-echo "============================================="
+# 4. Gracefully restart application container to load new bundle & run pending migrations
+echo "♻️  [4/6] Restarting tradegrow_app container..."
+docker restart tradegrow_app
+
+# 5. Wait for health check
+echo "⏳ [5/6] Waiting for server healthcheck on port 5000..."
+MAX_RETRIES=20
+RETRY_COUNT=0
+HEALTH_OK=false
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+  if curl -s -f http://127.0.0.1:5000/api/v1/health/live > /dev/null 2>&1; then
+    HEALTH_OK=true
+    break
+  fi
+  sleep 2
+  RETRY_COUNT=$((RETRY_COUNT+1))
+done
+
+if [ "$HEALTH_OK" = true ]; then
+  echo "✅ Application health check passed!"
+else
+  echo "❌ Health check failed after $MAX_RETRIES attempts! Check docker logs tradegrow_app"
+  exit 1
+fi
+
+# 6. Reload Nginx without dropping active connections
+echo "🌐 [6/6] Reloading Nginx reverse proxy..."
+nginx -t && systemctl reload nginx
+
+echo "=========================================================="
+echo "🎉 [TradeGrow] Deployment Successful & Live at tradegrowx.in!"
+echo "=========================================================="
+

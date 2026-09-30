@@ -18,13 +18,22 @@ docker exec tradegrow_postgres pg_dump -U tradegrow tradegrow | gzip > "${BACKUP
 echo "✅ Safety snapshot created: ${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz ($(du -h "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz" | cut -f1))"
 
 # 2. Sync migrations into container
-echo "🔄 [2/5] Syncing database migrations..."
+echo "🔄 [2/6] Syncing database migrations..."
 docker exec -i tradegrow_app mkdir -p /app/server/dist/db/migrations /app/server/src/db/migrations
 docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/src/db/migrations/
 docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/dist/db/migrations/
 
-# 3. Gracefully restart application container to load new bundle & run pending migrations
-echo "♻️  [3/5] Restarting tradegrow_app container..."
+# 3. Sync compiled code bundles into container
+echo "📦 [3/6] Syncing compiled server and client bundles..."
+if [ -d "${APP_DIR}/server/dist" ]; then
+  docker cp "${APP_DIR}/server/dist/." tradegrow_app:/app/server/dist/
+fi
+if [ -d "${APP_DIR}/client/dist" ]; then
+  docker cp "${APP_DIR}/client/dist/." tradegrow_app:/app/client/dist/
+fi
+
+# 4. Gracefully restart application container to load new bundle & run pending migrations
+echo "♻️  [4/6] Restarting tradegrow_app container..."
 docker restart tradegrow_app
 
 # 4. Wait for health check

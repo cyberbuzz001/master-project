@@ -55,7 +55,7 @@ const DEFAULT_ADMIN_CONFIG: AdminSoundConfig = {
     orderRejected: 'Order Rejected: {side} {symbol} - {reason}',
     priceAlert: 'Price Alert: {symbol} hit ₹{price} (target: ₹{target})',
     stopLoss: 'Risk Warning: Stop loss executed for {symbol} @ ₹{price}',
-    depositApproved: 'Funds Credited: ₹{amount} added to your virtual wallet',
+    depositApproved: 'Funds Credited: ₹{amount} added to your trading wallet',
     kycCompleted: 'KYC Document Verification Successful - Full F&O trading activated',
   },
 };

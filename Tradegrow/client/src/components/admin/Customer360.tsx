@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertTriangle, Wifi, WifiOff, Shield, CheckCircle, User, Phone, Mail,
   MapPin, Activity, Clock, ThumbsUp, ThumbsDown, RotateCcw, Briefcase, ListOrdered,
   Landmark, BookOpen, FileText, KeySquare, Zap, Sparkles, ExternalLink, Download,
-  ShieldCheck, Building2, Trash2, ShieldAlert
+  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send
 } from 'lucide-react';
 import { useMarketSocket, useAdminSubscribeUser, useSubscribeTokens } from '../../hooks/useMarketSocket';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
@@ -37,6 +37,77 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
   // Delete Account State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [submittingDelete, setSubmittingDelete] = useState(false);
+
+  // Email Trigger & Preference State
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailType, setEmailType] = useState<'KYC_REMINDER' | 'OFFER' | 'BONUS' | 'CUSTOM'>('KYC_REMINDER');
+  const [emailCustomSubject, setEmailCustomSubject] = useState('');
+  const [emailCustomBody, setEmailCustomBody] = useState('');
+  const [emailOfferTitle, setEmailOfferTitle] = useState('Exclusive Margin Bonus & Zero Brokerage');
+  const [emailPromoCode, setEmailPromoCode] = useState('TRADEGROW100');
+  const [emailBonusAmount, setEmailBonusAmount] = useState('1000');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailMsg, setEmailMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [togglingEmail, setTogglingEmail] = useState(false);
+
+  const handleToggleEmailPref = async () => {
+    if (!data?.profile) return;
+    setTogglingEmail(true);
+    const nextState = data.profile.email_notifications_enabled === false ? true : false;
+    try {
+      const res = await fetch(`/api/v1/admin/customers/${customerId}/email-preference`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ enabled: nextState })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setData((prev: any) => prev ? {
+          ...prev,
+          profile: { ...prev.profile, email_notifications_enabled: nextState }
+        } : prev);
+        setActionMsg({ type: 'success', text: `Email notifications ${nextState ? 'enabled' : 'disabled'} for ${data.profile.username}` });
+      }
+    } catch (_) {}
+    finally {
+      setTogglingEmail(false);
+    }
+  };
+
+  const handleSendEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data?.profile) return;
+    setSendingEmail(true);
+    setEmailMsg(null);
+
+    try {
+      const res = await fetch(`/api/v1/admin/customers/${customerId}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          type: emailType,
+          customSubject: emailCustomSubject,
+          customBody: emailCustomBody,
+          offerTitle: emailOfferTitle,
+          promoCode: emailPromoCode,
+          bonusAmount: parseFloat(emailBonusAmount) || 1000,
+        })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setEmailMsg({ type: 'success', text: d.message || 'Email sent successfully!' });
+        setTimeout(() => {
+          setShowEmailModal(false);
+        }, 1800);
+      } else {
+        setEmailMsg({ type: 'error', text: d.error?.message || d.message || 'Failed to send email' });
+      }
+    } catch (err: any) {
+      setEmailMsg({ type: 'error', text: err.message || 'Network error sending email' });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
@@ -436,6 +507,34 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
         </div>
 
         <div className="ml-auto flex items-center gap-2.5">
+          {/* Email Notification Toggle */}
+          <button
+            onClick={handleToggleEmailPref}
+            disabled={togglingEmail}
+            className={`font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border transition cursor-pointer ${
+              data.profile.email_notifications_enabled !== false
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+            }`}
+            title="Toggle promotional & reminder email notifications for this client"
+          >
+            {data.profile.email_notifications_enabled !== false ? <Bell className="w-3.5 h-3.5 text-emerald-400" /> : <BellOff className="w-3.5 h-3.5 text-zinc-400" />}
+            <span>Email Notifs: {data.profile.email_notifications_enabled !== false ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Trigger Email Modal */}
+          <button
+            onClick={() => {
+              setShowEmailModal(true);
+              setEmailType(data.profile.kyc_status !== 'APPROVED' ? 'KYC_REMINDER' : 'OFFER');
+              setEmailMsg(null);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Send Email</span>
+          </button>
+
           <button
             onClick={() => { setShowPasswordModal(true); setNewPassword(''); setPasswordMsg(null); setCopied(false); }}
             className="bg-[var(--warning)]/15 hover:bg-[var(--warning)]/25 text-[var(--warning)] border border-[var(--warning)]/40 font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
@@ -1485,6 +1584,245 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
                 {submittingDelete ? 'Deleting Account...' : 'Confirm Delete Account'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Email Reminder / Offer Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-gradient-to-r from-[var(--bg-surface-elevated)] to-transparent">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-main)]">Send Manual Email Reminder / Broadcast</h3>
+                  <div className="text-[11px] text-[var(--text-muted)] font-mono">
+                    To: {data.profile.username} ({data.profile.email})
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendEmailSubmit} className="p-5 space-y-4 overflow-y-auto">
+              {/* Email Notification Toggle Banner */}
+              <div className="p-3 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${data.profile.email_notifications_enabled !== false ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                  <div>
+                    <div className="text-xs font-semibold text-[var(--text-main)]">Client Email Notifications</div>
+                    <div className="text-[10px] text-[var(--text-muted)]">
+                      {data.profile.email_notifications_enabled !== false ? 'Notifications are currently ACTIVE for this client' : 'Notifications are currently MUTED for this client'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleEmailPref}
+                  disabled={togglingEmail}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center gap-1.5 ${
+                    data.profile.email_notifications_enabled !== false
+                      ? 'bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-rose-500/25'
+                      : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                  }`}
+                >
+                  {togglingEmail ? (
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <span>{data.profile.email_notifications_enabled !== false ? 'Turn OFF Notifs' : 'Turn ON Notifs'}</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Template Category Pills */}
+              <div>
+                <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1.5">
+                  Select Email Template
+                </label>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setEmailType('KYC_REMINDER')}
+                    className={`p-2.5 rounded-xl border text-left font-semibold transition cursor-pointer flex items-center gap-2 ${
+                      emailType === 'KYC_REMINDER'
+                        ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-sm'
+                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>📋</span>
+                    <span>KYC Pending Reminder</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEmailType('OFFER')}
+                    className={`p-2.5 rounded-xl border text-left font-semibold transition cursor-pointer flex items-center gap-2 ${
+                      emailType === 'OFFER'
+                        ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-sm'
+                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>🎁</span>
+                    <span>Offer Broadcast</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEmailType('BONUS')}
+                    className={`p-2.5 rounded-xl border text-left font-semibold transition cursor-pointer flex items-center gap-2 ${
+                      emailType === 'BONUS'
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
+                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>🚀</span>
+                    <span>First Trade Bonus</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEmailType('CUSTOM')}
+                    className={`p-2.5 rounded-xl border text-left font-semibold transition cursor-pointer flex items-center gap-2 ${
+                      emailType === 'CUSTOM'
+                        ? 'bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-sm'
+                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>✉️</span>
+                    <span>Custom Message</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Template Specific Inputs */}
+              {emailType === 'KYC_REMINDER' && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed">
+                  💡 This sends a high-priority branded email reminding the customer that KYC is required to unlock full trading, deposits, and withdrawal features, with a 1-click button to upload documents.
+                </div>
+              )}
+
+              {emailType === 'OFFER' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Offer Title</label>
+                    <input
+                      type="text"
+                      value={emailOfferTitle}
+                      onChange={e => setEmailOfferTitle(e.target.value)}
+                      placeholder="e.g. 100% Margin Bonus & Zero Brokerage"
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Promo Code (Optional)</label>
+                    <input
+                      type="text"
+                      value={emailPromoCode}
+                      onChange={e => setEmailPromoCode(e.target.value)}
+                      placeholder="e.g. TRADEGROW100"
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs font-mono uppercase text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Offer Details / Message</label>
+                    <textarea
+                      rows={3}
+                      value={emailCustomBody}
+                      onChange={e => setEmailCustomBody(e.target.value)}
+                      placeholder="Enjoy extra margin leverage on Bank Nifty & Sensex options contracts this expiry week..."
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {emailType === 'BONUS' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">First Trade Bonus Amount (₹)</label>
+                    <input
+                      type="number"
+                      value={emailBonusAmount}
+                      onChange={e => setEmailBonusAmount(e.target.value)}
+                      placeholder="1000"
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Custom Description (Optional)</label>
+                    <textarea
+                      rows={2}
+                      value={emailCustomBody}
+                      onChange={e => setEmailCustomBody(e.target.value)}
+                      placeholder="Congratulations! Your account is active and your first trade bonus has been allocated..."
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {emailType === 'CUSTOM' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Subject Line</label>
+                    <input
+                      type="text"
+                      required
+                      value={emailCustomSubject}
+                      onChange={e => setEmailCustomSubject(e.target.value)}
+                      placeholder="Subject of your message"
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[var(--text-muted)] block mb-1">Message Content (HTML / Plain text)</label>
+                    <textarea
+                      rows={4}
+                      required
+                      value={emailCustomBody}
+                      onChange={e => setEmailCustomBody(e.target.value)}
+                      placeholder="Write your custom message here..."
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {emailMsg && (
+                <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                  emailMsg.type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                }`}>
+                  {emailMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                  <span>{emailMsg.text}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-4 py-2 rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={sendingEmail}
+                  className="px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs transition shadow-md shadow-blue-500/20 cursor-pointer flex items-center gap-1.5"
+                >
+                  {sendingEmail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                  <span>{sendingEmail ? 'Sending Email...' : 'Send Email Now'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

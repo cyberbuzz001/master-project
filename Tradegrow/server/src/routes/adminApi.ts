@@ -232,6 +232,7 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
   const countRow = await queryOne<any>(`SELECT COUNT(*) as c FROM users u ${where}`, params);
   const users = await query(
     `SELECT u.id, u.client_id, u.username, u.email, u.full_name, u.phone_number, u.role, u.status, u.created_at, u.last_login_at, u.failed_login_attempts, u.is_kyc_completed,
+            COALESCE(u.email_notifications_enabled, true) as email_notifications_enabled,
             w.cash_balance, w.used_margin,
             COALESCE(
               (SELECT status FROM kyc_applications WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1),
@@ -548,7 +549,8 @@ router.get('/customers/:id', authenticateToken, checkPermission('ADMIN_BROAD_VIE
       queryOne<any>(
         `SELECT id, username, email, role, status, created_at, last_login_at, failed_login_attempts, 
                 full_name, phone_number, city, address, date_of_birth, is_kyc_completed, 
-                bank_name, bank_account_number, bank_account_name, bank_ifsc, onboarding_completed, risk_restriction 
+                bank_name, bank_account_number, bank_account_name, bank_ifsc, onboarding_completed, risk_restriction,
+                COALESCE(email_notifications_enabled, true) as email_notifications_enabled
          FROM users WHERE id = $1`, 
         [customerId]
       ),
@@ -3933,7 +3935,7 @@ router.get('/email/config', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN'
 router.post('/email/config', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { EmailService } = await import('../services/EmailService');
-    const { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPass, emailFrom, enabled, highPriorityOnly, requireRegistrationOtp, notifyOrders, notifyFunds, notifyKyc, notifySecurity } = req.body;
+    const { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPass, emailFrom, enabled, highPriorityOnly, requireRegistrationOtp, notifyOrders, notifyFunds, notifyKyc, notifySecurity, superAdminAlertEmail, superAdminNotificationsEnabled } = req.body;
     
     const updatePayload: any = {};
     if (smtpHost !== undefined) updatePayload.smtpHost = String(smtpHost).trim();
@@ -3951,6 +3953,8 @@ router.post('/email/config', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN
     if (notifyFunds !== undefined) updatePayload.notifyFunds = Boolean(notifyFunds);
     if (notifyKyc !== undefined) updatePayload.notifyKyc = Boolean(notifyKyc);
     if (notifySecurity !== undefined) updatePayload.notifySecurity = Boolean(notifySecurity);
+    if (superAdminAlertEmail !== undefined) updatePayload.superAdminAlertEmail = String(superAdminAlertEmail).trim();
+    if (superAdminNotificationsEnabled !== undefined) updatePayload.superAdminNotificationsEnabled = Boolean(superAdminNotificationsEnabled);
 
     const updated = await EmailService.getInstance().updateConfig(updatePayload);
     res.json({
@@ -4014,6 +4018,228 @@ router.get('/email/logs', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN'])
     res.json({ success: true, logs });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { message: err.message } });
+  }
+});
+
+// ============================================================
+// MANUAL EMAIL TRIGGERS, CLIENT EMAIL TOGGLE & BROADCASTS
+// ============================================================
+
+/**
+ * Toggle email notifications for a specific client (Admin control)
+ */
+router.patch('/customers/:id/email-preference', authenticateToken, checkPermission('CUSTOMERS_PROFILE_EDIT'), restrictManagerToOwnCustomer, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const customerId = String(req.params.id);
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'Field "enabled" (boolean) is required' } });
+      return;
+    }
+
+    const updated = await queryOne<any>(
+      `UPDATE users SET email_notifications_enabled = $1, updated_at = NOW() WHERE id = $2 RETURNING id, username, email, email_notifications_enabled`,
+      [enabled, customerId]
+    );
+
+    if (!updated) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Customer not found' } });
+      return;
+    }
+
+    await logAuditAction(req.user!.userId, req.user!.role, 'CUSTOMER_EMAIL_PREF_UPDATE', 'USER', customerId, undefined, { enabled }, getClientIp(req));
+
+    res.json({
+      success: true,
+      message: `Email notifications ${enabled ? 'enabled' : 'disabled'} for ${updated.username}`,
+      emailNotificationsEnabled: updated.email_notifications_enabled
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+/**
+ * Trigger a manual email reminder / offer / activation bonus to a specific client
+ */
+router.post('/customers/:id/send-email', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), restrictManagerToOwnCustomer, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const customerId = String(req.params.id);
+    const { type, customSubject, customBody, bonusAmount, headline, offerTitle, promoCode, bonusText, actionUrl, actionLabel } = req.body;
+
+    const user = await queryOne<any>(
+      `SELECT id, username, email, full_name, client_id, email_notifications_enabled FROM users WHERE id = $1`,
+      [customerId]
+    );
+
+    if (!user) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Customer not found' } });
+      return;
+    }
+
+    if (!user.email) {
+      res.status(400).json({ success: false, error: { code: 'NO_EMAIL', message: 'Customer does not have an email address configured' } });
+      return;
+    }
+
+    const { EmailService } = await import('../services/EmailService');
+    const emailService = EmailService.getInstance();
+
+    switch (type) {
+      case 'KYC_REMINDER':
+        await emailService.sendKycReminderEmail({
+          id: user.id,
+          email: user.email,
+          name: user.full_name || user.username,
+          clientId: user.client_id
+        });
+        break;
+
+      case 'OFFER':
+        await emailService.sendOfferBroadcastEmail(
+          { id: user.id, email: user.email, name: user.full_name || user.username },
+          {
+            title: offerTitle || 'Exclusive Trader Privilege & Margin Boost',
+            subject: customSubject,
+            offerDetails: customBody,
+            promoCode,
+            bonusText,
+            actionUrl,
+            actionLabel
+          }
+        );
+        break;
+
+      case 'BONUS':
+      case 'ACCOUNT_ACTIVATION':
+        await emailService.sendAccountBonusEmail(
+          { id: user.id, email: user.email, name: user.full_name || user.username },
+          {
+            bonusAmount: bonusAmount ? parseFloat(bonusAmount) : 1000,
+            headline: headline || 'Account Activation & First Trade Bonus',
+            description: customBody,
+            actionUrl
+          }
+        );
+        break;
+
+      case 'CUSTOM':
+      default:
+        if (!customSubject || !customBody) {
+          res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'Subject and body are required for custom email' } });
+          return;
+        }
+        emailService.sendMailAsync({
+          to: user.email,
+          subject: customSubject,
+          html: customBody,
+          templateType: 'ADMIN_CUSTOM',
+          userId: user.id,
+          priority: 'HIGH'
+        });
+        break;
+    }
+
+    await logAuditAction(req.user!.userId, req.user!.role, 'ADMIN_TRIGGER_EMAIL', 'USER', customerId, undefined, { type, to: user.email }, getClientIp(req));
+
+    res.json({
+      success: true,
+      message: `Email notification (${type}) queued successfully for ${user.username} <${user.email}>`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+/**
+ * Broadcast an email campaign to a segment of clients (All, KYC Pending, or Active)
+ */
+router.post('/email/broadcast', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { type, targetAudience, customSubject, customBody, bonusAmount, headline, offerTitle, promoCode, bonusText, actionUrl, actionLabel } = req.body;
+
+    let whereClause = 'WHERE email IS NOT NULL AND email != \'\'';
+    if (targetAudience === 'KYC_PENDING') {
+      whereClause += ' AND is_kyc_completed = FALSE AND email_notifications_enabled = TRUE';
+    } else if (targetAudience === 'ACTIVE_USERS') {
+      whereClause += ' AND status = \'ACTIVE\' AND email_notifications_enabled = TRUE';
+    } else {
+      whereClause += ' AND email_notifications_enabled = TRUE';
+    }
+
+    const recipients = await query<any>(
+      `SELECT id, username, email, full_name, client_id FROM users ${whereClause}`
+    );
+
+    if (recipients.length === 0) {
+      res.json({ success: true, count: 0, message: 'No eligible recipients found matching the selected audience criteria.' });
+      return;
+    }
+
+    const { EmailService } = await import('../services/EmailService');
+    const emailService = EmailService.getInstance();
+
+    // Asynchronously queue delivery to each recipient in batches
+    setImmediate(async () => {
+      for (const user of recipients) {
+        try {
+          if (type === 'KYC_REMINDER') {
+            await emailService.sendKycReminderEmail({
+              id: user.id,
+              email: user.email,
+              name: user.full_name || user.username,
+              clientId: user.client_id
+            });
+          } else if (type === 'OFFER') {
+            await emailService.sendOfferBroadcastEmail(
+              { id: user.id, email: user.email, name: user.full_name || user.username },
+              {
+                title: offerTitle || 'Special Trader Privilege',
+                subject: customSubject,
+                offerDetails: customBody,
+                promoCode,
+                bonusText,
+                actionUrl,
+                actionLabel
+              }
+            );
+          } else if (type === 'BONUS' || type === 'ACCOUNT_ACTIVATION') {
+            await emailService.sendAccountBonusEmail(
+              { id: user.id, email: user.email, name: user.full_name || user.username },
+              {
+                bonusAmount: bonusAmount ? parseFloat(bonusAmount) : 1000,
+                headline: headline || 'First Trade Bonus',
+                description: customBody,
+                actionUrl
+              }
+            );
+          } else {
+            emailService.sendMailAsync({
+              to: user.email,
+              subject: customSubject || 'Important Announcement from TradeGrow',
+              html: customBody || '',
+              templateType: 'EMAIL_BROADCAST',
+              userId: user.id,
+              priority: 'NORMAL'
+            });
+          }
+        } catch (e: any) {
+          console.error(`[EmailBroadcast] Error dispatching to ${user.email}:`, e.message);
+        }
+      }
+    });
+
+    await logAuditAction(req.user!.userId, req.user!.role, 'EMAIL_BROADCAST_TRIGGER', 'SYSTEM', undefined, undefined, {
+      type, targetAudience, recipientCount: recipients.length
+    }, getClientIp(req));
+
+    res.json({
+      success: true,
+      count: recipients.length,
+      message: `Email broadcast successfully initiated to ${recipients.length} recipients.`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
   }
 });
 

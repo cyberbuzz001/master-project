@@ -17,6 +17,8 @@ export interface EmailConfig {
   notifyFunds: boolean;
   notifyKyc: boolean;
   notifySecurity: boolean;
+  superAdminAlertEmail: string;
+  superAdminNotificationsEnabled: boolean;
 }
 
 export interface EmailLog {
@@ -58,7 +60,7 @@ export class EmailService {
 
     try {
       const rows = await query<{ key: string; value: string }>(
-        `SELECT key, value FROM system_config WHERE key LIKE 'SMTP_%' OR key LIKE 'EMAIL_%'`
+        `SELECT key, value FROM system_config WHERE key LIKE 'SMTP_%' OR key LIKE 'EMAIL_%' OR key LIKE 'SUPER_ADMIN_%'`
       );
 
       const map = new Map<string, string>();
@@ -67,9 +69,9 @@ export class EmailService {
       const host = map.get('SMTP_HOST') || process.env.SMTP_HOST || 'smtp.hostinger.com';
       const port = parseInt(map.get('SMTP_PORT') || process.env.SMTP_PORT || '465', 10);
       const secure = (map.get('SMTP_SECURE') || process.env.SMTP_SECURE || 'true').toLowerCase() === 'true';
-      const user = map.get('SMTP_USER') || process.env.SMTP_USER || 'notifications@tradegrowx.in';
+      const user = map.get('SMTP_USER') || process.env.SMTP_USER || 'info@tradegrowx.in';
       const pass = map.get('SMTP_PASS') || process.env.SMTP_PASS || '';
-      const from = map.get('EMAIL_FROM') || process.env.EMAIL_FROM || '"TradeGrow" <notifications@tradegrowx.in>';
+      const from = map.get('EMAIL_FROM') || process.env.EMAIL_FROM || '"TradeGrow" <info@tradegrowx.in>';
 
       const enabled = (map.get('EMAIL_NOTIFICATIONS_ENABLED') ?? 'true').toLowerCase() === 'true';
       const highPriorityOnly = (map.get('EMAIL_HIGH_PRIORITY_ONLY') ?? 'true').toLowerCase() === 'true';
@@ -78,6 +80,8 @@ export class EmailService {
       const notifyFunds = (map.get('EMAIL_NOTIFY_FUNDS') ?? 'true').toLowerCase() === 'true';
       const notifyKyc = (map.get('EMAIL_NOTIFY_KYC') ?? 'true').toLowerCase() === 'true';
       const notifySecurity = (map.get('EMAIL_NOTIFY_SECURITY') ?? 'true').toLowerCase() === 'true';
+      const superAdminAlertEmail = map.get('SUPER_ADMIN_ALERT_EMAIL') || process.env.SUPER_ADMIN_ALERT_EMAIL || 'cyberbuzz.mail@gmail.com';
+      const superAdminNotificationsEnabled = (map.get('SUPER_ADMIN_NOTIFICATIONS_ENABLED') ?? 'true').toLowerCase() === 'true';
 
       this.cachedConfig = {
         smtpHost: host,
@@ -93,6 +97,8 @@ export class EmailService {
         notifyFunds,
         notifyKyc,
         notifySecurity,
+        superAdminAlertEmail,
+        superAdminNotificationsEnabled,
       };
 
       this.lastConfigLoad = now;
@@ -103,9 +109,9 @@ export class EmailService {
         smtpHost: process.env.SMTP_HOST || 'smtp.hostinger.com',
         smtpPort: parseInt(process.env.SMTP_PORT || '465', 10),
         smtpSecure: (process.env.SMTP_SECURE || 'true') === 'true',
-        smtpUser: process.env.SMTP_USER || 'notifications@tradegrowx.in',
+        smtpUser: process.env.SMTP_USER || 'info@tradegrowx.in',
         smtpPass: process.env.SMTP_PASS || '',
-        emailFrom: process.env.EMAIL_FROM || '"TradeGrow" <notifications@tradegrowx.in>',
+        emailFrom: process.env.EMAIL_FROM || '"TradeGrow" <info@tradegrowx.in>',
         enabled: true,
         highPriorityOnly: true,
         requireRegistrationOtp: true,
@@ -113,6 +119,8 @@ export class EmailService {
         notifyFunds: true,
         notifyKyc: true,
         notifySecurity: true,
+        superAdminAlertEmail: process.env.SUPER_ADMIN_ALERT_EMAIL || 'cyberbuzz.mail@gmail.com',
+        superAdminNotificationsEnabled: true,
       };
     }
   }
@@ -146,6 +154,8 @@ export class EmailService {
     if (newConfig.notifyFunds !== undefined) await upsert('EMAIL_NOTIFY_FUNDS', String(updated.notifyFunds));
     if (newConfig.notifyKyc !== undefined) await upsert('EMAIL_NOTIFY_KYC', String(updated.notifyKyc));
     if (newConfig.notifySecurity !== undefined) await upsert('EMAIL_NOTIFY_SECURITY', String(updated.notifySecurity));
+    if (newConfig.superAdminAlertEmail !== undefined) await upsert('SUPER_ADMIN_ALERT_EMAIL', updated.superAdminAlertEmail);
+    if (newConfig.superAdminNotificationsEnabled !== undefined) await upsert('SUPER_ADMIN_NOTIFICATIONS_ENABLED', String(updated.superAdminNotificationsEnabled));
 
     // Reset transporter cache
     this.transporter = null;
@@ -237,9 +247,27 @@ export class EmailService {
           return;
         }
 
-        // Determine effective priority: security OTPs, KYC, deposits, and test emails are HIGH priority.
+        // If a specific userId is provided, check if client has disabled email notifications
+        // (Security OTPs and Password Resets always bypass client preference for account access safety)
+        if (userId && !['SECURITY_OTP', 'REGISTRATION_OTP', 'PASSWORD_RESET'].includes(templateType)) {
+          const userPref = await queryOne<{ email_notifications_enabled: boolean }>(
+            'SELECT email_notifications_enabled FROM users WHERE id = $1',
+            [userId]
+          );
+          if (userPref && userPref.email_notifications_enabled === false) {
+            console.log(`[EmailService] ⏭️ Skipped email to <${to}> [${templateType}]: "${subject}" (Client disabled email notifications)`);
+            await this.logDelivery(userId, to, subject, templateType, 'SKIPPED', 'Skipped: Client email notifications turned off');
+            return;
+          }
+        }
+
+        // Determine effective priority: security OTPs, KYC, deposits, reminders, broadcasts, and test emails are HIGH priority.
         const effectivePriority: EmailPriority = priority || (
-          ['SECURITY_OTP', 'REGISTRATION_OTP', 'PASSWORD_RESET', 'MARGIN_CALL', 'RMS_SQUAREOFF', 'KYC_APPROVED', 'KYC_REJECTED', 'FUNDS_CREDITED', 'TEST_EMAIL'].includes(templateType)
+          [
+            'SECURITY_OTP', 'REGISTRATION_OTP', 'PASSWORD_RESET', 'MARGIN_CALL', 'RMS_SQUAREOFF',
+            'KYC_APPROVED', 'KYC_REJECTED', 'KYC_REMINDER', 'OFFER_BROADCAST', 'ACCOUNT_BONUS',
+            'SUPER_ADMIN_ALERT', 'FUNDS_CREDITED', 'TEST_EMAIL'
+          ].includes(templateType)
             ? 'HIGH'
             : 'NORMAL'
         );
@@ -412,7 +440,7 @@ export class EmailService {
       userName: user.name || 'Trader',
       bodyHtml: `
         <p style="margin: 0 0 16px; color: #94A3B8; font-size: 14px; line-height: 1.6;">
-          Your deposit request has been approved and credited to your virtual trading wallet. You can immediately use this margin for equity and options trading.
+          Your deposit request has been approved and credited to your trading wallet. You can immediately use this margin for equity and options trading.
         </p>
         <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -623,6 +651,244 @@ export class EmailService {
     }
   }
 
+  /**
+   * 6. Manual KYC Pending Reminder
+   */
+  public async sendKycReminderEmail(
+    user: { id: string; email: string; name?: string; clientId?: string }
+  ): Promise<void> {
+    if (!user.email) return;
+
+    const subject = `Action Required: Please complete your KYC Verification — TradeGrow`;
+    const html = this.buildBaseEmailLayout({
+      title: 'KYC Verification Pending',
+      badge: 'ACTION REQUIRED',
+      badgeColor: '#F59E0B',
+      userName: user.name || 'Trader',
+      bodyHtml: `
+        <p style="margin: 0 0 16px; color: #94A3B8; font-size: 14px; line-height: 1.6;">
+          We noticed that your TradeGrow account registration is incomplete because your KYC verification has not been submitted yet.
+        </p>
+        <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <h4 style="margin: 0 0 12px; color: #F8FAFC; font-size: 13px; font-weight: 700;">Why complete KYC verification?</h4>
+          <ul style="margin: 0; padding-left: 20px; color: #94A3B8; font-size: 13px; line-height: 1.8;">
+            <li><strong style="color: #10B981;">Full Trading Access:</strong> Unlock high-speed NSE & BSE Options (NIFTY, SENSEX, BANKNIFTY) and Equity Cash trading.</li>
+            <li><strong style="color: #10B981;">Instant Wallet Deposits:</strong> Add capital to your trading account with UPI and Bank Transfer.</li>
+            <li><strong style="color: #10B981;">Zero Brokerage Benefits:</strong> Access intraday leverage and real-time market data streaming.</li>
+          </ul>
+        </div>
+        <p style="margin: 0 0 20px; color: #E2E8F0; font-size: 13px;">
+          It takes less than 2 minutes to upload your PAN and Aadhaar details.
+        </p>
+        <div style="text-align: center;">
+          <a href="https://tradegrowx.in/profile" style="display: inline-block; background-color: #10B981; color: #022C22; font-weight: 700; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Complete KYC Verification Now</a>
+        </div>
+      `,
+    });
+
+    this.sendMailAsync({
+      to: user.email,
+      subject,
+      html,
+      templateType: 'KYC_REMINDER',
+      userId: user.id,
+      priority: 'HIGH',
+    });
+  }
+
+  /**
+   * 7. Special Offer Broadcast Email
+   */
+  public async sendOfferBroadcastEmail(
+    user: { id: string; email: string; name?: string },
+    offer: {
+      title: string;
+      subject?: string;
+      offerDetails?: string;
+      promoCode?: string;
+      bonusText?: string;
+      actionUrl?: string;
+      actionLabel?: string;
+    }
+  ): Promise<void> {
+    if (!user.email) return;
+
+    const subject = offer.subject || `Special Trader Privilege: ${offer.title} — TradeGrow`;
+    const html = this.buildBaseEmailLayout({
+      title: offer.title || 'Exclusive Trader Privilege',
+      badge: 'EXCLUSIVE OFFER',
+      badgeColor: '#8B5CF6',
+      userName: user.name || 'Trader',
+      bodyHtml: `
+        <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+          <div style="font-size: 18px; font-weight: 800; color: #C4B5FD; margin-bottom: 8px;">
+            ${offer.title}
+          </div>
+          ${offer.promoCode ? `
+            <div style="display: inline-block; margin: 8px auto; padding: 6px 16px; background-color: #0F172A; border: 2px dashed #8B5CF6; border-radius: 6px; font-family: monospace; font-size: 16px; font-weight: 700; color: #A78BFA; letter-spacing: 2px;">
+              ${offer.promoCode}
+            </div>
+          ` : ''}
+          ${offer.bonusText ? `
+            <div style="color: #10B981; font-weight: 700; font-size: 14px; margin-top: 6px;">
+              ${offer.bonusText}
+            </div>
+          ` : ''}
+        </div>
+        <p style="margin: 0 0 16px; color: #94A3B8; font-size: 14px; line-height: 1.6; white-space: pre-line;">
+          ${offer.offerDetails || 'Take advantage of our exclusive trading benefits on NSE/BSE options, lower margin requirements, and high-speed execution.'}
+        </p>
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="${offer.actionUrl || 'https://tradegrowx.in'}" style="display: inline-block; background-color: #8B5CF6; color: #FFFFFF; font-weight: 700; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+            ${offer.actionLabel || 'Claim Offer & Start Trading'}
+          </a>
+        </div>
+      `,
+    });
+
+    this.sendMailAsync({
+      to: user.email,
+      subject,
+      html,
+      templateType: 'OFFER_BROADCAST',
+      userId: user.id,
+      priority: 'HIGH',
+    });
+  }
+
+  /**
+   * 8. Account Activation & First Trade Bonus Email
+   */
+  public async sendAccountBonusEmail(
+    user: { id: string; email: string; name?: string },
+    data: {
+      bonusAmount: number;
+      headline?: string;
+      description?: string;
+      actionUrl?: string;
+    }
+  ): Promise<void> {
+    if (!user.email) return;
+
+    const formattedBonus = (data.bonusAmount || 1000).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const subject = `Welcome Bonus: ₹${formattedBonus} Added to Your Account — TradeGrow`;
+    const html = this.buildBaseEmailLayout({
+      title: data.headline || 'Account Activation & First Trade Bonus',
+      badge: 'FIRST TRADE BONUS',
+      badgeColor: '#10B981',
+      userName: user.name || 'Trader',
+      bodyHtml: `
+        <p style="margin: 0 0 16px; color: #94A3B8; font-size: 14px; line-height: 1.6;">
+          ${data.description || 'Welcome to TradeGrow! Your account has been approved and activated. We have unlocked a special First Trade Bonus to help you kickstart your trading journey.'}
+        </p>
+        <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+          <div style="font-size: 12px; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px;">Trading Bonus Allocated</div>
+          <div style="font-size: 32px; font-weight: 800; color: #10B981; letter-spacing: -0.5px;">+₹${formattedBonus}</div>
+          <div style="font-size: 12px; color: #94A3B8; margin-top: 6px;">Available in your trading margin ledger for Equities & Derivatives</div>
+        </div>
+        <div style="background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #64748B; padding: 4px 0;">Eligible Contracts:</td>
+              <td style="color: #F8FAFC; font-weight: 600; text-align: right; padding: 4px 0;">NIFTY, SENSEX, BANKNIFTY Options & Cash</td>
+            </tr>
+            <tr>
+              <td style="color: #64748B; padding: 4px 0;">Matching Engine:</td>
+              <td style="color: #10B981; font-weight: 600; text-align: right; padding: 4px 0;">Ultra Low Latency (&lt;5ms)</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center;">
+          <a href="${data.actionUrl || 'https://tradegrowx.in'}" style="display: inline-block; background-color: #10B981; color: #022C22; font-weight: 700; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+            Open Terminal & Place First Trade
+          </a>
+        </div>
+      `,
+    });
+
+    this.sendMailAsync({
+      to: user.email,
+      subject,
+      html,
+      templateType: 'ACCOUNT_BONUS',
+      userId: user.id,
+      priority: 'HIGH',
+    });
+  }
+
+  /**
+   * 9. Super Admin Operational Alert Email
+   * Dispatched immediately to cyberbuzz.mail@gmail.com on critical lifecycle events:
+   * new client registration, KYC submission, fund deposit/withdrawal requests.
+   */
+  public async sendSuperAdminAlert(params: {
+    subject: string;
+    eventType: 'NEW_REGISTRATION' | 'KYC_SUBMITTED' | 'FUND_REQUEST' | 'CRITICAL_ALERT';
+    summary: string;
+    details: Array<{ label: string; value: string }>;
+    actionUrl?: string;
+    actionLabel?: string;
+  }): Promise<void> {
+    const config = await this.getConfig();
+    if (!config.superAdminNotificationsEnabled) return;
+
+    const toEmail = config.superAdminAlertEmail || 'cyberbuzz.mail@gmail.com';
+    const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    const badgeColorMap: Record<string, string> = {
+      NEW_REGISTRATION: '#38BDF8',
+      KYC_SUBMITTED: '#F59E0B',
+      FUND_REQUEST: '#10B981',
+      CRITICAL_ALERT: '#EF4444',
+    };
+
+    const subject = `[TradeGrow Admin Alert] ${params.subject}`;
+    const rowsHtml = params.details
+      .map(
+        d => `
+        <tr>
+          <td style="color: #64748B; padding: 6px 0; font-size: 13px;">${d.label}</td>
+          <td style="color: #F8FAFC; font-weight: 600; text-align: right; padding: 6px 0; font-size: 13px; font-family: monospace;">${d.value}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const html = this.buildBaseEmailLayout({
+      title: params.subject,
+      badge: params.eventType.replace('_', ' '),
+      badgeColor: badgeColorMap[params.eventType] || '#38BDF8',
+      userName: 'Super Admin',
+      bodyHtml: `
+        <p style="margin: 0 0 16px; color: #94A3B8; font-size: 14px; line-height: 1.6;">
+          ${params.summary}
+        </p>
+        <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            ${rowsHtml}
+            <tr>
+              <td style="color: #64748B; padding: 6px 0; font-size: 13px;">Timestamp</td>
+              <td style="color: #94A3B8; text-align: right; padding: 6px 0; font-size: 13px;">${dateStr} IST</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center;">
+          <a href="${params.actionUrl || 'https://tradegrowx.in/admin'}" style="display: inline-block; background-color: #38BDF8; color: #02131F; font-weight: 700; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+            ${params.actionLabel || 'Open Admin Portal'}
+          </a>
+        </div>
+      `,
+    });
+
+    this.sendMailAsync({
+      to: toEmail,
+      subject,
+      html,
+      templateType: 'SUPER_ADMIN_ALERT',
+      priority: 'HIGH',
+    });
+  }
+
   // ============================================================
   // Responsive TradeGrow Branded Email Layout
   // ============================================================
@@ -691,7 +957,7 @@ export class EmailService {
                 This is an automated system notification from TradeGrow Platform (<a href="https://tradegrowx.in" style="color: #38BDF8; text-decoration: none;">tradegrowx.in</a>).
               </p>
               <p style="margin: 0; color: #475569; font-size: 10px; line-height: 1.4;">
-                Need help? Contact support at <a href="mailto:support@tradegrowx.in" style="color: #10B981; text-decoration: none;">support@tradegrowx.in</a> | Virtual paper trading simulation only.
+                Need help? Contact support at <a href="mailto:info@tradegrowx.in" style="color: #10B981; text-decoration: none;">info@tradegrowx.in</a>
               </p>
             </td>
           </tr>
