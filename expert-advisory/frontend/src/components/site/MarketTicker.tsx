@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 interface IndexItem {
@@ -10,7 +11,7 @@ interface IndexItem {
   isPositive: boolean;
 }
 
-const INDICES: IndexItem[] = [
+const DEFAULT_INDICES: IndexItem[] = [
   { symbol: "NIFTY 50", name: "NSE Benchmark", price: "25,418.50", change: "+0.64%", isPositive: true },
   { symbol: "SENSEX", name: "BSE Benchmark", price: "83,184.80", change: "+0.58%", isPositive: true },
   { symbol: "BANK NIFTY", name: "Banking Sector", price: "53,890.15", change: "+0.72%", isPositive: true },
@@ -22,8 +23,31 @@ const INDICES: IndexItem[] = [
 ];
 
 export function MarketTicker() {
+  const [indices, setIndices] = useState<IndexItem[]>(DEFAULT_INDICES);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchLiveQuotes() {
+      try {
+        const res = await fetch("/api/v1/public/market-data");
+        const json = await res.json();
+        if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setIndices(json.data);
+        }
+      } catch (_) {}
+    }
+
+    fetchLiveQuotes();
+    const interval = setInterval(fetchLiveQuotes, 20000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Duplicate list to achieve continuous infinite marquee loop
-  const tickerItems = [...INDICES, ...INDICES];
+  const tickerItems = [...indices, ...indices];
 
   return (
     <div
