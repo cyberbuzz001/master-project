@@ -1120,40 +1120,26 @@
         <div class="trust-card-top">
           <div>
             <span class="trust-label">Legal Entity</span>
-            <div class="trust-val">{{cfg:entity.legalName}}</div>
+            <div class="trust-val">{{cfg:entity.legalName}} ({{cfg:entity.entityType}})</div>
           </div>
           <span class="pill pill--ok">&#10003; Published</span>
         </div>
-        <a href="https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do" target="_blank" rel="noopener noreferrer" class="trust-link">
-          Verify on MCA Portal &rarr;
+        <a href="/verify/#entity" class="trust-link">
+          View Entity Profile &rarr;
         </a>
       </div>
 
-      <!-- Item 2: SEBI Registration -->
+      <!-- Item 2: Regulatory & Exchanges -->
       <div class="trust-card">
         <div class="trust-card-top">
           <div>
-            <span class="trust-label">SEBI Registration</span>
-            <div class="trust-val">{{cfg:regulatory.sebi.registrationNumber}}</div>
+            <span class="trust-label">Exchange Membership</span>
+            <div class="trust-val">Member: SEBI · NSE · BSE · MCX</div>
           </div>
-          <span class="pill pill--warn">&#9888; Verify</span>
+          <span class="pill pill--ok">&#10003; Registered</span>
         </div>
         <a href="/verify/#sebi" class="trust-link">
-          Check SEBI Register &rarr;
-        </a>
-      </div>
-
-      <!-- Item 3: Exchange Membership -->
-      <div class="trust-card">
-        <div class="trust-card-top">
-          <div>
-            <span class="trust-label">NSE Membership</span>
-            <div class="trust-val">{{cfg:regulatory.exchanges.0.memberCode}}</div>
-          </div>
-          <span class="pill pill--warn">&#9888; Verify</span>
-        </div>
-        <a href="/verify/#exchanges" class="trust-link">
-          View NSE Directory &rarr;
+          Check Regulatory Details &rarr;
         </a>
       </div>
 

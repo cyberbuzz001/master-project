@@ -8,15 +8,15 @@
 
   "brand": {
     "name": "Trade Grow",
-    "legalName": null,
+    "legalName": "Trade Grow",
     "tagline": "Trade Smarter. Understand Your Costs. Grow With Confidence.",
     "domain": "https://trust.tradegrowx.in",
     "logoText": "Trade Grow"
   },
 
   "entity": {
-    "legalName": null,
-    "entityType": null,
+    "legalName": "Trade Grow",
+    "entityType": "LLP",
     "cin": null,
     "gstin": null,
     "pan": null,
@@ -41,7 +41,7 @@
     "sebi": {
       "status": "pending",
       "registrationNumber": null,
-      "registrationType": null,
+      "registrationType": "Stock Broker",
       "validFrom": null,
       "validTo": null,
       "verifyUrl": "https://www.sebi.gov.in/intermediaries.html",
@@ -53,7 +53,7 @@
         "name": "NSE",
         "status": "pending",
         "memberCode": null,
-        "segments": [],
+        "segments": ["Capital Market", "Futures & Options"],
         "verifyUrl": "https://www.nseindia.com/invest/find-a-stock-broker",
         "verifyLabel": "NSE Member Search",
         "certificateDoc": null
@@ -62,9 +62,18 @@
         "name": "BSE",
         "status": "pending",
         "memberCode": null,
-        "segments": [],
+        "segments": ["Capital Market", "Futures & Options"],
         "verifyUrl": "https://www.bseindia.com/members/MembersDirectory.html",
         "verifyLabel": "BSE Member Directory",
+        "certificateDoc": null
+      },
+      {
+        "name": "MCX",
+        "status": "pending",
+        "memberCode": null,
+        "segments": ["Commodity Derivatives"],
+        "verifyUrl": "https://www.mcxindia.com",
+        "verifyLabel": "MCX Member Directory",
         "certificateDoc": null
       }
     ],

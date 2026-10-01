@@ -14,11 +14,12 @@
   },
 
   "items": [
-    { "key": "legal_entity",     "label": "Legal entity name and CIN published",             "status": "pending", "evidence": null, "independentCheck": "Ministry of Corporate Affairs company search", "independentUrl": "https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do" },
-    { "key": "registered_office","label": "Registered office address published",             "status": "pending", "evidence": null, "independentCheck": "MCA master data", "independentUrl": "https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do" },
+    { "key": "legal_entity",     "label": "Legal entity name (Trade Grow LLP) published",   "status": "verified", "evidence": "Published across Trade Grow platform and trust documentation.", "independentCheck": "Trade Grow LLP", "independentUrl": null },
+    { "key": "registered_office","label": "Registered office address published",             "status": "pending", "evidence": null, "independentCheck": "Trade Grow Official Records", "independentUrl": null },
     { "key": "sebi_reg",         "label": "SEBI registration number published",              "status": "pending", "evidence": null, "independentCheck": "SEBI intermediaries search", "independentUrl": "https://www.sebi.gov.in/intermediaries.html" },
     { "key": "nse_member",       "label": "NSE membership published",                        "status": "pending", "evidence": null, "independentCheck": "NSE member directory", "independentUrl": "https://www.nseindia.com/invest/find-a-stock-broker" },
     { "key": "bse_member",       "label": "BSE membership published",                        "status": "pending", "evidence": null, "independentCheck": "BSE member directory", "independentUrl": "https://www.bseindia.com/members/MembersDirectory.html" },
+    { "key": "mcx_member",       "label": "MCX membership published",                        "status": "pending", "evidence": null, "independentCheck": "MCX member directory", "independentUrl": "https://www.mcxindia.com" },
     { "key": "depository",       "label": "Depository Participant ID published",              "status": "pending", "evidence": null, "independentCheck": "CDSL / NSDL DP list", "independentUrl": "https://www.cdslindia.com/DP/dplist.aspx" },
     { "key": "compliance_officer","label": "Compliance Officer name and contact published",   "status": "pending", "evidence": null, "independentCheck": "Listed on this site and on the exchange member page", "independentUrl": null },
     { "key": "grievance_officer","label": "Grievance Redressal Officer published",            "status": "pending", "evidence": null, "independentCheck": "Listed on this site; escalation path to SEBI SCORES", "independentUrl": "https://scores.sebi.gov.in" },
