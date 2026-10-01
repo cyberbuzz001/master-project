@@ -25,19 +25,23 @@ const nextConfig: NextConfig = {
    * session cookies stay first-party. In production Nginx performs the same routing.
    */
   async rewrites() {
-    return [
-      { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
-      { source: "/sanctum/:path*", destination: `${BACKEND_URL}/sanctum/:path*` },
-      // Staff back-office (Filament) and its Livewire/asset endpoints.
-      { source: "/office", destination: `${BACKEND_URL}/office` },
-      { source: "/office/:path*", destination: `${BACKEND_URL}/office/:path*` },
-      { source: "/filament/:path*", destination: `${BACKEND_URL}/filament/:path*` },
-      { source: "/css/filament/:path*", destination: `${BACKEND_URL}/css/filament/:path*` },
-      { source: "/js/filament/:path*", destination: `${BACKEND_URL}/js/filament/:path*` },
-      { source: "/fonts/filament/:path*", destination: `${BACKEND_URL}/fonts/filament/:path*` },
-      { source: "/favicon.svg", destination: `${BACKEND_URL}/favicon.svg` },
-      { source: "/:livewire(livewire-[a-f0-9]+)/:path*", destination: `${BACKEND_URL}/:livewire/:path*` },
-    ];
+    return {
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [
+        { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
+        { source: "/sanctum/:path*", destination: `${BACKEND_URL}/sanctum/:path*` },
+        // Staff back-office (Filament) and its Livewire/asset endpoints.
+        { source: "/office", destination: `${BACKEND_URL}/office` },
+        { source: "/office/:path*", destination: `${BACKEND_URL}/office/:path*` },
+        { source: "/filament/:path*", destination: `${BACKEND_URL}/filament/:path*` },
+        { source: "/css/filament/:path*", destination: `${BACKEND_URL}/css/filament/:path*` },
+        { source: "/js/filament/:path*", destination: `${BACKEND_URL}/js/filament/:path*` },
+        { source: "/fonts/filament/:path*", destination: `${BACKEND_URL}/fonts/filament/:path*` },
+        { source: "/favicon.svg", destination: `${BACKEND_URL}/favicon.svg` },
+        { source: "/:livewire(livewire-[a-f0-9]+)/:path*", destination: `${BACKEND_URL}/:livewire/:path*` },
+      ],
+    };
   },
 
   /** URLs from the previous site (see docs/CURRENT_SITE_AUDIT.md). */
