@@ -115,6 +115,7 @@
             <span style="font-size:0.7rem;color:var(--muted)">RELIANCE</span>
           </div>
           <table class="depth-mini-table">
+            <caption class="sr-only">Market order book depth simulation</caption>
             <thead>
               <tr style="color:var(--muted);border-bottom:1px solid var(--line-glass)">
                 <th>BID</th>
@@ -724,17 +725,17 @@
       <div class="screener-filter-bar">
         <div class="screener-search-wrap">
           <svg class="screener-search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input type="text" id="screener-search-input" placeholder="Search by company name or symbol (e.g. Reliance, TCS)...">
+          <input type="text" id="screener-search-input" aria-label="Search stocks by name or symbol" placeholder="Search by company name or symbol (e.g. Reliance, TCS)...">
         </div>
 
-        <select class="screener-dropdown" id="screener-mcap-filter">
+        <select class="screener-dropdown" id="screener-mcap-filter" aria-label="Filter by market capitalization">
           <option value="ALL">All Market Caps</option>
           <option value="LARGE">Large Cap (&gt; &#8377;50,000 Cr)</option>
           <option value="MID">Mid Cap (&#8377;15k - 50k Cr)</option>
           <option value="SMALL">Small Cap (&lt; &#8377;15k Cr)</option>
         </select>
 
-        <select class="screener-dropdown" id="screener-sector-filter">
+        <select class="screener-dropdown" id="screener-sector-filter" aria-label="Filter by industry sector">
           <option value="ALL">All Sectors</option>
           <option value="ENERGY">Energy</option>
           <option value="IT">IT &amp; Software</option>
@@ -743,7 +744,7 @@
           <option value="FMCG">FMCG</option>
         </select>
 
-        <select class="screener-dropdown" id="screener-rsi-filter">
+        <select class="screener-dropdown" id="screener-rsi-filter" aria-label="Filter by RSI indicator range">
           <option value="ALL">All RSI Levels</option>
           <option value="OVERSOLD">RSI &lt; 35 (Oversold)</option>
           <option value="NEUTRAL">RSI 35 - 65 (Neutral)</option>
@@ -754,6 +755,7 @@
       <!-- Filtered Table -->
       <div class="screener-table-wrap">
         <table class="screener-table" id="screener-table">
+          <caption class="sr-only">Stock Screener Results Table</caption>
           <thead>
             <tr>
               <th>Symbol</th>
