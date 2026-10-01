@@ -33,6 +33,7 @@ import { DiditService } from '../services/diditService';
 import { gttEngine } from '../trading/GttEngine';
 import { priceAlertEngine } from '../trading/PriceAlertEngine';
 import { calculateHedgedPortfolioMargin } from '../trading/MarginMath';
+import { updateFyersToken, setFyersAdapterRef, generateFyersAuthUrl, exchangeAuthCodeForToken } from '../utils/fyersTokenRefresh';
 
 import { RedisStore } from 'rate-limit-redis';
 import { redis } from '../db/redis';
@@ -189,8 +190,117 @@ router.get('/health/instruments', (req, res) => {
 
 
 // ============================================================
-// 2. AUTHENTICATION API
+// 2. AUTHENTICATION & BROKER OAUTH API
 // ============================================================
+router.get('/auth/fyers/login', (req: Request, res: Response) => {
+  const appId = String(req.query.appId || process.env.FYERS_APP_ID || 'P3U524USN6-100');
+  const redirectUri = String(req.query.redirectUri || process.env.FYERS_REDIRECT_URI || 'https://tradegrowx.in/api/v1/auth/fyers/callback');
+  const state = String(req.query.state || 'tradegrow_state');
+  const authUrl = generateFyersAuthUrl(appId, redirectUri, state);
+
+  if (req.headers.accept?.includes('application/json') && !req.query.redirect) {
+    return res.json({ success: true, authUrl });
+  }
+  return res.redirect(authUrl);
+});
+
+router.get('/auth/fyers/callback', async (req: Request, res: Response) => {
+  const authCode = String(req.query.auth_code || req.query.code || '');
+  const appId = String(process.env.FYERS_APP_ID || 'P3U524USN6-100');
+  const appSecret = String(process.env.FYERS_SECRET_KEY || 'SJULLJNM11');
+
+  if (!authCode) {
+    const loginUrl = '/api/v1/auth/fyers/login';
+    return res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Connect Fyers Market Data - Trade Grow</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #080D14; color: #F1F5F9; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1rem; }
+    .card { background: #0E1726; border: 1px solid #1E293B; padding: 2.5rem 2rem; border-radius: 1rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    .badge { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    h2 { margin: 1.25rem 0 0.5rem; font-size: 1.35rem; font-weight: 700; color: #FFFFFF; }
+    p { color: #94A3B8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.75rem; }
+    .btn { background: #10B981; color: #022C22; padding: 0.85rem 1.75rem; border-radius: 0.5rem; font-weight: 700; text-decoration: none; display: inline-block; transition: all 0.2s; font-size: 0.95rem; }
+    .btn:hover { background: #34D399; transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Trade Grow · Market Data Feed</span>
+    <h2>Authorize Fyers Live Market Feed</h2>
+    <p>Click below to sign in and grant permission for Trade Grow Engine (<code>${appId}</code>) to stream real-time market quotes from NSE, BSE & MCX.</p>
+    <a class="btn" href="${loginUrl}">Authorize Fyers Feed →</a>
+  </div>
+</body>
+</html>`);
+  }
+
+  try {
+    const engine = MarketDataEngine.getInstance();
+    const fyersProvider = (engine as any).providers?.get('FYERS');
+    if (fyersProvider) {
+      setFyersAdapterRef(fyersProvider);
+    }
+
+    const result = await exchangeAuthCodeForToken(authCode, appId, appSecret);
+
+    if (result.success && result.accessToken) {
+      return res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fyers Connected - Trade Grow</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #080D14; color: #F1F5F9; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1rem; }
+    .card { background: #0E1726; border: 1px solid #1E293B; padding: 2.5rem 2rem; border-radius: 1rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    .badge { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    h2 { margin: 1.25rem 0 0.5rem; font-size: 1.35rem; font-weight: 700; color: #FFFFFF; }
+    p { color: #94A3B8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    .details { background: #131F33; border-radius: 0.5rem; padding: 0.75rem; font-family: monospace; font-size: 0.8rem; color: #38BDF8; margin-bottom: 1.5rem; }
+    .btn { background: #3B82F6; color: #FFFFFF; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; display: inline-block; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Connection Active</span>
+    <h2>Fyers Market Data Connected!</h2>
+    <p>The 24-hour access token has been generated and hot-swapped into Trade Grow Engine. Real-time multi-asset market data streaming is now live.</p>
+    <div class="details">App ID: ${appId} · Feed Status: ACTIVE</div>
+    <a class="btn" href="/">Return to Platform →</a>
+  </div>
+</body>
+</html>`);
+    }
+
+    return res.status(400).send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fyers Authorization Error - Trade Grow</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #080D14; color: #F1F5F9; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1rem; }
+    .card { background: #0E1726; border: 1px solid #7F1D1D; padding: 2.5rem 2rem; border-radius: 1rem; max-width: 480px; width: 100%; text-align: center; }
+    .badge { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    h2 { margin: 1.25rem 0 0.5rem; font-size: 1.35rem; font-weight: 700; color: #EF4444; }
+    p { color: #94A3B8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    .btn { background: #1E293B; color: #F1F5F9; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; display: inline-block; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Connection Failed</span>
+    <h2>Token Exchange Failed</h2>
+    <p>${result.message || 'Fyers auth code could not be exchanged for access token. It may have expired or already been used.'}</p>
+    <a class="btn" href="/api/v1/auth/fyers/login">Try Again →</a>
+  </div>
+</body>
+</html>`);
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: { message: err.message || 'Internal server error in Fyers OAuth callback' } });
+  }
+});
 router.post('/auth/register-otp', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, username, phoneNumber, phone, mobileNumber } = req.body;
