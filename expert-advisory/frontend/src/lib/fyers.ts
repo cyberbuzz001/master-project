@@ -13,7 +13,10 @@ export interface FyersQuoteItem {
   volume?: string;
 }
 
-const TOKENS_CACHE_PATH = path.join(process.cwd(), ".fyers-tokens.json");
+const TOKENS_CACHE_PATH =
+  process.env.VERCEL || process.env.NODE_ENV === "production"
+    ? path.join("/tmp", ".fyers-tokens.json")
+    : path.join(process.cwd(), ".fyers-tokens.json");
 
 export function getFyersConfig() {
   return {
@@ -38,9 +41,14 @@ export interface FyersTokenStore {
 
 export function readStoredTokens(): FyersTokenStore | null {
   try {
+    if ((globalThis as any).__fyersTokens) {
+      return (globalThis as any).__fyersTokens;
+    }
     if (fs.existsSync(TOKENS_CACHE_PATH)) {
       const content = fs.readFileSync(TOKENS_CACHE_PATH, "utf-8");
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      (globalThis as any).__fyersTokens = parsed;
+      return parsed;
     }
   } catch (_) {}
   return null;
@@ -48,9 +56,153 @@ export function readStoredTokens(): FyersTokenStore | null {
 
 export function saveStoredTokens(data: FyersTokenStore): void {
   try {
+    (globalThis as any).__fyersTokens = data;
     fs.writeFileSync(TOKENS_CACHE_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (e) {
-    console.error("[Fyers] Failed saving tokens:", e);
+    console.error("[Fyers] Failed saving tokens to disk (in-memory preserved):", e);
+  }
+}
+
+export function generateTOTP(base32Secret: string): string {
+  if (!base32Secret) return "";
+  const cleanSecret = base32Secret.toUpperCase().replace(/[\s=]/g, "");
+  const base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (let i = 0; i < cleanSecret.length; i++) {
+    const val = base32Chars.indexOf(cleanSecret[i]);
+    if (val === -1) continue;
+    bits += val.toString(2).padStart(5, "0");
+  }
+
+  const bytes: number[] = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.substring(i, i + 8), 2));
+  }
+  const key = Buffer.from(bytes);
+
+  const epoch = Math.floor(Date.now() / 1000);
+  const timeStep = Math.floor(epoch / 30);
+  const timeBuffer = Buffer.alloc(8);
+  timeBuffer.writeBigInt64BE(BigInt(timeStep));
+
+  const hmac = crypto.createHmac("sha1", key).update(timeBuffer).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const binary =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+
+  return (binary % 1000000).toString().padStart(6, "0");
+}
+
+/**
+ * Headless TOTP login flow for automated server-side token generation
+ */
+export async function autoLoginFyers(): Promise<{ success: boolean; message?: string; accessToken?: string }> {
+  const config = getFyersConfig();
+  const [appIdOnly, appType] = config.appId.split("-");
+  const encodeItem = (str: string) => Buffer.from(str).toString("base64");
+
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  };
+
+  try {
+    const otpRes = await fetch("https://api-t2.fyers.in/vagator/v2/send_login_otp_v2", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        fy_id: encodeItem(config.clientId),
+        app_id: "2",
+      }),
+    });
+    const otpData = await otpRes.json();
+
+    if (!otpData.request_key) {
+      return {
+        success: false,
+        message: otpData.message || "Failed at send_login_otp_v2",
+      };
+    }
+
+    const totp = generateTOTP(config.totpSecret);
+    const verifyOtpRes = await fetch("https://api-t2.fyers.in/vagator/v2/verify_otp", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        otp: totp,
+        request_key: otpData.request_key,
+      }),
+    });
+    const verifyOtpData = await verifyOtpRes.json();
+
+    if (!verifyOtpData.request_key) {
+      return {
+        success: false,
+        message: verifyOtpData.message || "Failed at verify_otp",
+      };
+    }
+
+    const verifyPinRes = await fetch("https://api-t2.fyers.in/vagator/v2/verify_pin_v2", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        identifier: encodeItem(config.pin),
+        identity_type: "pin",
+        request_key: verifyOtpData.request_key,
+      }),
+    });
+    const verifyPinData = await verifyPinRes.json();
+
+    const bearerToken = verifyPinData?.data?.access_token || verifyPinData?.data?.token;
+    if (!bearerToken) {
+      return {
+        success: false,
+        message: verifyPinData.message || "Failed at verify_pin_v2",
+      };
+    }
+
+    const tokenRes = await fetch("https://api-t1.fyers.in/api/v3/token", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${bearerToken}`,
+      },
+      body: JSON.stringify({
+        fyers_id: config.clientId,
+        app_id: appIdOnly,
+        redirect_uri: config.redirectUri,
+        appType: appType || "100",
+        code_challenge: "",
+        state: "expertstocks_state",
+        scope: "",
+        nonce: "",
+        response_type: "code",
+        create_cookie: true,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+
+    let authCode = tokenData.auth_code;
+    const redirectUrl = tokenData.Url || tokenData.url || "";
+    if (!authCode && redirectUrl.includes("auth_code=")) {
+      authCode = redirectUrl.split("auth_code=")[1].split("&")[0];
+    }
+
+    if (!authCode) {
+      return {
+        success: false,
+        message: "Failed extracting auth_code from token endpoint",
+      };
+    }
+
+    return await exchangeFyersAuthCode(authCode);
+  } catch (err: any) {
+    return { success: false, message: err.message };
   }
 }
 
@@ -145,8 +297,15 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
   ];
 
   if (!token) {
-    // Try refreshing
+    // Try refreshing via refresh_token first
     token = (await refreshFyersAccessToken()) || "";
+    // If still no token, attempt automated TOTP login
+    if (!token) {
+      const autoRes = await autoLoginFyers();
+      if (autoRes.success && autoRes.accessToken) {
+        token = autoRes.accessToken;
+      }
+    }
   }
 
   if (!token) {
