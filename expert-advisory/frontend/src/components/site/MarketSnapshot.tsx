@@ -86,16 +86,72 @@ const INITIAL_MARKETS: MarketItem[] = [
 ];
 
 export function MarketSnapshot() {
-  const [markets] = useState<MarketItem[]>(INITIAL_MARKETS);
+  const [markets, setMarkets] = useState<MarketItem[]>(INITIAL_MARKETS);
   const [flickerId, setFlickerId] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchLiveMarkets() {
+      try {
+        const res = await fetch("/api/v1/public/market-data", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && mounted) {
+          setIsLive(true);
+          setMarkets((prev) =>
+            prev.map((item) => {
+              const liveMatch = json.data.find(
+                (d: any) =>
+                  d.symbol.toUpperCase() === item.symbol.toUpperCase() ||
+                  (item.symbol.includes("NIFTY 50") && d.symbol.includes("NIFTY 50")) ||
+                  (item.symbol.includes("SENSEX") && d.symbol.includes("SENSEX")) ||
+                  (item.symbol.includes("BANK NIFTY") && d.symbol.includes("BANK NIFTY")) ||
+                  (item.symbol.includes("INDIA VIX") && d.symbol.includes("INDIA VIX")) ||
+                  (item.symbol.includes("NIFTY IT") && d.symbol.includes("NIFTY IT")) ||
+                  (item.symbol.includes("NIFTY AUTO") && d.symbol.includes("NIFTY AUTO"))
+              );
+
+              if (liveMatch) {
+                const numericPrice = parseFloat(liveMatch.price.replace(/,/g, "")) || 0;
+                const newSparkline = [...item.sparkline.slice(1), numericPrice];
+                return {
+                  ...item,
+                  price: liveMatch.price,
+                  change: liveMatch.change,
+                  isPositive: liveMatch.isPositive,
+                  high: liveMatch.high || item.high,
+                  low: liveMatch.low || item.low,
+                  sparkline: numericPrice > 0 ? newSparkline : item.sparkline,
+                };
+              }
+              return item;
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch live market snapshot", err);
+      }
+    }
+
+    fetchLiveMarkets();
+    const pollInterval = setInterval(fetchLiveMarkets, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(pollInterval);
+    };
+  }, []);
 
   // Micro-interaction: Subtle digit heartbeat on random card every 6 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       const randomIdx = Math.floor(Math.random() * markets.length);
       const chosen = markets[randomIdx];
-      setFlickerId(chosen.id);
-      setTimeout(() => setFlickerId(null), 800);
+      if (chosen) {
+        setFlickerId(chosen.id);
+        setTimeout(() => setFlickerId(null), 800);
+      }
     }, 6000);
     return () => clearInterval(interval);
   }, [markets]);
@@ -108,13 +164,19 @@ export function MarketSnapshot() {
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#43D9FF] mb-1.5">
               <TrendingUp className="size-3.5" />
               <span>Institutional Overview</span>
+              {isLive && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[#00E599]/15 px-2 py-0.5 text-[10px] font-bold text-[#00E599]">
+                  <span className="size-1.5 rounded-full bg-[#00E599] animate-pulse" />
+                  Live Feed
+                </span>
+              )}
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold font-display text-[#F5F7FA] tracking-tight">
               Market Snapshot
             </h2>
           </div>
           <div className="text-xs font-mono text-[#667383]">
-            Settlement: T+1 Rolling · Exchange Cache Refreshed
+            Settlement: T+1 Rolling · Exchange Cache Refreshed {isLive ? "· Fyers V3" : ""}
           </div>
         </div>
 

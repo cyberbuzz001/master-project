@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpRight, BarChart2, CheckCircle2, ChevronRight, Compass, ShieldCheck, Terminal as TerminalIcon } from "lucide-react";
 import { Container, Eyebrow } from "../ui";
 
@@ -220,10 +220,56 @@ const INSTRUMENTS: Record<string, InstrumentData> = {
 };
 
 export function SimulatedResearchTerminal() {
+  const [instruments, setInstruments] = useState(INSTRUMENTS);
   const [activeSymbol, setActiveSymbol] = useState("NIFTY");
   const [activeTab, setActiveTab] = useState<"technical" | "fundamental" | "risk" | "thesis">("technical");
 
-  const current = INSTRUMENTS[activeSymbol] || INSTRUMENTS["NIFTY"];
+  useEffect(() => {
+    let mounted = true;
+    async function loadLive() {
+      try {
+        const res = await fetch("/api/v1/public/market-data", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data) && mounted) {
+          setInstruments((prev) => {
+            const updated = { ...prev };
+            const niftyMatch = json.data.find((d: any) => d.symbol.includes("NIFTY 50"));
+            if (niftyMatch) {
+              updated.NIFTY = {
+                ...updated.NIFTY,
+                price: niftyMatch.price,
+                change: niftyMatch.change,
+                isPositive: niftyMatch.isPositive,
+                high: niftyMatch.high || updated.NIFTY.high,
+                low: niftyMatch.low || updated.NIFTY.low,
+              };
+            }
+            const bnfMatch = json.data.find((d: any) => d.symbol.includes("BANK NIFTY"));
+            if (bnfMatch) {
+              updated.BANKNIFTY = {
+                ...updated.BANKNIFTY,
+                price: bnfMatch.price,
+                change: bnfMatch.change,
+                isPositive: bnfMatch.isPositive,
+                high: bnfMatch.high || updated.BANKNIFTY.high,
+                low: bnfMatch.low || updated.BANKNIFTY.low,
+              };
+            }
+            return updated;
+          });
+        }
+      } catch (e) {}
+    }
+    loadLive();
+    const interval = setInterval(loadLive, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const current = instruments[activeSymbol] || instruments["NIFTY"];
 
   return (
     <section id="terminal" className="relative py-16 lg:py-24 bg-[#080D14] border-b border-[#1C2734]">
