@@ -90,6 +90,11 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    // Allow production platform domains and subdomains
+    const isPlatformDomain = /https?:\/\/([a-z0-9-]+\.)*(tradegrowx\.in|tradegrow\.in|expertstocks\.in|github\.io)$/i.test(origin);
+    if (isPlatformDomain) {
+      return callback(null, true);
+    }
     callback(new Error(`CORS: Origin '${origin}' is not allowed`));
   },
   credentials: true,

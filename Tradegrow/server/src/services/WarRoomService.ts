@@ -156,10 +156,39 @@ export class WarRoomService {
         leadCode = 'LD-' + Date.now().toString().slice(-6);
         stage = 'NEW';
 
+        // Calculate intent score dynamically based on signals
+        let initialScore = 15;
+        if (input.phone) initialScore += 10;
+        if (input.fullName) initialScore += 10;
+        if (input.email) initialScore += 10;
+        if (input.consentWhatsApp !== false) initialScore += 5;
+        if (input.referralCode || input.creatorCode) initialScore += 10;
+        if (input.utmCampaign && /fno|option|algo|vip|pro/i.test(input.utmCampaign)) initialScore += 15;
+
+        // Auto-assign telecaller / agent (least loaded round-robin)
+        let assignedAgentId: string | null = null;
+        let assignedAgentName: string = 'Unassigned';
+        try {
+          const agentRes = await client.query(
+            `SELECT id, username, email FROM users 
+             WHERE role IN ('agent', 'telecaller', 'staff', 'sales', 'admin', 'SUPER_ADMIN')
+               AND status = 'ACTIVE'
+             ORDER BY (
+               SELECT COUNT(*) FROM warroom.leads 
+               WHERE assigned_agent_id = users.id AND created_at >= CURRENT_DATE
+             ) ASC, id ASC
+             LIMIT 1`
+          );
+          if (agentRes.rows.length > 0) {
+            assignedAgentId = agentRes.rows[0].id;
+            assignedAgentName = agentRes.rows[0].username || agentRes.rows[0].email || 'Agent';
+          }
+        } catch (_) {}
+
         await client.query(
           `INSERT INTO warroom.leads (
-            id, lead_code, phone_e164, email, full_name, source, stage, score, consent_whatsapp
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, 20, $8)`,
+            id, lead_code, phone_e164, email, full_name, source, stage, score, assigned_agent_id, consent_whatsapp
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [
             leadId,
             leadCode,
@@ -168,6 +197,8 @@ export class WarRoomService {
             input.fullName ? input.fullName.trim() : null,
             source,
             stage,
+            initialScore,
+            assignedAgentId,
             input.consentWhatsApp !== false
           ]
         );
@@ -175,8 +206,8 @@ export class WarRoomService {
         // Record initial state transition
         await client.query(
           `INSERT INTO warroom.lead_events (lead_id, from_stage, to_stage, actor, notes)
-           VALUES ($1, NULL, 'NEW', 'INGRESS_API', 'Lead captured via ' || $2)`,
-          [leadId, source]
+           VALUES ($1, NULL, 'NEW', 'ROUND_ROBIN_ASSIGNER', 'Lead captured via ' || $2 || ' and assigned to ' || $3)`,
+          [leadId, source, assignedAgentName]
         );
 
         // Update WhatsApp contacts opt-in table
@@ -593,5 +624,129 @@ export class WarRoomService {
       channelBreakdown,
       alerts
     };
+  }
+
+  /**
+   * List paginated leads with full funnel metadata, assigned agent, and last touchpoint
+   */
+  public async listLeads(options: {
+    stage?: string;
+    assignedAgentId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.min(100, Math.max(1, options.limit || 25));
+    const offset = (page - 1) * limit;
+
+    let whereClause = `WHERE l.is_deleted = FALSE`;
+    const params: any[] = [];
+
+    if (options.stage && options.stage !== 'ALL') {
+      params.push(options.stage);
+      whereClause += ` AND l.stage = $${params.length}`;
+    }
+    if (options.assignedAgentId && options.assignedAgentId !== 'ALL') {
+      params.push(options.assignedAgentId);
+      whereClause += ` AND l.assigned_agent_id = $${params.length}`;
+    }
+    if (options.search) {
+      params.push(`%${options.search.trim()}%`);
+      whereClause += ` AND (l.phone_e164 ILIKE $${params.length} OR l.full_name ILIKE $${params.length} OR l.email ILIKE $${params.length} OR l.lead_code ILIKE $${params.length})`;
+    }
+
+    const countSql = `SELECT COUNT(*) as total FROM warroom.leads l ${whereClause}`;
+    const countRes = await queryOne<{ total: string }>(countSql, params);
+    const totalCount = parseInt(countRes?.total || '0', 10);
+
+    const dataSql = `
+      SELECT 
+        l.id, l.lead_code, l.phone_e164, l.email, l.full_name, l.source,
+        l.stage, l.score, l.assigned_agent_id, l.consent_whatsapp,
+        l.created_at, l.updated_at,
+        u.username as assigned_agent_name,
+        t.utm_source, t.utm_medium, t.utm_campaign, t.referrer_url, t.landing_page
+      FROM warroom.leads l
+      LEFT JOIN users u ON l.assigned_agent_id = u.id
+      LEFT JOIN warroom.touchpoints t ON l.last_touchpoint_id = t.id
+      ${whereClause}
+      ORDER BY l.created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+    const queryParams = [...params, limit, offset];
+    const rows = await query<any>(dataSql, queryParams);
+
+    return {
+      leads: rows,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
+  }
+
+  /**
+   * Update lead funnel stage with audit log note
+   */
+  public async updateLeadStage(leadId: string, toStage: string, actor: string, notes?: string) {
+    return withTransaction(async (client) => {
+      const current = await client.query(`SELECT stage FROM warroom.leads WHERE id = $1 LIMIT 1`, [leadId]);
+      if (current.rows.length === 0) throw new Error('Lead not found');
+      const fromStage = current.rows[0].stage;
+
+      await client.query(
+        `UPDATE warroom.leads SET stage = $1, updated_at = clock_timestamp() WHERE id = $2`,
+        [toStage, leadId]
+      );
+
+      await client.query(
+        `INSERT INTO warroom.lead_events (lead_id, from_stage, to_stage, actor, notes)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [leadId, fromStage, toStage, actor, notes || `Stage updated from ${fromStage} to ${toStage}`]
+      );
+
+      return { success: true, leadId, fromStage, toStage };
+    });
+  }
+
+  /**
+   * Reassign a lead to a telecaller / agent
+   */
+  public async assignLead(leadId: string, agentId: string, actor: string) {
+    return withTransaction(async (client) => {
+      const agentRes = await client.query(`SELECT username, email FROM users WHERE id = $1 LIMIT 1`, [agentId]);
+      const agentName = agentRes.rows[0]?.username || agentRes.rows[0]?.email || 'Agent';
+
+      await client.query(
+        `UPDATE warroom.leads SET assigned_agent_id = $1, updated_at = clock_timestamp() WHERE id = $2`,
+        [agentId, leadId]
+      );
+
+      await client.query(
+        `INSERT INTO warroom.lead_events (lead_id, from_stage, to_stage, actor, notes)
+         VALUES ($1, NULL, 'ASSIGNED', $2, $3)`,
+        [leadId, actor, `Lead assigned to ${agentName}`]
+      );
+
+      return { success: true, leadId, assignedAgentId: agentId, assignedAgentName: agentName };
+    });
+  }
+
+  /**
+   * List active telecaller/staff agents for lead desk assignment
+   */
+  public async listAgents() {
+    return query<any>(
+      `SELECT id, username, email, role, status,
+        (SELECT COUNT(*) FROM warroom.leads WHERE assigned_agent_id = users.id AND is_deleted = FALSE) as active_leads_count,
+        (SELECT COUNT(*) FROM warroom.leads WHERE assigned_agent_id = users.id AND created_at >= CURRENT_DATE) as today_leads_count
+       FROM users 
+       WHERE role IN ('agent', 'telecaller', 'staff', 'sales', 'admin', 'SUPER_ADMIN')
+         AND status = 'ACTIVE'
+       ORDER BY username ASC`
+    );
   }
 }

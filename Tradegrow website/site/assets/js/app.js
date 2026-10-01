@@ -26,6 +26,13 @@
   /* -------------------------------------------------- current page marker */
 
   var BASE = window.TG_BASE || '';
+  function getApiBase() {
+    if (window.TG_API_HOST) return window.TG_API_HOST;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+    return 'https://tradegrowx.in';
+  }
   var here = location.pathname;
   if (BASE && here.indexOf(BASE) === 0) here = here.slice(BASE.length) || '/';
   here = here.replace(/\/+$/, '/') || '/';
@@ -394,6 +401,17 @@
   var applicantState = {};
 
   if (formKycMobile) {
+    // Pre-populate phone if passed from hero quick ingress
+    try {
+      var prefillPhone = getQueryParam('phone') || sessionStorage.getItem('tg_lead_phone') || '';
+      if (prefillPhone) {
+        var phoneInput = document.getElementById('kyc-phone');
+        if (phoneInput && !phoneInput.value) {
+          phoneInput.value = prefillPhone.replace(/\D/g, '').slice(-10);
+        }
+      }
+    } catch (_) {}
+
     formKycMobile.addEventListener('submit', function (e) {
       e.preventDefault();
       var phone = document.getElementById('kyc-phone').value;
@@ -418,7 +436,7 @@
           referrerUrl: document.referrer || '',
           consentWhatsApp: true
         };
-        fetch('/api/v1/public/leads', {
+        fetch(getApiBase() + '/api/v1/public/leads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(leadPayload)
@@ -426,10 +444,69 @@
           .then(function (resData) {
             if (resData && resData.data && resData.data.leadCode) {
               applicantState.leadCode = resData.data.leadCode;
-              try { localStorage.setItem('tg_lead_code', resData.data.leadCode); } catch (_) {}
+              try { 
+                localStorage.setItem('tg_lead_code', resData.data.leadCode);
+                sessionStorage.setItem('tg_lead_code', resData.data.leadCode);
+              } catch (_) {}
             }
-          }).catch(function () {});
+          }).catch(function (err) {
+            console.warn('[WarRoom Ingress] Lead capture offline/fallback:', err);
+          });
       } catch (_) {}
+    });
+  }
+
+  /* ------------------------------------------------------------ Homepage Hero Lead Ingress */
+  var heroQuickIngress = document.getElementById('hero-quick-ingress');
+  if (heroQuickIngress) {
+    heroQuickIngress.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = document.getElementById('hero-phone-input');
+      var rawPhone = input ? input.value : '';
+      var phone = rawPhone.replace(/\D/g, '').slice(-10);
+      if (phone.length !== 10) return;
+
+      var btn = document.getElementById('hero-ingress-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+      }
+
+      try {
+        sessionStorage.setItem('tg_lead_phone', phone);
+      } catch (_) {}
+
+      var leadPayload = {
+        phone: phone,
+        source: 'HOMEPAGE_HERO_INGRESS',
+        utmSource: sessionStorage.getItem('tg_utm_source') || '',
+        utmMedium: sessionStorage.getItem('tg_utm_medium') || '',
+        utmCampaign: sessionStorage.getItem('tg_utm_campaign') || '',
+        utmTerm: sessionStorage.getItem('tg_utm_term') || '',
+        utmContent: sessionStorage.getItem('tg_utm_content') || '',
+        referralCode: sessionStorage.getItem('tg_r') || localStorage.getItem('tg_ref') || '',
+        creatorCode: sessionStorage.getItem('tg_c') || localStorage.getItem('tg_creator') || '',
+        landingPage: window.location.href,
+        referrerUrl: document.referrer || '',
+        consentWhatsApp: true
+      };
+
+      fetch(getApiBase() + '/api/v1/public/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadPayload)
+      }).then(function (res) { return res.json(); })
+        .then(function (resData) {
+          if (resData && resData.data && resData.data.leadCode) {
+            try { 
+              localStorage.setItem('tg_lead_code', resData.data.leadCode);
+              sessionStorage.setItem('tg_lead_code', resData.data.leadCode);
+            } catch (_) {}
+          }
+          window.location.href = (window.TG_BASE || '') + '/open-account/?phone=' + encodeURIComponent(phone);
+        }).catch(function () {
+          window.location.href = (window.TG_BASE || '') + '/open-account/?phone=' + encodeURIComponent(phone);
+        });
     });
   }
 

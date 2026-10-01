@@ -984,4 +984,96 @@ warRoomRouter.get('/internal/clients/:phone/360', async (req: Request, res: Resp
   }
 });
 
+/**
+ * GET /api/v1/warroom/leads
+ * Telecaller Desk: Paginated leads with stage, score, and UTM filters
+ */
+warRoomRouter.get('/warroom/leads', async (req: Request, res: Response) => {
+  try {
+    const { stage, assignedAgentId, search, page, limit } = req.query;
+    const result = await warRoom.listLeads({
+      stage: stage as string,
+      assignedAgentId: assignedAgentId as string,
+      search: search as string,
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 25
+    });
+
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (err: any) {
+    console.error('[WarRoom API] List leads error:', err);
+    return res.status(500).json({ success: false, error: { message: 'Failed to fetch leads list.' } });
+  }
+});
+
+/**
+ * PATCH /api/v1/warroom/leads/:id/stage
+ * Telecaller Desk: Update lead funnel stage with disposition notes
+ */
+warRoomRouter.patch('/warroom/leads/:id/stage', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { stage, notes, actor } = req.body;
+
+    if (!stage) {
+      return res.status(400).json({ success: false, error: { message: 'Target stage is required.' } });
+    }
+
+    const result = await warRoom.updateLeadStage(
+      String(id),
+      stage,
+      actor || (req as any).user?.username || 'TELECALLER_DESK',
+      notes
+    );
+
+    return res.json({ success: true, data: result });
+  } catch (err: any) {
+    console.error('[WarRoom API] Update lead stage error:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to update lead stage.' } });
+  }
+});
+
+/**
+ * PATCH /api/v1/warroom/leads/:id/assign
+ * Telecaller Desk: Reassign lead to an agent
+ */
+warRoomRouter.patch('/warroom/leads/:id/assign', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { agentId, actor } = req.body;
+
+    if (!agentId) {
+      return res.status(400).json({ success: false, error: { message: 'Target agentId is required.' } });
+    }
+
+    const result = await warRoom.assignLead(
+      String(id),
+      agentId,
+      actor || (req as any).user?.username || 'DESK_SUPERVISOR'
+    );
+
+    return res.json({ success: true, data: result });
+  } catch (err: any) {
+    console.error('[WarRoom API] Assign lead error:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to assign lead.' } });
+  }
+});
+
+/**
+ * GET /api/v1/warroom/agents
+ * Telecaller Desk: List active agents and their lead workload
+ */
+warRoomRouter.get('/warroom/agents', async (_req: Request, res: Response) => {
+  try {
+    const agents = await warRoom.listAgents();
+    return res.json({ success: true, data: agents });
+  } catch (err: any) {
+    console.error('[WarRoom API] List agents error:', err);
+    return res.status(500).json({ success: false, error: { message: 'Failed to list agents.' } });
+  }
+});
+
 

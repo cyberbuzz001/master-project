@@ -2798,3 +2798,59 @@ code {
   padding: 2px 6px;
 }
 
+/* --- Hero Quick Ingress Lead Bar ------------------------------------ */
+.hero-quick-ingress {
+  margin-top: 18px;
+  max-width: 440px;
+}
+.quick-input-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(13, 19, 28, 0.95);
+  border: 1px solid var(--line-glass);
+  border-radius: var(--r-md);
+  padding: 4px 6px 4px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.quick-input-wrap:focus-within {
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+}
+.quick-prefix {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--cyan);
+  font-weight: 600;
+  margin-right: 8px;
+  user-select: none;
+}
+.quick-input-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+  padding: 8px 4px;
+}
+.quick-input-wrap input::placeholder {
+  color: var(--muted);
+  font-family: var(--sans);
+  letter-spacing: normal;
+}
+.quick-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.quick-hint svg {
+  color: var(--emerald);
+  flex-shrink: 0;
+}
