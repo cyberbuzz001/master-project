@@ -1,32 +1,193 @@
-<header class="site-header">
+<header class="site-header" id="site-header">
   <div class="wrap site-header__inner">
-    <a class="logo" href="/">
-      <svg class="logo__mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="9" fill="url(#lg)"/>
-        <path d="M8 21.5l5-5.5 4 3.5 7-8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="24" cy="11.5" r="2.4" fill="#fff"/>
-        <defs>
-          <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#1B4DFF"/><stop offset="1" stop-color="#0FB5A5"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="logo__text">Trade&thinsp;Grow</span><span class="sr-only"> home</span>
+    <a class="logo" href="/" aria-label="Trade Grow Homepage">
+      <div class="logo__icon">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="url(#tgh-grad)"/>
+          <path d="M7 21.5l5.5-6 4 4 8.5-9.5" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="25" cy="10" r="2.5" fill="#22D3EE"/>
+          <defs>
+            <linearGradient id="tgh-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#3B82F6"/>
+              <stop offset="1" stop-color="#0F172A"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo__brand">
+        <span class="logo__text">TRADE GROW</span>
+        <span class="logo__tagline">INTELLIGENT TRADING</span>
+      </div>
     </a>
 
-    <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
+    <nav class="nav" id="primary-nav" aria-label="Primary Navigation">
+      <!-- Markets Mega Menu -->
+      <div class="nav-item has-dropdown">
+        <button class="nav-link dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+          Markets
+          <svg class="dropdown-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="mega-menu mega-menu--markets">
+          <div class="mega-menu__col">
+            <span class="mega-menu__cat">Indian Markets</span>
+            <ul class="mega-menu__list">
+              <li><a href="/#screener" class="mega-menu__link"><strong>NSE</strong><span>National Stock Exchange</span></a></li>
+              <li><a href="/#screener" class="mega-menu__link"><strong>BSE</strong><span>Bombay Stock Exchange</span></a></li>
+              <li><a href="/#terminal" class="mega-menu__link"><strong>Indices</strong><span>NIFTY 50, Bank Nifty, Sensex</span></a></li>
+              <li><a href="/#screener" class="mega-menu__link"><strong>Stocks</strong><span>Large, Mid, Small Cap</span></a></li>
+              <li><a href="/#products" class="mega-menu__link"><strong>ETFs</strong><span>Index &amp; Commodity ETFs</span></a></li>
+            </ul>
+          </div>
+          <div class="mega-menu__col">
+            <span class="mega-menu__cat">Market Data</span>
+            <ul class="mega-menu__list">
+              <li><a href="/#screener" class="mega-menu__link"><strong>Top Gainers</strong><span>Daily momentum leaders</span></a></li>
+              <li><a href="/#screener" class="mega-menu__link"><strong>Top Losers</strong><span>Intraday pullbacks</span></a></li>
+              <li><a href="/#screener" class="mega-menu__link"><strong>Most Active</strong><span>Highest turnover volume</span></a></li>
+              <li><a href="/#screener" class="mega-menu__link"><strong>52W High / Low</strong><span>Breakouts &amp; valuation extremes</span></a></li>
+              <li><a href="/#terminal" class="mega-menu__link"><strong>Sector Performance</strong><span>Bank, IT, Auto, Pharma</span></a></li>
+            </ul>
+          </div>
+          <div class="mega-menu__feature">
+            <div class="mega-feature-card">
+              <span class="badge-pulse">Live Demonstrator</span>
+              <h4>Institutional Market Engine</h4>
+              <p>Explore real-time simulated order books, depth charts and live price action before opening an account.</p>
+              <a href="/#terminal" class="btn btn--sm btn--primary">Open Demo Terminal &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <nav class="nav" id="primary-nav" aria-label="Primary">
-      <a href="/verify/" data-ev="verify_page_view">Verify us</a>
-      <a href="/pricing/" data-ev="pricing_view">Pricing</a>
-      <a href="/compare/" data-ev="comparison_view">Compare</a>
-      <a href="/platform/" data-ev="platform_demo">Platform</a>
-      <a href="/security-awareness/">Security</a>
-      <a href="/support/">Support</a>
-      <a href="/faq/" data-ev="faq_view">FAQ</a>
-      <a class="btn btn--primary btn--sm nav__cta" href="/open-account/" data-ev="kyc_start">Start account opening</a>
+      <!-- Products Mega Menu -->
+      <div class="nav-item has-dropdown">
+        <button class="nav-link dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+          Products
+          <svg class="dropdown-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="mega-menu mega-menu--products">
+          <div class="mega-menu__grid">
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--blue">EQ</div>
+              <div>
+                <strong>Equity</strong>
+                <span>NSE &amp; BSE cash delivery &amp; intraday</span>
+              </div>
+            </a>
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--cyan">F&amp;O</div>
+              <div>
+                <strong>Futures &amp; Options</strong>
+                <span>Index &amp; stock derivatives with option chain</span>
+              </div>
+            </a>
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--purple">ETF</div>
+              <div>
+                <strong>ETFs</strong>
+                <span>Passive index &amp; gold investment baskets</span>
+              </div>
+            </a>
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--emerald">IPO</div>
+              <div>
+                <strong>IPO</strong>
+                <span>Direct UPI-backed primary market bidding</span>
+              </div>
+            </a>
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--amber">MCX</div>
+              <div>
+                <strong>Commodity</strong>
+                <span>Crude, natural gas, gold &amp; metals</span>
+              </div>
+            </a>
+            <a href="/#products" class="product-menu-item">
+              <div class="p-icon p-icon--indigo">FX</div>
+              <div>
+                <strong>Currency</strong>
+                <span>USDINR, EURINR, GBPINR exchange pairs</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tools Mega Menu -->
+      <div class="nav-item has-dropdown">
+        <button class="nav-link dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+          Tools
+          <svg class="dropdown-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="mega-menu mega-menu--tools">
+          <div class="mega-menu__grid">
+            <a href="/#screener" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <div>
+                <strong>Stock Screener</strong>
+                <span>Filter 2,000+ securities by P/E, RSI, 52W range</span>
+              </div>
+            </a>
+            <a href="/#calculator" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/></svg>
+              <div>
+                <strong>Brokerage Calculator</strong>
+                <span>Itemize statutory vs Trade Grow charges</span>
+              </div>
+            </a>
+            <a href="/#calculator" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <div>
+                <strong>P&amp;L Calculator</strong>
+                <span>Simulate target profit, loss and breakeven</span>
+              </div>
+            </a>
+            <a href="/#calculator" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V10M12 20V4M19 20v8"/></svg>
+              <div>
+                <strong>Margin Calculator</strong>
+                <span>SPAN, exposure and intraday leverage preview</span>
+              </div>
+            </a>
+            <a href="/#ai-intel" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14v-4m0-4h.01"/></svg>
+              <div>
+                <strong>AI Market Intelligence</strong>
+                <span>Contextual breadth, volatility &amp; factor analysis</span>
+              </div>
+            </a>
+            <a href="/#terminal" class="tool-menu-item">
+              <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+              <div>
+                <strong>Interactive Terminal</strong>
+                <span>Hands-on order simulation and crosshair charts</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <a href="/pricing/" class="nav-link" data-ev="pricing_view">Pricing</a>
+      <a href="/#academy" class="nav-link" data-ev="academy_view">Learn</a>
+      <a href="/verify/" class="nav-link" data-ev="verify_page_view">Company</a>
     </nav>
+
+    <div class="site-header__actions">
+      <button class="header-search-btn" id="header-search-trigger" aria-label="Search markets and stocks">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span class="search-text">Search...</span>
+        <kbd class="search-kbd">&#8984;K</kbd>
+      </button>
+
+      <a href="/open-account/" class="header-login-link" data-ev="login_click">Login</a>
+      <a class="btn btn--primary btn--sm nav__cta" href="/open-account/" data-ev="kyc_start">
+        <span>Open Account</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+
+      <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open mobile menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>

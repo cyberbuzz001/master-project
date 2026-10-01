@@ -1,242 +1,1433 @@
 <!--meta {
-  "title": "Trade Grow — Transparent Trading Costs, Digital Onboarding, Verifiable Details",
-  "description": "Trade Grow is a new Indian trading platform. Before you open an account, verify our company and regulatory details independently, compare our charges, and see the platform for yourself."
+  "title": "Trade Grow — The Intelligent, Transparent Trading Platform",
+  "description": "Trade with clarity. Move with confidence. Trade Grow brings transparent trading costs, institutional charting tools, digital onboarding, and independent verification for Indian markets."
 }-->
 
-<section class="hero">
-  <div class="wrap hero__grid">
-    <div>
-      <p class="hero__badge">
-        <span class="dot" aria-hidden="true"></span>
-        A new platform &mdash; <b>so check us before you trust us</b>
-      </p>
+<!-- ============================================================== 02 HERO -->
+<section class="hero" id="hero">
+  <div class="hero-canvas-wrap" aria-hidden="true">
+    <canvas id="hero-canvas"></canvas>
+  </div>
 
-      <h1>Trade smarter. Understand your costs. Grow with confidence.</h1>
+  <div class="wrap hero__inner">
+    <div class="hero__content">
+      <div class="badge-live">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span>Live Market Environment &middot; Demo Mode</span>
+      </div>
+
+      <h1>
+        Trade with clarity.<br>
+        <span class="text-glow">Move with confidence.</span>
+      </h1>
 
       <p class="hero__sub">
-        Trade Grow brings a modern trading experience with transparent pricing, digital
-        onboarding and investor-focused support. We are new, so we have published everything
-        you would need to check us out &mdash; before you share a single document.
+        Powerful trading tools, transparent costs and a modern market experience&mdash;built to help you understand every step before you trade.
       </p>
 
       <div class="hero__actions">
-        <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">Open Account Digitally</a>
-        <a class="btn btn--ghost btn--lg" href="/verify/" data-ev="verify_page_view">{{raw:cta.secondary.label|Verify Our Details}}</a>
-        <a class="btn btn--ghost btn--lg" href="/platform/" data-ev="platform_demo">Explore Platform Demo</a>
+        <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">
+          <span>Open Trading Account</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a class="btn btn--ghost btn--lg" href="#terminal" data-ev="platform_demo">
+          <span>Explore Platform</span>
+        </a>
       </div>
 
-      <ul class="hero__points">
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span>Brokerage and statutory charges shown as separate line items, never merged into one number</span>
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span>Every registration detail linked to the regulator&rsquo;s own database, not a screenshot</span>
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span>No tips, no targets, no return claims &mdash; we are a platform, not an advisor</span>
-        </li>
-      </ul>
-    </div>
-
-    <div>
-      <div class="device">
-        <div class="device__bar">
-          <i></i><i></i><i></i>
-          <span>TRADE GROW TERMINAL</span>
-        </div>
-        <div class="device__body">
-          <div class="mini-row">
-            <div><span class="sym">NSE</span><strong>RELIANCE EQ</strong></div>
-            <div class="num num--up">&#8377;2,940.50 (+1.15%)</div>
-          </div>
-          <div class="mini-row">
-            <div><span class="sym">NSE</span><strong>TCS EQ</strong></div>
-            <div class="num num--down">&#8377;3,892.10 (-0.42%)</div>
-          </div>
-
-          <div class="mini-breakdown">
-            <p class="mb-title">What a sample &#8377;1,00,000 delivery trade actually costs</p>
-            <dl>
-              <div><dt>Brokerage</dt><dd>Trade Grow (&#8377;0/&#8377;20)</dd></div>
-              <div><dt>STT (0.1% both sides)</dt><dd>Government (&#8377;100.00)</dd></div>
-              <div><dt>GST (18% on fees)</dt><dd>Government (&#8377;4.22)</dd></div>
-              <div><dt>Exchange Txn (0.00297%)</dt><dd>NSE (&#8377;2.97)</dd></div>
-              <div><dt>SEBI Turnover (&#8377;10/cr)</dt><dd>SEBI (&#8377;0.10)</dd></div>
-              <div><dt>Stamp Duty (0.015% buy)</dt><dd>State Govt (&#8377;15.00)</dd></div>
-              <div class="tot"><dt><strong>Total cost</strong></dt><dd><strong>Transparently Itemised</strong></dd></div>
-            </dl>
-          </div>
-          <div style="margin-top:10px;text-align:center">
-            <a href="/platform/" class="small" style="font-weight:600">Try the interactive order simulator on Platform &rarr;</a>
-          </div>
-        </div>
-      </div>
-      <span class="illustrative">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
-        {{raw:compliance.illustrativeLabel|Illustrative interface}}
-      </span>
-    </div>
-  </div>
-</section>
-
-{{comp:trustbar}}
-
-{{comp:whyTrust}}
-
-<section class="section" aria-labelledby="cost-h">
-  <div class="wrap">
-    <div class="section__head">
-      <p class="eyebrow">Pricing</p>
-      <h2 id="cost-h" class="h2">Brokerage is one line. Your cost is the whole list.</h2>
-      <p class="lede">
-        A headline brokerage rate tells you very little on its own. Statutory and regulatory
-        charges apply on every trade in India regardless of which broker you use, and regardless
-        of what brokerage plan you are on. So we show you both, separately.
+      <p>
+        <a class="hero__subtle-link" href="/verify/">
+          <span>See how Trade Grow works &rarr;</span>
+        </a>
       </p>
+
+      <div class="hero__trust-strip">
+        <div class="trust-strip-item">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>SEBI &amp; NSE Registered Brokerage</span>
+        </div>
+        <div class="trust-strip-item">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Zero Advice &middot; Zero Hidden Charges</span>
+        </div>
+        <div class="trust-strip-item">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          <span>100% Paperless Digital Onboarding</span>
+        </div>
+      </div>
     </div>
 
-    <div class="split-note">
-      <div class="split-note__col">
-        <span class="tag tag--tg">Trade Grow sets this</span>
-        <p><strong>Brokerage.</strong> The only charge we control and the only one we keep.
-        Our published rate is on the pricing page, with the conditions that apply to it.</p>
-      </div>
-      <div class="split-note__col">
-        <span class="tag tag--stat">Government / Exchange / SEBI sets this</span>
-        <p><strong>STT, GST, Stamp Duty, Exchange charges, SEBI fees, DP charges.</strong>
-        Levied by law. We collect and remit them. No broker in India can waive these, and any
-        broker suggesting otherwise is not being straight with you.</p>
-      </div>
-    </div>
+    <!-- 3D Financial Data Environment Parallax -->
+    <div class="hero__visual" id="hero-parallax-container">
+      <div class="hero-3d-stack" id="hero-3d-stack">
+        <!-- Floating Card 1: Portfolio -->
+        <div class="hero-floating-card card-portfolio" id="card-portfolio">
+          <span class="label">Portfolio Value</span>
+          <div class="val">&#8377;12,48,320.00</div>
+          <div class="pnl">&#9650; +&#8377;8,421.50 (+0.68%) today</div>
+        </div>
 
-    <div class="hero__actions">
-      <a class="btn btn--primary" href="/pricing/" data-ev="pricing_view">See the full charge list</a>
-      <a class="btn btn--ghost" href="/pricing/#calculator" data-ev="calculator_used">Calculate your trading cost</a>
-      <a class="btn btn--ghost" href="/compare/" data-ev="comparison_view">Compare with other brokers</a>
-    </div>
-  </div>
-</section>
+        <!-- Floating Card 2: Main Engine Center -->
+        <div class="hero-floating-card card-engine" id="card-engine">
+          <div class="engine-header">
+            <span class="engine-title">MARKET ENGINE</span>
+            <span class="engine-badge">&#9679; NSE &middot; BSE LIVE</span>
+          </div>
 
-<!-- Acquisition WhatsApp Trust Pack Section -->
-<section class="section section--tint">
-  <div class="wrap">
-    <div class="grid-2" style="align-items:center">
-      <div>
-        <p class="eyebrow">Trust &amp; Verification</p>
-        <h2 class="h2">Get our Verification Trust Pack on WhatsApp</h2>
-        <p class="lede">
-          Don't have time to browse every page now? We will send you our official verification pack:
-          SEBI registration links, exchange member numbers, tariff schedule, and fraud prevention checklist.
-        </p>
-        <ul class="steps steps--compact" style="margin-top:16px">
-          <li><strong>Direct Official Links:</strong> Look us up directly on SEBI and NSE databases.</li>
-          <li><strong>No Spam Guarantee:</strong> Educational trust pack only. No calls without your request.</li>
-        </ul>
-      </div>
-
-      <div class="card" style="padding:28px">
-        <h3 class="h4" style="margin-bottom:8px">Request Trust Pack</h3>
-        <p class="small muted" style="margin-bottom:18px">Sent via our verified WhatsApp business channel.</p>
-        <form id="form-home-trustpack" onsubmit="event.preventDefault(); var num=document.getElementById('home-wa-num').value; window.open('https://wa.me/919876543210?text=' + encodeURIComponent('Hi Trade Grow, please send me the Verification Trust Pack and SEBI verification links.'), '_blank');">
-          <div class="field">
-            <label for="home-wa-num">Your WhatsApp Number</label>
-            <div class="input-prefix-group">
-              <span class="input-prefix">+91</span>
-              <input type="tel" id="home-wa-num" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" required>
+          <div class="engine-indices">
+            <div class="index-tile">
+              <span class="index-name">NIFTY 50</span>
+              <div class="index-price">24,852.15</div>
+              <span class="index-chg num--up">&#9650; +0.82%</span>
+            </div>
+            <div class="index-tile">
+              <span class="index-name">BANK NIFTY</span>
+              <div class="index-price">53,420.80</div>
+              <span class="index-chg num--up">&#9650; +1.14%</span>
             </div>
           </div>
-          <button type="submit" class="btn btn--wa" style="width:100%;margin-top:14px">
-            Send Trust Pack on WhatsApp &rarr;
-          </button>
-          <p class="field__hint" style="text-align:center;margin-top:10px">
-            Instant delivery &middot; 100% free &middot; Unsubscribe anytime
-          </p>
-        </form>
+
+          <div class="engine-chart">
+            <svg viewBox="0 0 400 110" width="100%" height="100%">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,85 Q40,90 80,60 T160,50 T240,30 T320,40 T400,15 L400,110 L0,110 Z" fill="url(#chartGrad)"/>
+              <path d="M0,85 Q40,90 80,60 T160,50 T240,30 T320,40 T400,15" fill="none" stroke="#22D3EE" stroke-width="2.6" stroke-linecap="round"/>
+              <circle cx="400" cy="15" r="4" fill="#22D3EE"/>
+              <circle cx="400" cy="15" r="8" fill="#22D3EE" opacity="0.3"/>
+            </svg>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--muted);">
+            <span>Top Scrip: <b>RELIANCE EQ</b></span>
+            <span class="num--up">&#8377;2,940.50 (+1.42%)</span>
+          </div>
+        </div>
+
+        <!-- Floating Card 3: Market Depth -->
+        <div class="hero-floating-card card-depth" id="card-depth">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);font-weight:700">ORDER BOOK DEPTH</span>
+            <span style="font-size:0.7rem;color:var(--muted)">RELIANCE</span>
+          </div>
+          <table class="depth-mini-table">
+            <thead>
+              <tr style="color:var(--muted);border-bottom:1px solid var(--line-glass)">
+                <th>BID</th>
+                <th>QTY</th>
+                <th>ASK</th>
+                <th>QTY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num--up">2,940.40</td>
+                <td>1,250</td>
+                <td class="num--down">2,940.60</td>
+                <td>840</td>
+              </tr>
+              <tr>
+                <td class="num--up">2,940.20</td>
+                <td>3,400</td>
+                <td class="num--down">2,940.75</td>
+                <td>2,100</td>
+              </tr>
+              <tr>
+                <td class="num--up">2,939.90</td>
+                <td>5,890</td>
+                <td class="num--down">2,941.00</td>
+                <td>4,300</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="text-align:center">
+        <span class="illustrative-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Illustrative interface &mdash; market data shown for demonstration.
+        </span>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="check-h">
+<!-- =================================================== 03 LIVE MARKET TICKER -->
+<section class="market-ticker-section" aria-label="Live Market Ticker">
+  <div class="ticker-marquee-wrap">
+    <div class="ticker-track" id="ticker-track">
+      <div class="ticker-item"><span class="ticker-sym">NIFTY 50</span><span class="ticker-price">24,852.15</span><span class="ticker-chg num--up">&#9650; +0.82%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">BANK NIFTY</span><span class="ticker-price">53,420.80</span><span class="ticker-chg num--up">&#9650; +1.14%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">SENSEX</span><span class="ticker-price">81,765.40</span><span class="ticker-chg num--down">&#9660; -0.18%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">RELIANCE</span><span class="ticker-price">&#8377;2,940.50</span><span class="ticker-chg num--up">&#9650; +1.42%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">TCS</span><span class="ticker-price">&#8377;3,892.10</span><span class="ticker-chg num--up">&#9650; +0.64%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">INFY</span><span class="ticker-price">&#8377;1,824.30</span><span class="ticker-chg num--down">&#9660; -0.32%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">HDFCBANK</span><span class="ticker-price">&#8377;1,684.20</span><span class="ticker-chg num--up">&#9650; +0.95%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">ICICIBANK</span><span class="ticker-price">&#8377;1,248.60</span><span class="ticker-chg num--up">&#9650; +1.18%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">BHARTIARTL</span><span class="ticker-price">&#8377;1,560.00</span><span class="ticker-chg num--up">&#9650; +0.45%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">ITC</span><span class="ticker-price">&#8377;492.30</span><span class="ticker-chg num--up">&#9650; +0.22%</span></div>
+
+      <!-- Duplicate loop for seamless continuous scrolling -->
+      <div class="ticker-item"><span class="ticker-sym">NIFTY 50</span><span class="ticker-price">24,852.15</span><span class="ticker-chg num--up">&#9650; +0.82%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">BANK NIFTY</span><span class="ticker-price">53,420.80</span><span class="ticker-chg num--up">&#9650; +1.14%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">SENSEX</span><span class="ticker-price">81,765.40</span><span class="ticker-chg num--down">&#9660; -0.18%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">RELIANCE</span><span class="ticker-price">&#8377;2,940.50</span><span class="ticker-chg num--up">&#9650; +1.42%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">TCS</span><span class="ticker-price">&#8377;3,892.10</span><span class="ticker-chg num--up">&#9650; +0.64%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">INFY</span><span class="ticker-price">&#8377;1,824.30</span><span class="ticker-chg num--down">&#9660; -0.32%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">HDFCBANK</span><span class="ticker-price">&#8377;1,684.20</span><span class="ticker-chg num--up">&#9650; +0.95%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">ICICIBANK</span><span class="ticker-price">&#8377;1,248.60</span><span class="ticker-chg num--up">&#9650; +1.18%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">BHARTIARTL</span><span class="ticker-price">&#8377;1,560.00</span><span class="ticker-chg num--up">&#9650; +0.45%</span></div>
+      <div class="ticker-item"><span class="ticker-sym">ITC</span><span class="ticker-price">&#8377;492.30</span><span class="ticker-chg num--up">&#9650; +0.22%</span></div>
+    </div>
+
+    <div class="ticker-controls">
+      <button class="ticker-pause-btn" id="ticker-pause-btn" aria-label="Pause or play ticker">Pause</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================== 04 INTERACTIVE TRADING TERMINAL -->
+<section class="terminal-section" id="terminal" aria-labelledby="terminal-heading">
   <div class="wrap">
-    <div class="section__head">
-      <p class="eyebrow">Verification checklist</p>
-      <h2 id="check-h" class="h2">What we can prove, and what we cannot prove yet</h2>
-      <p class="lede">
-        Most new platforms show you a trust badge. We would rather show you the list of things
-        that are still blank. Here is our current status, updated as each item is confirmed.
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Interactive Simulator</p>
+      <h2 id="terminal-heading" class="h2">Experience the platform before you trade.</h2>
+      <p class="lede" style="margin:0 auto">
+        Explore the interface, live candlesticks, depth charts, and order workflow through an interactive demonstration.
       </p>
     </div>
-    {{comp:checklist}}
-    <p style="margin-top:22px">
-      <a class="btn btn--secondary" href="/verify/">See the full verification page</a>
+
+    <div class="terminal-window">
+      <!-- Window Title Bar -->
+      <div class="terminal-window__bar">
+        <div class="terminal-window__dots">
+          <i></i><i></i><i></i>
+        </div>
+        <div style="font-family:var(--mono);font-size:0.8rem;color:var(--muted);display:flex;align-items:center;gap:12px">
+          <span>TRADE GROW TERMINAL v4.2</span>
+          <span class="terminal-demo-badge">&#9679; DEMO MODE</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted-2)">
+          Illustrative Simulation &middot; Non-Transactional
+        </div>
+      </div>
+
+      <!-- 3-Column Terminal Layout -->
+      <div class="terminal-grid">
+        <!-- Col 1: Watchlist -->
+        <div class="terminal-col--left">
+          <div class="col-head">
+            <span>Watchlist (NSE)</span>
+            <span style="color:var(--cyan)">6 Instruments</span>
+          </div>
+          <ul class="watchlist-items" id="terminal-watchlist">
+            <li class="watchlist-row is-active" data-symbol="RELIANCE" data-price="2940.50" data-change="+1.42%" data-high="2958.00" data-low="2915.20" data-vol="4.2M">
+              <div>
+                <span class="watchlist-sym">RELIANCE</span>
+                <span class="watchlist-sec">Energy &middot; Large Cap</span>
+              </div>
+              <div class="watchlist-data">
+                <div>&#8377;2,940.50</div>
+                <div class="num--up">&#9650; +1.42%</div>
+              </div>
+            </li>
+            <li class="watchlist-row" data-symbol="TCS" data-price="3892.10" data-change="+0.64%" data-high="3910.00" data-low="3870.50" data-vol="1.8M">
+              <div>
+                <span class="watchlist-sym">TCS</span>
+                <span class="watchlist-sec">IT &middot; Large Cap</span>
+              </div>
+              <div class="watchlist-data">
+                <div>&#8377;3,892.10</div>
+                <div class="num--up">&#9650; +0.64%</div>
+              </div>
+            </li>
+            <li class="watchlist-row" data-symbol="INFY" data-price="1824.30" data-change="-0.32%" data-high="1840.00" data-low="1815.00" data-vol="3.1M">
+              <div>
+                <span class="watchlist-sym">INFY</span>
+                <span class="watchlist-sec">IT &middot; Large Cap</span>
+              </div>
+              <div class="watchlist-data">
+                <div>&#8377;1,824.30</div>
+                <div class="num--down">&#9660; -0.32%</div>
+              </div>
+            </li>
+            <li class="watchlist-row" data-symbol="HDFCBANK" data-price="1684.20" data-change="+0.95%" data-high="1695.00" data-low="1668.00" data-vol="5.6M">
+              <div>
+                <span class="watchlist-sym">HDFCBANK</span>
+                <span class="watchlist-sec">Banking &middot; Large Cap</span>
+              </div>
+              <div class="watchlist-data">
+                <div>&#8377;1,684.20</div>
+                <div class="num--up">&#9650; +0.95%</div>
+              </div>
+            </li>
+            <li class="watchlist-row" data-symbol="NIFTY 50" data-price="24852.15" data-change="+0.82%" data-high="24890.00" data-low="24710.00" data-vol="280M">
+              <div>
+                <span class="watchlist-sym">NIFTY 50</span>
+                <span class="watchlist-sec">Benchmark Index</span>
+              </div>
+              <div class="watchlist-data">
+                <div>24,852.15</div>
+                <div class="num--up">&#9650; +0.82%</div>
+              </div>
+            </li>
+            <li class="watchlist-row" data-symbol="BANK NIFTY" data-price="53420.80" data-change="+1.14%" data-high="53550.00" data-low="53020.00" data-vol="140M">
+              <div>
+                <span class="watchlist-sym">BANK NIFTY</span>
+                <span class="watchlist-sec">Sectoral Index</span>
+              </div>
+              <div class="watchlist-data">
+                <div>53,420.80</div>
+                <div class="num--up">&#9650; +1.14%</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Col 2: Center Chart -->
+        <div class="terminal-col--center">
+          <div class="chart-top-bar">
+            <div class="active-scrip-info">
+              <span class="active-scrip-name" id="term-scrip-name">RELIANCE</span>
+              <span class="active-scrip-price" id="term-scrip-price">&#8377;2,940.50</span>
+              <span class="active-scrip-chg num--up" id="term-scrip-chg">&#9650; +1.42%</span>
+            </div>
+
+            <div class="chart-controls-group">
+              <div class="btn-pill-group" id="term-timeframe-btns">
+                <button class="is-active" data-tf="1D">1D</button>
+                <button data-tf="1W">1W</button>
+                <button data-tf="1M">1M</button>
+                <button data-tf="6M">6M</button>
+                <button data-tf="1Y">1Y</button>
+              </div>
+
+              <div class="btn-pill-group" id="term-chart-type-btns">
+                <button class="is-active" data-type="candle">Candle</button>
+                <button data-type="line">Line</button>
+                <button data-type="area">Area</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Candlestick / Area Chart -->
+          <div class="chart-viewport" id="chart-viewport">
+            <svg id="terminal-candlestick-svg" viewBox="0 0 650 360" preserveAspectRatio="none">
+              <!-- Rendered dynamically by app.js -->
+            </svg>
+          </div>
+
+          <div class="chart-stats-bar">
+            <span>High: <b id="term-stat-high">&#8377;2,958.00</b></span>
+            <span>Low: <b id="term-stat-low">&#8377;2,915.20</b></span>
+            <span>Volume: <b id="term-stat-vol">4.2M</b></span>
+            <span>52W H/L: <b>&#8377;3,024 / &#8377;2,220</b></span>
+            <span>VWAP: <b>&#8377;2,936.80</b></span>
+          </div>
+        </div>
+
+        <!-- Col 3: Right Order Panel -->
+        <div class="terminal-col--right">
+          <div class="order-side-toggle">
+            <button class="order-side-btn side-buy is-active" id="btn-side-buy">BUY</button>
+            <button class="order-side-btn side-sell" id="btn-side-sell">SELL</button>
+          </div>
+
+          <div class="order-fields-grid">
+            <div class="order-field-row">
+              <label for="order-product-type">Product</label>
+              <select id="order-product-type">
+                <option value="CNC">CNC (Cash &amp; Delivery)</option>
+                <option value="MIS">MIS (Intraday Margin)</option>
+              </select>
+            </div>
+
+            <div class="order-field-row">
+              <label for="order-order-type">Order Type</label>
+              <select id="order-order-type">
+                <option value="MARKET">Market</option>
+                <option value="LIMIT">Limit</option>
+                <option value="SL">Stop Loss (SL-L)</option>
+              </select>
+            </div>
+
+            <div class="order-field-row">
+              <label for="order-qty-input">Quantity (Shares)</label>
+              <input type="number" id="order-qty-input" value="40" min="1" step="1">
+            </div>
+
+            <div class="order-field-row">
+              <label for="order-price-input">Price (&#8377;)</label>
+              <input type="number" id="order-price-input" value="2940.50" step="0.05">
+            </div>
+          </div>
+
+          <!-- Pre-trade Itemized Cost Snippet -->
+          <div class="order-charges-snippet">
+            <div class="line">
+              <span>Turnover:</span>
+              <strong id="term-calc-turnover">&#8377;1,17,620.00</strong>
+            </div>
+            <div class="line">
+              <span>Trade Grow Brokerage:</span>
+              <strong id="term-calc-bro">&#8377;20.00</strong>
+            </div>
+            <div class="line">
+              <span>Statutory Levies (STT, GST, Exch):</span>
+              <strong id="term-calc-stat">&#8377;134.80</strong>
+            </div>
+            <div class="line total">
+              <span>Total Estimated Cost:</span>
+              <strong id="term-calc-total">&#8377;154.80</strong>
+            </div>
+          </div>
+
+          <button class="btn btn--primary btn-execute-order" id="btn-execute-demo-order">
+            Execute Demo Order
+          </button>
+
+          <p style="font-size:0.72rem;color:var(--muted-2);text-align:center;margin:0">
+            Simulated sandbox &middot; No real funds or exchange orders submitted.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== 05 WHY TRADE GROW -->
+<section class="why-tg-section" id="why-trade-grow">
+  <div class="wrap">
+    <div style="text-align:center;max-width:720px;margin:0 auto">
+      <p class="eyebrow">Institutional Foundations</p>
+      <h2 class="h2">Why Trade Grow</h2>
+      <p class="lede" style="margin:0 auto">
+        Built on regulatory transparency, itemised costs, and verifiable engineering. No gimmicks, no hidden markups.
+      </p>
+    </div>
+
+    <div class="why-tg-grid">
+      <!-- Card 1 -->
+      <div class="why-card">
+        <span class="why-num">01</span>
+        <div class="why-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3 class="why-title">Transparent Costs</h3>
+        <p class="why-desc">
+          See brokerage and applicable statutory charges separately on every single contract note, so you understand exactly what you are paying.
+        </p>
+        <a href="/pricing/" class="why-link">Explore Pricing &rarr;</a>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="why-card">
+        <div class="why-num">02</div>
+        <div class="why-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3 class="why-title">Powerful Platform</h3>
+        <p class="why-desc">
+          Engineered for institutional reliability with sub-millisecond order validation, TradingView-grade charts, and high-throughput execution.
+        </p>
+        <a href="#terminal" class="why-link">Explore Terminal &rarr;</a>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="why-card">
+        <div class="why-num">03</div>
+        <div class="why-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3 class="why-title">Digital Onboarding</h3>
+        <p class="why-desc">
+          100% paperless account opening powered by Digilocker and Aadhaar e-Sign. No physical paperwork, courier visits, or hidden prerequisites.
+        </p>
+        <a href="/open-account/" class="why-link">Open Account &rarr;</a>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="why-card">
+        <div class="why-num">04</div>
+        <div class="why-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3 class="why-title">Security First</h3>
+        <p class="why-desc">
+          Your credentials belong to you. We maintain strict fraud prevention protocols and will never ask for your passwords, OTPs, or remote screen access.
+        </p>
+        <a href="#security" class="why-link">Security Architecture &rarr;</a>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="why-card">
+        <div class="why-num">05</div>
+        <div class="why-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="why-title">Human Support</h3>
+        <p class="why-desc">
+          Direct telephone desk and designated compliance &amp; grievance officers published openly with transparent escalation paths.
+        </p>
+        <a href="/support/" class="why-link">Support Desk &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ 06 MARKETS & PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="wrap">
+    <div style="text-align:center;max-width:720px;margin:0 auto">
+      <p class="eyebrow">Comprehensive Market Access</p>
+      <h2 class="h2">Markets &amp; Products</h2>
+      <p class="lede" style="margin:0 auto">
+        Trade Indian capital markets with institutional tools and unified order routing.
+      </p>
+    </div>
+
+    <div class="asym-product-grid">
+      <!-- Equity -->
+      <div class="p-card p-card--large">
+        <div>
+          <span class="p-card__tag">CASH &amp; DELIVERY</span>
+          <h3>Equity</h3>
+          <p>Invest in NSE and BSE listed equities with flat, transparent brokerage. Cash delivery (CNC) and intraday (MIS) with advanced trailing stop-loss orders.</p>
+        </div>
+        <div>
+          <a href="#terminal" class="why-link">Explore Equity Trading &rarr;</a>
+        </div>
+        <div class="p-card__sparkline">
+          <svg viewBox="0 0 140 60" width="100%" height="100%">
+            <path d="M0,50 Q30,55 60,35 T100,25 T140,5" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- F&O -->
+      <div class="p-card p-card--large">
+        <div>
+          <span class="p-card__tag">DERIVATIVES</span>
+          <h3>Futures &amp; Options</h3>
+          <p>Trade NIFTY, BANK NIFTY, FINNIFTY and stock derivatives. Real-time option Greeks, strike multi-charts, and multi-leg order execution.</p>
+        </div>
+        <div>
+          <a href="#terminal" class="why-link">Explore F&amp;O Suite &rarr;</a>
+        </div>
+        <div class="p-card__sparkline">
+          <svg viewBox="0 0 140 60" width="100%" height="100%">
+            <path d="M0,45 Q40,10 80,40 T140,15" fill="none" stroke="#22D3EE" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ETF -->
+      <div class="p-card p-card--small">
+        <div>
+          <span class="p-card__tag">INDEX &amp; COMMODITY</span>
+          <h3>ETFs</h3>
+          <p>Low-cost diversified index funds, Gold, and Silver baskets with real-time liquidity.</p>
+        </div>
+        <a href="/pricing/" class="why-link">Explore ETFs &rarr;</a>
+      </div>
+
+      <!-- IPO -->
+      <div class="p-card p-card--small">
+        <div>
+          <span class="p-card__tag">PRIMARY MARKET</span>
+          <h3>IPO</h3>
+          <p>Direct UPI-based bidding for mainboard and SME initial public offerings with real-time status.</p>
+        </div>
+        <a href="/open-account/" class="why-link">Bid for IPOs &rarr;</a>
+      </div>
+
+      <!-- Commodity -->
+      <div class="p-card p-card--small">
+        <div>
+          <span class="p-card__tag">MCX DERIVATIVES</span>
+          <h3>Commodity</h3>
+          <p>Trade MCX crude oil, natural gas, gold, silver, and base metals with risk controls.</p>
+        </div>
+        <a href="/pricing/" class="why-link">Explore Commodities &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================== 07 ADVANCED TRADING TOOLS -->
+<section class="tools-section" id="tools">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Quantitative Infrastructure</p>
+      <h2 class="h2">Everything you need to understand the market.</h2>
+      <p class="lede" style="margin:0 auto">
+        Institutional tools designed to build disciplined trading hypotheses and manage risk systematically.
+      </p>
+    </div>
+
+    <div class="tools-grid">
+      <!-- Tool 1 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <h3>Stock Screener</h3>
+        <p>Filter over 2,000 listed securities across valuation, technical momentum (RSI, 52W range), and fundamental ratios.</p>
+        <a href="#screener" class="why-link">Open Screener &rarr;</a>
+      </div>
+
+      <!-- Tool 2 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Market Dashboard</h3>
+        <p>Monitor advance-decline breadth, sector rotations, India VIX, top gainers, losers, and volume shockers.</p>
+        <a href="#terminal" class="why-link">View Dashboard &rarr;</a>
+      </div>
+
+      <!-- Tool 3 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>P&amp;L Calculator</h3>
+        <p>Model risk scenarios, breakeven thresholds, target profits, and maximum drawdowns for custom positions.</p>
+        <a href="#calculator" class="why-link">Calculate Scenarios &rarr;</a>
+      </div>
+
+      <!-- Tool 4 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/></svg>
+        </div>
+        <h3>Brokerage Calculator</h3>
+        <p>Itemise Trade Grow brokerage vs government statutory levies (STT, GST, Stamp Duty, Exchange Charges) to the rupee.</p>
+        <a href="#calculator" class="why-link">Itemise Charges &rarr;</a>
+      </div>
+
+      <!-- Tool 5 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V10M12 20V4M19 20v8"/></svg>
+        </div>
+        <h3>Margin Calculator</h3>
+        <p>Inspect SPAN, exposure, and intraday margin requirements across cash equities, futures, and multi-leg option writing.</p>
+        <a href="/pricing/" class="why-link">Check Margin Rules &rarr;</a>
+      </div>
+
+      <!-- Tool 6 -->
+      <div class="tool-card">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Cloud Watchlists</h3>
+        <p>Create multi-asset custom watchlists with cloud sync, rapid search, and customizable price and volume alerts.</p>
+        <a href="#terminal" class="why-link">Explore Watchlists &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================== 08 AI MARKET INTELLIGENCE -->
+<section class="ai-intel-section" id="ai-intel">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Data Synthesis</p>
+      <h2 class="h2">Turn market data into understanding.</h2>
+      <p class="lede" style="margin:0 auto">
+        Explore market context, technical indicators, and terminology without predictive hype, guaranteed-return claims, or false promises.
+      </p>
+    </div>
+
+    <div class="ai-intel-card">
+      <!-- Context Bar -->
+      <div class="ai-context-bar">
+        <div class="ai-ctx-tile">
+          <span class="ai-ctx-label">Market Breadth</span>
+          <div class="ai-ctx-val num--up">62% Positive</div>
+          <span style="font-size:0.75rem;color:var(--muted)">1,240 Adv / 760 Dec</span>
+        </div>
+        <div class="ai-ctx-tile">
+          <span class="ai-ctx-label">India VIX</span>
+          <div class="ai-ctx-val" style="color:var(--cyan)">13.42</div>
+          <span style="font-size:0.75rem;color:var(--muted)">Moderate Volatility</span>
+        </div>
+        <div class="ai-ctx-tile">
+          <span class="ai-ctx-label">Exchange Turnover</span>
+          <div class="ai-ctx-val">&#8377;94,210 Cr</div>
+          <span style="font-size:0.75rem;color:var(--ok)">+18.4% vs 30D Avg</span>
+        </div>
+        <div class="ai-ctx-tile">
+          <span class="ai-ctx-label">Sector Momentum</span>
+          <div class="ai-ctx-val num--up">NIFTY IT +1.8%</div>
+          <span style="font-size:0.75rem;color:var(--muted)">Leading benchmark</span>
+        </div>
+      </div>
+
+      <!-- Prompt Chips -->
+      <div style="margin-bottom:12px;font-size:0.85rem;color:var(--muted);font-weight:600">
+        Sample Analytical Prompts (Click to inspect):
+      </div>
+      <div class="ai-prompt-chips" id="ai-prompt-chips">
+        <button class="ai-chip is-active" data-query="nifty-movement">Explain today's NIFTY movement</button>
+        <button class="ai-chip" data-query="rsi-indicator">Explain RSI &amp; divergence</button>
+        <button class="ai-chip" data-query="cnc-vs-mis">Difference between CNC and MIS</button>
+        <button class="ai-chip" data-query="stt-impact">How does STT affect delivery trades?</button>
+      </div>
+
+      <!-- Dynamic Response Box -->
+      <div class="ai-response-box" id="ai-response-box">
+        <div class="ai-response-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14v-4m0-4h.01"/></svg>
+          <span id="ai-response-header">Analysis: NIFTY 50 Intraday Price Action</span>
+        </div>
+        <div id="ai-response-text" style="color:var(--ink-2)">
+          <p>
+            <strong>Market Factors Visible in Available Data:</strong> NIFTY 50 opened steady at 24,780 and maintained upward momentum (+0.82%) supported primarily by IT (+1.8%) and private banking (+1.1%). Market breadth remains 62% positive across broader market indices.
+          </p>
+          <p>
+            <strong>Key Technical Zones:</strong> The index is trading above its 20-day exponential moving average (24,620) with immediate consolidation observed near the 24,900 resistance band. India VIX remains subdued at 13.42, reflecting moderate implied volatility.
+          </p>
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:12px">
+            <em>Educational Disclaimer: Trade Grow AI provides structured synthesis of historical and published market data for educational purposes. It does not provide stock recommendations, investment advice, or guaranteed-profit targets.</em>
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:var(--muted)">
+        <a href="/learn/" style="color:var(--cyan)">View AI Methodology &amp; Data Pipeline &rarr;</a>
+        <span>Source: Public exchange data &middot; Updated EOD</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== 09 STOCK SCREENER -->
+<section class="screener-section" id="screener">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Market Filters</p>
+      <h2 class="h2">Stock Screener</h2>
+      <p class="lede" style="margin:0 auto">
+        Filter Indian equities by market capitalization, sector, price-to-earnings valuation, and technical momentum.
+      </p>
+    </div>
+
+    <div class="screener-container">
+      <!-- Filter Bar -->
+      <div class="screener-filter-bar">
+        <div class="screener-search-wrap">
+          <svg class="screener-search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="screener-search-input" placeholder="Search by company name or symbol (e.g. Reliance, TCS)...">
+        </div>
+
+        <select class="screener-dropdown" id="screener-mcap-filter">
+          <option value="ALL">All Market Caps</option>
+          <option value="LARGE">Large Cap (&gt; &#8377;50,000 Cr)</option>
+          <option value="MID">Mid Cap (&#8377;15k - 50k Cr)</option>
+          <option value="SMALL">Small Cap (&lt; &#8377;15k Cr)</option>
+        </select>
+
+        <select class="screener-dropdown" id="screener-sector-filter">
+          <option value="ALL">All Sectors</option>
+          <option value="ENERGY">Energy</option>
+          <option value="IT">IT &amp; Software</option>
+          <option value="BANKING">Banking &amp; Finance</option>
+          <option value="AUTO">Automobile</option>
+          <option value="FMCG">FMCG</option>
+        </select>
+
+        <select class="screener-dropdown" id="screener-rsi-filter">
+          <option value="ALL">All RSI Levels</option>
+          <option value="OVERSOLD">RSI &lt; 35 (Oversold)</option>
+          <option value="NEUTRAL">RSI 35 - 65 (Neutral)</option>
+          <option value="OVERBOUGHT">RSI &gt; 65 (Overbought)</option>
+        </select>
+      </div>
+
+      <!-- Filtered Table -->
+      <div class="screener-table-wrap">
+        <table class="screener-table" id="screener-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Company Name</th>
+              <th>Sector</th>
+              <th>Market Cap</th>
+              <th>Price (&#8377;)</th>
+              <th>1D Change</th>
+              <th>P/E Ratio</th>
+              <th>RSI (14)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="screener-tbody">
+            <!-- Populated dynamically by app.js -->
+            <tr>
+              <td><strong class="mono">RELIANCE</strong></td>
+              <td>Reliance Industries Ltd</td>
+              <td>Energy</td>
+              <td>Large</td>
+              <td class="mono">&#8377;2,940.50</td>
+              <td class="mono num--up">+1.42%</td>
+              <td class="mono">28.4</td>
+              <td class="mono">58.2</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">TCS</strong></td>
+              <td>Tata Consultancy Services</td>
+              <td>IT</td>
+              <td>Large</td>
+              <td class="mono">&#8377;3,892.10</td>
+              <td class="mono num--up">+0.64%</td>
+              <td class="mono">31.2</td>
+              <td class="mono">62.0</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">INFY</strong></td>
+              <td>Infosys Limited</td>
+              <td>IT</td>
+              <td>Large</td>
+              <td class="mono">&#8377;1,824.30</td>
+              <td class="mono num--down">-0.32%</td>
+              <td class="mono">27.6</td>
+              <td class="mono">44.8</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">HDFCBANK</strong></td>
+              <td>HDFC Bank Limited</td>
+              <td>Banking</td>
+              <td>Large</td>
+              <td class="mono">&#8377;1,684.20</td>
+              <td class="mono num--up">+0.95%</td>
+              <td class="mono">19.8</td>
+              <td class="mono">56.4</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">ICICIBANK</strong></td>
+              <td>ICICI Bank Limited</td>
+              <td>Banking</td>
+              <td>Large</td>
+              <td class="mono">&#8377;1,248.60</td>
+              <td class="mono num--up">+1.18%</td>
+              <td class="mono">18.4</td>
+              <td class="mono">64.2</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">TATAMOTORS</strong></td>
+              <td>Tata Motors Limited</td>
+              <td>Auto</td>
+              <td>Large</td>
+              <td class="mono">&#8377;968.40</td>
+              <td class="mono num--up">+1.85%</td>
+              <td class="mono">16.2</td>
+              <td class="mono">61.5</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+            <tr>
+              <td><strong class="mono">ITC</strong></td>
+              <td>ITC Limited</td>
+              <td>FMCG</td>
+              <td>Large</td>
+              <td class="mono">&#8377;492.30</td>
+              <td class="mono num--up">+0.22%</td>
+              <td class="mono">26.5</td>
+              <td class="mono">51.0</td>
+              <td><a href="#terminal" class="btn btn--sm btn--ghost">Trade Demo</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================= 10 TRANSPARENT COST CALCULATOR -->
+<section class="calculator-section" id="calculator">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Cost Transparency</p>
+      <h2 class="h2">How much will your trade cost?</h2>
+      <p class="lede" style="margin:0 auto">
+        We separate Trade Grow brokerage from statutory government and exchange levies. Understand every rupee before placing an order.
+      </p>
+    </div>
+
+    <div class="calc-widget">
+      <!-- Left Inputs -->
+      <div class="calc-inputs-pane">
+        <div class="calc-field-group">
+          <label class="calc-field-label" for="calc-product-select">
+            <span>Trading Segment</span>
+            <span style="color:var(--cyan)">Delivery / Intraday</span>
+          </label>
+          <select class="calc-input" id="calc-product-select">
+            <option value="DELIVERY">Equity Delivery (CNC)</option>
+            <option value="INTRADAY">Equity Intraday (MIS)</option>
+            <option value="FUTURES">Futures (F&amp;O)</option>
+            <option value="OPTIONS">Options (F&amp;O)</option>
+          </select>
+        </div>
+
+        <div class="calc-field-group">
+          <label class="calc-field-label" for="calc-turnover-slider">
+            <span>Investment / Turnover Amount</span>
+            <span class="mono" id="disp-calc-turnover" style="color:#fff;font-weight:700">&#8377;1,00,000</span>
+          </label>
+          <input type="range" class="calc-slider" id="calc-turnover-slider" min="10000" max="1000000" step="5000" value="100000">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="calc-field-group">
+            <label class="calc-field-label" for="calc-buy-price">Buy Price (&#8377;)</label>
+            <input type="number" class="calc-input" id="calc-buy-price" value="2500">
+          </div>
+          <div class="calc-field-group">
+            <label class="calc-field-label" for="calc-qty">Quantity</label>
+            <input type="number" class="calc-input" id="calc-qty" value="40">
+          </div>
+        </div>
+
+        <div style="background:var(--surface-glass);border:1px solid var(--line-glass);border-radius:var(--r-sm);padding:14px;font-size:0.8rem;color:var(--muted)">
+          <strong style="color:var(--ink);display:block;margin-bottom:4px">Key Distinction:</strong>
+          Trade Grow charges flat brokerage (&#8377;20 or 0.05% whichever is lower). All other charges (STT, Stamp Duty, GST, Exchange Fees, SEBI) are statutory levies mandated by law.
+        </div>
+      </div>
+
+      <!-- Right Breakdown -->
+      <div class="calc-breakdown-pane">
+        <div class="calc-breakdown-head">
+          <span>Charge Itemisation</span>
+          <span>Beneficiary</span>
+        </div>
+
+        <div>
+          <div class="breakdown-row" style="color:var(--cyan);font-weight:600">
+            <span>Trade Grow Brokerage</span>
+            <strong id="c-bro">&#8377;20.00</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>Securities Transaction Tax (STT)</span>
+            <strong id="c-stt">&#8377;100.00</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>Goods &amp; Services Tax (GST 18%)</span>
+            <strong id="c-gst">&#8377;4.22</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>Stamp Duty (State Govt)</span>
+            <strong id="c-stamp">&#8377;15.00</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>Exchange Transaction Charges</span>
+            <strong id="c-exch">&#8377;2.97</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>SEBI Turnover Fees</span>
+            <strong id="c-sebi">&#8377;0.10</strong>
+          </div>
+        </div>
+
+        <div class="breakdown-total">
+          <div>
+            <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-transform:uppercase">Estimated Total Cost</span>
+            <div style="font-size:0.8rem;color:var(--muted-2)">~0.14% of trade value</div>
+          </div>
+          <div class="breakdown-total-val" id="c-total">&#8377;142.29</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:0.78rem;color:var(--muted-2);margin-top:16px">
+      Rates and statutory charges are determined by Government &amp; Exchange circulars. Refer to the <a href="/pricing/">detailed tariff sheet</a> for applicable terms.
     </p>
   </div>
 </section>
 
-<section class="section section--tint" aria-labelledby="sec-h">
+<!-- ============================================== 11 MOBILE + WEB PLATFORM -->
+<section class="platform-section" id="platform">
   <div class="wrap">
-    <div class="grid-2">
-      <div>
-        <p class="eyebrow">Security</p>
-        <h2 id="sec-h" class="h2">The rule that protects you from us, too</h2>
-        <p class="lede">
-          No one from Trade Grow will ever ask for your OTP, password, PIN, UPI PIN or card PIN.
-          Not a sales agent, not a support executive, not someone claiming to be a manager.
-          There is no legitimate situation in which we need those.
-        </p>
-        <p>
-          If anyone asks you for these in our name, they are committing fraud &mdash; and we would
-          like to know about it.
-        </p>
-        <div class="hero__actions">
-          <a class="btn btn--ghost" href="/security-awareness/">Read the red-flag checklist</a>
-          <a class="btn btn--ghost" href="/security/">How we secure accounts</a>
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Unified Experience</p>
+      <h2 class="h2">Your market. Wherever you are.</h2>
+      <p class="lede" style="margin:0 auto">
+        A single high-speed trading engine powering desktop web browsers and native mobile screens.
+      </p>
+    </div>
+
+    <div class="platform-mockups-dual">
+      <!-- Desktop Browser Mockup -->
+      <div class="browser-mockup">
+        <div class="browser-bar">
+          <div class="browser-dots"><i></i><i></i><i></i></div>
+          <div class="browser-address">https://trade.tradegrowx.in/terminal</div>
+        </div>
+        <div class="browser-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--line)">
+            <div style="display:flex;align-items:center;gap:12px">
+              <strong style="font-family:var(--font-display);font-size:1.1rem">TRADE GROW WEB TERMINAL</strong>
+              <span class="pill pill--ok">&#9679; CONNECTED</span>
+            </div>
+            <div class="mono" style="font-size:0.85rem;color:var(--cyan)">PORTFOLIO: &#8377;12,48,320.00</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+            <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:16px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                <span style="font-weight:700">NIFTY 50 &middot; 1D CANDLES</span>
+                <span class="num--up mono">+0.82%</span>
+              </div>
+              <svg viewBox="0 0 400 160" width="100%" height="160">
+                <path d="M0,130 L60,110 L120,120 L180,90 L240,100 L300,60 L360,40 L400,20" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+                <path d="M0,130 L60,110 L120,120 L180,90 L240,100 L300,60 L360,40 L400,20 L400,160 L0,160 Z" fill="rgba(59,130,246,0.1)"/>
+              </svg>
+            </div>
+
+            <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:16px;display:flex;flex-direction:column;gap:10px">
+              <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-transform:uppercase">Quick Positions</span>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+                <span>RELIANCE (40 Qty)</span>
+                <span class="num--up mono">+&#8377;1,420</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+                <span>TCS (25 Qty)</span>
+                <span class="num--up mono">+&#8377;980</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+                <span>INFY (50 Qty)</span>
+                <span class="num--down mono">-&#8377;310</span>
+              </div>
+              <div style="margin-top:auto">
+                <a href="#terminal" class="btn btn--sm btn--primary" style="width:100%">Launch Web Demo</a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div>
-        {{comp:otpWarning}}
-        <ul class="never">
-          <li>OTP</li>
-          <li>Password</li>
-          <li>Trading PIN</li>
-          <li>UPI PIN</li>
-          <li>Card PIN / CVV</li>
-          <li>Screen sharing</li>
-        </ul>
+
+      <!-- Smartphone Mockup -->
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <strong style="font-family:var(--font-display);font-size:0.9rem">Trade Grow</strong>
+            <span class="pill pill--ok" style="font-size:0.65rem">LIVE</span>
+          </div>
+
+          <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:12px">
+            <span style="font-size:0.68rem;color:var(--muted)">Portfolio</span>
+            <div class="mono" style="font-size:1.15rem;font-weight:700">&#8377;12,48,320</div>
+            <div class="mono num--up" style="font-size:0.75rem">+&#8377;8,421 (+0.68%)</div>
+          </div>
+
+          <div style="height:60px;margin-bottom:14px">
+            <svg viewBox="0 0 200 60" width="100%" height="100%">
+              <path d="M0,50 Q40,55 80,35 T140,25 T200,10" fill="none" stroke="#22D3EE" stroke-width="2"/>
+            </svg>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn btn--sm" style="background:var(--ok);color:#05070B;font-weight:700">BUY</button>
+            <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700">SELL</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="testi-h">
+<!-- =================================================== 12 SECURITY CENTER -->
+<section class="security-section" id="security">
   <div class="wrap">
-    <div class="section__head section__head--center">
-      <p class="eyebrow">Customer testimonials</p>
-      <h2 id="testi-h" class="h2">This space is empty on purpose</h2>
-    </div>
-    {{comp:testimonials}}
-  </div>
-</section>
-
-<section class="section section--tint">
-  <div class="wrap">
-    <div class="cta-band">
-      <h2 class="h2">Verify. Compare. Understand. Then decide.</h2>
-      <p>
-        That order matters. Take as long as you need on the first three &mdash; the fourth is
-        entirely your call, and there is no deadline on it from us.
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow" style="color:var(--danger)">Fraud Awareness &middot; Zero Compromise</p>
+      <h2 class="h2">Your credentials are yours.</h2>
+      <p class="lede" style="margin:0 auto">
+        Security begins with clear boundaries. Trade Grow operates under strict fraud-prevention rules to protect your capital.
       </p>
-      <div class="cta-band__actions">
-        <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">Open Account Digitally</a>
-        <a class="btn btn--ghost btn--lg" href="/verify/" data-ev="verify_page_view">Verify Our Details</a>
-        <a class="btn btn--ghost btn--lg" href="/pricing/" data-ev="pricing_view">View Pricing</a>
-        <a class="btn btn--ghost btn--lg" href="/platform/" data-ev="platform_demo">See Platform Demo</a>
+    </div>
+
+    <div class="security-alert-box">
+      <div class="security-alert-head">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>TRADE GROW WILL NEVER ASK YOU FOR:</span>
+      </div>
+
+      <div class="never-list-grid">
+        <div class="never-item"><span class="never-cross">&#10005;</span> OTP (One-Time Password)</div>
+        <div class="never-item"><span class="never-cross">&#10005;</span> Account Password</div>
+        <div class="never-item"><span class="never-cross">&#10005;</span> Trading PIN</div>
+        <div class="never-item"><span class="never-cross">&#10005;</span> UPI PIN</div>
+        <div class="never-item"><span class="never-cross">&#10005;</span> Card PIN / CVV</div>
+        <div class="never-item"><span class="never-cross">&#10005;</span> Remote Screen Sharing</div>
+      </div>
+
+      <p style="font-size:0.92rem;color:var(--ink-2);margin-bottom:20px">
+        No sales agent, relationship manager, support executive or officer is authorized to request these credentials. If anyone claims to represent Trade Grow and requests this information, do not share it&mdash;report the incident immediately to our compliance desk.
+      </p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <a href="/security-awareness/" class="btn btn--secondary">Read Fraud Awareness Guide &rarr;</a>
+        <a href="/security/" class="btn btn--ghost">Security Architecture Details &rarr;</a>
       </div>
     </div>
-    {{comp:headlineVariants}}
+  </div>
+</section>
+
+<!-- ============================================== 13 TRUST / VERIFICATION -->
+<section class="trust-section" id="trust">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Verifiable Facts</p>
+      <h2 class="h2">Don't just trust us. Verify us.</h2>
+      <p class="lede" style="margin:0 auto">
+        We link every regulatory registration and membership to official databases maintained by SEBI, MCA, and exchanges.
+      </p>
+    </div>
+
+    <div class="trust-grid">
+      <!-- Item 1: Legal Entity -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">Legal Entity</span>
+            <div class="trust-val">{{cfg:entity.legalName}}</div>
+          </div>
+          <span class="pill pill--ok">&#10003; Published</span>
+        </div>
+        <a href="https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do" target="_blank" rel="noopener noreferrer" class="trust-link">
+          Verify on MCA Portal &rarr;
+        </a>
+      </div>
+
+      <!-- Item 2: SEBI Registration -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">SEBI Registration</span>
+            <div class="trust-val">{{cfg:regulatory.sebi.registrationNumber}}</div>
+          </div>
+          <span class="pill pill--warn">&#9888; Verify</span>
+        </div>
+        <a href="/verify/#sebi" class="trust-link">
+          Check SEBI Register &rarr;
+        </a>
+      </div>
+
+      <!-- Item 3: Exchange Membership -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">NSE Membership</span>
+            <div class="trust-val">{{cfg:regulatory.exchanges.0.memberCode}}</div>
+          </div>
+          <span class="pill pill--warn">&#9888; Verify</span>
+        </div>
+        <a href="/verify/#exchanges" class="trust-link">
+          View NSE Directory &rarr;
+        </a>
+      </div>
+
+      <!-- Item 4: Depository -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">Depository (DP ID)</span>
+            <div class="trust-val">{{cfg:regulatory.depositories.0.dpId}}</div>
+          </div>
+          <span class="pill pill--warn">&#9888; Verify</span>
+        </div>
+        <a href="/verify/#depository" class="trust-link">
+          Check CDSL/NSDL Record &rarr;
+        </a>
+      </div>
+
+      <!-- Item 5: Compliance Officer -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">Compliance Officer</span>
+            <div class="trust-val">{{cfg:officers.compliance.name}}</div>
+          </div>
+          <span class="pill pill--ok">&#10003; Published</span>
+        </div>
+        <a href="/verify/#officers" class="trust-link">
+          Official Contact &rarr;
+        </a>
+      </div>
+
+      <!-- Item 6: Investor Charter -->
+      <div class="trust-card">
+        <div class="trust-card-top">
+          <div>
+            <span class="trust-label">Investor Charter</span>
+            <div class="trust-val">SEBI Mandate Compliant</div>
+          </div>
+          <span class="pill pill--ok">&#10003; Published</span>
+        </div>
+        <a href="/investor-charter/" class="trust-link">
+          Read Investor Charter &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- WhatsApp Trust Pack Banner -->
+    <div style="background:linear-gradient(135deg,rgba(37,211,102,0.1),rgba(59,130,246,0.08));border:1px solid rgba(37,211,102,0.25);border-radius:var(--r);padding:28px;margin-top:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+      <div>
+        <h3 style="margin:0 0 6px;font-size:1.25rem">Get the Trade Grow Official Verification Pack</h3>
+        <p style="margin:0;font-size:0.9rem;color:var(--muted)">
+          Direct official registration links, exchange certificates, full tariff schedule, and fraud prevention checklist sent to your WhatsApp.
+        </p>
+      </div>
+      <div>
+        <a href="https://wa.me/919876543210?text=Hi%20Trade%20Grow,%20please%20send%20me%20the%20Official%20Verification%20Pack." target="_blank" rel="noopener noreferrer" class="btn btn--wa">
+          Get Trust Pack on WhatsApp &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================== 14 TRADE GROW ACADEMY -->
+<section class="academy-section" id="academy">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Financial Literacy</p>
+      <h2 class="h2">Trade Grow Academy</h2>
+      <p class="lede" style="margin:0 auto">
+        Curated educational guides to build structural understanding of market mechanisms, charges, and risk management.
+      </p>
+    </div>
+
+    <div class="academy-grid">
+      <!-- Guide 1 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>BEGINNER</span>
+          <span>5 MIN READ</span>
+        </div>
+        <h3>What is a Demat account?</h3>
+        <p>How shares are held electronically in depository accounts and how your depository participant functions.</p>
+        <a href="/learn/what-is-demat-account/" class="why-link">Read Guide &rarr;</a>
+      </div>
+
+      <!-- Guide 2 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>INTERMEDIATE</span>
+          <span>9 MIN READ</span>
+        </div>
+        <h3>Understanding Technical Charts</h3>
+        <p>Japanese candlestick anatomy, support and resistance lines, moving averages, and volume confirmation.</p>
+        <a href="/learn/" class="why-link">Read Guide &rarr;</a>
+      </div>
+
+      <!-- Guide 3 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>ADVANCED</span>
+          <span>14 MIN READ</span>
+        </div>
+        <h3>Understanding Derivatives</h3>
+        <p>The mechanics of futures and options contracts, leverage implications, margin rules, and contract expiry.</p>
+        <a href="/learn/" class="why-link">Read Guide &rarr;</a>
+      </div>
+
+      <!-- Guide 4 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>MARKET BASICS</span>
+          <span>4 MIN READ</span>
+        </div>
+        <h3>What is STT?</h3>
+        <p>Securities Transaction Tax explained: who collects it, how it applies to delivery versus intraday trades.</p>
+        <a href="/learn/what-is-stt/" class="why-link">Read Guide &rarr;</a>
+      </div>
+
+      <!-- Guide 5 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>COSTS</span>
+          <span>6 MIN READ</span>
+        </div>
+        <h3>How Brokerage Works</h3>
+        <p>Flat brokerage versus percentage charges, regulatory charges, and reading your contract note accurately.</p>
+        <a href="/learn/brokerage-charges-explained/" class="why-link">Read Guide &rarr;</a>
+      </div>
+
+      <!-- Guide 6 -->
+      <div class="academy-card">
+        <div class="academy-meta">
+          <span>RISK</span>
+          <span>8 MIN READ</span>
+        </div>
+        <h3>Understanding Market Risk</h3>
+        <p>Risk-reward ratios, position sizing, stop loss discipline, and capital preservation fundamentals.</p>
+        <a href="/risk-disclosure/" class="why-link">Read Guide &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================== 15 ACCOUNT OPENING -->
+<section class="onboarding-section" id="onboarding">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Digital KYC</p>
+      <h2 class="h2">Start your trading journey digitally.</h2>
+      <p class="lede" style="margin:0 auto">
+        A 100% paperless onboarding journey compliant with SEBI and KRA guidelines.
+      </p>
+    </div>
+
+    <div class="timeline-pipeline">
+      <div class="timeline-step">
+        <div class="timeline-step-num">01</div>
+        <div class="timeline-step-title">Mobile Verification</div>
+        <div class="timeline-step-desc">Instant OTP authentication linking your Aadhaar-registered mobile.</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-step-num">02</div>
+        <div class="timeline-step-title">PAN / KYC</div>
+        <div class="timeline-step-desc">Automated validation with KRA and Digilocker document retrieval.</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-step-num">03</div>
+        <div class="timeline-step-title">Personal Details</div>
+        <div class="timeline-step-desc">Nominee selection, trading preferences, and statutory declarations.</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-step-num">04</div>
+        <div class="timeline-step-title">Bank Verification</div>
+        <div class="timeline-step-desc">Penny drop validation to link your primary settlement bank account.</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-step-num">05</div>
+        <div class="timeline-step-title">Verification (IPV)</div>
+        <div class="timeline-step-desc">Quick in-person video selfie check required by exchange guidelines.</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-step-num">06</div>
+        <div class="timeline-step-title">Account Activation</div>
+        <div class="timeline-step-desc">Aadhaar e-Sign on NSDL portal and immediate UCC generation.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">
+        <span>Open Trading Account Digitally</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= 16 FAQ -->
+<section class="faq-section" id="faq">
+  <div class="wrap">
+    <div style="text-align:center;max-width:760px;margin:0 auto">
+      <p class="eyebrow">Clear Answers</p>
+      <h2 class="h2">Frequently Asked Questions</h2>
+      <p class="lede" style="margin:0 auto">
+        Transparent answers regarding charges, account opening, regulatory status, and security.
+      </p>
+    </div>
+
+    <div class="faq-accordion-list" style="margin-top:36px">
+      <!-- QA 1 -->
+      <details class="faq-item" open>
+        <summary class="faq-summary">
+          <span>How does Trade Grow charge for trades?</span>
+          <span style="color:var(--cyan);font-weight:bold">&#9662;</span>
+        </summary>
+        <div class="faq-body">
+          Trade Grow charges a flat brokerage of &#8377;20 or 0.05% (whichever is lower) per executed order. In addition to our brokerage, all trades in Indian markets attract statutory charges levied by the Government, Exchanges, and SEBI (STT, Stamp Duty, GST, Exchange Turnover Fees, and SEBI charges). We itemize every single charge on your contract note with zero markup.
+        </div>
+      </details>
+
+      <!-- QA 2 -->
+      <details class="faq-item">
+        <summary class="faq-summary">
+          <span>How can I verify Trade Grow's regulatory registrations?</span>
+          <span style="color:var(--cyan);font-weight:bold">&#9662;</span>
+        </summary>
+        <div class="faq-body">
+          You can independently verify Trade Grow by visiting our <a href="/verify/">Verify page</a>, which provides direct links to the official SEBI directory, MCA corporate registry, and exchange member lists. We publish actual lookup codes rather than static image certificates.
+        </div>
+      </details>
+
+      <!-- QA 3 -->
+      <details class="faq-item">
+        <summary class="faq-summary">
+          <span>What documents are required to open an account?</span>
+          <span style="color:var(--cyan);font-weight:bold">&#9662;</span>
+        </summary>
+        <div class="faq-body">
+          You will need your PAN card, Aadhaar card (linked to an active mobile number for OTP verification), proof of bank account (cancelled cheque or bank statement), and a selfie for In-Person Verification (IPV). For F&amp;O trading, 6 months of bank statement or salary slip is required as income proof.
+        </div>
+      </details>
+
+      <!-- QA 4 -->
+      <details class="faq-item">
+        <summary class="faq-summary">
+          <!--lint:ignore-->
+          <span>Does Trade Grow offer stock tips or guaranteed returns?</span>
+          <!--/lint:ignore-->
+          <span style="color:var(--cyan);font-weight:bold">&#9662;</span>
+        </summary>
+        <div class="faq-body">
+          <!--lint:ignore-->
+          No. Trade Grow is strictly a trading technology and execution platform. We do not offer stock tips, trade calls, portfolio management, or guaranteed returns. Any person claiming to offer assured returns in the name of Trade Grow is fraudulent and should be reported to our compliance officer.
+          <!--/lint:ignore-->
+        </div>
+      </details>
+
+      <!-- QA 5 -->
+      <details class="faq-item">
+        <summary class="faq-summary">
+          <span>How are my funds and securities protected?</span>
+          <span style="color:var(--cyan);font-weight:bold">&#9662;</span>
+        </summary>
+        <div class="faq-body">
+          Your securities are held directly in your personal Demat account with the central depository (CDSL/NSDL), not on Trade Grow's balance sheet. Client funds are segregated in designated settlement accounts with clearing corporations according to strict SEBI regulations.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 17 FINAL CTA -->
+<section class="final-cta-section">
+  <div class="wrap">
+    <div class="final-cta-box">
+      <p class="eyebrow" style="color:var(--cyan)">Start With Clarity</p>
+      <h2>READY TO EXPLORE THE MARKET?</h2>
+      <p>
+        Experience Trade Grow for yourself. Explore the interactive terminal, calculate your exact charges, and verify our credentials before you make a decision.
+      </p>
+      <div class="final-cta-actions">
+        <a class="btn btn--primary btn--lg" href="/open-account/" data-ev="kyc_start">
+          <span>Open Trading Account</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a class="btn btn--ghost btn--lg" href="#terminal" data-ev="platform_demo">
+          <span>Explore Platform Demo &rarr;</span>
+        </a>
+        <a class="btn btn--secondary btn--lg" href="/verify/" data-ev="verify_page_view">
+          <span>Verify Credentials</span>
+        </a>
+      </div>
+    </div>
   </div>
 </section>

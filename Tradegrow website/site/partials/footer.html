@@ -1,106 +1,176 @@
 <footer class="site-footer">
   <div class="wrap">
-
-    <div class="site-footer__grid">
-      <div class="site-footer__brand">
-        <span class="logo logo--footer">
-          <svg class="logo__mark" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="9" fill="url(#lgf)"/>
-            <path d="M8 21.5l5-5.5 4 3.5 7-8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="24" cy="11.5" r="2.4" fill="#fff"/>
-            <defs><linearGradient id="lgf" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#1B4DFF"/><stop offset="1" stop-color="#0FB5A5"/>
-            </linearGradient></defs>
-          </svg>
-          <span class="logo__text">Trade&thinsp;Grow</span>
-        </span>
-        <p class="site-footer__entity">{{cfg:entity.legalName}}</p>
-        <p class="site-footer__addr">
-          {{cfg:entity.registeredOffice.line1}}<br>
-          {{cfg:entity.registeredOffice.city}}, {{cfg:entity.registeredOffice.state}} {{cfg:entity.registeredOffice.pincode}}
+    <!-- Main Footer Grid: 8 Columns / Groups -->
+    <div class="site-footer__main">
+      <div class="site-footer__brand-col">
+        <a class="logo logo--footer" href="/">
+          <div class="logo__icon">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="url(#tgf-grad)"/>
+              <path d="M7 21.5l5.5-6 4 4 8.5-9.5" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="25" cy="10" r="2.5" fill="#22D3EE"/>
+              <defs>
+                <linearGradient id="tgf-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#3B82F6"/>
+                  <stop offset="1" stop-color="#0F172A"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="logo__brand">
+            <span class="logo__text">TRADE GROW</span>
+            <span class="logo__tagline">INTELLIGENT TRADING</span>
+          </div>
+        </a>
+        <p class="site-footer__entity-desc">
+          The intelligent, transparent trading ecosystem built for Indian capital markets. Transparent costs, institutional tools, and verifiable compliance.
         </p>
+        <div class="site-footer__entity-meta">
+          <p><strong>Legal Entity:</strong> {{cfg:entity.legalName}}</p>
+          <p><strong>Registered Office:</strong><br>
+            {{cfg:entity.registeredOffice.line1}}<br>
+            {{cfg:entity.registeredOffice.city}}, {{cfg:entity.registeredOffice.state}} {{cfg:entity.registeredOffice.pincode}}
+          </p>
+        </div>
       </div>
 
-      <nav class="site-footer__col" aria-label="Verify">
-        <h2>Verify</h2>
-        <a href="/verify/">Verify Trade Grow</a>
-        <a href="/verify/#sebi">SEBI registration</a>
-        <a href="/verify/#officers">Compliance &amp; grievance officers</a>
-        <a href="/verify/#documents">Documents</a>
-        <a href="/verify/#how-to-verify">How to verify us yourself</a>
-      </nav>
+      <div class="site-footer__links-grid">
+        <!-- Col 1: Products -->
+        <nav class="site-footer__col" aria-label="Products">
+          <h3 class="footer-heading">Products</h3>
+          <a href="/#products">Equity Cash &amp; Delivery</a>
+          <a href="/#products">Futures &amp; Options</a>
+          <a href="/#products">Exchange Traded Funds</a>
+          <a href="/#products">Initial Public Offerings</a>
+          <a href="/#products">Commodities (MCX)</a>
+          <a href="/#products">Currency Derivatives</a>
+        </nav>
 
-      <nav class="site-footer__col" aria-label="Costs">
-        <h2>Costs</h2>
-        <a href="/pricing/">Pricing &amp; charges</a>
-        <a href="/pricing/#calculator">Cost calculator</a>
-        <a href="/compare/">Compare brokers</a>
-        <a href="/learn/brokerage-charges-explained/">Brokerage charges explained</a>
-        <a href="/learn/what-is-stt/">What is STT?</a>
-        <a href="/learn/what-is-dp-charge/">What is a DP charge?</a>
-      </nav>
+        <!-- Col 2: Markets -->
+        <nav class="site-footer__col" aria-label="Markets">
+          <h3 class="footer-heading">Markets</h3>
+          <a href="/#terminal">Market Dashboard</a>
+          <a href="/#terminal">NIFTY &amp; Indices</a>
+          <a href="/#screener">Top Gainers &amp; Losers</a>
+          <a href="/#screener">52-Week High &amp; Low</a>
+          <a href="/#screener">Most Active Turnover</a>
+          <a href="/#terminal">Sector Performance</a>
+        </nav>
 
-      <nav class="site-footer__col" aria-label="Platform">
-        <h2>Platform</h2>
-        <a href="/platform/">Platform tour</a>
-        <a href="/open-account/">Account opening</a>
-        <a href="/security/">Security</a>
-        <a href="/security-awareness/">Fraud awareness</a>
-        <a href="/faq/">FAQ</a>
-      </nav>
+        <!-- Col 3: Tools -->
+        <nav class="site-footer__col" aria-label="Tools">
+          <h3 class="footer-heading">Tools</h3>
+          <a href="/#screener">Stock Screener</a>
+          <a href="/#calculator">Brokerage Calculator</a>
+          <a href="/#calculator">P&amp;L Calculator</a>
+          <a href="/#calculator">Margin Calculator</a>
+          <a href="/#ai-intel">AI Market Intelligence</a>
+          <a href="/#terminal">Interactive Terminal</a>
+        </nav>
 
-      <nav class="site-footer__col" aria-label="Learn">
-        <h2>Learn</h2>
-        <a href="/learn/how-to-verify-a-stock-broker/">How to verify a broker</a>
-        <a href="/learn/how-to-choose-a-stock-broker/">How to choose a broker</a>
-        <a href="/learn/what-is-demat-account/">What is a demat account?</a>
-        <a href="/learn/how-kyc-works/">How KYC works</a>
-        <a href="/learn/how-to-compare-brokerage-charges/">Comparing brokerage charges</a>
-      </nav>
+        <!-- Col 4: Learn -->
+        <nav class="site-footer__col" aria-label="Learn">
+          <h3 class="footer-heading">Learn</h3>
+          <a href="/#academy">Trade Grow Academy</a>
+          <a href="/learn/what-is-demat-account/">What is a Demat Account?</a>
+          <a href="/learn/what-is-stt/">What is STT?</a>
+          <a href="/learn/brokerage-charges-explained/">Brokerage Charges Explained</a>
+          <a href="/learn/how-kyc-works/">Digital KYC Walkthrough</a>
+          <a href="/compare/">Broker Comparison Guide</a>
+        </nav>
 
-      <nav class="site-footer__col" aria-label="Support">
-        <h2>Support</h2>
-        <a href="/support/">Contact support</a>
-        <a href="/support/#ticket">Raise a ticket</a>
-        <a href="/support/#escalation">Grievance escalation</a>
-        <a href="https://scores.sebi.gov.in" target="_blank" rel="noopener noreferrer">SEBI SCORES</a>
-      </nav>
+        <!-- Col 5: Company -->
+        <nav class="site-footer__col" aria-label="Company">
+          <h3 class="footer-heading">Company</h3>
+          <a href="/verify/">Verify Trade Grow</a>
+          <a href="/verify/#sebi">Regulatory Registrations</a>
+          <a href="/verify/#officers">Key Officers &amp; Desk</a>
+          <a href="/verify/#documents">Public Documents</a>
+          <a href="/verify/#how-to-verify">Self-Verification Guide</a>
+        </nav>
+
+        <!-- Col 6: Support -->
+        <nav class="site-footer__col" aria-label="Support">
+          <h3 class="footer-heading">Support</h3>
+          <a href="/support/">Help Center</a>
+          <a href="/support/#ticket">Raise Support Ticket</a>
+          <a href="/support/#track">Track Ticket Status</a>
+          <a href="/support/#escalation">Grievance Escalation</a>
+          <a href="https://scores.sebi.gov.in" target="_blank" rel="noopener noreferrer">SEBI SCORES Portal</a>
+        </nav>
+
+        <!-- Col 7: Legal -->
+        <nav class="site-footer__col" aria-label="Legal">
+          <h3 class="footer-heading">Legal</h3>
+          <a href="/terms/">Terms &amp; Conditions</a>
+          <a href="/privacy/">Privacy Policy</a>
+          <a href="/risk-disclosure/">Risk Disclosure</a>
+          <a href="/investor-charter/">Investor Charter</a>
+          <a href="/grievance-policy/">Grievance Policy</a>
+          <a href="/pmla-policy/">PMLA Policy</a>
+        </nav>
+
+        <!-- Col 8: Security -->
+        <nav class="site-footer__col" aria-label="Security">
+          <h3 class="footer-heading">Security</h3>
+          <a href="/#security">Security Architecture</a>
+          <a href="/security-awareness/">Fraud Awareness Red Flags</a>
+          <a href="/security/#sessions">Session Security</a>
+          <a href="/security/#2fa">Two-Factor Authentication</a>
+          <a href="/support/#ticket">Report Vulnerability</a>
+        </nav>
+      </div>
     </div>
 
-    <div class="site-footer__legal">
-      <div class="site-footer__docs">
-        <a href="/terms/">Terms &amp; Conditions</a>
-        <a href="/privacy/">Privacy Policy</a>
-        <a href="/risk-disclosure/">Risk Disclosure</a>
-        <a href="/investor-charter/">Investor Charter</a>
-        <a href="/grievance-policy/">Grievance Policy</a>
-        <a href="/pmla-policy/">PMLA Policy</a>
+    <!-- Regulatory Disclosure Section -->
+    <div class="site-footer__regulatory">
+      <div class="regulatory-card">
+        <div class="regulatory-head">
+          <span class="reg-title">SEBI &amp; EXCHANGE REGULATORY DISCLOSURE</span>
+          <span class="reg-pill">&#10003; Published for Verification</span>
+        </div>
+        <div class="regulatory-grid">
+          <div>
+            <span class="reg-label">SEBI Registration No.</span>
+            <span class="reg-value">{{cfg:regulatory.sebi.registrationNumber}}</span>
+          </div>
+          <div>
+            <span class="reg-label">NSE Member Code</span>
+            <span class="reg-value">{{cfg:regulatory.exchanges.0.memberCode}}</span>
+          </div>
+          <div>
+            <span class="reg-label">Depository Participant</span>
+            <span class="reg-value">CDSL / NSDL &middot; DP ID: {{cfg:regulatory.depositories.0.dpId}}</span>
+          </div>
+          <div>
+            <span class="reg-label">Compliance Officer</span>
+            <span class="reg-value">{{cfg:officers.compliance.name}} &middot; {{cfg:officers.compliance.email}}</span>
+          </div>
+          <div>
+            <span class="reg-label">Grievance Officer</span>
+            <span class="reg-value">{{cfg:officers.grievance.name}} &middot; {{cfg:officers.grievance.email}}</span>
+          </div>
+        </div>
       </div>
 
-      <div class="site-footer__reg">
-        <p><strong>SEBI Registration:</strong> {{cfg:regulatory.sebi.registrationNumber}}</p>
-        <p><strong>Compliance Officer:</strong> {{cfg:officers.compliance.name}} &middot; {{cfg:officers.compliance.email}}</p>
-        <p><strong>Grievance Officer:</strong> {{cfg:officers.grievance.name}} &middot; {{cfg:officers.grievance.email}}</p>
+      <div class="site-footer__disclaimers">
+        <p class="risk-highlight">
+          <strong>Mandatory Risk Disclosure:</strong> Securities investments and derivatives (Futures &amp; Options) are subject to market risks. Please read all scheme-related and offer documents carefully before investing. Trade Grow is a trading and technology platform; it does not offer investment tips, stock recommendations, or portfolio management services.
+        </p>
+        <p class="statutory-note">
+          Statutory levies (STT, GST, Stamp Duty, Exchange Transaction Fees, SEBI Turnover Charges) are determined by Government of India, respective state governments, exchanges and SEBI. Trade Grow collects and remits these without markup. Where any detail reads &ldquo;{{cfg:compliance.pendingLabel}}&rdquo;, it has not yet been confirmed by compliance and should not be relied upon until verified.
+        </p>
+        <div class="site-footer__bottom-bar">
+          <p>&copy; <span data-year>2026</span> {{cfg:entity.legalName}}. All rights reserved.</p>
+          <div class="bottom-links">
+            <a href="/terms/">Terms</a>
+            <a href="/privacy/">Privacy</a>
+            <a href="/risk-disclosure/">Risk Disclosure</a>
+            <a href="/investor-charter/">Investor Charter</a>
+            <a href="/verify/">Verify Us</a>
+          </div>
+        </div>
       </div>
-
-      {{comp:marketRisk}}
-
-      <p class="site-footer__disc">
-        {{cfg:compliance.chargesDisclaimer}}
-      </p>
-
-      <p class="site-footer__disc">
-        Investor grievances may be escalated to the relevant exchange or filed on SEBI&rsquo;s SCORES
-        portal at <a href="https://scores.sebi.gov.in" target="_blank" rel="noopener noreferrer">scores.sebi.gov.in</a>.
-        Where any detail on this website reads &ldquo;{{cfg:compliance.pendingLabel}}&rdquo;, it has not yet been
-        confirmed and must not be relied upon.
-      </p>
-
-      <p class="site-footer__copy">
-        &copy; <span data-year>2026</span> {{cfg:entity.legalName}}. All rights reserved.
-        Other broker names and trademarks referenced on this site belong to their respective owners.
-      </p>
     </div>
-
   </div>
 </footer>
