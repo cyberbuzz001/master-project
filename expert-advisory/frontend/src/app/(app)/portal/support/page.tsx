@@ -299,34 +299,14 @@ export default function SupportDeskPage() {
       {tab === "grievance" && (
         <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-6">
-            <Card className="p-6 border-l-4 border-l-warning-600">
+            <Card className="p-6 border-l-4 border-l-brand-600">
               <div className="flex gap-3">
-                <ShieldAlert className="size-6 text-warning-600 shrink-0" />
+                <ShieldCheck className="size-6 text-brand-600 shrink-0" />
                 <div>
-                  <h3 className="text-base font-bold text-ink-900">SEBI Mandated Grievance Redressal Mechanism</h3>
+                  <h3 className="text-base font-bold text-ink-900">Dedicated Grievance Redressal Mechanism</h3>
                   <p className="mt-1 text-xs text-ink-600 leading-relaxed">
-                    Under SEBI (Research Analysts) Regulations, 2014, and SEBI Master Circulars, every registered Research Analyst
-                    must resolve complaints within a maximum of <strong>21 calendar days</strong>. All grievances are directly
-                    audited by the Compliance Officer.
+                    Every complaint submitted through this desk is tracked with an official reference code and directly reviewed and audited by our Compliance and Grievance Officer.
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    <a
-                      href="https://scores.sebi.gov.in"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 hover:underline"
-                    >
-                      SEBI SCORES Portal <ExternalLink className="size-3" />
-                    </a>
-                    <a
-                      href="https://smartodr.in"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 hover:underline"
-                    >
-                      SMART ODR Portal <ExternalLink className="size-3" />
-                    </a>
-                  </div>
                 </div>
               </div>
             </Card>

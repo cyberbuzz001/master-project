@@ -36,13 +36,11 @@ function RegulatoryDetails({ info }: { info: RegulatoryInfo }) {
         <Row label="Legal entity" value={info.legal_entity_name} />
         <Row label="Operating structure" value={info.entity_type_label} />
         <Row label="Research status" value={info.research_status} />
-        <Row label="Registration number" value={info.registration_number} />
         <Row label="Registration date" value={info.registration_date} />
         <Row label="Valid until" value={info.registration_valid_until} />
         <Row label="Research Analyst" value={info.ra_name} />
         <Row label="Research Analyst contact" value={info.ra_contact_email} />
         <Row label="Partner Research Analyst" value={info.partner_ra?.name} />
-        <Row label="Partner registration number" value={info.partner_ra?.registration_number} />
         <Row label="Principal officer" value={info.principal_officer} />
         <Row label="Compliance officer" value={info.compliance_officer} />
         <Row label="Grievance officer" value={[info.grievance_officer.name, info.grievance_officer.email, info.grievance_officer.phone].filter(Boolean).join(" · ")} />

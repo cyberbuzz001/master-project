@@ -28,8 +28,8 @@ const PLANS = [
     code: "equity-cash",
     name: "Equity Cash Advisory",
     tagline: "For delivery investors and swing traders in cash equities.",
-    priceQuarterly: "₹14,999",
-    priceAnnual: "₹44,999",
+    priceMonthly: "₹14,999",
+    priceAnnual: "₹1,49,999",
     popular: false,
     badge: "Consistent Momentum",
     icon: LineChart,
@@ -48,8 +48,8 @@ const PLANS = [
     code: "index-options",
     name: "Index Options & Futures",
     tagline: "High-momentum derivative setups for active intraday traders.",
-    priceQuarterly: "₹19,999",
-    priceAnnual: "₹59,999",
+    priceMonthly: "₹49,999",
+    priceAnnual: "₹4,99,999",
     popular: true,
     badge: "Most Popular",
     icon: Zap,
@@ -68,8 +68,8 @@ const PLANS = [
     code: "multi-segment",
     name: "Stock F&O & Commodities",
     tagline: "Comprehensive coverage across high-beta stock options and MCX commodities.",
-    priceQuarterly: "₹29,999",
-    priceAnnual: "₹89,999",
+    priceMonthly: "₹79,999",
+    priceAnnual: "₹7,99,999",
     popular: false,
     badge: "Multi-Asset",
     icon: BarChart3,
@@ -88,7 +88,7 @@ const PLANS = [
     code: "hni-wealth",
     name: "HNI Wealth Generator Strategy",
     tagline: "Bespoke absolute momentum portfolio strategy for high-net-worth investors.",
-    priceQuarterly: "Custom",
+    priceMonthly: "Custom",
     priceAnnual: "Bespoke Retainer",
     popular: false,
     badge: "Exclusive HNI",
@@ -186,13 +186,15 @@ export default function PricingPage() {
                   <div className="mt-6 rounded-xl bg-ink-50/70 p-4 border border-ink-100">
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-2xl font-extrabold text-ink-950 sm:text-3xl">
-                        {plan.priceQuarterly}
+                        {plan.priceMonthly}
                       </span>
-                      <span className="text-xs text-ink-500">/ Quarter</span>
+                      <span className="text-xs text-ink-500">{plan.code === "hni-wealth" ? "Retainer" : "/ Month"}</span>
                     </div>
-                    <p className="mt-1 text-xs text-ink-600">
-                      Annual: <strong className="text-ink-800">{plan.priceAnnual}</strong> (Save ~25%)
-                    </p>
+                    {plan.code !== "hni-wealth" && (
+                      <p className="mt-1 text-xs text-ink-600">
+                        Annual: <strong className="text-ink-800">{plan.priceAnnual}</strong>
+                      </p>
+                    )}
                   </div>
 
                   <p className="mt-4 text-xs font-medium text-ink-500">
@@ -229,9 +231,9 @@ export default function PricingPage() {
         <div className="mt-10 rounded-2xl bg-brand-50/60 p-6 border border-brand-100/80">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h4 className="text-sm font-bold text-brand-950">Statutory GST & Payment Information</h4>
+              <h4 className="text-sm font-bold text-brand-950">Payment & Account Information</h4>
               <p className="mt-1 text-xs text-brand-800 leading-relaxed">
-                All listed fees are exclusive of 18% Goods & Services Tax (GST). Payments must be remitted exclusively to the authorized bank account of Expert Stocks Consultancy. We never accept cash or cash deposits into personal accounts.
+                Payments must be remitted exclusively to the authorized entity accounts of Expert Stocks Consultancy. We never accept cash or cash deposits into personal employee accounts.
               </p>
             </div>
             <LinkButton href="/contact" size="sm" variant="ghost" className="whitespace-nowrap">

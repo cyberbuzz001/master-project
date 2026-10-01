@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const STATS = [
   { value: "25+", label: "Years Experience", description: "In-depth expertise navigating Indian capital markets." },
   { value: "150+", label: "Expert Strategies", description: "Data-driven research reports and actionable insights." },
-  { value: "95%+", label: "Technical Precision", description: "High-probability chart pattern and momentum models." },
+  { value: "1:2.5+", label: "Risk-Reward Discipline", description: "Predefined invalidation levels and momentum models." },
   { value: "24/7", label: "Dedicated Support", description: "Multi-channel assistance for active traders and investors." },
 ];
 
@@ -87,7 +87,7 @@ export default function AboutPage() {
     <>
       {/* Hero Banner */}
       <PageHero
-        eyebrow="SEBI Registered Research Analyst Equity and Derivative Advisory"
+        eyebrow="Institutional Equity and Derivative Market Research"
         title="About Expert Stocks Consultancy"
         lead="A cutting-edge fintech platform dedicated to delivering seamless financial consultation, stock market advisory, portfolio management, and rigorous market research across Indian capital markets."
       />
@@ -219,9 +219,9 @@ export default function AboutPage() {
               Partner with our advisory desk today to identify high-probability setups and manage portfolio risks with confidence.
             </p>
             <div className="mt-6 flex flex-wrap gap-4 text-sm text-ink-800">
-              <a href="tel:+917389487726" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
+              <a href="tel:+919238837041" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
                 <Phone className="size-4 text-teal-600" />
-                +91 73894 87726
+                +91 92388 37041
               </a>
               <a href="mailto:info@expertstocks.in" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
                 <Mail className="size-4 text-teal-600" />

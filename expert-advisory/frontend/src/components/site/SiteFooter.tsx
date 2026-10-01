@@ -13,7 +13,7 @@ export async function SiteFooter() {
   const contact = settings.contact ?? {};
 
   const email = contact.email || "info@expertstocks.in";
-  const phone = contact.phone || "+91 73894 87726";
+  const phone = contact.phone || "+91 92388 37041";
 
   return (
     <footer className="mt-auto border-t border-[#1C2734] bg-[#05070B] text-[#9AA7B5]">
@@ -41,7 +41,7 @@ export async function SiteFooter() {
             </div>
             <div className="flex items-start gap-2 pt-1">
               <MapPin className="size-3.5 text-[#43D9FF] shrink-0 mt-0.5" />
-              <span>Bengaluru, Karnataka, India</span>
+              <span>Navi Mumbai, Maharashtra, India</span>
             </div>
           </div>
         </div>
@@ -91,16 +91,6 @@ export async function SiteFooter() {
                 </Link>
               </li>
             ))}
-            <li>
-              <a
-                href={TRUST_CONFIG.grievanceOfficer.scoresUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#9AA7B5] hover:text-[#43D9FF] transition-colors"
-              >
-                SEBI SCORES Portal ↗
-              </a>
-            </li>
           </ul>
         </div>
       </Container>

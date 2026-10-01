@@ -42,7 +42,7 @@ export function TrustCenterCards() {
       title: "GRIEVANCE REDRESSAL",
       version: TRUST_CONFIG.documents[3].version,
       updated: TRUST_CONFIG.documents[3].lastUpdated,
-      desc: "Formal investor charter, designated compliance officer escalation matrix, and direct integration with SEBI SCORES & SMART ODR portals.",
+      desc: "Formal investor charter, designated compliance officer escalation matrix, and dedicated internal grievance resolution cell.",
       icon: LifeBuoy,
       href: "/legal/grievance-redressal",
       action: "Escalation Matrix",
@@ -130,23 +130,12 @@ export function TrustCenterCards() {
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs font-mono">
-            <a
-              href={TRUST_CONFIG.grievanceOfficer.scoresUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/legal/grievance-redressal"
               className="text-[#43D9FF] hover:underline"
             >
-              SEBI SCORES →
-            </a>
-            <span className="text-[#1C2734]">│</span>
-            <a
-              href={TRUST_CONFIG.grievanceOfficer.smartOdrUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#43D9FF] hover:underline"
-            >
-              SMART ODR →
-            </a>
+              Grievance Matrix →
+            </Link>
           </div>
         </div>
       </Container>

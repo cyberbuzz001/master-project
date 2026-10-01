@@ -19,8 +19,8 @@ export const FALLBACK_SITE_DATA: SiteData = {
     },
     contact: {
       email: "info@expertstocks.in",
-      phone: "+91 73894 87726",
-      whatsapp: "+91 73894 87726",
+      phone: "+91 92388 37041",
+      whatsapp: "+91 92388 37041",
       registered_address: "ITC Park, Belapur Station Complex, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614",
       branch_address: "Techno IT Park, Jabalpur, Madhya Pradesh 482001",
       business_hours: "Monday to Friday: 9:00 AM – 4:00 PM IST",
@@ -42,29 +42,26 @@ export const FALLBACK_TRUST_CENTER: TrustCenterData = {
   settings: FALLBACK_SITE_DATA.settings,
   policies: FALLBACK_POLICIES_LINKS,
   regulatory: {
-    entity_type: "partner_ra",
-    entity_type_label: "Research Advisory Intermediary",
+    entity_type: "research_advisory",
+    entity_type_label: "Research Advisory Desk",
     legal_entity_name: "Expert Stocks Consultancy",
     brand_name: "Expert Stocks Consultancy",
-    research_status: "Active (in association with SEBI Certified Research Analyst)",
-    registration_number: "INH000010892 / Associated RA",
+    research_status: "Active Research Advisory",
+    registration_number: null,
     registration_date: "2024-01-15",
-    registration_valid_until: "Perpetual / Active",
+    registration_valid_until: "Active",
     ra_name: "Research Desk Lead",
     ra_contact_email: "info@expertstocks.in",
     principal_officer: "Principal Officer",
     compliance_officer: "Compliance Officer",
     grievance_officer: {
       name: "Grievance Officer",
-      email: "grievance@expertstocks.in",
-      phone: "+91 73894 87726",
+      email: "support@expertstocks.in",
+      phone: "+91 92388 37041",
     },
-    partner_ra: {
-      name: "Authorized SEBI Registered Research Analyst",
-      registration_number: "INH000010892",
-    },
+    partner_ra: null,
     public_statement:
-      "Expert Stocks Consultancy provides research-driven, risk-aware market intelligence for Indian equities and derivatives in full alignment with SEBI (Research Analysts) Regulations. Every research report is subjected to dual-control analytical review before publication.",
+      "Expert Stocks Consultancy provides research-driven, risk-aware market intelligence for Indian equities and derivatives. Every research report is subjected to dual-control analytical review before publication.",
     version: 1,
     verified_at: "2026-09-16T10:00:00Z",
     review_due_at: "2027-09-15T10:00:00Z",
@@ -83,7 +80,7 @@ export const FALLBACK_POLICY_MAP: Record<string, PolicyData> = {
 
 **Data Controller:** Expert Stocks Consultancy  
 **Registered Office:** ITC Park, Belapur Station Complex, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614  
-**Privacy & Grievance Contact:** info@expertstocks.in | grievance@expertstocks.in  
+**Privacy & Grievance Contact:** info@expertstocks.in | support@expertstocks.in  
 
 ---
 
@@ -108,7 +105,7 @@ Your personal information is processed exclusively for lawful, regulatory, and o
 You retain complete authority over your personal information:
 - **Right to Access & Rectify:** You may inspect your records and update inaccurate personal details at any time through the client portal or by emailing info@expertstocks.in.
 - **Withdrawal of Consent:** You may withdraw marketing or channel-specific communications (such as WhatsApp or promotional calls) by adjusting your account preferences or contacting support.
-- **Data Protection Inquiries:** Escalations regarding data handling may be lodged directly with our Grievance & Data Protection Officer at grievance@expertstocks.in.
+- **Data Protection Inquiries:** Escalations regarding data handling may be lodged directly with our Grievance & Data Protection Officer at support@expertstocks.in.
 
 ---
 
@@ -249,8 +246,7 @@ This Investor Charter outlines the mission, services, rights, and responsibiliti
 ### C. Rights of Investors
 - Right to receive authentic, unbiased research reports that include mandatory disclosures regarding financial interests or affiliations.
 - Right to be informed of all fee schedules, statutory levies, and terms of service in writing prior to subscription.
-- Right to prompt resolution of grievances within 21 calendar days per SEBI redressal frameworks.
-- Right to escalate unresolved complaints to SEBI SCORES portal or online dispute resolution (ODR) mechanisms.
+- Right to prompt resolution of grievances through our dedicated internal redressal framework.
 
 ---
 
@@ -278,7 +274,7 @@ Expert Stocks Consultancy is committed to resolving client complaints and grieva
 ### Level 1: Client Support Desk
 If you encounter an issue or have a concern regarding research delivery, billing, or portal access, please contact our support team first:
 - **Email:** info@expertstocks.in
-- **Telephone / WhatsApp:** +91 73894 87726
+- **Telephone / WhatsApp:** +91 92388 37041
 - **Operating Hours:** Monday to Friday, 9:00 AM to 4:00 PM IST
 - **Turnaround Time:** Within 24 to 48 working hours.
 
@@ -287,17 +283,9 @@ If you encounter an issue or have a concern regarding research delivery, billing
 ### Level 2: Grievance Officer Escalation
 If your concern remains unresolved after 3 business days or the resolution is unsatisfactory, you may escalate directly to our designated Grievance Officer:
 - **Grievance Officer:** Grievance & Compliance Cell
-- **Email:** grievance@expertstocks.in
+- **Email:** support@expertstocks.in
 - **Address:** ITC Park, Belapur Station Complex, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614
-- **Resolution SLA:** All formal grievances are resolved within a statutory maximum of **21 calendar days**.
-
----
-
-### Level 3: SEBI SCORES & Regulatory Escalation
-If your grievance is not resolved to your satisfaction through our internal escalation matrix, you may lodge a complaint with the market regulator:
-- **SEBI SCORES Portal:** [https://scores.sebi.gov.in](https://scores.sebi.gov.in)
-- **Toll-Free SEBI Investor Helpline:** 1800 22 7575 / 1800 266 7575
-- **SEBI ODR Portal:** [https://smartodr.in](https://smartodr.in) for online dispute resolution.`,
+- **Resolution SLA:** All formal grievances are reviewed and resolved through our dedicated internal escalation framework.`,
   },
 
   "cookie-policy": {

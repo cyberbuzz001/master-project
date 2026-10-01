@@ -122,7 +122,7 @@ export default function DisclaimerPage() {
               None of the information on this site constitutes an invitation, solicitation, or offer to buy or sell securities, commodities, or financial instruments of any kind.
             </p>
             <div className="pt-2 flex flex-wrap gap-4 text-xs text-ink-300">
-              <span className="flex items-center gap-1.5"><Phone className="size-3.5 text-teal-400" /> +91 73894 87726</span>
+              <span className="flex items-center gap-1.5"><Phone className="size-3.5 text-teal-400" /> +91 92388 37041</span>
               <span className="flex items-center gap-1.5"><Mail className="size-3.5 text-teal-400" /> info@expertstocks.in</span>
             </div>
           </Card>

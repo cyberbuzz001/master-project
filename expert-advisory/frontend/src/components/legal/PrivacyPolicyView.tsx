@@ -12,7 +12,7 @@ export function PrivacyPolicyView() {
           </div>
           <div className="text-right">
             <div className="text-xs font-mono text-[#667383]">Data Protection & Grievance Contact</div>
-            <div className="text-xs font-mono text-[#43D9FF]">privacy@expertstocks.in │ grievance@expertstocks.in</div>
+            <div className="text-xs font-mono text-[#43D9FF]">privacy@expertstocks.in │ support@expertstocks.in</div>
           </div>
         </div>
         <p className="text-xs font-mono text-[#9AA7B5] leading-relaxed">
@@ -181,7 +181,7 @@ export function PrivacyPolicyView() {
           <div className="rounded-xl border border-[#1C2734] bg-[#101923] p-4">
             <div className="font-semibold text-[#F5F7FA] font-mono mb-1">Data Protection Inquiries</div>
             <p>
-              Escalations regarding data handling may be lodged directly with our Grievance & Data Protection Officer at grievance@expertstocks.in.
+              Escalations regarding data handling may be lodged directly with our Grievance & Data Protection Officer at support@expertstocks.in.
             </p>
           </div>
         </div>

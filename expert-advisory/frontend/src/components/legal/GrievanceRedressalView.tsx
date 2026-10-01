@@ -20,11 +20,11 @@ export function GrievanceRedressalView() {
           Structured Dispute Resolution & Escalation Framework
         </h2>
         <p className="mt-2 text-sm sm:text-base leading-relaxed text-[#9AA7B5]">
-          Expert Stocks Consultancy maintains a structured, time-bound, 3-tier grievance handling mechanism. If you have an inquiry, technical issue, or formal complaint, please follow the escalation path below.
+          Expert Stocks Consultancy maintains a structured, time-bound internal grievance handling mechanism. If you have an inquiry, technical issue, or formal complaint, please follow the escalation path below.
         </p>
 
         {/* Timeline Quick Indicator */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex items-center gap-3 rounded-xl border border-[#1C2734] bg-[#101923] p-3 text-xs font-mono">
             <span className="size-6 rounded bg-[#43D9FF]/10 text-[#43D9FF] flex items-center justify-center font-bold">
               L1
@@ -40,18 +40,8 @@ export function GrievanceRedressalView() {
               L2
             </span>
             <div>
-              <div className="font-semibold text-[#F5F7FA]">Grievance Officer</div>
-              <div className="text-[10px] text-[#667383]">21-Day Statutory Resolution</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl border border-[#1C2734] bg-[#101923] p-3 text-xs font-mono">
-            <span className="size-6 rounded bg-[#22C55E]/10 text-[#22C55E] flex items-center justify-center font-bold">
-              L3
-            </span>
-            <div>
-              <div className="font-semibold text-[#F5F7FA]">SEBI SCORES / ODR</div>
-              <div className="text-[10px] text-[#667383]">Regulatory Escalation</div>
+              <div className="font-semibold text-[#F5F7FA]">Grievance Officer & Compliance Cell</div>
+              <div className="text-[10px] text-[#667383]">Internal Resolution</div>
             </div>
           </div>
         </div>
@@ -106,16 +96,16 @@ export function GrievanceRedressalView() {
                 <span>PHONE & WHATSAPP</span>
               </div>
               <div className="text-sm font-semibold font-mono text-[#F5F7FA]">
-                +91 73894 87726
+                +91 92388 37041
               </div>
             </div>
             <div className="mt-4 flex items-center gap-3 text-xs font-mono">
-              <a href="tel:+917389487726" className="text-[#9AA7B5] hover:text-[#F5F7FA]">
+              <a href="tel:+919238837041" className="text-[#9AA7B5] hover:text-[#F5F7FA]">
                 Direct Call
               </a>
               <span className="text-[#1C2734]">│</span>
               <a
-                href="https://wa.me/917389487726"
+                href="https://wa.me/919238837041"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#22C55E] hover:underline"
@@ -161,8 +151,8 @@ export function GrievanceRedressalView() {
             </div>
             <div>
               <span className="text-[#667383] block">ESCALATION EMAIL:</span>
-              <a href="mailto:grievance@expertstocks.in" className="font-semibold text-[#43D9FF] hover:underline">
-                grievance@expertstocks.in
+              <a href="mailto:support@expertstocks.in" className="font-semibold text-[#43D9FF] hover:underline">
+                support@expertstocks.in
               </a>
             </div>
           </div>
@@ -173,61 +163,6 @@ export function GrievanceRedressalView() {
               ITC Park, Belapur Station Complex, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614
             </span>
           </div>
-        </div>
-      </section>
-
-      {/* LEVEL 3: Regulatory Escalation (SEBI SCORES & Smart ODR) */}
-      <section id="level-3" className="rounded-2xl border-2 border-[#22C55E]/30 bg-[#07140B]/90 p-6 sm:p-8">
-        <div className="flex items-center gap-3 text-xs font-mono text-[#22C55E] mb-3">
-          <span className="size-6 rounded-md bg-[#0B1A10] border border-[#22C55E]/30 flex items-center justify-center font-bold">
-            03
-          </span>
-          <span className="uppercase tracking-widest font-semibold">Tier 3 · External Regulatory Escalation</span>
-        </div>
-
-        <h3 className="text-xl sm:text-2xl font-bold font-display text-[#F5F7FA]">
-          SEBI SCORES & Online Dispute Resolution (ODR)
-        </h3>
-        <p className="mt-2 text-sm leading-relaxed text-[#9AA7B5]">
-          If your grievance is not resolved to your satisfaction through our internal escalation matrix within the statutory period, you may lodge a complaint directly with the Securities and Exchange Board of India (SEBI):
-        </p>
-
-        {/* Regulatory Action Buttons */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <a
-            href="https://scores.sebi.gov.in"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-xl border border-[#22C55E]/30 bg-[#0B1A10] p-4 text-[#F5F7FA] hover:border-[#22C55E] hover:bg-[#0f2416] transition-all group"
-          >
-            <div>
-              <div className="text-xs font-mono text-[#22C55E] font-semibold">SEBI SCORES PORTAL</div>
-              <div className="text-sm font-bold font-display mt-0.5">scores.sebi.gov.in</div>
-              <div className="text-[11px] text-[#9AA7B5] mt-1">SEBI Complaints Redress System</div>
-            </div>
-            <ExternalLink className="size-4 text-[#22C55E] group-hover:translate-x-0.5 transition-transform" />
-          </a>
-
-          <a
-            href="https://smartodr.in"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-xl border border-[#43D9FF]/30 bg-[#0B1720] p-4 text-[#F5F7FA] hover:border-[#43D9FF] hover:bg-[#0e212d] transition-all group"
-          >
-            <div>
-              <div className="text-xs font-mono text-[#43D9FF] font-semibold">SMART ODR PORTAL</div>
-              <div className="text-sm font-bold font-display mt-0.5">smartodr.in</div>
-              <div className="text-[11px] text-[#9AA7B5] mt-1">Online Dispute Resolution Platform</div>
-            </div>
-            <ExternalLink className="size-4 text-[#43D9FF] group-hover:translate-x-0.5 transition-transform" />
-          </a>
-        </div>
-
-        <div className="mt-4 rounded-lg bg-[#0D131C] p-3 text-xs font-mono text-[#9AA7B5] flex items-center gap-2">
-          <AlertCircle className="size-4 text-[#F5B84B] shrink-0" />
-          <span>
-            SEBI Toll-Free Investor Helpline: <strong>1800 22 7575</strong> / <strong>1800 266 7575</strong> (Toll-Free within India).
-          </span>
         </div>
       </section>
     </div>

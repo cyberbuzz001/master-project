@@ -277,7 +277,7 @@ export default function PortalResearchPage() {
                     <span className="font-semibold">Entity:</span> {detail.data.disclosures?.entity?.legal_name ?? "Expert Stocks Consultancy"}
                   </div>
                   <div>
-                    <span className="font-semibold">SEBI Reg #:</span> {detail.data.disclosures?.entity?.registration_number ?? "INH000012345"}
+                    <span className="font-semibold">Desk:</span> Research Advisory Services
                   </div>
                   <div>
                     <span className="font-semibold">Material Conflict:</span> {detail.data.disclosures?.analyst_declarations?.material_conflict_of_interest ? "Declared" : "Nil"}

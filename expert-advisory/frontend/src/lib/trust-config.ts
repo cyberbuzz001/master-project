@@ -12,8 +12,7 @@ export interface RegulatoryConfig {
   brandName: string;
   tagline: string;
   registrationStatus: "VERIFICATION_PENDING" | "REGISTERED" | "DISCLOSED";
-  registrationNumber: string | null; // Set to verified SEBI registration when approved
-  cinNumber: string | null;
+  registrationNumber: string | null;
   complianceOfficer: {
     name: string;
     designation: string;
@@ -27,8 +26,6 @@ export interface RegulatoryConfig {
     email: string;
     phone: string;
     escalationTimeline: string;
-    scoresUrl: string;
-    smartOdrUrl: string;
   };
   statutoryNotice: string;
   advisoryDisclaimer: string;
@@ -49,23 +46,20 @@ export const TRUST_CONFIG: RegulatoryConfig = {
   brandName: "Expert Stocks",
   tagline: "Market Intelligence, Engineered.",
   registrationStatus: "DISCLOSED",
-  registrationNumber: null, // Left null until official registration certificate is issued
-  cinNumber: null,
+  registrationNumber: null,
   complianceOfficer: {
     name: "Designated Compliance Desk",
     designation: "Head of Regulatory Oversight & Quality",
-    email: "compliance@expertstocks.in",
-    phone: "+91 80 4718 2000",
-    address: "Expert Stocks Consultancy, Financial District, Bengaluru, Karnataka 560103, India",
+    email: "support@expertstocks.in",
+    phone: "+91 92388 37041",
+    address: "Expert Stocks Consultancy, ITC Park, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614",
   },
   grievanceOfficer: {
     name: "Investor Grievance Redressal Cell",
     designation: "Principal Grievance Officer",
-    email: "grievance@expertstocks.in",
-    phone: "+91 80 4718 2001",
-    escalationTimeline: "Formal written acknowledgment within 24 hours; resolution within 21 calendar days.",
-    scoresUrl: "https://scores.sebi.gov.in",
-    smartOdrUrl: "https://smartodr.in",
+    email: "support@expertstocks.in",
+    phone: "+91 92388 37041",
+    escalationTimeline: "Formal written acknowledgment within 24 hours through our dedicated internal grievance cell.",
   },
   statutoryNotice:
     "Investments in securities market are subject to market risks. Read all related documents carefully before investing.",
