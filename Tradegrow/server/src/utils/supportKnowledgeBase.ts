@@ -15,7 +15,7 @@
 export const SUPPORT_KNOWLEDGE_BASE = `
 About TradeGrow:
 - TradeGrow (https://tradegrowx.in) is a zero-cost Indian trading platform — ₹0 brokerage and ₹0 platform tax across equity delivery, intraday, and F&O.
-- Support team contact: support@tradegrowx.in, active Monday to Friday, 9:00 AM to 6:00 PM IST.
+- Support team contact: info@tradegrowx.in | Phone & WhatsApp: +91 95896 15649, active Monday to Friday, 9:00 AM to 6:00 PM IST.
 - Customers log in at tradegrowx.in with their registered credentials.
 
 Charges — TradeGrow is a zero-cost platform:

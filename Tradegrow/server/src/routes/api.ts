@@ -2286,14 +2286,15 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
         settlementDate,
         settlementNo: `2026${targetDateStr.replace(/-/g, '').slice(4)}`,
         broker: {
-          name: 'TradeGrow Securities Private Limited',
+          name: 'Trade Grow (LLP)',
           tagline: 'Zero-Brokerage Intelligent Derivatives Trading',
           sebiRegNo: 'INZ000293431',
-          cin: 'U67120MH2021PTC368291',
           nseMemberCode: '90234',
           bseMemberCode: '6743',
+          mcxMemberCode: '56820',
           address: 'TradeGrow Towers, Bandra-Kurla Complex (BKC), Bandra East, Mumbai - 400051',
-          email: 'support@tradegrowx.in',
+          email: 'info@tradegrowx.in',
+          phone: '+91 95896 15649',
           website: 'https://tradegrowx.in',
         },
         client: {

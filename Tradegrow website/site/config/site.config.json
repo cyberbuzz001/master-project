@@ -108,48 +108,50 @@
 
   "officers": {
     "compliance": {
-      "name": null,
+      "name": "Compliance Cell",
       "designation": "Compliance Officer",
-      "email": null,
-      "phone": null
+      "email": "info@tradegrowx.in",
+      "phone": "+91 95896 15649"
     },
     "grievance": {
-      "name": null,
+      "name": "Grievance Desk",
       "designation": "Grievance Redressal Officer",
-      "email": null,
-      "phone": null
+      "email": "info@tradegrowx.in",
+      "phone": "+91 95896 15649"
     },
     "principal": {
-      "name": null,
+      "name": "Management",
       "designation": "Principal Officer / Director",
-      "email": null,
-      "phone": null
+      "email": "info@tradegrowx.in",
+      "phone": "+91 95896 15649"
     }
   },
 
   "support": {
-    "phone": null,
-    "phoneDisplay": null,
-    "email": null,
+    "phone": "+91 95896 15649",
+    "phoneDisplay": "+91 95896 15649",
+    "email": "info@tradegrowx.in",
     "whatsapp": {
-      "enabled": false,
-      "number": null,
+      "enabled": true,
+      "number": "+919589615649",
       "prefilledMessage": "Hi Trade Grow, I would like to know more about your platform."
     },
-    "hours": null,
-    "workingDays": null,
+    "hours": "9:00 AM – 6:00 PM IST",
+    "workingDays": "Monday to Friday",
     "escalation": [
-      { "level": "Level 1", "channel": "Customer Support", "contact": null, "tat": null },
-      { "level": "Level 2", "channel": "Head of Customer Service", "contact": null, "tat": null },
-      { "level": "Level 3", "channel": "Compliance Officer", "contact": null, "tat": null },
-      { "level": "Level 4", "channel": "Exchange / SEBI SCORES", "contact": "https://scores.sebi.gov.in", "tat": null }
+      { "level": "Level 1", "channel": "Customer Support", "contact": "info@tradegrowx.in | +91 95896 15649", "tat": "24 hours" },
+      { "level": "Level 2", "channel": "Head of Customer Service", "contact": "info@tradegrowx.in", "tat": "48 hours" },
+      { "level": "Level 3", "channel": "Compliance Desk", "contact": "info@tradegrowx.in", "tat": "3 business days" },
+      { "level": "Level 4", "channel": "Exchange / SEBI SCORES", "contact": "https://scores.sebi.gov.in", "tat": "As per regulatory norms" }
     ]
   },
 
   "app": {
+    "type": "Web Application (PWA)",
+    "description": "Progressive Web App with one-tap Add to Home Screen shortcut on mobile & desktop",
     "androidUrl": null,
     "iosUrl": null,
-    "webUrl": "https://tradegrowx.in/profile/account",
+    "webUrl": "https://tradegrowx.in",
     "signupUrl": "https://tradegrowx.in/register",
     "packageName": null,
     "screenshotsAreIllustrative": true,
