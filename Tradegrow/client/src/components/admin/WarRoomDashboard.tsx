@@ -19,7 +19,7 @@ interface DashboardState {
   referralStats: any;
 }
 
-type TabId = 'command' | 'pacing' | 'creators' | 'content' | 'whatsapp';
+type TabId = 'command' | 'leads' | 'pacing' | 'creators' | 'content' | 'whatsapp';
 
 /* ─────────────────── Utility Helpers ─────────────────── */
 const paisa = (p: number) => `₹${(p / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
@@ -101,6 +101,26 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
   const [contentFilter, setContentFilter] = useState('');
   const [contentCategory, setContentCategory] = useState('');
 
+  // Telecaller Desk State
+  const [leadsList, setLeadsList] = useState<any[]>([]);
+  const [agentsList, setAgentsList] = useState<any[]>([]);
+  const [leadsPagination, setLeadsPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 1 });
+  const [leadStageFilter, setLeadStageFilter] = useState('ALL');
+  const [leadAgentFilter, setLeadAgentFilter] = useState('ALL');
+  const [leadSearch, setLeadSearch] = useState('');
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
+  // Disposition Modal State
+  const [selectedLeadForStage, setSelectedLeadForStage] = useState<any | null>(null);
+  const [dispositionStage, setDispositionStage] = useState('CONTACTED');
+  const [dispositionNotes, setDispositionNotes] = useState('');
+  const [savingDisposition, setSavingDisposition] = useState(false);
+
+  // Reassignment Modal State
+  const [selectedLeadForAssign, setSelectedLeadForAssign] = useState<any | null>(null);
+  const [targetAgentId, setTargetAgentId] = useState('');
+  const [savingAssign, setSavingAssign] = useState(false);
+
   // WhatsApp Sender State
   const [waPhone, setWaPhone] = useState('');
   const [waName, setWaName] = useState('');
@@ -111,6 +131,91 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
   const [waResult, setWaResult] = useState<{ success?: boolean; message?: string } | null>(null);
 
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }), [token]);
+
+  /* ───── Leads & Telecaller Fetchers ───── */
+  const fetchLeads = useCallback(async (page = 1) => {
+    setLeadsLoading(true);
+    try {
+      const q = new URLSearchParams({
+        page: String(page),
+        limit: '25',
+        stage: leadStageFilter,
+        assignedAgentId: leadAgentFilter,
+        search: leadSearch.trim()
+      });
+      const res = await fetch(`/api/v1/warroom/leads?${q.toString()}`, { headers });
+      const d = await res.json();
+      if (d.success && d.data) {
+        setLeadsList(d.data.leads || []);
+        setLeadsPagination(d.data.pagination || { page: 1, limit: 25, total: 0, totalPages: 1 });
+      }
+    } catch (e) {
+      console.error('[WarRoom] Fetch leads error:', e);
+    } finally {
+      setLeadsLoading(false);
+    }
+  }, [headers, leadStageFilter, leadAgentFilter, leadSearch]);
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/warroom/agents', { headers });
+      const d = await res.json();
+      if (d.success && d.data) {
+        setAgentsList(d.data || []);
+      }
+    } catch (e) {
+      console.error('[WarRoom] Fetch agents error:', e);
+    }
+  }, [headers]);
+
+  const handleUpdateStage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLeadForStage) return;
+    setSavingDisposition(true);
+    try {
+      const res = await fetch(`/api/v1/warroom/leads/${selectedLeadForStage.id}/stage`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          stage: dispositionStage,
+          notes: dispositionNotes.trim() || undefined
+        })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setSelectedLeadForStage(null);
+        setDispositionNotes('');
+        await fetchLeads(leadsPagination.page);
+      }
+    } catch (err) {
+      console.error('[WarRoom] Update stage error:', err);
+    } finally {
+      setSavingDisposition(false);
+    }
+  };
+
+  const handleAssignAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLeadForAssign || !targetAgentId) return;
+    setSavingAssign(true);
+    try {
+      const res = await fetch(`/api/v1/warroom/leads/${selectedLeadForAssign.id}/assign`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ agentId: targetAgentId })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setSelectedLeadForAssign(null);
+        setTargetAgentId('');
+        await fetchLeads(leadsPagination.page);
+      }
+    } catch (err) {
+      console.error('[WarRoom] Assign agent error:', err);
+    } finally {
+      setSavingAssign(false);
+    }
+  };
 
   /* ───── Parallel Data Fetch ───── */
   const fetchAll = useCallback(async () => {
@@ -137,13 +242,22 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
       if (waStatR.status === 'fulfilled' && waStatR.value.success) {
         setWaStatus(waStatR.value.data);
       }
+
+      await Promise.allSettled([fetchLeads(1), fetchAgents()]);
     } catch (e) {
       console.error('[WarRoom] Fetch error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [headers]);
+  }, [headers, fetchLeads, fetchAgents]);
+
+  useEffect(() => {
+    if (activeTab === 'leads') {
+      fetchLeads(1);
+      fetchAgents();
+    }
+  }, [activeTab, fetchLeads, fetchAgents]);
 
   const handleSendWa = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,6 +358,7 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
   /* ───── Tabs ───── */
   const tabs: { id: TabId; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'command', label: 'Command Center', icon: <Target className="w-3.5 h-3.5" /> },
+    { id: 'leads', label: 'Telecaller Desk', icon: <PhoneCall className="w-3.5 h-3.5 text-blue-400" />, badge: leadsPagination.total || state.data?.funnelSummary?.totalLeads },
     { id: 'pacing', label: 'Daily Pacing', icon: <Calendar className="w-3.5 h-3.5" />, badge: state.pacing.length },
     { id: 'creators', label: 'Creators & Affiliates', icon: <Instagram className="w-3.5 h-3.5" />, badge: state.creators.length },
     { id: 'content', label: 'Content Scripts', icon: <Megaphone className="w-3.5 h-3.5" />, badge: state.contentIdeas.length },
@@ -496,6 +611,375 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ═══════════ TAB: TELECALLER DESK ═══════════ */}
+      {activeTab === 'leads' && (
+        <div className="space-y-4">
+          {/* Top Controls Bar */}
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-[var(--text-tertiary)]" />
+              <input
+                type="text"
+                placeholder="Search by phone (+91...), name, or lead code (LD-...)"
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') fetchLeads(1); }}
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+              />
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                <Filter className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase">Stage:</span>
+              </div>
+              <select
+                value={leadStageFilter}
+                onChange={(e) => setLeadStageFilter(e.target.value)}
+                className="px-2.5 py-1.5 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none"
+              >
+                <option value="ALL">All Stages</option>
+                <option value="NEW">New (Uncontacted)</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="ENGAGED">Engaged</option>
+                <option value="DEMAT_OPENED">Demat Opened</option>
+                <option value="KYC_COMPLETED">KYC Completed</option>
+                <option value="ACTIVATED">Activated</option>
+                <option value="LOST">Lost / Not Interested</option>
+              </select>
+
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] ml-2">
+                <Users className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase">Agent:</span>
+              </div>
+              <select
+                value={leadAgentFilter}
+                onChange={(e) => setLeadAgentFilter(e.target.value)}
+                className="px-2.5 py-1.5 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none"
+              >
+                <option value="ALL">All Agents</option>
+                {agentsList.map(a => (
+                  <option key={a.id} value={a.id}>{a.username || a.email} ({a.today_leads_count || 0} today)</option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => fetchLeads(1)}
+                disabled={leadsLoading}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-black hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer ml-auto"
+              >
+                <RefreshCw className={cls("w-3 h-3", leadsLoading ? "animate-spin" : "")} />
+                Filter
+              </button>
+            </div>
+          </div>
+
+          {/* Leads Table */}
+          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-extrabold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                <PhoneCall className="w-3.5 h-3.5 text-blue-400" />
+                Inbound Lead Queue ({leadsPagination.total} Total)
+              </h3>
+              <span className="text-[11px] text-[var(--text-tertiary)]">
+                Showing {leadsList.length} of {leadsPagination.total} leads (Page {leadsPagination.page} of {leadsPagination.totalPages})
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] text-left">
+                <thead>
+                  <tr className="border-b border-[var(--border-color)] text-[var(--text-tertiary)] uppercase font-bold tracking-wider">
+                    <th className="pb-2.5">Lead Code</th>
+                    <th className="pb-2.5">Contact Details</th>
+                    <th className="pb-2.5 text-center">Score</th>
+                    <th className="pb-2.5 text-center">Stage</th>
+                    <th className="pb-2.5">Assigned Agent</th>
+                    <th className="pb-2.5">Source / UTM</th>
+                    <th className="pb-2.5">Captured</th>
+                    <th className="pb-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-light)]">
+                  {leadsLoading ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-[var(--text-tertiary)]">
+                        <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin text-[var(--primary)]" />
+                        <p className="font-medium">Fetching inbound leads from CRM...</p>
+                      </td>
+                    </tr>
+                  ) : leadsList.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-[var(--text-tertiary)]">
+                        <PhoneCall className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="font-medium">No leads match the selected filters</p>
+                        <p className="text-[10px] mt-1">Incoming leads from the trust portal appear here in real time</p>
+                      </td>
+                    </tr>
+                  ) : leadsList.map((lead: any) => {
+                    const score = lead.score || 0;
+                    const stageColor =
+                      lead.stage === 'NEW' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                      lead.stage === 'CONTACTED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                      lead.stage === 'ENGAGED' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
+                      lead.stage === 'DEMAT_OPENED' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
+                      lead.stage === 'KYC_COMPLETED' || lead.stage === 'ACTIVATED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                      'bg-zinc-500/20 text-zinc-400 border border-zinc-500/30';
+
+                    return (
+                      <tr key={lead.id} className="hover:bg-[var(--bg-surface-elevated)] transition-colors">
+                        <td className="py-3 font-mono font-bold text-[var(--text-main)]">
+                          {lead.lead_code}
+                        </td>
+                        <td className="py-3">
+                          <div className="font-bold text-[var(--text-main)]">{lead.full_name || 'Anonymous Trader'}</div>
+                          <div className="font-mono text-[var(--text-muted)] text-[10px] flex items-center gap-1.5 mt-0.5">
+                            <span>{lead.phone_e164}</span>
+                            <a href={`tel:${lead.phone_e164}`} className="text-blue-400 hover:underline" title="Call">📞</a>
+                            <a
+                              href={`https://wa.me/${lead.phone_e164.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-emerald-400 hover:underline"
+                              title="WhatsApp"
+                            >
+                              💬
+                            </a>
+                          </div>
+                          {lead.email && <div className="text-[10px] text-[var(--text-tertiary)]">{lead.email}</div>}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className={cls(
+                            "px-2 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1",
+                            score >= 30 ? "bg-emerald-500/20 text-emerald-400" :
+                            score >= 20 ? "bg-cyan-500/20 text-cyan-400" :
+                            "bg-zinc-500/20 text-zinc-400"
+                          )}>
+                            {score >= 30 && <Flame className="w-2.5 h-2.5" />}
+                            {score}
+                          </span>
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className={cls("px-2 py-0.5 rounded text-[10px] font-bold uppercase", stageColor)}>
+                            {lead.stage}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <div className="font-medium text-[var(--text-main)]">
+                            {lead.assigned_agent_name || 'Round-Robin Pool'}
+                          </div>
+                          <button
+                            onClick={() => { setSelectedLeadForAssign(lead); setTargetAgentId(lead.assigned_agent_id || ''); }}
+                            className="text-[9px] text-[var(--primary)] hover:underline mt-0.5 cursor-pointer block"
+                          >
+                            Reassign Agent &rarr;
+                          </button>
+                        </td>
+                        <td className="py-3">
+                          <div className="text-[var(--text-muted)] font-medium text-[10px]">{lead.source}</div>
+                          {lead.utm_campaign && (
+                            <div className="text-[9px] text-[var(--text-tertiary)] font-mono">
+                              cmp:{lead.utm_campaign}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 text-[var(--text-tertiary)] tabular-nums">
+                          {lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                        </td>
+                        <td className="py-3 text-right space-x-1.5 whitespace-nowrap">
+                          <button
+                            onClick={() => { setSelectedLeadForStage(lead); setDispositionStage(lead.stage || 'CONTACTED'); }}
+                            className="px-2.5 py-1 text-[10px] font-bold rounded border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-main)] hover:border-[var(--primary)] transition-all cursor-pointer"
+                          >
+                            Update Stage
+                          </button>
+                          <button
+                            onClick={() => {
+                              setWaPhone(lead.phone_e164.replace(/\D/g, '').slice(-10));
+                              setWaName(lead.full_name || '');
+                              setWaSequence('LEAD_WELCOME');
+                              setActiveTab('whatsapp');
+                            }}
+                            className="px-2 py-1 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all cursor-pointer"
+                            title="Open WhatsApp composer"
+                          >
+                            WhatsApp Nudge
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {leadsPagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--border-light)] text-xs text-[var(--text-muted)]">
+                <span>Page {leadsPagination.page} of {leadsPagination.totalPages}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    disabled={leadsPagination.page <= 1 || leadsLoading}
+                    onClick={() => fetchLeads(leadsPagination.page - 1)}
+                    className="px-3 py-1 rounded border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] disabled:opacity-40 cursor-pointer"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    disabled={leadsPagination.page >= leadsPagination.totalPages || leadsLoading}
+                    onClick={() => fetchLeads(leadsPagination.page + 1)}
+                    className="px-3 py-1 rounded border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] disabled:opacity-40 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Disposition Modal */}
+          {selectedLeadForStage && (
+            <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[var(--text-main)] flex items-center gap-2">
+                    <PhoneCall className="w-4 h-4 text-blue-400" />
+                    Update Lead Funnel Stage
+                  </h3>
+                  <button
+                    onClick={() => setSelectedLeadForStage(null)}
+                    className="text-[var(--text-tertiary)] hover:text-[var(--text-main)] text-sm cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-light)] text-xs space-y-1">
+                  <div className="font-bold text-[var(--text-main)]">{selectedLeadForStage.full_name || 'Anonymous Trader'} ({selectedLeadForStage.lead_code})</div>
+                  <div className="font-mono text-[var(--text-muted)]">{selectedLeadForStage.phone_e164}</div>
+                  <div className="text-[10px] text-[var(--text-tertiary)]">Current Stage: <span className="font-bold text-[var(--primary)]">{selectedLeadForStage.stage}</span></div>
+                </div>
+
+                <form onSubmit={handleUpdateStage} className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[var(--text-muted)] uppercase mb-1">
+                      New Funnel Stage <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={dispositionStage}
+                      onChange={(e) => setDispositionStage(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    >
+                      <option value="NEW">NEW — Uncontacted</option>
+                      <option value="CONTACTED">CONTACTED — Spoke to Client</option>
+                      <option value="ENGAGED">ENGAGED — High Intent / Platform Demo Given</option>
+                      <option value="DEMAT_OPENED">DEMAT_OPENED — DigiLocker KYC In Progress</option>
+                      <option value="KYC_COMPLETED">KYC_COMPLETED — Documents Verified</option>
+                      <option value="ACTIVATED">ACTIVATED — First Trade Completed</option>
+                      <option value="LOST">LOST — Disqualified / Unresponsive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[var(--text-muted)] uppercase mb-1">
+                      Call Disposition Notes
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g. Client requested callback at 6 PM; interested in NIFTY options zero-brokerage plan..."
+                      value={dispositionNotes}
+                      onChange={(e) => setDispositionNotes(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLeadForStage(null)}
+                      className="px-3 py-1.5 text-xs rounded-lg border border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingDisposition}
+                      className="px-4 py-1.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-black hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                    >
+                      {savingDisposition ? 'Saving...' : 'Save Stage'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Reassign Modal */}
+          {selectedLeadForAssign && (
+            <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[var(--text-main)] flex items-center gap-2">
+                    <Users className="w-4 h-4 text-emerald-400" />
+                    Reassign Telecaller Agent
+                  </h3>
+                  <button
+                    onClick={() => setSelectedLeadForAssign(null)}
+                    className="text-[var(--text-tertiary)] hover:text-[var(--text-main)] text-sm cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="text-xs text-[var(--text-muted)]">
+                  Reassigning <span className="font-bold text-[var(--text-main)]">{selectedLeadForAssign.lead_code}</span> ({selectedLeadForAssign.phone_e164})
+                </div>
+
+                <form onSubmit={handleAssignAgent} className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[var(--text-muted)] uppercase mb-1">
+                      Select Agent <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={targetAgentId}
+                      onChange={(e) => setTargetAgentId(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-elevated)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    >
+                      <option value="">-- Choose Agent --</option>
+                      {agentsList.map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.username || a.email} ({a.today_leads_count || 0} today / {a.active_leads_count || 0} total)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLeadForAssign(null)}
+                      className="px-3 py-1.5 text-xs rounded-lg border border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingAssign || !targetAgentId}
+                      className="px-4 py-1.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-black hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                    >
+                      {savingAssign ? 'Assigning...' : 'Assign Agent'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
