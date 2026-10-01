@@ -317,43 +317,43 @@ export function HeroFinancialCore() {
   }, []);
 
   return (
-    <div className="relative flex size-full items-center justify-center">
+    <div className="relative flex w-full items-center justify-center">
       {/* Three.js Canvas Container */}
       <div
         ref={mountRef}
-        className="size-[340px] sm:size-[460px] lg:size-[540px] flex items-center justify-center pointer-events-none select-none"
+        className="size-[280px] sm:size-[360px] md:size-[420px] lg:size-[460px] xl:size-[500px] flex items-center justify-center pointer-events-none select-none"
         aria-hidden="true"
       />
 
       {/* Central Holographic Market HUD Card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="relative rounded-2xl border border-[#1C2734] bg-[#0D131C]/90 p-5 sm:p-6 backdrop-blur-xl shadow-[0_0_50px_rgba(67,217,255,0.12)] text-center transition-all duration-700 min-w-[200px] sm:min-w-[240px] pointer-events-auto">
+        <div className="relative rounded-2xl border border-[#1C2734] bg-[#0D131C]/92 p-4 sm:p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(67,217,255,0.12)] text-center transition-all duration-700 min-w-[190px] sm:min-w-[220px] pointer-events-auto">
           {/* Subtle top indicator bar */}
-          <div className="flex items-center justify-center gap-2 mb-2 text-[11px] font-mono tracking-widest text-[#9AA7B5] uppercase">
+          <div className="flex items-center justify-center gap-1.5 mb-1.5 text-[10px] sm:text-[11px] font-mono tracking-widest text-[#9AA7B5] uppercase">
             <span className="size-1.5 rounded-full bg-[#43D9FF] animate-ping" />
             <Activity className="size-3 text-[#43D9FF]" />
             <span>Market Core</span>
           </div>
 
-          <div className="text-sm font-semibold tracking-wider text-[#F5F7FA] font-display">
+          <div className="text-xs sm:text-sm font-semibold tracking-wider text-[#F5F7FA] font-display">
             {currentData.indexName}
           </div>
 
-          <div className="mt-1 text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[#F5F7FA]">
+          <div className="mt-0.5 text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[#F5F7FA]">
             {currentData.price}
           </div>
 
-          <div className="mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-mono font-medium text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20">
+          <div className="mt-1 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-mono font-medium text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20">
             <ArrowUpRight className="size-3" />
             {currentData.change}
           </div>
 
           {/* Surrounding Floating Technical Orbitals */}
-          <div className="mt-4 grid grid-cols-2 gap-2 pt-3 border-t border-[#1C2734]/80 text-left">
+          <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2 pt-2.5 border-t border-[#1C2734]/80 text-left">
             {currentData.metrics.map((m) => (
               <div key={m.label} className="bg-[#111923]/80 rounded p-1.5 border border-[#1C2734]">
                 <div className="text-[9px] font-mono text-[#667383]">{m.label}</div>
-                <div className="text-[11px] font-mono font-semibold text-[#F5F7FA]">
+                <div className="text-[10px] sm:text-[11px] font-mono font-semibold text-[#F5F7FA]">
                   {m.value}
                 </div>
               </div>

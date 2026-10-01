@@ -101,7 +101,7 @@ export function MarketSnapshot() {
   }, [markets]);
 
   return (
-    <section id="markets" className="relative py-12 lg:py-16 border-b border-[#1C2734] bg-[#080D14]/60">
+    <section id="markets" className="relative py-10 lg:py-14 border-b border-[#1C2734] bg-[#080D14]/60">
       <Container>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
