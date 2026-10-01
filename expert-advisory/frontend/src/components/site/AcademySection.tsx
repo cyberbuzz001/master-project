@@ -65,7 +65,7 @@ export function AcademySection() {
   ];
 
   return (
-    <section id="academy" className="relative py-24 lg:py-32 bg-[#080D14] border-b border-[#1C2734]">
+    <section id="academy" className="relative py-16 lg:py-24 bg-[#080D14] border-b border-[#1C2734]">
       <Container>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">

@@ -66,7 +66,7 @@ export function ServicesGrid() {
   ];
 
   return (
-    <section id="services" className="relative py-24 lg:py-32 bg-[#080D14] border-b border-[#1C2734]">
+    <section id="services" className="relative py-16 lg:py-24 bg-[#080D14] border-b border-[#1C2734]">
       <Container>
         {/* Header */}
         <div className="max-w-3xl mb-16">

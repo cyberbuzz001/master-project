@@ -226,7 +226,7 @@ export function SimulatedResearchTerminal() {
   const current = INSTRUMENTS[activeSymbol] || INSTRUMENTS["NIFTY"];
 
   return (
-    <section id="terminal" className="relative py-24 lg:py-32 bg-[#080D14] border-b border-[#1C2734]">
+    <section id="terminal" className="relative py-16 lg:py-24 bg-[#080D14] border-b border-[#1C2734]">
       <Container>
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">

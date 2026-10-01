@@ -63,7 +63,7 @@ export function FinancialToolsHub() {
   }[riskProfile];
 
   return (
-    <section id="tools" className="relative py-24 lg:py-32 bg-[#05070B] border-b border-[#1C2734]">
+    <section id="tools" className="relative py-16 lg:py-24 bg-[#05070B] border-b border-[#1C2734]">
       <Container>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">

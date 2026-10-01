@@ -5,7 +5,7 @@ import { Container, LinkButton } from "../ui";
 
 export function FinalCtaSection() {
   return (
-    <section className="relative py-24 lg:py-32 bg-[#05070B] border-b border-[#1C2734] overflow-hidden">
+    <section className="relative py-16 lg:py-24 bg-[#05070B] border-b border-[#1C2734] overflow-hidden">
       {/* Background Subtle Tech Radial Glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] rounded-full bg-[#43D9FF]/5 blur-[150px]" />
 

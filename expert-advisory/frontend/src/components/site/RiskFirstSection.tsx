@@ -50,7 +50,7 @@ export function RiskFirstSection() {
   ];
 
   return (
-    <section className="relative py-24 lg:py-32 bg-[#080D14] border-b border-[#1C2734]">
+    <section className="relative py-16 lg:py-24 bg-[#080D14] border-b border-[#1C2734]">
       {/* Restrained Amber Ambient Glow */}
       <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 size-96 rounded-full bg-[#F5B84B]/5 blur-[120px]" />
 
