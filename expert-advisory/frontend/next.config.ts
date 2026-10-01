@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
+const BACKEND_URL = process.env.BACKEND_URL || (isDev ? "http://127.0.0.1:8000" : undefined);
 const isDev = process.env.NODE_ENV !== "production";
 
 const csp = [
@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
    * session cookies stay first-party. In production Nginx performs the same routing.
    */
   async rewrites() {
+    if (!BACKEND_URL) {
+      return [];
+    }
     return {
       beforeFiles: [],
       afterFiles: [],
