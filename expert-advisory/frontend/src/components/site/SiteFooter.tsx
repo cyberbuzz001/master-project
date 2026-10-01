@@ -1,91 +1,138 @@
 import Link from "next/link";
 import { getSiteData } from "@/lib/api-server";
-import { FOOTER_NAV, LEGAL_PAGES, MARKET_RISK_NOTE } from "@/lib/site";
+import { FOOTER_NAV, LEGAL_PAGES, MARKET_RISK_NOTE, SITE } from "@/lib/site";
 import { Container } from "../ui";
 import { CookieSettingsLink } from "./CookieConsent";
 import { Logo } from "./Logo";
+import { TRUST_CONFIG } from "@/lib/trust-config";
+import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
 
 export async function SiteFooter() {
   const site = await getSiteData();
   const settings = site.ok ? site.data.settings : {};
   const contact = settings.contact ?? {};
-  const legalName = settings.company?.legal_entity_name;
+
+  const email = contact.email || "info@expertstocks.in";
+  const phone = contact.phone || "+91 73894 87726";
 
   return (
-    <footer className="mt-auto border-t border-ink-200 bg-white">
-      <Container className="grid gap-10 py-14 lg:grid-cols-[1.3fr_2fr]">
+    <footer className="mt-auto border-t border-[#1C2734] bg-[#05070B] text-[#9AA7B5]">
+      {/* Upper 4-Column Layout */}
+      <Container className="grid gap-10 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        {/* Column 1: Brand & Positioning */}
         <div>
           <Logo />
-          <p className="mt-4 max-w-sm text-sm leading-6 text-ink-600">
-            Research-driven, risk-aware market intelligence for Indian markets — with a published methodology and human review before
-            publication.
+          <p className="mt-4 max-w-sm text-xs sm:text-sm leading-relaxed text-[#9AA7B5]">
+            {SITE.description}
           </p>
-          <dl className="mt-5 space-y-1.5 text-sm text-ink-700">
-            {contact.email && (
-              <div className="flex gap-2">
-                <dt className="sr-only">Email</dt>
-                <dd>
-                  <a className="hover:text-brand-700" href={`mailto:${contact.email}`}>
-                    {contact.email}
-                  </a>
-                </dd>
-              </div>
-            )}
-            {contact.phone && (
-              <div className="flex gap-2">
-                <dt className="sr-only">Phone</dt>
-                <dd>
-                  <a className="hover:text-brand-700" href={`tel:${contact.phone.replace(/\s+/g, "")}`}>
-                    {contact.phone}
-                  </a>
-                </dd>
-              </div>
-            )}
-            {contact.business_hours && (
-              <div className="flex gap-2">
-                <dt className="sr-only">Hours</dt>
-                <dd className="text-ink-500">{contact.business_hours}</dd>
-              </div>
-            )}
-          </dl>
+
+          <div className="mt-6 space-y-2.5 text-xs font-mono text-[#667383]">
+            <div className="flex items-center gap-2">
+              <Mail className="size-3.5 text-[#43D9FF]" />
+              <a href={`mailto:${email}`} className="text-[#9AA7B5] hover:text-[#F5F7FA]">
+                {email}
+              </a>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="size-3.5 text-[#43D9FF]" />
+              <a href={`tel:${phone.replace(/\s+/g, "")}`} className="text-[#9AA7B5] hover:text-[#F5F7FA]">
+                {phone}
+              </a>
+            </div>
+            <div className="flex items-start gap-2 pt-1">
+              <MapPin className="size-3.5 text-[#43D9FF] shrink-0 mt-0.5" />
+              <span>Bengaluru, Karnataka, India</span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-          {Object.entries(FOOTER_NAV).map(([heading, links]) => (
-            <div key={heading}>
-              <p className="text-sm font-semibold text-ink-900">{heading}</p>
-              <ul className="mt-3 space-y-2.5">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-ink-600 hover:text-ink-950">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        {/* Column 2: Company */}
+        <div>
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#F5F7FA]">
+            Company
+          </p>
+          <ul className="mt-4 space-y-2.5 text-xs">
+            {FOOTER_NAV.Company.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-[#9AA7B5] hover:text-[#43D9FF] transition-colors">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Column 3: Research & Markets */}
+        <div>
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#F5F7FA]">
+            Research & Markets
+          </p>
+          <ul className="mt-4 space-y-2.5 text-xs">
+            {FOOTER_NAV.Research.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-[#9AA7B5] hover:text-[#43D9FF] transition-colors">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Column 4: Trust & Compliance */}
+        <div>
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#F5F7FA]">
+            Trust & Compliance
+          </p>
+          <ul className="mt-4 space-y-2.5 text-xs">
+            {FOOTER_NAV.Trust.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-[#9AA7B5] hover:text-[#43D9FF] transition-colors">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <a
+                href={TRUST_CONFIG.grievanceOfficer.scoresUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#9AA7B5] hover:text-[#43D9FF] transition-colors"
+              >
+                SEBI SCORES Portal ↗
+              </a>
+            </li>
+          </ul>
         </div>
       </Container>
 
-      <div className="border-t border-ink-100 bg-ink-50">
-        <Container className="space-y-4 py-6">
-          <p className="text-xs leading-5 text-ink-600">{MARKET_RISK_NOTE}</p>
-          <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-            {LEGAL_PAGES.map((page) => (
-              <Link key={page.slug} href={`/legal/${page.slug}`} className="text-ink-600 hover:text-ink-950">
-                {page.label}
-              </Link>
-            ))}
-            <CookieSettingsLink />
-          </nav>
-          <p className="text-xs text-ink-500">
-            © {new Date().getFullYear()} {legalName ?? "Expert Stocks Consultancy"}. Regulatory details are published in the{" "}
-            <Link href="/trust-center" className="underline underline-offset-2 hover:text-ink-800">
-              Trust Center
-            </Link>{" "}
-            only after verification.
-          </p>
+      {/* Prominent Mandatory Statutory Risk Disclosure Box */}
+      <div className="border-t border-[#1C2734] bg-[#080D14]">
+        <Container className="py-6 space-y-4">
+          <div className="rounded-xl border border-[#F5B84B]/20 bg-[#111923] p-4 text-xs font-mono text-[#F5B84B] leading-relaxed">
+            <span className="font-bold uppercase tracking-wider block mb-1">
+              Mandatory Market Risk Disclosure:
+            </span>
+            {MARKET_RISK_NOTE}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono text-[#667383] pt-2">
+            <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-2">
+              {LEGAL_PAGES.map((page) => (
+                <Link
+                  key={page.slug}
+                  href={`/legal/${page.slug}`}
+                  className="hover:text-[#F5F7FA] transition-colors"
+                >
+                  {page.label}
+                </Link>
+              ))}
+              <CookieSettingsLink />
+            </nav>
+
+            <div className="text-[11px]">
+              © {new Date().getFullYear()} {TRUST_CONFIG.entityName}. All rights reserved.
+            </div>
+          </div>
         </Container>
       </div>
     </footer>

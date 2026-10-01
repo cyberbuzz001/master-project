@@ -80,12 +80,12 @@ export default function DisclaimerPage() {
       {/* General Disclaimer Clauses */}
       <Section>
         <div className="space-y-8">
-          <Card className="p-6 sm:p-8 space-y-4 border border-ink-200/80 bg-white">
-            <h3 className="text-xl font-bold text-ink-950">Exclusion of Investment Advice & Liability</h3>
-            <p className="text-sm leading-7 text-ink-700">
-              Any and all liability for risks resulting from investment transactions or asset dispositions carried out by the customer based on information received or market analysis is expressly excluded. All information made available here is provided to serve as educational analysis and commentary only, without obligation and without specific recommendations for action. <strong>It does not constitute and cannot replace personal financial advice. We recommend that you consult your certified financial planner or tax advisor before carrying out specific financial commitments.</strong>
+          <Card className="p-6 sm:p-8 space-y-4 border border-[#1C2734] bg-[#0D131C]">
+            <h3 className="text-xl font-bold text-[#F5F7FA] font-display">Exclusion of Investment Advice & Liability</h3>
+            <p className="text-sm leading-7 text-[#9AA7B5]">
+              Any and all liability for risks resulting from investment transactions or asset dispositions carried out by the customer based on information received or market analysis is expressly excluded. All information made available here is provided to serve as educational analysis and commentary only, without obligation and without specific recommendations for action. <strong className="text-[#F5F7FA]">It does not constitute and cannot replace personal financial advice. We recommend that you consult your certified financial planner or tax advisor before carrying out specific financial commitments.</strong>
             </p>
-            <p className="text-sm leading-7 text-ink-700">
+            <p className="text-sm leading-7 text-[#9AA7B5]">
               In view of high volatility and market complexity, you should only trade in securities and derivatives if you fully understand the nature of the contracts, exchange rules, and have evaluated your total downside potential.
             </p>
           </Card>

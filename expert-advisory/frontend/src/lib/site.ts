@@ -1,17 +1,18 @@
 export const SITE = {
   name: "Expert Stocks Consultancy",
   shortName: "Expert Stocks",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  tagline: "MARKET INTELLIGENCE, ENGINEERED.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://expertstocks.in",
   description:
-    "Research-driven, risk-aware market intelligence for Indian equity and derivatives markets, with a transparent methodology and human-reviewed research.",
+    "Research-driven market intelligence for Indian markets, supported by structured methodology, risk-aware analysis, transparent disclosures and appropriate human review.",
 };
 
 export const PRIMARY_NAV = [
-  { href: "/about", label: "About" },
-  { href: "/services", label: "Services" },
-  { href: "/pricing", label: "Plans & Pricing" },
+  { href: "/#markets", label: "Markets" },
   { href: "/research", label: "Research" },
-  { href: "/testimonials", label: "Portfolio & Reviews" },
+  { href: "/services", label: "Services" },
+  { href: "/#tools", label: "Tools" },
+  { href: "/#academy", label: "Academy" },
   { href: "/trust-center", label: "Trust Center" },
 ] as const;
 
@@ -19,20 +20,32 @@ export const FOOTER_NAV = {
   Company: [
     { href: "/about", label: "About" },
     { href: "/technology", label: "Technology" },
+    { href: "/services", label: "Services" },
     { href: "/pricing", label: "Plans" },
     { href: "/contact", label: "Contact" },
   ],
-  Research: [
-    { href: "/research", label: "Research archive" },
-    { href: "/market-insights", label: "Market insights" },
-    { href: "/methodology", label: "How our research works" },
-    { href: "/blog", label: "Blog" },
+  Markets: [
+    { href: "/#markets", label: "Market Snapshot" },
+    { href: "/#sector-pulse", label: "Sector Pulse" },
+    { href: "/#terminal", label: "Research Terminal" },
+    { href: "/#tools", label: "Financial Tools" },
   ],
-  Support: [
-    { href: "/faq", label: "FAQ" },
-    { href: "/testimonials", label: "Testimonials & Portfolio" },
+  Research: [
+    { href: "/research", label: "Research Archive" },
+    { href: "/market-insights", label: "Market Insights" },
+    { href: "/methodology", label: "Methodology" },
+    { href: "/blog", label: "Blog" },
+    { href: "/#academy", label: "Academy" },
+  ],
+  Trust: [
     { href: "/trust-center", label: "Trust Center" },
-    { href: "/login", label: "Client & staff login" },
+    { href: "/legal/risk-disclosure", label: "Risk Disclosure" },
+    { href: "/legal/investor-charter", label: "Investor Charter" },
+    { href: "/legal/grievance-redressal", label: "Grievance" },
+    { href: "/legal/privacy-policy", label: "Privacy" },
+    { href: "/legal/terms-of-use", label: "Terms" },
+    { href: "/legal/refund-policy", label: "Refund Policy" },
+    { href: "/legal/cookie-policy", label: "Cookies" },
   ],
 } as const;
 
@@ -49,4 +62,5 @@ export const LEGAL_PAGES = [
 ] as const;
 
 export const MARKET_RISK_NOTE =
-  "Investments in the securities market are subject to market risks. Read all related documents carefully before investing. Research does not guarantee returns, and past performance does not indicate future results.";
+  "Investments in securities market are subject to market risks. Read all related documents carefully before investing.";
+

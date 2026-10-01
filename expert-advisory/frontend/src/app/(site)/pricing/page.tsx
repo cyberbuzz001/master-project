@@ -268,19 +268,19 @@ export default function PricingPage() {
       {/* FAQ on Pricing */}
       <Section>
         <div className="mx-auto max-w-3xl space-y-6">
-          <h2 className="text-2xl font-bold tracking-tight text-ink-950">Plans & Billing FAQ</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[#F5F7FA] font-display">Plans & Billing FAQ</h2>
           
-          <div className="divide-y divide-ink-100 rounded-2xl border border-ink-200/80 bg-white">
+          <div className="divide-y divide-[#1C2734] rounded-2xl border border-[#1C2734] bg-[#0D131C]">
             <div className="p-6">
-              <h3 className="text-base font-semibold text-ink-950">Can I switch plans mid-way through my subscription?</h3>
-              <p className="mt-2 text-sm leading-6 text-ink-600">
+              <h3 className="text-base font-semibold text-[#F5F7FA]">Can I switch plans mid-way through my subscription?</h3>
+              <p className="mt-2 text-sm leading-6 text-[#9AA7B5]">
                 Yes. If your risk assessment category permits participation in higher-volatility segments (such as F&O), you can upgrade your plan at any time by paying the prorated difference.
               </p>
             </div>
             <div className="p-6">
-              <h3 className="text-base font-semibold text-ink-950">Do you offer free trials or guaranteed profit sharing?</h3>
-              <p className="mt-2 text-sm leading-6 text-ink-600">
-                In strict compliance with SEBI regulations, we do not provide free trials, profit-sharing models, or performance-contingent fees. All fees are fixed advisory subscriptions charged for verified research and commentary.
+              <h3 className="text-base font-semibold text-[#F5F7FA]">Do you offer free trials or guaranteed profit sharing?</h3>
+              <p className="mt-2 text-sm leading-6 text-[#9AA7B5]">
+                In strict compliance with regulatory standards, we do not provide free trials, profit-sharing models, or performance-contingent fees. All fees are fixed advisory subscriptions charged for verified research and commentary.
               </p>
             </div>
             <div className="p-6">

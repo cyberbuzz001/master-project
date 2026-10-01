@@ -73,34 +73,35 @@ export function CookieConsent() {
   if (!open) return null;
 
   return (
-    <div role="dialog" aria-labelledby="cookie-title" className="fixed inset-x-3 bottom-3 z-50 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md animate-rise">
-      <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-lift)] ring-1 ring-ink-200">
-        <p id="cookie-title" className="text-sm font-semibold text-ink-950">
-          Cookie choices
+    <div role="dialog" aria-labelledby="cookie-title" className="fixed inset-x-3 bottom-3 z-50 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
+      <div className="rounded-2xl bg-[#0D131C] p-5 shadow-2xl border border-[#1C2734] text-[#F5F7FA]">
+        <p id="cookie-title" className="text-sm font-semibold text-[#F5F7FA] font-display">
+          Privacy & Cookie Preferences
         </p>
-        <p className="mt-1.5 text-sm leading-6 text-ink-600">
-          Necessary cookies keep the site secure and working. Analytics and advertising cookies are off unless you turn them on.
+        <p className="mt-1.5 text-xs leading-5 text-[#9AA7B5]">
+          Necessary cookies keep the site secure and functional. Analytics cookies remain disabled unless explicitly enabled.
         </p>
-        <fieldset className="mt-3 space-y-2 text-sm">
+        <fieldset className="mt-3 space-y-2 text-xs font-mono">
           <legend className="sr-only">Optional cookies</legend>
-          <label className="flex items-center gap-2.5 text-ink-700">
-            <input type="checkbox" checked disabled className="size-4 rounded accent-brand-600" /> Necessary (always on)
+          <label className="flex items-center gap-2.5 text-[#9AA7B5]">
+            <input type="checkbox" checked disabled className="size-3.5 rounded accent-[#43D9FF]" />
+            <span>Necessary Security & Session (Always On)</span>
           </label>
-          <label className="flex items-center gap-2.5 text-ink-700">
-            <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="size-4 rounded accent-brand-600" />
-            Analytics
+          <label className="flex items-center gap-2.5 text-[#9AA7B5] cursor-pointer">
+            <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="size-3.5 rounded accent-[#43D9FF]" />
+            <span>Anonymized Analytics</span>
           </label>
-          <label className="flex items-center gap-2.5 text-ink-700">
-            <input type="checkbox" checked={advertising} onChange={(e) => setAdvertising(e.target.checked)} className="size-4 rounded accent-brand-600" />
-            Advertising measurement
+          <label className="flex items-center gap-2.5 text-[#9AA7B5] cursor-pointer">
+            <input type="checkbox" checked={advertising} onChange={(e) => setAdvertising(e.target.checked)} className="size-3.5 rounded accent-[#43D9FF]" />
+            <span>Campaign Attribution</span>
           </label>
         </fieldset>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant="secondary" size="sm" onClick={() => save({ analytics: false, advertising: false })}>
-            Decline optional
+            Decline Optional
           </Button>
-          <Button size="sm" onClick={() => save({ analytics, advertising })}>
-            Save choices
+          <Button variant="primary" size="sm" onClick={() => save({ analytics, advertising })}>
+            Save Choices
           </Button>
         </div>
       </div>
@@ -110,7 +111,7 @@ export function CookieConsent() {
 
 export function CookieSettingsLink() {
   return (
-    <button type="button" className="text-ink-600 hover:text-ink-950" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))}>
+    <button type="button" className="text-[#9AA7B5] hover:text-[#F5F7FA] transition-colors cursor-pointer" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))}>
       Cookie settings
     </button>
   );

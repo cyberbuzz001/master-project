@@ -10,21 +10,23 @@ type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:translate-y-px disabled:bg-brand-200 disabled:text-white",
+    "bg-[#43D9FF] text-[#05070B] font-semibold hover:bg-[#33c9ef] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_0_20px_rgba(67,217,255,0.2)] disabled:opacity-50 disabled:pointer-events-none",
   secondary:
-    "bg-white text-ink-900 ring-1 ring-inset ring-ink-200 hover:ring-ink-300 hover:bg-ink-50 active:translate-y-px disabled:text-ink-400",
-  ghost: "text-ink-700 hover:bg-ink-100 hover:text-ink-900 disabled:text-ink-400",
-  danger: "bg-danger-600 text-white hover:bg-danger-700 active:translate-y-px disabled:opacity-50",
+    "bg-[#111923] text-[#F5F7FA] border border-[#1C2734] hover:border-[#283749] hover:bg-[#162130] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none",
+  ghost:
+    "bg-transparent text-[#9AA7B5] hover:text-[#F5F7FA] hover:bg-[#111923]/60 disabled:opacity-50 disabled:pointer-events-none",
+  danger:
+    "bg-[#F05252]/10 text-[#F05252] border border-[#F05252]/30 hover:bg-[#F05252]/20 active:translate-y-0 disabled:opacity-50",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm gap-1.5",
+  sm: "h-8 px-3 text-xs gap-1.5",
   md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-5 text-base gap-2",
+  lg: "h-12 px-6 text-sm font-semibold gap-2.5",
 };
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-xl font-semibold transition-[background,box-shadow,color,transform] duration-150 disabled:cursor-not-allowed whitespace-nowrap";
+  "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer";
 
 export function Button({
   variant = "primary",
@@ -45,33 +47,35 @@ export function LinkButton({
 }
 
 export function Container({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cx("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)} {...props} />;
+  return <div className={cx("mx-auto w-full max-w-[1280px] px-4 sm:px-8", className)} {...props} />;
 }
 
 export function Card({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cx("rounded-[var(--radius-card)] bg-white ring-1 ring-ink-200/70 shadow-[var(--shadow-card)]", className)}
+      className={cx("glass-card p-6 text-[#F5F7FA]", className)}
       {...props}
     />
   );
 }
 
-type Tone = "neutral" | "brand" | "teal" | "positive" | "warning" | "danger";
+type Tone = "neutral" | "brand" | "cyan" | "violet" | "teal" | "positive" | "warning" | "danger";
 
 const TONES: Record<Tone, string> = {
-  neutral: "bg-ink-100 text-ink-700",
-  brand: "bg-brand-50 text-brand-700",
-  teal: "bg-teal-50 text-teal-700",
-  positive: "bg-positive-50 text-positive-600",
-  warning: "bg-warning-50 text-warning-700",
-  danger: "bg-danger-50 text-danger-700",
+  neutral: "bg-[#111923] border border-[#1C2734] text-[#9AA7B5]",
+  brand: "bg-[#43D9FF]/10 border border-[#43D9FF]/30 text-[#43D9FF]",
+  cyan: "bg-[#43D9FF]/10 border border-[#43D9FF]/30 text-[#43D9FF]",
+  violet: "bg-[#7C5CFF]/10 border border-[#7C5CFF]/30 text-[#7C5CFF]",
+  teal: "bg-[#43D9FF]/10 border border-[#43D9FF]/30 text-[#43D9FF]",
+  positive: "bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E]",
+  warning: "bg-[#F5B84B]/10 border border-[#F5B84B]/30 text-[#F5B84B]",
+  danger: "bg-[#F05252]/10 border border-[#F05252]/30 text-[#F05252]",
 };
 
 export function Badge({ tone = "neutral", className, ...props }: ComponentProps<"span"> & { tone?: Tone }) {
   return (
     <span
-      className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", TONES[tone], className)}
+      className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium font-mono", TONES[tone], className)}
       {...props}
     />
   );
@@ -79,7 +83,7 @@ export function Badge({ tone = "neutral", className, ...props }: ComponentProps<
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cx("text-xs font-semibold uppercase tracking-[0.14em] text-teal-600", className)}>{children}</p>
+    <p className={cx("text-xs font-semibold uppercase tracking-[0.16em] text-[#43D9FF]", className)}>{children}</p>
   );
 }
 
@@ -95,10 +99,10 @@ export function SectionHeading({
   align?: "left" | "center";
 }) {
   return (
-    <div className={cx("max-w-2xl", align === "center" && "mx-auto text-center")}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl text-balance">{title}</h2>
-      {lead && <p className="mt-4 text-lg leading-8 text-ink-600 text-pretty">{lead}</p>}
+    <div className={cx("max-w-3xl", align === "center" && "mx-auto text-center")}>
+      {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+      <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F5F7FA] text-balance font-display">{title}</h2>
+      {lead && <p className="mt-4 text-base sm:text-lg leading-relaxed text-[#9AA7B5] text-pretty">{lead}</p>}
     </div>
   );
 }
@@ -115,16 +119,16 @@ export function Notice({
   className?: string;
 }) {
   const tones = {
-    warning: "bg-warning-50 ring-warning-200 text-warning-700",
-    brand: "bg-brand-50 ring-brand-100 text-brand-900",
-    danger: "bg-danger-50 ring-danger-600/20 text-danger-700",
-    neutral: "bg-ink-50 ring-ink-200 text-ink-700",
-  } as const;
+    warning: "bg-[#F5B84B]/10 border border-[#F5B84B]/30 text-[#F5B84B]",
+    brand: "bg-[#43D9FF]/10 border border-[#43D9FF]/30 text-[#43D9FF]",
+    danger: "bg-[#F05252]/10 border border-[#F05252]/30 text-[#F05252]",
+    neutral: "bg-[#111923] border border-[#1C2734] text-[#9AA7B5]",
+  };
 
   return (
-    <div role="note" className={cx("rounded-xl px-4 py-3 text-sm ring-1 ring-inset", tones[tone], className)}>
-      {title && <p className="font-semibold">{title}</p>}
-      <div className={cx(title && "mt-1", "leading-6")}>{children}</div>
+    <div role="note" className={cx("rounded-xl p-4 sm:p-5", tones[tone], className)}>
+      {title && <h4 className="font-semibold text-sm mb-1 text-[#F5F7FA]">{title}</h4>}
+      <div className="text-xs sm:text-sm leading-relaxed">{children}</div>
     </div>
   );
 }
@@ -146,14 +150,14 @@ export function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="flex items-baseline justify-between text-sm font-medium text-ink-800">
+      <label htmlFor={htmlFor} className="flex items-baseline justify-between text-sm font-medium text-[#F5F7FA]">
         {label}
-        {optional && <span className="text-xs font-normal text-ink-500">Optional</span>}
+        {optional && <span className="text-xs font-normal text-[#667383]">Optional</span>}
       </label>
       <div className="mt-1.5">{children}</div>
-      {hint && !error && <p className="mt-1 text-xs text-ink-500">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-[#9AA7B5]">{hint}</p>}
       {error && (
-        <p id={`${htmlFor}-error`} className="mt-1 text-xs font-medium text-danger-600">
+        <p id={`${htmlFor}-error`} className="mt-1 text-xs font-medium text-[#F05252]">
           {error}
         </p>
       )}
@@ -162,7 +166,7 @@ export function Field({
 }
 
 export const inputClass =
-  "block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-inset ring-ink-200 placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500 focus:outline-none aria-[invalid=true]:ring-danger-600 transition-shadow";
+  "block w-full rounded-xl border border-[#1C2734] bg-[#080D14] px-3.5 py-2.5 text-sm text-[#F5F7FA] placeholder-[#667383] focus:border-[#43D9FF] focus:outline-none focus:ring-1 focus:ring-[#43D9FF] aria-[invalid=true]:border-[#F05252] transition-colors font-sans";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cx(inputClass, className)} {...props} />;
@@ -176,12 +180,22 @@ export function Select({ className, ...props }: ComponentProps<"select">) {
   return <select className={cx(inputClass, "pr-8", className)} {...props} />;
 }
 
-export function EmptyState({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({
+  icon,
+  title,
+  children,
+  action,
+}: {
+  icon?: ReactNode;
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed border-ink-300 bg-white/60 px-6 py-12 text-center">
-      {icon && <div className="mb-3 grid size-11 place-items-center rounded-full bg-ink-100 text-ink-500">{icon}</div>}
-      <p className="text-base font-semibold text-ink-900">{title}</p>
-      {children && <div className="mt-1.5 max-w-md text-sm leading-6 text-ink-600">{children}</div>}
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#1C2734] bg-[#0D131C] px-6 py-12 text-center text-[#F5F7FA]">
+      {icon && <div className="mb-3 grid size-11 place-items-center rounded-full bg-[#111923] text-[#43D9FF]">{icon}</div>}
+      <p className="text-base font-semibold text-[#F5F7FA]">{title}</p>
+      {children && <div className="mt-1.5 max-w-md text-sm leading-6 text-[#9AA7B5]">{children}</div>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

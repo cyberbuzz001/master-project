@@ -44,20 +44,20 @@ export default function FaqPage() {
     <>
       <PageHero eyebrow="FAQ" title="Frequently asked questions" />
       <Section>
-        <div className="mx-auto max-w-3xl divide-y divide-ink-200 rounded-2xl bg-white ring-1 ring-ink-200">
+        <div className="mx-auto max-w-3xl divide-y divide-[#1C2734] rounded-2xl bg-[#0D131C] border border-[#1C2734]">
           {FAQS.map((item) => (
             <details key={item.q} className="group px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-ink-900">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-[#F5F7FA]">
                 {item.q}
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-ink-100 text-ink-600 transition-transform group-open:rotate-45" aria-hidden="true">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#111923] text-[#43D9FF] transition-transform group-open:rotate-45" aria-hidden="true">
                   +
                 </span>
               </summary>
-              <p className="mt-3 text-[15px] leading-7 text-ink-600">{item.a}</p>
+              <p className="mt-3 text-[15px] leading-7 text-[#9AA7B5]">{item.a}</p>
             </details>
           ))}
         </div>
-        <p className="mx-auto mt-8 max-w-3xl text-sm text-ink-600">
+        <p className="mx-auto mt-8 max-w-3xl text-sm text-[#9AA7B5]">
           More questions? <Link href="/contact" className="font-medium text-brand-700 underline underline-offset-2">Contact our team</Link> or read the{" "}
           <Link href="/legal/grievance-redressal" className="font-medium text-brand-700 underline underline-offset-2">grievance process</Link>.
         </p>
