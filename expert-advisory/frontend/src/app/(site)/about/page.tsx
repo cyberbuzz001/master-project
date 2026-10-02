@@ -221,7 +221,7 @@ export default function AboutPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-4 text-sm text-ink-800">
               <a
-                href="https://wa.me/919589615649"
+                href="https://wa.me/919238837041"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 font-medium text-emerald-600 hover:text-emerald-700"

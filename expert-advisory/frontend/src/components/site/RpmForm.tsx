@@ -392,7 +392,7 @@ export function RpmForm({
 
           <div className="mt-8 pt-6 border-t border-[#1C2734] flex flex-wrap items-center justify-between gap-4">
             <a
-              href={`https://wa.me/919589615649?text=${encodeURIComponent(
+              href={`https://wa.me/919238837041?text=${encodeURIComponent(
                 `Hi Expert Stocks, I just completed my Risk Assessment (${band.tier} tier, Score: ${score}/60, Ref: ${leadCode}). I would like to discuss suitable advisory services.`
               )}`}
               target="_blank"

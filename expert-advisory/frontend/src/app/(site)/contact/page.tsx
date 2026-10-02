@@ -17,7 +17,7 @@ export default async function ContactPage() {
   const contact = site.ok ? (site.data.settings.contact ?? {}) : {};
 
   const rows = [
-    { icon: MessageCircle, label: "WhatsApp Desk", value: "Chat on WhatsApp (+91 95896 15649)", href: "https://wa.me/919589615649" },
+    { icon: MessageCircle, label: "WhatsApp Desk", value: "Chat on WhatsApp (+91 92388 37041)", href: "https://wa.me/919238837041" },
     contact.email && { icon: Mail, label: "Email Support", value: contact.email, href: `mailto:${contact.email}` },
     contact.registered_address && { icon: MapPin, label: "Registered office", value: contact.registered_address },
     contact.branch_address && { icon: MapPin, label: "Operations Branch", value: contact.branch_address },

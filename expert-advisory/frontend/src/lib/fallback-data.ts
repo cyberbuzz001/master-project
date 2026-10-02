@@ -19,8 +19,8 @@ export const FALLBACK_SITE_DATA: SiteData = {
     },
     contact: {
       email: "info@expertstocks.in",
-      phone: "+91 95896 15649",
-      whatsapp: "+91 95896 15649",
+      phone: "+91 92388 37041",
+      whatsapp: "+91 92388 37041",
       registered_address: "ITC Park, Belapur Station Complex, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614",
       branch_address: "Techno IT Park, Jabalpur, Madhya Pradesh 482001",
       business_hours: "Monday to Friday: 9:00 AM – 4:00 PM IST",
@@ -57,7 +57,7 @@ export const FALLBACK_TRUST_CENTER: TrustCenterData = {
     grievance_officer: {
       name: "Grievance Officer",
       email: "support@expertstocks.in",
-      phone: "+91 95896 15649",
+      phone: "+91 92388 37041",
     },
     partner_ra: null,
     public_statement:
@@ -274,7 +274,7 @@ Expert Stocks Consultancy is committed to resolving client complaints and grieva
 ### Level 1: Client Support Desk
 If you encounter an issue or have a concern regarding research delivery, billing, or portal access, please contact our support team first:
 - **Email:** info@expertstocks.in
-- **Telephone / WhatsApp:** +91 95896 15649
+- **Telephone / WhatsApp:** +91 92388 37041
 - **Operating Hours:** Monday to Friday, 9:00 AM to 4:00 PM IST
 - **Turnaround Time:** Within 24 to 48 working hours.
 

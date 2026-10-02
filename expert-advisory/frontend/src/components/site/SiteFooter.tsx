@@ -35,7 +35,7 @@ export async function SiteFooter() {
             <div className="flex items-center gap-2">
               <MessageCircle className="size-3.5 text-[#25D366]" />
               <a
-                href="https://wa.me/919589615649"
+                href="https://wa.me/919238837041"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#9AA7B5] hover:text-[#25D366] transition-colors"

@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error_code: "INTERNAL_ERROR",
-        message: "An unexpected error occurred while processing your request. Please connect directly via WhatsApp at +91 95896 15649 or info@expertstocks.in.",
+        message: "An unexpected error occurred while processing your request. Please connect directly via WhatsApp at +91 92388 37041 or info@expertstocks.in.",
       },
       { status: 500 }
     );

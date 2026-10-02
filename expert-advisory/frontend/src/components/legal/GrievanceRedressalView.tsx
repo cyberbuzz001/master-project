@@ -96,16 +96,16 @@ export function GrievanceRedressalView() {
                 <span>PHONE & WHATSAPP</span>
               </div>
               <div className="text-sm font-semibold font-mono text-[#F5F7FA]">
-                +91 95896 15649
+                +91 92388 37041
               </div>
             </div>
             <div className="mt-4 flex items-center gap-3 text-xs font-mono">
-              <a href="tel:+919589615649" className="text-[#9AA7B5] hover:text-[#F5F7FA]">
+              <a href="tel:+919238837041" className="text-[#9AA7B5] hover:text-[#F5F7FA]">
                 Direct Call
               </a>
               <span className="text-[#1C2734]">│</span>
               <a
-                href="https://wa.me/919589615649"
+                href="https://wa.me/919238837041"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#22C55E] hover:underline"
