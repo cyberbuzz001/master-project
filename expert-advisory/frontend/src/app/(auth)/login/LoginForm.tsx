@@ -2,7 +2,7 @@
 
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { homeFor, isServerRoute } from "@/components/app/AuthProvider";
 import { Button, Field, Input, Notice } from "@/components/ui";
 import { api } from "@/lib/api-client";
@@ -21,6 +21,22 @@ export function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useRecovery, setUseRecovery] = useState(false);
+
+  // Automatic SSO Ticket Exchange from TradeGrow Brokerage Desk
+  const ssoTicket = params.get("ticket") || params.get("sso_ticket");
+  useEffect(() => {
+    if (!ssoTicket) return;
+    setBusy(true);
+    setError(null);
+    api.post<{ redirect: string; user?: Me }>("/auth/sso/consume", { ticket: ssoTicket })
+      .then((res) => {
+        window.location.assign(res.data.redirect || "/office");
+      })
+      .catch((err) => {
+        setError(describe(err));
+        setBusy(false);
+      });
+  }, [ssoTicket]);
 
   function finish(me: Me) {
     const next = safeNext(params.get("next"));

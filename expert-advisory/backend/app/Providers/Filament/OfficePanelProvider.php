@@ -71,10 +71,20 @@ class OfficePanelProvider extends PanelProvider
                     ->label('Account security')
                     ->icon(Heroicon::OutlinedKey)
                     ->url(fn () => config('platform.frontend_url').'/account/security'),
+                Action::make('tradegrow_desk')
+                    ->label('TradeGrow RMS / War Room Desk')
+                    ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
+                    ->url(fn () => env('TRADEGROW_ADMIN_URL', 'https://tradegrowx.in/admin'))
+                    ->openUrlInNewTab(),
             ])
             ->renderHook(PanelsRenderHook::TOPBAR_START, fn () => config('platform.demo_mode')
                 ? new HtmlString('<span class="esc-demo-pill">Demo mode — [DEMO] records are sample data</span>')
                 : '')
+            ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => new HtmlString(
+                '<a href="' . e(env('TRADEGROW_ADMIN_URL', 'https://tradegrowx.in/admin')) . '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;color:#0ea5e9;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);text-decoration:none;margin-right:12px;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(14,165,233,0.18)\'" onmouseout="this.style.background=\'rgba(14,165,233,0.08)\'">' .
+                '<svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>' .
+                'TradeGrow RMS Desk ↗</a>'
+            ))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([Dashboard::class])

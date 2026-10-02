@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function (): void {
     Route::prefix('auth')->group(function (): void {
         Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
         Route::post('two-factor/challenge', [AuthController::class, 'twoFactorChallenge'])->middleware('throttle:two-factor');
+        Route::post('sso/consume', [\App\Http\Controllers\SsoHandoffController::class, 'consumeApi'])->middleware('throttle:login');
         Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     });
 

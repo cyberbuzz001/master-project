@@ -71,7 +71,7 @@ ssoRouter.get('/staff-desks', authenticateToken, async (req: AuthenticatedReques
         domain: 'expertstocks.in',
         portalUrl: 'https://expertstocks.in/office',
         description: 'Research report publishing, SEBI compliance audit, telecaller desk & lead funnel',
-        active: false,
+        active: true,
       },
     ],
   });

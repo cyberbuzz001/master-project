@@ -30,7 +30,9 @@ export const StaffDeskSwitcher: React.FC<StaffDeskSwitcherProps> = ({ token }) =
 
       const ticket = data.ticket;
       // Open Expert Stocks Advisory & CRM Portal with single-use SSO Ticket
-      const targetUrl = `https://expertstocks.in/office?sso_ticket=${encodeURIComponent(ticket)}`;
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const targetBase = isLocal ? 'http://localhost:3000' : 'https://expertstocks.in';
+      const targetUrl = `${targetBase}/sso?ticket=${encodeURIComponent(ticket)}`;
       window.open(targetUrl, '_blank', 'noopener,noreferrer');
       setIsOpen(false);
     } catch (err: any) {

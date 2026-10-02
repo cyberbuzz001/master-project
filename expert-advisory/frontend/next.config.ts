@@ -34,7 +34,8 @@ const nextConfig: NextConfig = {
       fallback: [
         { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
         { source: "/sanctum/:path*", destination: `${BACKEND_URL}/sanctum/:path*` },
-        // Staff back-office (Filament) and its Livewire/asset endpoints.
+        // Staff back-office (Filament), SSO handoff, and its Livewire/asset endpoints.
+        { source: "/sso", destination: `${BACKEND_URL}/sso` },
         { source: "/office", destination: `${BACKEND_URL}/office` },
         { source: "/office/:path*", destination: `${BACKEND_URL}/office/:path*` },
         { source: "/filament/:path*", destination: `${BACKEND_URL}/filament/:path*` },
