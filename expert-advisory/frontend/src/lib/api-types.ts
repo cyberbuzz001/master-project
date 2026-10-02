@@ -89,7 +89,7 @@ export type Me = {
   status: string;
   roles: { name: string; label: string }[];
   permissions: string[];
-  areas: Array<"admin" | "manager" | "research" | "workspace" | "portal">;
+  areas: Array<"admin" | "manager" | "research" | "workspace" | "portal" | "office">;
   two_factor: { enabled: boolean; required: boolean; enrollment_required: boolean; verified_this_session: boolean };
   employee: { employee_code: string; designation: string | null; team: string | null; is_authorized_research_person: boolean } | null;
   client: { client_code: string; onboarding_status: string } | null;

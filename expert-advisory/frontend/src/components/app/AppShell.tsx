@@ -12,7 +12,7 @@ import { ApiErrorView } from "./widgets";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; permission?: string; anyOf?: string[] };
 
-const NAV: Record<"portal", { title: string; items: NavItem[] }> = {
+const NAV: Record<"portal" | "office", { title: string; items: NavItem[] }> = {
   portal: {
     title: "Client portal",
     items: [
@@ -21,6 +21,13 @@ const NAV: Record<"portal", { title: string; items: NavItem[] }> = {
       { href: "/portal/onboarding", label: "Onboarding", icon: ClipboardCheck, permission: "portal.access" },
       { href: "/portal/billing", label: "Services & billing", icon: ReceiptIndianRupee, permission: "portal.access" },
       { href: "/portal/support", label: "Support & Grievance", icon: LifeBuoy, permission: "portal.access" },
+    ],
+  },
+  office: {
+    title: "Staff Back-Office",
+    items: [
+      { href: "/office", label: "Executive Desk", icon: LayoutDashboard },
+      { href: "/portal", label: "Client Portal View", icon: LineChart },
     ],
   },
 };
@@ -33,7 +40,8 @@ export function AppShell({ area, children }: { area: keyof typeof NAV; children:
   if (useChanged(pathname) && open) setOpen(false);
 
   const allowedAreas = {
-    portal: me.areas.includes("portal"),
+    portal: me.areas.includes("portal") || me.user_type === "staff",
+    office: me.user_type === "staff" || me.areas.includes("office") || me.roles.some((r) => r.name === "admin" || r.name === "super_admin"),
   };
 
   const items = NAV[area].items.filter((item) => (item.permission ? can(item.permission) : item.anyOf ? item.anyOf.some(can) : true));
