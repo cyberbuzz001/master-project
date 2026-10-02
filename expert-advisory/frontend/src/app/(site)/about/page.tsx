@@ -7,6 +7,7 @@ import {
   Eye, 
   LineChart, 
   Mail, 
+  MessageSquare,
   Phone, 
   ShieldCheck, 
   Sparkles, 
@@ -219,9 +220,14 @@ export default function AboutPage() {
               Partner with our advisory desk today to identify high-probability setups and manage portfolio risks with confidence.
             </p>
             <div className="mt-6 flex flex-wrap gap-4 text-sm text-ink-800">
-              <a href="tel:+919238837041" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
-                <Phone className="size-4 text-teal-600" />
-                +91 92388 37041
+              <a
+                href="https://wa.me/919589615649"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-medium text-emerald-600 hover:text-emerald-700"
+              >
+                <MessageSquare className="size-4 text-emerald-600" />
+                Chat on WhatsApp
               </a>
               <a href="mailto:info@expertstocks.in" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
                 <Mail className="size-4 text-teal-600" />

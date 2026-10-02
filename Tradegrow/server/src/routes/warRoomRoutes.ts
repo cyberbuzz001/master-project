@@ -2,30 +2,152 @@ import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { WarRoomService } from '../services/WarRoomService';
 import { WhatsAppAutomationService } from '../services/WhatsAppAutomationService';
-import { query } from '../db/schema';
+import { EmailService } from '../services/EmailService';
+import { query, queryOne, execute } from '../db/schema';
 import { generateUUID } from '../utils/crypto';
 
 export const warRoomRouter = Router();
 const warRoom = WarRoomService.getInstance();
 const waService = WhatsAppAutomationService.getInstance();
+const emailService = EmailService.getInstance();
+
+/**
+ * Helper to build an attractive, responsive notification email HTML
+ */
+function buildAlertEmailHtml(params: {
+  badgeTitle: string;
+  badgeColor?: string;
+  headline: string;
+  summary: string;
+  details: Array<{ label: string; value: string }>;
+  extraHtml?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+}): string {
+  const rows = params.details
+    .map(
+      (d) => `
+      <tr>
+        <td style="padding: 7px 0; color: #64748B; font-size: 13px; font-weight: 500; border-bottom: 1px solid #1E293B;">${d.label}</td>
+        <td style="padding: 7px 0; color: #F8FAFC; font-size: 13px; font-weight: 600; text-align: right; border-bottom: 1px solid #1E293B;">${d.value || 'N/A'}</td>
+      </tr>`
+    )
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${params.headline}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #F8FAFC;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #020617; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="width: 100%; max-width: 580px; border-collapse: collapse; background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);">
+          <tr>
+            <td style="padding: 24px 32px; background: linear-gradient(180deg, #131B2E 0%, #0B0F19 100%); border-bottom: 1px solid #1E293B;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td>
+                    <div style="font-size: 20px; font-weight: 800; color: #10B981;">
+                      Trade<span style="color: #38BDF8;">Grow</span> &bull; <span style="color: #F8FAFC; font-size: 16px; font-weight: 600;">Expert Stocks</span>
+                    </div>
+                    <div style="font-size: 11px; color: #64748B; font-weight: 500; text-transform: uppercase; margin-top: 2px;">
+                      Unified Ingress Alert & CRM Desk
+                    </div>
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: ${params.badgeColor || '#10B981'}20; color: ${params.badgeColor || '#10B981'}; border: 1px solid ${params.badgeColor || '#10B981'}50; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">
+                      ${params.badgeTitle}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 28px 32px;">
+              <h2 style="margin: 0 0 12px; color: #F8FAFC; font-size: 18px; font-weight: 700;">${params.headline}</h2>
+              <p style="margin: 0 0 20px; color: #94A3B8; font-size: 14px; line-height: 1.6;">${params.summary}</p>
+              
+              <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  ${rows}
+                </table>
+              </div>
+
+              ${params.extraHtml || ''}
+
+              ${
+                params.actionUrl
+                  ? `<div style="text-align: center; margin-top: 24px;">
+                      <a href="${params.actionUrl}" style="display: inline-block; background-color: #10B981; color: #022C22; font-weight: 700; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                        ${params.actionLabel || 'View Record'}
+                      </a>
+                    </div>`
+                  : ''
+              }
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 32px; background-color: #060911; border-top: 1px solid #1E293B; text-align: center;">
+              <p style="margin: 0; color: #64748B; font-size: 11px;">
+                TradeGrow Unified Ecosystem &bull; Automatic Form Notification Dispatch
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
 
 /**
  * POST /api/v1/public/leads
- * Public Ingress for Trust Website (tradegrow.in) and Landing Pages
+ * Public Ingress for Trust Website (tradegrow.in), Expert Advisory (expertstocks.in),
+ * Consultation Modals, and Risk Assessment Form.
+ * Automatically dispatches real-time email notifications to info@tradegrowx.in and support@expertstocks.in.
  */
 warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
   try {
-    const { phone, fullName, email, source, utmSource, utmMedium, utmCampaign, utmTerm, utmContent, landingPage, referrerUrl, referralCode, creatorCode, consentWhatsApp } = req.body;
+    const rawPhone = req.body.phone || req.body.mobile;
+    const fullName = req.body.fullName || req.body.full_name || req.body.name;
+    const email = req.body.email;
+    const city = req.body.city;
+    const state = req.body.state;
+    const source = req.body.source || req.body.form_key || 'WEBSITE';
+    const message = req.body.message;
+    const capitalRange = req.body.capitalRange || req.body.capital_range;
+    const segments = req.body.segments;
+    const assessment = req.body.assessment; // Risk Profile Questionnaire submission
+    const {
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      landingPage,
+      referrerUrl,
+      referralCode,
+      creatorCode,
+      consentWhatsApp
+    } = req.body;
 
-    if (!phone || typeof phone !== 'string' || phone.trim().length < 10) {
+    if (!rawPhone || typeof rawPhone !== 'string' || rawPhone.replace(/\D/g, '').length < 10) {
       return res.status(400).json({
         success: false,
         error: { code: 'INVALID_PHONE', message: 'A valid 10-digit Indian mobile number is required.' }
       });
     }
 
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+
+    // 1. Ingest lead into War Room database
     const result = await warRoom.ingestLead({
-      phone: phone.trim(),
+      phone: cleanPhone,
       fullName: fullName ? String(fullName).trim() : undefined,
       email: email ? String(email).trim() : undefined,
       source: source || 'TRUST_WEBSITE',
@@ -43,9 +165,115 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
       userAgent: req.headers['user-agent']
     });
 
+    const isRpm = source === 'risk_assessment' || Boolean(assessment);
+    const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    // 2. Format and dispatch alert email to internal team
+    const alertSubject = isRpm
+      ? `[RPM Assessment] ${fullName || cleanPhone} - Tier: ${assessment?.category || 'Assessed'} (Score: ${assessment?.score || 'N/A'}/60)`
+      : `[New Lead Alert] ${fullName || cleanPhone} via ${source}`;
+
+    let extraHtml = '';
+    if (message) {
+      extraHtml += `
+        <div style="background-color: #0F172A; border-left: 3px solid #38BDF8; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+          <strong style="color: #38BDF8; font-size: 13px; display: block; margin-bottom: 4px;">Message / Investor Note:</strong>
+          <span style="color: #E2E8F0; font-size: 13px; line-height: 1.5; white-space: pre-wrap;">${message}</span>
+        </div>`;
+    }
+
+    if (assessment && Array.isArray(assessment.questions)) {
+      const qRows = assessment.questions
+        .map(
+          (q: any, idx: number) => `
+          <div style="padding: 8px 0; border-bottom: 1px solid #1E293B; font-size: 12px;">
+            <div style="color: #94A3B8; font-weight: 600;">${idx + 1}. ${q.question}</div>
+            <div style="color: #10B981; font-weight: 700; margin-top: 2px;">&rarr; ${q.answer}</div>
+          </div>`
+        )
+        .join('');
+
+      extraHtml += `
+        <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <strong style="color: #F8FAFC; font-size: 14px; display: block; margin-bottom: 8px;">Risk Profile Questionnaire Breakdown:</strong>
+          ${qRows}
+        </div>`;
+    }
+
+    const teamHtml = buildAlertEmailHtml({
+      badgeTitle: isRpm ? 'RISK ASSESSMENT' : 'NEW LEAD',
+      badgeColor: isRpm ? '#A855F7' : '#10B981',
+      headline: isRpm ? 'Investor Risk Profile Assessment Submitted' : 'New Inbound Lead / Consultation Request',
+      summary: `A client has submitted their contact details through the website. Immediate follow-up required within defined SLA.`,
+      details: [
+        { label: 'Investor Name', value: fullName || 'Not provided' },
+        { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
+        { label: 'Email Address', value: email || 'Not provided' },
+        { label: 'City / State', value: [city, state].filter(Boolean).join(', ') || 'Not specified' },
+        { label: 'Form / Source', value: source },
+        { label: 'Capital Allocation', value: capitalRange || 'Prefer to discuss' },
+        { label: 'Preferred Markets', value: Array.isArray(segments) ? segments.join(', ') : segments || 'General' },
+        { label: 'Lead Reference Code', value: result?.leadCode || 'N/A' },
+        { label: 'Campaign / UTM', value: utmCampaign || 'Direct / Organic' },
+        { label: 'Referral / Creator', value: referralCode || creatorCode || 'None' },
+        { label: 'Captured At', value: `${dateStr} IST` },
+      ],
+      extraHtml,
+      actionUrl: 'https://tradegrowx.in/admin',
+      actionLabel: 'Open Executive War Room'
+    });
+
+    // Send notification to primary notification addresses
+    const notificationEmails = ['info@tradegrowx.in', 'support@expertstocks.in', 'cyberbuzz.mail@gmail.com'];
+    for (const targetEmail of notificationEmails) {
+      emailService.sendMailAsync({
+        to: targetEmail,
+        subject: alertSubject,
+        html: teamHtml,
+        templateType: isRpm ? 'RISK_ASSESSMENT' : 'LEAD_INGRESS',
+        priority: 'HIGH',
+      });
+    }
+
+    // 3. Send automated confirmation email to the client if email is provided
+    if (email && email.includes('@')) {
+      const clientConfirmHtml = buildAlertEmailHtml({
+        badgeTitle: isRpm ? 'ASSESSMENT RECORDED' : 'REQUEST RECEIVED',
+        badgeColor: '#10B981',
+        headline: `Thank you, ${fullName || 'Investor'}!`,
+        summary: isRpm
+          ? `Your SEBI-aligned Risk Profile & Suitability Questionnaire has been successfully recorded. Your risk tier is: <strong>${assessment?.category || 'Under Review'}</strong>.`
+          : `We have received your enquiry. A registered advisory representative will reach out to you at +91 ${cleanPhone} during market hours.`,
+        details: [
+          { label: 'Reference Code', value: result?.leadCode || 'TG-LEAD-2026' },
+          { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
+          { label: 'Status', value: 'Acknowledged & In Queue' },
+          { label: 'Turnaround Time', value: 'Within 2 to 4 business hours' },
+        ],
+        extraHtml: `
+          <div style="background-color: #0F172A; border-radius: 8px; padding: 14px; border: 1px solid #1E293B; margin-bottom: 16px;">
+            <p style="margin: 0; color: #94A3B8; font-size: 13px; line-height: 1.5;">
+              If your request is urgent, connect with our support desk directly on WhatsApp at
+              <a href="https://wa.me/919589615649" style="color: #10B981; font-weight: 700; text-decoration: none;">+91 95896 15649</a>.
+            </p>
+          </div>`
+      });
+
+      emailService.sendMailAsync({
+        to: email.trim(),
+        subject: isRpm ? `TradeGrow & Expert Stocks: Your Risk Assessment Summary` : `We received your consultation request - TradeGrow & Expert Stocks`,
+        html: clientConfirmHtml,
+        templateType: 'CLIENT_CONFIRMATION',
+        priority: 'NORMAL',
+      });
+    }
+
     return res.status(201).json({
       success: true,
-      data: result
+      data: {
+        ...result,
+        message: `Thank you! Your request has been logged successfully (Ref: ${result?.leadCode || 'Captured'}). Our desk will revert promptly.`
+      }
     });
   } catch (err: any) {
     console.error('[WarRoom API] Error ingesting lead:', err);
@@ -53,6 +281,227 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to record lead. Please try again.' }
     });
+  }
+});
+
+/**
+ * POST /api/v1/public/support/tickets
+ * Public Support Ticket submission endpoint for website visitors and clients.
+ * Generates an official reference ID, records to support_tickets database table,
+ * and sends instant email notification to info@tradegrowx.in and customer.
+ */
+warRoomRouter.post('/public/support/tickets', async (req: Request, res: Response) => {
+  try {
+    const { name, phone, email, clientCode, category, message } = req.body;
+
+    if (!name || !phone || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'Name, phone, email, and description are required.' }
+      });
+    }
+
+    const ticketNum = Math.floor(1000 + Math.random() * 9000);
+    const ticketId = `TG-TKT-2026-${ticketNum}`;
+    const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+    const cleanCategory = category || 'General Query';
+    const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    // Store in support_tickets table
+    try {
+      await execute(
+        `INSERT INTO support_tickets (id, customer_id, category, priority, subject, description, status, created_at, updated_at)
+         VALUES ($1, $2, $3, 'HIGH', $4, $5, 'OPEN', NOW(), NOW())`,
+        [
+          ticketId,
+          clientCode || cleanPhone,
+          cleanCategory,
+          `[Support] ${cleanCategory}: ${name}`,
+          `Name: ${name}\nPhone: +91 ${cleanPhone}\nEmail: ${email}\nClient Code: ${clientCode || 'N/A'}\nCategory: ${cleanCategory}\n\nMessage:\n${message}`
+        ]
+      );
+    } catch (dbErr: any) {
+      console.warn('[WarRoom API] Direct support_tickets insert note:', dbErr.message);
+    }
+
+    // Build internal alert email
+    const internalEmailHtml = buildAlertEmailHtml({
+      badgeTitle: 'SUPPORT TICKET',
+      badgeColor: '#EF4444',
+      headline: `New Support Ticket Logged: ${ticketId}`,
+      summary: `A customer has submitted a formal support ticket on the Trust portal. Please review and assign to the support desk.`,
+      details: [
+        { label: 'Ticket Reference', value: ticketId },
+        { label: 'Client Name', value: name },
+        { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
+        { label: 'Email Address', value: email },
+        { label: 'Client Code / Ref', value: clientCode || 'Not provided' },
+        { label: 'Category', value: cleanCategory },
+        { label: 'Submitted At', value: `${dateStr} IST` },
+      ],
+      extraHtml: `
+        <div style="background-color: #0F172A; border-left: 3px solid #EF4444; padding: 14px 18px; margin-bottom: 20px; border-radius: 4px;">
+          <strong style="color: #F8FAFC; font-size: 13px; display: block; margin-bottom: 6px;">Ticket Description:</strong>
+          <span style="color: #CBD5E1; font-size: 13px; line-height: 1.6; white-space: pre-wrap;">${message}</span>
+        </div>`,
+      actionUrl: `https://tradegrowx.in/admin`,
+      actionLabel: 'Open Support Console'
+    });
+
+    // Send email to operations & support desk
+    const alertRecipients = ['info@tradegrowx.in', 'support@expertstocks.in', 'cyberbuzz.mail@gmail.com'];
+    for (const to of alertRecipients) {
+      emailService.sendMailAsync({
+        to,
+        subject: `[TradeGrow Support Ticket] ${ticketId} - ${cleanCategory}: ${name}`,
+        html: internalEmailHtml,
+        templateType: 'SUPPORT_TICKET',
+        priority: 'HIGH',
+      });
+    }
+
+    // Send customer receipt confirmation email
+    const clientReceiptHtml = buildAlertEmailHtml({
+      badgeTitle: 'TICKET CONFIRMED',
+      badgeColor: '#10B981',
+      headline: `We have received your ticket: ${ticketId}`,
+      summary: `Hi ${name}, your request has been logged in our support queue. Our team monitors all tickets and responds within our statutory resolution window.`,
+      details: [
+        { label: 'Ticket Reference ID', value: ticketId },
+        { label: 'Category', value: cleanCategory },
+        { label: 'Expected First Response', value: 'Within 2 hours' },
+        { label: 'Full Resolution TAT', value: '24 to 48 business hours' },
+      ],
+      extraHtml: `
+        <div style="background-color: #0F172A; border-radius: 8px; padding: 16px; border: 1px solid #1E293B; margin-bottom: 16px;">
+          <p style="margin: 0 0 10px; color: #94A3B8; font-size: 13px; line-height: 1.5;">
+            You can check the progress of this ticket anytime on our Support Portal using your Reference ID <strong>${ticketId}</strong>.
+          </p>
+          <p style="margin: 0; color: #64748B; font-size: 12px;">
+            For urgent escalations, reach us directly on WhatsApp at <a href="https://wa.me/919589615649" style="color: #10B981; font-weight: 700; text-decoration: none;">+91 95896 15649</a>.
+          </p>
+        </div>`
+    });
+
+    emailService.sendMailAsync({
+      to: email.trim(),
+      subject: `TradeGrow Support Ticket Received: ${ticketId}`,
+      html: clientReceiptHtml,
+      templateType: 'TICKET_RECEIPT',
+      priority: 'HIGH',
+    });
+
+    return res.status(201).json({
+      success: true,
+      reference: ticketId,
+      message: `Ticket received successfully. Reference: ${ticketId}. A confirmation email has been dispatched to ${email}.`
+    });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error creating support ticket:', err);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to record support ticket. Please try again.' }
+    });
+  }
+});
+
+/**
+ * GET /api/v1/public/support/tickets/:ref
+ * Look up ticket status by reference ID
+ */
+warRoomRouter.get('/public/support/tickets/:ref', async (req: Request, res: Response) => {
+  try {
+    const rawRef = Array.isArray(req.params.ref) ? req.params.ref[0] : req.params.ref;
+    const ref = String(rawRef || '').trim().toUpperCase();
+    if (!ref) {
+      return res.status(400).json({ success: false, error: { message: 'Reference number is required' } });
+    }
+
+    const ticket = await queryOne<any>(
+      `SELECT id, customer_id, category, priority, subject, description, status, admin_notes, created_at, updated_at
+       FROM support_tickets
+       WHERE UPPER(id) = $1 OR UPPER(customer_id) = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [ref]
+    );
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'TICKET_NOT_FOUND', message: `No active ticket found with reference ${ref}` }
+      });
+    }
+
+    return res.json({
+      success: true,
+      ticket: {
+        ref: ticket.id,
+        status: ticket.status || 'Under Review',
+        category: ticket.category || 'General',
+        createdAt: ticket.created_at,
+        updatedAt: ticket.updated_at,
+        notes: ticket.admin_notes || 'Ticket has been queued for investigation by support staff.'
+      }
+    });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error looking up ticket:', err);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to look up ticket status.' }
+    });
+  }
+});
+
+/**
+ * POST /api/v1/public/onboarding/apply
+ * Captures completed KYC onboarding application from website and sends real-time email
+ */
+warRoomRouter.post('/public/onboarding/apply', async (req: Request, res: Response) => {
+  try {
+    const { ref, phone, name, pan, dob, gender, ifsc } = req.body;
+    const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+    const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    // Send email alert to operations team
+    const alertHtml = buildAlertEmailHtml({
+      badgeTitle: 'NEW APPLICATION',
+      badgeColor: '#38BDF8',
+      headline: `Digital Onboarding Application Submitted: ${ref || 'TG-APP-2026'}`,
+      summary: `An investor has completed the digital onboarding flow on the website. Immediate KYC and CKYC verification required.`,
+      details: [
+        { label: 'Application Reference', value: ref || 'TG-APP-2026' },
+        { label: 'Applicant Name', value: name || 'Not provided' },
+        { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
+        { label: 'PAN Number', value: pan || 'Not provided' },
+        { label: 'Date of Birth', value: dob || 'Not provided' },
+        { label: 'Gender', value: gender || 'Not provided' },
+        { label: 'Bank IFSC', value: ifsc || 'Not provided' },
+        { label: 'Timestamp', value: `${dateStr} IST` },
+      ],
+      actionUrl: 'https://tradegrowx.in/admin',
+      actionLabel: 'Open Compliance Portal'
+    });
+
+    const opsEmails = ['info@tradegrowx.in', 'cyberbuzz.mail@gmail.com'];
+    for (const to of opsEmails) {
+      emailService.sendMailAsync({
+        to,
+        subject: `[TradeGrow KYC Application] ${ref || 'TG-APP-2026'} - ${name || cleanPhone}`,
+        html: alertHtml,
+        templateType: 'KYC_APPLICATION',
+        priority: 'HIGH',
+      });
+    }
+
+    return res.json({
+      success: true,
+      reference: ref,
+      message: 'Account opening application recorded successfully.'
+    });
+  } catch (err: any) {
+    console.error('[WarRoom API] Onboarding application error:', err);
+    return res.status(500).json({ success: false, error: { message: 'Failed to record application' } });
   }
 });
 

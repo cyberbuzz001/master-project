@@ -17,12 +17,11 @@ export default async function ContactPage() {
   const contact = site.ok ? (site.data.settings.contact ?? {}) : {};
 
   const rows = [
-    contact.phone && { icon: Phone, label: "Phone", value: contact.phone, href: `tel:${contact.phone.replace(/\s+/g, "")}` },
-    contact.whatsapp && { icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp, href: `https://wa.me/${contact.whatsapp.replace(/\D/g, "")}` },
-    contact.email && { icon: Mail, label: "Email", value: contact.email, href: `mailto:${contact.email}` },
-    contact.registered_address && { icon: MapPin, label: "Registered address", value: contact.registered_address },
-    contact.branch_address && { icon: MapPin, label: "Branch", value: contact.branch_address },
-    contact.business_hours && { icon: Clock, label: "Hours", value: contact.business_hours },
+    { icon: MessageCircle, label: "WhatsApp Desk", value: "Chat on WhatsApp (+91 95896 15649)", href: "https://wa.me/919589615649" },
+    contact.email && { icon: Mail, label: "Email Support", value: contact.email, href: `mailto:${contact.email}` },
+    contact.registered_address && { icon: MapPin, label: "Registered office", value: contact.registered_address },
+    contact.branch_address && { icon: MapPin, label: "Operations Branch", value: contact.branch_address },
+    contact.business_hours && { icon: Clock, label: "Operating Hours", value: contact.business_hours },
   ].filter(Boolean) as Array<{ icon: typeof Phone; label: string; value: string; href?: string }>;
 
   return (

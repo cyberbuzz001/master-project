@@ -193,28 +193,31 @@
     ticketForm.addEventListener('submit', function (e) {
       e.preventDefault();
       var status = document.getElementById('ticket-status');
-      var endpoint = ticketForm.getAttribute('data-endpoint');
+      var endpoint = ticketForm.getAttribute('data-endpoint') || (getApiBase() + '/api/v1/public/support/tickets');
       var fd = new FormData(ticketForm);
       var data = Object.fromEntries(fd);
 
-      if (endpoint) {
-        status.className = 'form-status';
-        status.textContent = 'Submitting…';
-        fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+      status.className = 'form-status';
+      status.textContent = 'Submitting support ticket to operations desk…';
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
         })
-          .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
-          .then(function (d) { handleTicketSuccess(d.reference || generateTicketId(), data); })
-          .catch(function () {
-            handleTicketSuccess(generateTicketId(), data);
-          });
-      } else {
-        // Fallback local persistence
-        var ref = generateTicketId();
-        handleTicketSuccess(ref, data);
-      }
+        .then(function (d) {
+          var ref = (d && d.reference) || (d && d.data && d.data.reference) || generateTicketId();
+          handleTicketSuccess(ref, data, true);
+        })
+        .catch(function (err) {
+          console.warn('[Ticket Submit] Online dispatch fallback:', err);
+          var ref = generateTicketId();
+          handleTicketSuccess(ref, data, false);
+        });
     });
   }
 
@@ -223,7 +226,7 @@
     return 'TG-TKT-2026-' + num;
   }
 
-  function handleTicketSuccess(ref, data) {
+  function handleTicketSuccess(ref, data, isSynced) {
     var status = document.getElementById('ticket-status');
     var ticketRecord = {
       ref: ref,
@@ -243,7 +246,11 @@
     } catch (err) {}
 
     status.className = 'form-status form-status--ok';
-    status.innerHTML = 'Ticket received successfully. Reference: <strong>' + ref + '</strong>. We have logged your request and will revert via email.';
+    if (isSynced) {
+      status.innerHTML = '✅ Ticket created successfully. Reference: <strong>' + ref + '</strong>. An email notification has been dispatched to <strong>info@tradegrowx.in</strong> and a confirmation was sent to ' + (data.email || 'your email') + '.';
+    } else {
+      status.innerHTML = 'Ticket logged locally: <strong>' + ref + '</strong>. If urgent, connect directly: <a href="mailto:info@tradegrowx.in?subject=' + encodeURIComponent('Support Ticket ' + ref + ' - ' + (data.name || 'Investor')) + '&body=' + encodeURIComponent(data.message) + '" style="color:#10b981;font-weight:700">Email info@tradegrowx.in</a> or <a href="https://wa.me/919589615649?text=' + encodeURIComponent('Hi TradeGrow, ticket ' + ref + ': ' + data.message) + '" target="_blank" style="color:#25d366;font-weight:700">Message on WhatsApp</a>.';
+    }
     ticketForm.reset();
     track('support_ticket_created', { ref: ref });
 
@@ -275,6 +282,22 @@
           status: 'Under Review',
         };
       }
+
+      // Check online status in parallel
+      fetch(getApiBase() + '/api/v1/public/support/tickets/' + encodeURIComponent(q))
+        .then(function (r) { if (!r.ok) throw new Error('not found'); return r.json(); })
+        .then(function (res) {
+          if (res && res.ticket) {
+            document.getElementById('disp-tkt-id').textContent = res.ticket.ref;
+            document.getElementById('disp-tkt-status').textContent = res.ticket.status || 'Under Review';
+            document.getElementById('disp-tkt-cat').textContent = res.ticket.category || 'Support';
+            if (res.ticket.notes) {
+              var noteEl = document.getElementById('disp-tkt-notes');
+              if (noteEl) noteEl.textContent = res.ticket.notes;
+            }
+          }
+        })
+        .catch(function () {});
 
       document.getElementById('disp-tkt-id').textContent = found.ref;
       document.getElementById('disp-tkt-status').textContent = found.status || 'Under Review';
@@ -578,6 +601,17 @@
         existing.unshift(applicantState);
         localStorage.setItem('tg_applications', JSON.stringify(existing.slice(0, 5)));
       } catch (err) {}
+
+      // Dispatch real application to backend for instant email alert to operations desk
+      try {
+        fetch(getApiBase() + '/api/v1/public/onboarding/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(applicantState)
+        }).catch(function (err) {
+          console.warn('[Onboarding Dispatch] Offline fallback:', err);
+        });
+      } catch (_) {}
 
       document.getElementById('disp-app-ref').textContent = refNum;
       kycStep3.classList.remove('is-active');

@@ -5,7 +5,7 @@ import { Container } from "../ui";
 import { CookieSettingsLink } from "./CookieConsent";
 import { Logo } from "./Logo";
 import { TRUST_CONFIG } from "@/lib/trust-config";
-import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
+import { Mail, MessageCircle, MapPin, ShieldCheck } from "lucide-react";
 
 export async function SiteFooter() {
   const site = await getSiteData();
@@ -13,7 +13,6 @@ export async function SiteFooter() {
   const contact = settings.contact ?? {};
 
   const email = contact.email || "info@expertstocks.in";
-  const phone = contact.phone || "+91 92388 37041";
 
   return (
     <footer className="mt-auto border-t border-[#1C2734] bg-[#05070B] text-[#9AA7B5]">
@@ -34,9 +33,14 @@ export async function SiteFooter() {
               </a>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="size-3.5 text-[#43D9FF]" />
-              <a href={`tel:${phone.replace(/\s+/g, "")}`} className="text-[#9AA7B5] hover:text-[#F5F7FA]">
-                {phone}
+              <MessageCircle className="size-3.5 text-[#25D366]" />
+              <a
+                href="https://wa.me/919589615649"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#9AA7B5] hover:text-[#25D366] transition-colors"
+              >
+                Chat on WhatsApp
               </a>
             </div>
             <div className="flex items-start gap-2 pt-1">

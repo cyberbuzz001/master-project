@@ -11,8 +11,9 @@ export const PRIMARY_NAV = [
   { href: "/#markets", label: "Markets" },
   { href: "/research", label: "Research" },
   { href: "/services", label: "Services" },
+  { href: "/pricing", label: "Plans" },
+  { href: "/risk-assessment", label: "Risk Assessment" },
   { href: "/#tools", label: "Tools" },
-  { href: "/#academy", label: "Academy" },
   { href: "/trust-center", label: "Trust Center" },
 ] as const;
 
@@ -22,6 +23,7 @@ export const FOOTER_NAV = {
     { href: "/technology", label: "Technology" },
     { href: "/services", label: "Services" },
     { href: "/pricing", label: "Plans" },
+    { href: "/risk-assessment", label: "Risk Assessment" },
     { href: "/contact", label: "Contact" },
   ],
   Markets: [
