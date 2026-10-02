@@ -99,10 +99,32 @@ export function LeadForm({
 
   if (status === "done") {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-2xl bg-teal-50 p-6 ring-1 ring-teal-100 animate-rise" role="status">
-        <CheckCircle2 className="size-7 text-teal-600" aria-hidden="true" />
-        <p className="text-lg font-semibold text-ink-950">Enquiry received</p>
-        <p className="text-sm leading-6 text-ink-700">{doneMessage}</p>
+      <div
+        className="flex flex-col items-start gap-4 rounded-2xl border border-[#22C55E]/40 bg-[#0D131C] p-6 sm:p-8 shadow-2xl animate-rise text-[#F5F7FA]"
+        role="status"
+      >
+        <div className="size-12 rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 flex items-center justify-center text-[#22C55E]">
+          <CheckCircle2 className="size-6 text-[#22C55E]" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-xl font-bold font-display text-[#F5F7FA]">Enquiry Received</p>
+          <p className="mt-2 text-sm leading-relaxed text-[#D1D5DB]">{doneMessage}</p>
+        </div>
+        <div className="mt-2 w-full pt-4 border-t border-[#1C2734] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-mono">
+          <span className="flex items-center gap-1.5 text-[#22C55E] font-medium">
+            <span className="size-2 rounded-full bg-[#22C55E] animate-pulse" />
+            Request Logged in Advisory Desk
+          </span>
+          <a
+            href="https://wa.me/919589615649"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[#43D9FF] hover:underline"
+          >
+            <span>Connect on WhatsApp Desk</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
       </div>
     );
   }
