@@ -361,7 +361,7 @@ export function AppShell({
               : 'bg-[var(--loss-light)] text-[var(--loss)] border border-[var(--loss)]/30'
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${socket.status === 'CONNECTED' ? 'bg-[var(--gain)] animate-pulse' : 'bg-[var(--loss)]'}`} />
-            <span>{socket.status === 'CONNECTED' ? 'LIVE (Dhan HQ v2)' : 'RECONNECTING'}</span>
+            <span>{socket.status === 'CONNECTED' ? 'LIVE' : 'RECONNECTING'}</span>
           </span>
         </div>
       </div>

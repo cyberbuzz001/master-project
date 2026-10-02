@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
-const BACKEND_URL = process.env.BACKEND_URL || (isDev ? "http://127.0.0.1:8000" : undefined);
 const isDev = process.env.NODE_ENV !== "production";
+const BACKEND_URL = process.env.BACKEND_URL || (isDev ? "http://127.0.0.1:8000" : undefined);
 
 const csp = [
   "default-src 'self'",

@@ -188,9 +188,9 @@ export function InvestorCharterView() {
           <div className="rounded-xl border border-[#22C55E]/20 bg-[#0B1A10] p-4 flex items-start gap-3.5">
             <CheckCircle2 className="size-5 text-[#22C55E] shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-semibold text-[#F5F7FA]">Regulatory Escalation Access (SCORES & SMART ODR)</h4>
+              <h4 className="text-sm font-semibold text-[#F5F7FA]">Dedicated Compliance Escalation Desk</h4>
               <p className="mt-1 text-xs leading-relaxed text-[#9AA7B5]">
-                Right to escalate unresolved complaints to SEBI SCORES portal or the Online Dispute Resolution (ODR) mechanism without pre-conditions.
+                Direct access to the Principal Grievance Officer and designated Compliance Cell for structured review and resolution of all queries.
               </p>
             </div>
           </div>

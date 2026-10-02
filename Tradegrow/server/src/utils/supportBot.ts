@@ -55,7 +55,7 @@ async function buildAccountSnapshot(customerId: string): Promise<string> {
       `Realized P&L: ${inr(wallet.realizedPnl)}, Unrealized P&L: ${inr(wallet.unrealizedPnl)}`
     );
   } else {
-    lines.push('Wallet — no virtual wallet found for this account.');
+    lines.push('Wallet — no trading wallet found for this account.');
   }
   lines.push(
     openPositions.length === 0

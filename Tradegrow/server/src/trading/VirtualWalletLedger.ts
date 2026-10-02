@@ -314,7 +314,7 @@ export class VirtualWalletLedger {
             'led_' + generateUUID(), generateUUID(), userId,
             amount, cashBalance, cashBalance - newUsedMargin,
             referenceId, createdBy,
-            JSON.stringify({ reason: 'Pre-Trade Virtual Margin Block' })
+            JSON.stringify({ reason: 'Pre-Trade Margin Block' })
           ]
         );
       });
@@ -367,7 +367,7 @@ export class VirtualWalletLedger {
           'led_' + generateUUID(), generateUUID(), userId,
           releaseAmt, cashBalance, cashBalance - newUsedMargin,
           referenceId, createdBy,
-          JSON.stringify({ reason: 'Virtual Margin Release' })
+          JSON.stringify({ reason: 'Margin Release' })
         ]
       );
     });

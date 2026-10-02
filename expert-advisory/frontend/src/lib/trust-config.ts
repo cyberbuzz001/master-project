@@ -106,7 +106,7 @@ export const TRUST_CONFIG: RegulatoryConfig = {
       publishedDate: "2026-01-10",
       lastUpdated: "2026-09-10",
       summary:
-        "Step-by-step escalation hierarchy from internal compliance desk to SEBI SCORES portal and the SMART ODR dispute platform.",
+        "Step-by-step internal escalation hierarchy from front-desk customer support to dedicated Compliance and Grievance Officers.",
       href: "/legal/grievance-redressal",
       category: "Grievance",
     },

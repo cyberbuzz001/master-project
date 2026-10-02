@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { LeadForm } from "@/components/site/LeadForm";
 import { PageHero, Section } from "@/components/site/PageHero";
+import { ResearchArchiveView } from "@/components/site/ResearchArchiveView";
 import { Badge, Card, Container, LinkButton, Notice, SectionHeading } from "@/components/ui";
 import { getSiteData } from "@/lib/api-server";
 
@@ -91,20 +92,44 @@ export default async function ResourcesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Knowledge & Discipline"
-        title="Investor education & market guides"
-        lead="Clear, practical educational resources designed to build risk awareness, analytical depth, and disciplined trading habits in Indian capital markets."
+        eyebrow="Market Intelligence & Investor Education"
+        title="Daily Research Reports & Educational Guides"
+        lead="Automated daily market intelligence published across 10 specialized coverage disciplines, accompanied by foundational educational guides on risk control, technical analysis, and derivatives."
       >
         <div className="flex flex-wrap gap-3">
-          <LinkButton href="/risk-assessment">Take the Risk Assessment</LinkButton>
-          <LinkButton href="/methodology" variant="secondary">
-            Our Research Methodology
+          <LinkButton href="#daily-reports">Browse Today's Reports</LinkButton>
+          <LinkButton href="/risk-assessment" variant="secondary">
+            Take Risk Assessment
+          </LinkButton>
+          <LinkButton href="/pricing" variant="secondary">
+            View Advisory Plans
           </LinkButton>
         </div>
       </PageHero>
 
-      {/* Guides Grid */}
-      <Section>
+      {/* 10 Automated Daily Published Reports */}
+      <div id="daily-reports">
+        <Section className="pt-0">
+          <div className="mb-8">
+            <SectionHeading
+              eyebrow="Daily Coverage"
+              title="Today's Published Research Reports"
+              lead="Explore our daily automated publications spanning 10 key market disciplines with verified metrics and technical levels."
+            />
+          </div>
+          <ResearchArchiveView />
+        </Section>
+      </div>
+
+      {/* Educational Guides Grid */}
+      <Section className="border-t border-[#1C2734]">
+        <div className="mb-8">
+          <SectionHeading
+            eyebrow="Investor Academy"
+            title="Core Educational Guides & Risk Rules"
+            lead="Essential foundational knowledge designed to develop risk awareness, emotional discipline, and sound trading principles."
+          />
+        </div>
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div>
             <div className="grid gap-6 sm:grid-cols-2">

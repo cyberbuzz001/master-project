@@ -443,9 +443,9 @@ export default function SupportDeskPage() {
             <Card className="p-6 bg-ink-50">
               <h4 className="text-sm font-bold text-ink-900 mb-1">Resolution Escalation Stages</h4>
               <ol className="mt-2 text-xs text-ink-600 space-y-2 list-decimal list-inside">
-                <li><strong>Stage 1:</strong> Direct resolution by Grievance Officer within 21 days.</li>
-                <li><strong>Stage 2:</strong> SEBI Complaints Redress System (SCORES).</li>
-                <li><strong>Stage 3:</strong> Online Dispute Resolution (SMART ODR).</li>
+                <li><strong>Stage 1:</strong> Dedicated Helpdesk Support acknowledgment within 24 hours.</li>
+                <li><strong>Stage 2:</strong> Direct evaluation & resolution by Grievance Redressal Officer.</li>
+                <li><strong>Stage 3:</strong> Final executive review by Head of Compliance Cell.</li>
               </ol>
             </Card>
           </div>

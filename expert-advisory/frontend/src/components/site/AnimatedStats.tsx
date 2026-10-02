@@ -13,9 +13,9 @@ const STATS = [
   },
   {
     icon: Clock,
-    value: "21 Days",
-    label: "SEBI Statutory SLA",
-    detail: "Guaranteed maximum turnaround for any investor grievance filed, with direct SEBI SCORES / SMART ODR escalation.",
+    value: "24-48 Hrs",
+    label: "Prompt Grievance SLA",
+    detail: "Guaranteed prompt turnaround for any investor inquiry or grievance filed, handled by our dedicated compliance cell.",
     tone: "text-teal-600",
     bg: "bg-teal-50",
   },
