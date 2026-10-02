@@ -45,8 +45,8 @@
       "statement": "Trade Grow operates as a technology/platform brand. Securities transactions, where applicable, are facilitated through the relevant registered intermediary.",
       "validFrom": "Active",
       "validTo": "Perpetual",
-      "verifyUrl": "https://www.sebi.gov.in/intermediaries.html",
-      "verifyLabel": "Verify on SEBI",
+      "verifyUrl": null,
+      "verifyLabel": null,
       "certificateDoc": null
     },
     "exchanges": [
@@ -55,8 +55,8 @@
         "status": "verified",
         "memberCode": "Access through registered intermediary",
         "segments": ["Equity Cash", "Futures & Options (F&O)"],
-        "verifyUrl": "https://www.nseindia.com/invest/find-a-stock-broker",
-        "verifyLabel": "Verify on NSE",
+        "verifyUrl": null,
+        "verifyLabel": null,
         "certificateDoc": null
       },
       {
@@ -112,25 +112,25 @@
       "name": "Compliance Cell",
       "designation": "Compliance Officer",
       "email": "info@tradegrowx.in",
-      "phone": "+91 95896 15649"
+      "phone": "WhatsApp Support"
     },
     "grievance": {
       "name": "Grievance Desk",
       "designation": "Grievance Redressal Officer",
       "email": "info@tradegrowx.in",
-      "phone": "+91 95896 15649"
+      "phone": "WhatsApp Support"
     },
     "principal": {
       "name": "Management",
       "designation": "Principal Officer / Director",
       "email": "info@tradegrowx.in",
-      "phone": "+91 95896 15649"
+      "phone": "WhatsApp Support"
     }
   },
 
   "support": {
     "phone": "+91 95896 15649",
-    "phoneDisplay": "+91 95896 15649",
+    "phoneDisplay": "WhatsApp Support",
     "email": "info@tradegrowx.in",
     "whatsapp": {
       "enabled": true,
@@ -140,10 +140,10 @@
     "hours": "9:00 AM – 6:00 PM IST",
     "workingDays": "Monday to Friday",
     "escalation": [
-      { "level": "Level 1", "channel": "Customer Support", "contact": "info@tradegrowx.in | +91 95896 15649", "tat": "24 hours" },
+      { "level": "Level 1", "channel": "Customer Support", "contact": "info@tradegrowx.in | WhatsApp Support", "tat": "24 hours" },
       { "level": "Level 2", "channel": "Head of Customer Service", "contact": "info@tradegrowx.in", "tat": "48 hours" },
       { "level": "Level 3", "channel": "Compliance Desk", "contact": "info@tradegrowx.in", "tat": "3 business days" },
-      { "level": "Level 4", "channel": "Exchange / SEBI SCORES", "contact": "https://scores.sebi.gov.in", "tat": "As per regulatory norms" }
+      { "level": "Level 4", "channel": "Regulatory Escalation", "contact": "Regulatory Grievance Redressal Portal", "tat": "As per regulatory norms" }
     ]
   },
 
