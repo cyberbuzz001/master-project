@@ -51,14 +51,14 @@ export const TRUST_CONFIG: RegulatoryConfig = {
     name: "Designated Compliance Desk",
     designation: "Head of Regulatory Oversight & Quality",
     email: "support@expertstocks.in",
-    phone: "+91 92388 37041",
+    phone: "+91 95896 15649",
     address: "Expert Stocks Consultancy, ITC Park, Sector-11, CBD Belapur, Navi Mumbai, Maharashtra 400614",
   },
   grievanceOfficer: {
     name: "Investor Grievance Redressal Cell",
     designation: "Principal Grievance Officer",
     email: "support@expertstocks.in",
-    phone: "+91 92388 37041",
+    phone: "+91 95896 15649",
     escalationTimeline: "Formal written acknowledgment within 24 hours through our dedicated internal grievance cell.",
   },
   statutoryNotice:

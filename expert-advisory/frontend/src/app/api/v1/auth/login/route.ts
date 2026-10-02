@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           id: "usr_client_demo_1",
           name: "[DEMO] Client",
           email: email || "client@demo.example.test",
-          mobile: "+91 98765 43210",
+          mobile: "+91 95896 15649",
           user_type: "client",
           status: "ACTIVE",
           roles: [{ name: "client", label: "Client" }],
