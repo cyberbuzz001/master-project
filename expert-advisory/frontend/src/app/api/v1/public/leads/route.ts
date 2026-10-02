@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { leadsStore } from "@/lib/leads-store";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
-const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "http://127.0.0.1:5000";
+const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in";
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +65,25 @@ export async function POST(request: NextRequest) {
       console.warn("[Leads Forwarding] TradeGrow email engine unreachable / deferred:", err.message);
     }
 
-    // 2. Forward to Laravel CRM backend if reachable
+    // 2. Save directly in Expert Stocks persistent storage so /office shows it immediately!
+    try {
+      leadsStore.addLead({
+        leadCode: dispatchedLeadCode,
+        fullName,
+        mobile: cleanMobile,
+        email: body.email,
+        city: body.city,
+        capitalRange: body.capital_range,
+        segments: body.segments,
+        source: body.form_key || body.source || "Contact Form",
+        message: body.message,
+        assessment: body.assessment,
+      });
+    } catch (err: any) {
+      console.warn("[Leads Store] Could not record to local store:", err.message);
+    }
+
+    // 3. Forward to Laravel CRM backend if reachable
     try {
       const response = await fetch(`${BACKEND_URL}/api/v1/public/leads`, {
         method: "POST",
@@ -92,7 +111,6 @@ export async function POST(request: NextRequest) {
       // Laravel backend is offline or on serverless; continue gracefully
     }
 
-    // Serverless / Graceful fallback response so customer is NEVER blocked
     console.log(`[Lead Successfully Handled] Ref: ${dispatchedLeadCode}, Name: ${fullName}, Mobile: ${cleanMobile}, Form: ${body.form_key || "general"}`);
 
     const isRpm = body.form_key === "risk_assessment" || Boolean(body.assessment);

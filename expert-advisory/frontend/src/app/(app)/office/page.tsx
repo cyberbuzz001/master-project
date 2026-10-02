@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Users,
   LineChart,
@@ -11,18 +11,18 @@ import {
   MessageSquare,
   Search,
   Filter,
-  ArrowUpRight,
   TrendingUp,
   AlertTriangle,
   PlusCircle,
-  CheckCircle2,
+  RotateCw,
   Clock,
   PhoneCall,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/app/AuthProvider";
 import { PageTitle } from "@/components/app/AppShell";
-import { Badge, Button, Card, cx } from "@/components/ui";
+import { Badge, Card, cx } from "@/components/ui";
 
 interface Lead {
   id: string;
@@ -33,6 +33,21 @@ interface Lead {
   segment: string;
   status: "new" | "contacted" | "qualified" | "converted";
   createdAt: string;
+  source?: string;
+  message?: string;
+  city?: string;
+}
+
+interface KycRecord {
+  code: string;
+  name: string;
+  mobile: string;
+  score: string;
+  profile: string;
+  kyc: string;
+  rm: string;
+  createdAt: string;
+  summary?: string;
 }
 
 interface AdvisoryCall {
@@ -47,49 +62,6 @@ interface AdvisoryCall {
   status: "Active" | "Target Hit" | "Closed";
   pnl: string;
 }
-
-const INITIAL_LEADS: Lead[] = [
-  {
-    id: "LD-2026-901",
-    name: "Vikram Malhotra",
-    mobile: "+91 98201 44521",
-    email: "vikram.m@gmail.com",
-    capital: "₹10L - ₹25L",
-    segment: "Large-cap Equity & Options",
-    status: "new",
-    createdAt: "Today, 10:15 AM",
-  },
-  {
-    id: "LD-2026-902",
-    name: "Sunita Verma",
-    mobile: "+91 99304 88721",
-    email: "sunita.v@outlook.com",
-    capital: "₹5L - ₹10L",
-    segment: "Cash Equity Only",
-    status: "contacted",
-    createdAt: "Today, 09:30 AM",
-  },
-  {
-    id: "LD-2026-903",
-    name: "Rajeshwar Rao",
-    mobile: "+91 94401 23901",
-    email: "r.rao@rediffmail.com",
-    capital: "₹25L+",
-    segment: "HNI Wealth & Index Derivatives",
-    status: "qualified",
-    createdAt: "Yesterday",
-  },
-  {
-    id: "LD-2026-904",
-    name: "Amitabh Sen",
-    mobile: "+91 98112 55902",
-    email: "amitabh.sen@tcs.com",
-    capital: "₹15L - ₹20L",
-    segment: "Swing Equity",
-    status: "converted",
-    createdAt: "2 days ago",
-  },
-];
 
 const INITIAL_CALLS: AdvisoryCall[] = [
   {
@@ -133,10 +105,14 @@ const INITIAL_CALLS: AdvisoryCall[] = [
 export default function OfficeDashboardPage() {
   const { me } = useAuth();
   const [activeTab, setActiveTab] = useState<"leads" | "research" | "kyc" | "compliance">("leads");
-  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [kycRecords, setKycRecords] = useState<KycRecord[]>([]);
   const [calls, setCalls] = useState<AdvisoryCall[]>(INITIAL_CALLS);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadFilter, setLeadFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<string>("Just now");
 
   // New recommendation form modal state
   const [showCallModal, setShowCallModal] = useState(false);
@@ -146,6 +122,44 @@ export default function OfficeDashboardPage() {
   const [newSL, setNewSL] = useState("");
   const [newTargets, setNewTargets] = useState("");
   const [newHorizon, setNewHorizon] = useState("1-3 Months");
+
+  const fetchOfficeData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setRefreshing(true);
+    try {
+      const [leadsRes, kycRes] = await Promise.all([
+        fetch("/api/v1/office/leads", { cache: "no-store" }).catch(() => null),
+        fetch("/api/v1/office/kyc", { cache: "no-store" }).catch(() => null),
+      ]);
+
+      if (leadsRes && leadsRes.ok) {
+        const json = await leadsRes.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setLeads(json.data);
+        }
+      }
+
+      if (kycRes && kycRes.ok) {
+        const json = await kycRes.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setKycRecords(json.data);
+        }
+      }
+
+      setLastRefreshed(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (err) {
+      console.warn("[Office] Data fetch failed, retaining active state:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOfficeData();
+    // Auto-refresh every 15 seconds to stream in new leads
+    const interval = setInterval(() => fetchOfficeData(true), 15000);
+    return () => clearInterval(interval);
+  }, [fetchOfficeData]);
 
   const handleCreateCall = (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,13 +188,24 @@ export default function OfficeDashboardPage() {
     const matchesSearch =
       l.name.toLowerCase().includes(leadSearch.toLowerCase()) ||
       l.mobile.includes(leadSearch) ||
-      l.segment.toLowerCase().includes(leadSearch.toLowerCase());
+      (l.segment && l.segment.toLowerCase().includes(leadSearch.toLowerCase())) ||
+      (l.email && l.email.toLowerCase().includes(leadSearch.toLowerCase())) ||
+      l.id.toLowerCase().includes(leadSearch.toLowerCase());
     const matchesFilter = leadFilter === "all" || l.status === leadFilter;
     return matchesSearch && matchesFilter;
   });
 
-  const toggleLeadStatus = (id: string, newStatus: Lead["status"]) => {
-    setLeads(leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+  const toggleLeadStatus = async (id: string, newStatus: Lead["status"]) => {
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+    try {
+      await fetch("/api/v1/office/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+    } catch (err) {
+      console.warn("[Office] Could not persist status change:", err);
+    }
   };
 
   return (
@@ -192,56 +217,78 @@ export default function OfficeDashboardPage() {
             title="Staff Operations & Executive Desk"
             description="Manage inbound leads, research publications, client suitability, and regulatory oversight."
           />
-          <div className="mt-1 flex items-center gap-2 text-xs font-mono text-ink-600">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono text-ink-600">
             <span className="size-2 rounded-full bg-positive-500 animate-pulse" />
-            <span>Operator: <strong>{me.name}</strong> ({me.email})</span>
+            <span>Operator: <strong>{me.name}</strong></span>
             <span>•</span>
-            <span className="text-brand-700 font-semibold">SEBI Dual-Control Active</span>
+            <span className="text-brand-700 font-semibold">Dual-Control Audit Active</span>
+            <span>•</span>
+            <span className="text-ink-400">Synced: {lastRefreshed}</span>
           </div>
         </div>
 
-        {/* Quick link to TradeGrow Brokerage Admin */}
-        <a
-          href="https://tradegrowx.in/admin"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-ink-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-ink-800 transition-colors"
-        >
-          <TrendingUp className="size-4 text-accent-400" />
-          <span>TradeGrow Admin Panel</span>
-          <ExternalLink className="size-3.5 text-ink-400" />
-        </a>
+        <div className="flex items-center gap-2.5">
+          {/* Manual Refresh Button */}
+          <button
+            type="button"
+            onClick={() => fetchOfficeData()}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-ink-300 bg-white px-3.5 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-100 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+            title="Fetch latest leads and KYC submissions"
+          >
+            <RotateCw className={cx("size-3.5 text-brand-600", refreshing && "animate-spin")} />
+            <span>{refreshing ? "Refreshing..." : "Refresh Feed"}</span>
+          </button>
+
+          {/* Quick link to TradeGrow Brokerage Admin */}
+          <a
+            href="https://tradegrowx.in/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-ink-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-ink-800 transition-colors"
+          >
+            <TrendingUp className="size-4 text-accent-400" />
+            <span>TradeGrow Admin</span>
+            <ExternalLink className="size-3 text-ink-400" />
+          </a>
+        </div>
       </div>
 
       {/* KPI Stats Overview Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-5 border-l-4 border-l-brand-600">
           <div className="flex items-center justify-between text-xs font-mono text-ink-500">
-            <span>TOTAL CRM LEADS</span>
+            <span>INBOUND CRM LEADS</span>
             <Users className="size-4 text-brand-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-ink-900">{leads.length} Active</div>
-          <p className="mt-1 text-xs text-positive-600 font-medium">+4 new leads captured today</p>
+          <div className="mt-2 text-2xl font-bold font-mono text-ink-900">
+            {loading ? "..." : `${leads.length} Records`}
+          </div>
+          <p className="mt-1 text-xs text-positive-600 font-medium">
+            {leads.filter((l) => l.status === "new").length} New / Unhandled
+          </p>
         </Card>
 
         <Card className="p-5 border-l-4 border-l-positive-600">
           <div className="flex items-center justify-between text-xs font-mono text-ink-500">
+            <span>KYC & ASSESSMENTS</span>
+            <FileCheck2 className="size-4 text-positive-600" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-mono text-ink-900">
+            {loading ? "..." : `${kycRecords.length} Submissions`}
+          </div>
+          <p className="mt-1 text-xs text-ink-600">SEBI Suitability Matrix</p>
+        </Card>
+
+        <Card className="p-5 border-l-4 border-l-accent-600">
+          <div className="flex items-center justify-between text-xs font-mono text-ink-500">
             <span>ACTIVE ADVISORY CALLS</span>
-            <LineChart className="size-4 text-positive-600" />
+            <LineChart className="size-4 text-accent-600" />
           </div>
           <div className="mt-2 text-2xl font-bold font-mono text-ink-900">
             {calls.filter((c) => c.status === "Active").length} Live Calls
           </div>
           <p className="mt-1 text-xs text-ink-600">Avg Risk:Reward 1 : 2.4</p>
-        </Card>
-
-        <Card className="p-5 border-l-4 border-l-accent-600">
-          <div className="flex items-center justify-between text-xs font-mono text-ink-500">
-            <span>MONTHLY ADVISORY REVENUE</span>
-            <ReceiptIndianRupee className="size-4 text-accent-600" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-ink-900">₹14,80,000</div>
-          <p className="mt-1 text-xs text-ink-600">100% GST Invoiced</p>
         </Card>
 
         <Card className="p-5 border-l-4 border-l-warning-600">
@@ -259,8 +306,8 @@ export default function OfficeDashboardPage() {
         <nav className="flex space-x-4 sm:space-x-8">
           {[
             { id: "leads", label: "Leads & Telecaller CRM", icon: Users, count: leads.length },
+            { id: "kyc", label: "Client KYC & Risk Profiles", icon: FileCheck2, count: kycRecords.length },
             { id: "research", label: "Research & Calls Dispatch", icon: LineChart, count: calls.length },
-            { id: "kyc", label: "Client KYC & Risk Profiles", icon: FileCheck2 },
             { id: "compliance", label: "Compliance & Audit Trail", icon: ShieldCheck },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -300,7 +347,7 @@ export default function OfficeDashboardPage() {
                 type="text"
                 value={leadSearch}
                 onChange={(e) => setLeadSearch(e.target.value)}
-                placeholder="Search leads by name, phone, or segment..."
+                placeholder="Search by name, phone, segment, or ref..."
                 className="w-full rounded-xl border border-ink-300 bg-white pl-9 pr-4 py-2 text-sm text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:outline-none"
               />
             </div>
@@ -312,11 +359,11 @@ export default function OfficeDashboardPage() {
                 onChange={(e) => setLeadFilter(e.target.value)}
                 className="rounded-xl border border-ink-300 bg-white px-3 py-2 text-sm text-ink-800 focus:outline-none"
               >
-                <option value="all">All Statuses</option>
-                <option value="new">New Inbound</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="converted">Converted</option>
+                <option value="all">All Statuses ({leads.length})</option>
+                <option value="new">New ({leads.filter((l) => l.status === "new").length})</option>
+                <option value="contacted">Contacted ({leads.filter((l) => l.status === "contacted").length})</option>
+                <option value="qualified">Qualified ({leads.filter((l) => l.status === "qualified").length})</option>
+                <option value="converted">Converted ({leads.filter((l) => l.status === "converted").length})</option>
               </select>
             </div>
           </div>
@@ -327,61 +374,78 @@ export default function OfficeDashboardPage() {
                 <thead className="bg-ink-50 text-xs font-mono uppercase tracking-wider text-ink-500 border-b border-ink-200">
                   <tr>
                     <th className="px-5 py-3">Lead ID & Name</th>
-                    <th className="px-5 py-3">Contact</th>
+                    <th className="px-5 py-3">Contact Details</th>
                     <th className="px-5 py-3">Declared Capital</th>
-                    <th className="px-5 py-3">Trading Segment</th>
+                    <th className="px-5 py-3">Segment / Source</th>
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3">Captured</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                  {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-ink-50/60 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="font-semibold text-ink-900">{lead.name}</div>
-                        <div className="font-mono text-xs text-ink-500">{lead.id}</div>
-                      </td>
-                      <td className="px-5 py-3.5 font-mono text-xs text-ink-800">
-                        <div>{lead.mobile}</div>
-                        <div className="text-ink-500">{lead.email}</div>
-                      </td>
-                      <td className="px-5 py-3.5 font-mono font-medium text-ink-900">{lead.capital}</td>
-                      <td className="px-5 py-3.5 text-xs text-ink-700">{lead.segment}</td>
-                      <td className="px-5 py-3.5">
-                        <select
-                          value={lead.status}
-                          onChange={(e) => toggleLeadStatus(lead.id, e.target.value as any)}
-                          className={cx(
-                            "rounded-md border px-2 py-1 text-xs font-semibold focus:outline-none cursor-pointer",
-                            lead.status === "new" && "bg-brand-50 border-brand-300 text-brand-700",
-                            lead.status === "contacted" && "bg-warning-50 border-warning-300 text-warning-800",
-                            lead.status === "qualified" && "bg-accent-50 border-accent-300 text-accent-800",
-                            lead.status === "converted" && "bg-positive-50 border-positive-300 text-positive-700"
-                          )}
-                        >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="qualified">Qualified</option>
-                          <option value="converted">Converted</option>
-                        </select>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-ink-500">{lead.createdAt}</td>
-                      <td className="px-5 py-3.5 text-right">
-                        <a
-                          href={`https://wa.me/${lead.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
-                            `Hello ${lead.name}, thank you for contacting Expert Stocks Consultancy regarding our SEBI-registered advisory services.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/20 px-2.5 py-1 text-xs font-medium text-[#16A34A] hover:bg-[#22C55E]/20 transition-colors"
-                        >
-                          <MessageSquare className="size-3.5" />
-                          <span>WhatsApp</span>
-                        </a>
+                  {filteredLeads.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-5 py-8 text-center text-sm text-ink-500">
+                        No leads matching your current filter.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredLeads.map((lead) => (
+                      <tr key={lead.id} className="hover:bg-ink-50/60 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <div className="font-semibold text-ink-900">{lead.name}</div>
+                          <div className="font-mono text-xs text-brand-700">{lead.id}</div>
+                          {lead.message && (
+                            <div className="text-[11px] text-ink-500 line-clamp-1 mt-0.5" title={lead.message}>
+                              &quot;{lead.message}&quot;
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5 font-mono text-xs text-ink-800">
+                          <div className="font-semibold text-ink-900">{lead.mobile}</div>
+                          <div className="text-ink-500">{lead.email}</div>
+                          {lead.city && <div className="text-[11px] text-ink-400">{lead.city}</div>}
+                        </td>
+                        <td className="px-5 py-3.5 font-mono font-medium text-ink-900">{lead.capital}</td>
+                        <td className="px-5 py-3.5 text-xs text-ink-700">
+                          <div>{lead.segment}</div>
+                          {lead.source && <div className="text-[11px] text-ink-400 mt-0.5">{lead.source}</div>}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <select
+                            value={lead.status}
+                            onChange={(e) => toggleLeadStatus(lead.id, e.target.value as any)}
+                            className={cx(
+                              "rounded-md border px-2 py-1 text-xs font-semibold focus:outline-none cursor-pointer",
+                              lead.status === "new" && "bg-brand-50 border-brand-300 text-brand-700",
+                              lead.status === "contacted" && "bg-warning-50 border-warning-300 text-warning-800",
+                              lead.status === "qualified" && "bg-accent-50 border-accent-300 text-accent-800",
+                              lead.status === "converted" && "bg-positive-50 border-positive-300 text-positive-700"
+                            )}
+                          >
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="converted">Converted</option>
+                          </select>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-ink-500">{lead.createdAt}</td>
+                        <td className="px-5 py-3.5 text-right">
+                          <a
+                            href={`https://wa.me/${lead.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
+                              `Hello ${lead.name}, thank you for contacting Expert Stocks Consultancy regarding our advisory services (Ref: ${lead.id}). How may our advisory team assist you today?`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/20 px-2.5 py-1 text-xs font-medium text-[#16A34A] hover:bg-[#22C55E]/20 transition-colors"
+                          >
+                            <MessageSquare className="size-3.5" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -389,7 +453,68 @@ export default function OfficeDashboardPage() {
         </div>
       )}
 
-      {/* TAB 2: RESEARCH & CALLS DISPATCH */}
+      {/* TAB 2: CLIENT KYC & RISK PROFILES */}
+      {activeTab === "kyc" && (
+        <Card className="p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-ink-100 pb-3 gap-2">
+            <div>
+              <h3 className="text-base font-semibold text-ink-900">SEBI Suitability & KYC Verification Queue</h3>
+              <p className="text-xs text-ink-500">Every subscribed client must have an active risk suitability assessment.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge tone="positive">{kycRecords.length} Assessments Active</Badge>
+              <button
+                type="button"
+                onClick={() => fetchOfficeData()}
+                className="text-xs text-brand-700 hover:underline font-mono"
+              >
+                Reload
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {kycRecords.length === 0 ? (
+              <p className="text-sm text-ink-500 py-6 text-center">No KYC submissions found.</p>
+            ) : (
+              kycRecords.map((c) => (
+                <div key={c.code} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-ink-200 bg-ink-50/50 gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-ink-900">{c.name}</span>
+                      <span className="font-mono text-xs text-brand-700 font-bold">({c.code})</span>
+                      <span className="text-xs font-mono text-ink-500">{c.mobile}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-ink-600">
+                      RM: <strong>{c.rm}</strong> • Status: <span className="text-positive-700 font-semibold">{c.kyc}</span>
+                      {c.summary && <span className="text-ink-500 italic ml-2">— &quot;{c.summary}&quot;</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-xs text-ink-500">Risk Profile: <strong>{c.score}</strong></div>
+                      <div className="text-xs font-semibold text-brand-700">{c.profile}</div>
+                    </div>
+                    <a
+                      href={`https://wa.me/${c.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Hello ${c.name}, your SEBI Risk Suitability assessment (${c.profile}, Score: ${c.score}) has been reviewed by our compliance desk.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-lg border border-ink-300 bg-white px-3 py-1.5 text-xs font-semibold text-ink-800 hover:bg-ink-100 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <MessageSquare className="size-3 text-[#22C55E]" />
+                      <span>Follow Up</span>
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* TAB 3: RESEARCH & CALLS DISPATCH */}
       {activeTab === "research" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -448,48 +573,6 @@ export default function OfficeDashboardPage() {
             </div>
           </Card>
         </div>
-      )}
-
-      {/* TAB 3: CLIENT KYC & RISK PROFILES */}
-      {activeTab === "kyc" && (
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-ink-100 pb-3">
-            <div>
-              <h3 className="text-base font-semibold text-ink-900">SEBI Suitability & KYC Verification Queue</h3>
-              <p className="text-xs text-ink-500">Every subscribed client must have an active risk suitability assessment.</p>
-            </div>
-            <Badge tone="positive">100% Compliant</Badge>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              { code: "ESC-2026-9841", name: "Demo Client", score: "72/100", profile: "Moderately Aggressive", kyc: "Verified (PAN/Aadhaar)", rm: "Priya Sharma" },
-              { code: "ESC-2026-9842", name: "Rameshwar K.", score: "54/100", profile: "Balanced Conservative", kyc: "Verified", rm: "Priya Sharma" },
-              { code: "ESC-2026-9843", name: "Kunal Mehra", score: "88/100", profile: "Aggressive Equity", kyc: "Verified", rm: "Unassigned" },
-            ].map((c) => (
-              <div key={c.code} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-ink-200 bg-ink-50/50 gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-ink-900">{c.name}</span>
-                    <span className="font-mono text-xs text-ink-500">({c.code})</span>
-                  </div>
-                  <div className="mt-1 text-xs text-ink-600">
-                    RM: <strong>{c.rm}</strong> • KYC: <span className="text-positive-700 font-semibold">{c.kyc}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="text-xs text-ink-500">Risk Profile: {c.score}</div>
-                    <div className="text-xs font-semibold text-brand-700">{c.profile}</div>
-                  </div>
-                  <button type="button" className="rounded-lg border border-ink-300 bg-white px-3 py-1.5 text-xs font-semibold text-ink-800 hover:bg-ink-100 transition-colors cursor-pointer">
-                    View Certificate
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
       )}
 
       {/* TAB 4: COMPLIANCE & AUDIT TRAIL */}
