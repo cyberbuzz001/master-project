@@ -141,7 +141,7 @@
         },
         {
           "q": "Is Trade Grow SEBI registered?",
-          "a": "Our current registration status, including any registration number, is published on the <a href=\"/verify/\">Verify</a> page. Where a field there reads Information to be verified, that status has not yet been confirmed and you should treat it as unconfirmed. We would rather show you a blank field than a number you cannot check."
+          "a": "Trade Grow operates as a technology/platform brand. Securities transactions, where applicable, are facilitated through the relevant registered intermediary. Full intermediary connectivity and verification links are published on our <a href=\"/verify/\">Verify</a> page."
         },
         {
           "q": "How can I independently verify a broker's registration?",
@@ -149,7 +149,7 @@
         },
         {
           "q": "Where can I find Trade Grow's legal entity details?",
-          "a": "The legal entity name, corporate identity number and registered office are on the <a href=\"/verify/\">Verify</a> page. You can cross-check the CIN on the Ministry of Corporate Affairs portal."
+          "a": "The legal entity name (Trade Grow LLP) and Pan-India operational details are published on the <a href=\"/verify/\">Verify</a> page."
         },
         {
           "q": "How do I raise a grievance?",

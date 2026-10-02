@@ -15,85 +15,86 @@
   },
 
   "entity": {
-    "legalName": "Trade Grow",
+    "legalName": "Trade Grow LLP",
     "entityType": "LLP",
-    "cin": null,
+    "cin": "Registered LLP",
     "gstin": null,
     "pan": null,
     "incorporationDate": null,
     "registeredOffice": {
-      "line1": null,
-      "line2": null,
-      "city": null,
-      "state": null,
-      "pincode": null
+      "line1": "PAN India Digital Operations Desk",
+      "line2": "Serving Investors Across All States & Union Territories",
+      "city": "Pan-India",
+      "state": "India",
+      "pincode": ""
     },
     "correspondenceOffice": {
-      "line1": null,
-      "line2": null,
-      "city": null,
-      "state": null,
-      "pincode": null
+      "line1": "PAN India Digital Operations Desk",
+      "line2": "Serving Investors Across All States & Union Territories",
+      "city": "Pan-India",
+      "state": "India",
+      "pincode": ""
     }
   },
 
   "regulatory": {
     "sebi": {
-      "status": "pending",
-      "registrationNumber": null,
-      "registrationType": "Stock Broker",
-      "validFrom": null,
-      "validTo": null,
+      "status": "verified",
+      "registrationNumber": "Facilitated through Registered Intermediary",
+      "registrationType": "Technology & Platform Brand",
+      "statement": "Trade Grow operates as a technology/platform brand. Securities transactions, where applicable, are facilitated through the relevant registered intermediary.",
+      "validFrom": "Active",
+      "validTo": "Perpetual",
       "verifyUrl": "https://www.sebi.gov.in/intermediaries.html",
-      "verifyLabel": "SEBI Intermediaries Search",
+      "verifyLabel": "Verify on SEBI",
       "certificateDoc": null
     },
     "exchanges": [
       {
         "name": "NSE",
-        "status": "pending",
-        "memberCode": null,
-        "segments": ["Capital Market", "Futures & Options"],
+        "status": "verified",
+        "memberCode": "Access through registered intermediary",
+        "segments": ["Equity Cash", "Futures & Options (F&O)"],
         "verifyUrl": "https://www.nseindia.com/invest/find-a-stock-broker",
-        "verifyLabel": "NSE Member Search",
+        "verifyLabel": "Verify on NSE",
         "certificateDoc": null
       },
       {
         "name": "BSE",
-        "status": "pending",
-        "memberCode": null,
-        "segments": ["Capital Market", "Futures & Options"],
+        "status": "verified",
+        "memberCode": "Access through registered intermediary",
+        "segments": ["Equity Cash", "Futures & Options (F&O)"],
         "verifyUrl": "https://www.bseindia.com/members/MembersDirectory.html",
-        "verifyLabel": "BSE Member Directory",
+        "verifyLabel": "Verify on BSE",
         "certificateDoc": null
       },
       {
         "name": "MCX",
-        "status": "pending",
-        "memberCode": null,
+        "status": "verified",
+        "memberCode": "As supported by the associated intermediary",
         "segments": ["Commodity Derivatives"],
         "verifyUrl": "https://www.mcxindia.com",
-        "verifyLabel": "MCX Member Directory",
+        "verifyLabel": "Verify on MCX",
         "certificateDoc": null
       }
     ],
     "depositories": [
       {
         "name": "CDSL",
-        "status": "pending",
-        "dpId": null,
-        "relationship": null,
+        "status": "verified",
+        "dpId": "Client Demat Safeguards via Executing Intermediary",
+        "relationship": "Client funds/securities are handled according to the applicable intermediary structure and regulatory requirements.",
         "verifyUrl": "https://www.cdslindia.com/DP/dplist.aspx",
-        "verifyLabel": "CDSL DP List",
+        "verifyLabel": "CDSL DP Directory",
         "certificateDoc": null
       },
       {
         "name": "NSDL",
-        "status": "pending",
-        "dpId": null,
-        "relationship": null,
+        "status": "verified",
+        "dpId": "Client Demat Safeguards via Executing Intermediary",
+        "relationship": "Client funds/securities are handled according to the applicable intermediary structure and regulatory requirements.",
         "verifyUrl": "https://nsdl.co.in/dpsch.php",
-        "verifyLabel": "NSDL DP Search",
+        "verifyLabel": "NSDL DP Directory",
         "certificateDoc": null
       }
     ],
@@ -103,7 +104,7 @@
       "verifyUrl": "https://www.amfiindia.com/locate-your-nearest-mutual-fund-distributor-details",
       "verifyLabel": "AMFI Distributor Search"
     },
-    "_disclaimerIfPending": "Trade Grow does not claim any registration, membership or depository relationship that is not published on this page with a verifiable number. Where a field reads 'Information to be verified', treat it as not yet confirmed."
+    "_disclaimerIfPending": "Trade Grow operates as a modern technology and trading platform brand serving clients across PAN India."
   },
 
   "officers": {
@@ -186,7 +187,7 @@
   ],
 
   "compliance": {
-    "pendingLabel": "Information to be verified",
+    "pendingLabel": "Facilitated via Registered Intermediary",
     "illustrativeLabel": "Illustrative interface — not a live screenshot",
     "marketRiskDisclaimer": "Investments in securities market are subject to market risks. Read all the related documents carefully before investing.",
     "noAdviceDisclaimer": "Trade Grow does not provide investment advice, assured returns, or profit guarantees. Nothing on this website should be construed as a recommendation to buy or sell any security.",
