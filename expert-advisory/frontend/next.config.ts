@@ -9,7 +9,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://graph.facebook.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -29,7 +29,17 @@ const nextConfig: NextConfig = {
       return [];
     }
     return {
-      beforeFiles: [],
+      beforeFiles: [
+        /**
+         * Meta WhatsApp Cloud API Webhook
+         * Served directly by Next.js App Router — NOT proxied to Laravel.
+         * Meta calls: GET/POST https://expertstocks.in/internal/advisory/meta-webhook
+         */
+        {
+          source: '/internal/advisory/meta-webhook',
+          destination: '/internal/advisory/meta-webhook',
+        },
+      ],
       afterFiles: [],
       fallback: [
         { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },

@@ -4,6 +4,32 @@ import { leadsStore } from "@/lib/leads-store";
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in";
 
+// TradeGrow server URL — hosts the AdvisoryWhatsAppService webhook endpoint
+const TRADEGROW_SERVER_URL = process.env.TRADEGROW_SERVER_URL ?? "http://127.0.0.1:3001";
+
+/**
+ * Fire-and-forget: Trigger the Advisory WhatsApp welcome sequence via the
+ * TradeGrow server's internal webhook. Non-blocking — never delays the lead
+ * response if the server is unreachable.
+ */
+async function triggerAdvisoryWelcome(params: {
+  phone: string;
+  leadId: string;
+  fullName: string;
+}) {
+  try {
+    await fetch(`${TRADEGROW_SERVER_URL}/internal/advisory/welcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-internal-key": process.env.INTERNAL_API_KEY || "advisory_internal_key" },
+      body: JSON.stringify(params),
+      signal: AbortSignal.timeout(4000),
+    });
+  } catch {
+    // Silently swallow — WhatsApp trigger is best-effort, not critical path
+  }
+}
+
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -83,7 +109,15 @@ export async function POST(request: NextRequest) {
       console.warn("[Leads Store] Could not record to local store:", err.message);
     }
 
-    // 3. Forward to Laravel CRM backend if reachable
+    // 3. Trigger Expert Stocks Advisory WhatsApp welcome sequence (fire & forget)
+    // Calls AdvisoryWhatsAppService.triggerLeadWelcome via the TradeGrow server webhook
+    triggerAdvisoryWelcome({
+      phone: cleanMobile,
+      leadId: dispatchedLeadCode,
+      fullName,
+    });
+
+    // 4. Forward to Laravel CRM backend if reachable
     try {
       const response = await fetch(`${BACKEND_URL}/api/v1/public/leads`, {
         method: "POST",

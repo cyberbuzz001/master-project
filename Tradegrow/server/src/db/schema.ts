@@ -77,6 +77,12 @@ export async function runMigrations(): Promise<void> {
       // If constraint violation on re-running an old or superseded check constraint, log warning rather than halting server
       if (err.message && err.message.includes('check constraint') && err.message.includes('violated by some row')) {
         console.warn(`[DB] ⚠️ Migration warning on ${file}: ${err.message}. Continuing...`);
+      } else if (
+        // TimescaleDB is not available on local dev PostgreSQL installs — skip gracefully
+        (err.message?.includes('timescaledb') || file.toLowerCase().includes('timescaledb')) &&
+        process.env.NODE_ENV !== 'production'
+      ) {
+        console.warn(`[DB] ⚠️ TimescaleDB migration skipped (extension not installed locally): ${file}. This is normal for local dev.`);
       } else {
         console.error(`[DB] ❌ Migration failed: ${file} — ${err.message}`);
         throw err;

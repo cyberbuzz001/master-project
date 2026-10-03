@@ -20,6 +20,7 @@ import apiRouter from './routes/api';
 import adminApiRouter from './routes/adminApi';
 import { warRoomRouter } from './routes/warRoomRoutes';
 import { ssoRouter } from './routes/ssoRoutes';
+import { internalAdvisoryRouter } from './routes/internalAdvisoryRoutes';
 import { SafetyLock } from './services/SafetyLock';
 import { startCronJobs, stopCronJobs, startMisAutoSquareOffJob, startExpirySettlementJob } from './utils/cronJobs';
 import { startRmsLossMonitor } from './trading/RmsLossMonitor';
@@ -113,6 +114,9 @@ app.use('/api/v1/admin', adminApiRouter);
 app.use('/api/v1', warRoomRouter);
 app.use('/api/v1/auth/sso', ssoRouter);
 app.use('/api/v1', ssoRouter);
+
+// Internal Advisory WhatsApp Routes (Expert Stocks — not public facing)
+app.use('/internal/advisory', internalAdvisoryRouter);
 
 // Global JSON error handler for all /api routes (Multer errors, parse errors, uncaught errors)
 app.use('/api', (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
