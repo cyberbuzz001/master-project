@@ -214,6 +214,14 @@ services:
       REDIS_PORT:                   "6379"
       # CORS — set to your actual domain
       ALLOWED_ORIGINS:              ${ALLOWED_ORIGINS:-http://localhost:5000}
+      # Expert Stocks Advisory WhatsApp Bot (Meta Cloud API)
+      ADVISORY_WHATSAPP_PROVIDER:           ${ADVISORY_WHATSAPP_PROVIDER:-META_CLOUD}
+      ADVISORY_WHATSAPP_META_TOKEN:         ${ADVISORY_WHATSAPP_META_TOKEN}
+      ADVISORY_WHATSAPP_PHONE_NUMBER_ID:    ${ADVISORY_WHATSAPP_PHONE_NUMBER_ID}
+      ADVISORY_WHATSAPP_WABA_ID:            ${ADVISORY_WHATSAPP_WABA_ID}
+      ADVISORY_WHATSAPP_WEBHOOK_SECRET:     ${ADVISORY_WHATSAPP_WEBHOOK_SECRET}
+      ADVISORY_WHATSAPP_DAILY_LIMIT:        ${ADVISORY_WHATSAPP_DAILY_LIMIT:-80}
+      INTERNAL_API_KEY:                     ${INTERNAL_API_KEY:-advisory_internal_2026_key}
       NODE_OPTIONS:                 "--max-old-space-size=16384"
     ports:
       - "5000:5000"
