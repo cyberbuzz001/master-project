@@ -18,7 +18,7 @@ const WEBHOOK_SECRET =
   process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET || 'expert_stocks_webhook_2026';
 
 const TRADEGROW_SERVER_URL =
-  process.env.TRADEGROW_SERVER_URL || 'http://localhost:5000';
+  process.env.TRADEGROW_SERVER_URL || process.env.TRADEGROW_API_URL || 'https://tradegrowx.in';
 
 const INTERNAL_KEY =
   process.env.INTERNAL_API_KEY || 'advisory_internal_2026_key';

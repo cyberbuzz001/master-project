@@ -17,18 +17,47 @@ const SEGMENTS = [
   { value: "commodity", label: "Commodities" },
 ];
 
+const PLAN_PRESETS: Record<string, { label: string; segments: string[]; capital?: string; message: string }> = {
+  "equity-cash": {
+    label: "Equity Cash Advisory",
+    segments: ["equity"],
+    capital: "1l_5l",
+    message: "I am interested in subscribing to the Equity Cash Advisory plan.",
+  },
+  "index-options": {
+    label: "Index Options & Futures",
+    segments: ["options", "futures"],
+    capital: "1l_5l",
+    message: "I am interested in subscribing to the Index Options & Futures plan.",
+  },
+  "multi-segment": {
+    label: "Stock F&O & Commodities",
+    segments: ["futures", "options", "commodity"],
+    capital: "5l_25l",
+    message: "I am interested in subscribing to the Stock F&O & Commodities plan.",
+  },
+  "hni-wealth": {
+    label: "HNI Bespoke Advisory",
+    segments: ["equity", "options", "futures"],
+    capital: "25l_1cr",
+    message: "I would like to schedule a private HNI consultation for bespoke wealth advisory.",
+  },
+};
+
 export function LeadForm({
   formKey,
   consentText,
   submitLabel = "Send enquiry",
   showMessage = true,
   compact = false,
+  initialPlan,
 }: {
   formKey: FormKey;
   consentText: SiteData["consent_text"] | null;
   submitLabel?: string;
   showMessage?: boolean;
   compact?: boolean;
+  initialPlan?: string;
 }) {
   const id = useId();
   const attribution = useRef<Attribution>({});
@@ -36,6 +65,11 @@ export function LeadForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState("");
+
+  const preset = initialPlan ? PLAN_PRESETS[initialPlan] : null;
+  const [selectedSegments, setSelectedSegments] = useState<string[]>(preset?.segments || []);
+  const [selectedCapital, setSelectedCapital] = useState<string>(preset?.capital || "");
+  const [message, setMessage] = useState<string>(preset?.message || "");
 
   useEffect(() => {
     attribution.current = captureAttribution();
@@ -136,6 +170,20 @@ export function LeadForm({
     <form onSubmit={onSubmit} noValidate className="space-y-4">
       {formError && <Notice tone="danger">{formError}</Notice>}
 
+      {preset && (
+        <div className="flex items-center justify-between rounded-xl bg-teal-50 border border-teal-200/80 px-4 py-3 text-xs text-teal-900">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-teal-600 animate-pulse" />
+            <span>
+              Selected Advisory Plan: <strong>{preset.label}</strong>
+            </span>
+          </div>
+          <span className="font-mono text-[11px] font-semibold text-teal-800 bg-white px-2 py-0.5 rounded shadow-sm border border-teal-200">
+            Advisory Desk
+          </span>
+        </div>
+      )}
+
       {/* Honeypot: hidden from people and assistive tech. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label htmlFor={f("website")}>Website</label>
@@ -167,7 +215,19 @@ export function LeadForm({
                   key={segment.value}
                   className="flex cursor-pointer items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm text-ink-700 ring-1 ring-ink-200 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-700 has-[:checked]:ring-brand-200"
                 >
-                  <input type="checkbox" name="segments" value={segment.value} className="size-3.5 accent-brand-600" />
+                  <input
+                    type="checkbox"
+                    name="segments"
+                    value={segment.value}
+                    checked={selectedSegments.includes(segment.value)}
+                    onChange={(e) => {
+                      const val = segment.value;
+                      setSelectedSegments((prev) =>
+                        e.target.checked ? [...prev, val] : prev.filter((s) => s !== val)
+                      );
+                    }}
+                    className="size-3.5 accent-brand-600"
+                  />
                   {segment.label}
                 </label>
               ))}
@@ -175,13 +235,18 @@ export function LeadForm({
           </fieldset>
 
           <Field label="Approximate capital you plan to allocate" htmlFor={f("capital_range")} optional hint="Helps us understand suitability. You can skip this.">
-            <Select id={f("capital_range")} name="capital_range" defaultValue="">
+            <Select
+              id={f("capital_range")}
+              name="capital_range"
+              value={selectedCapital}
+              onChange={(e) => setSelectedCapital(e.target.value)}
+            >
               <option value="">Prefer to discuss</option>
-              <option value="under_1l">Under ₹1 lakh</option>
-              <option value="1l_5l">₹1–5 lakh</option>
-              <option value="5l_25l">₹5–25 lakh</option>
-              <option value="25l_1cr">₹25 lakh – ₹1 crore</option>
-              <option value="over_1cr">Above ₹1 crore</option>
+              <option value="under_1l">Under ₹1 Lakh</option>
+              <option value="1l_5l">₹1L – ₹5 Lakh</option>
+              <option value="5l_25l">₹5L – ₹25 Lakh</option>
+              <option value="25l_1cr">₹25L – ₹1 Crore</option>
+              <option value="over_1cr">Above ₹1 Crore</option>
             </Select>
           </Field>
         </>
@@ -189,7 +254,15 @@ export function LeadForm({
 
       {showMessage && (
         <Field label="How can we help?" htmlFor={f("message")} error={errors.message} optional>
-          <Textarea id={f("message")} name="message" maxLength={2000} rows={compact ? 3 : 4} {...invalid("message")} />
+          <Textarea
+            id={f("message")}
+            name="message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={2000}
+            rows={compact ? 3 : 4}
+            {...invalid("message")}
+          />
         </Field>
       )}
 

@@ -215,7 +215,7 @@ export default function PricingPage() {
 
                 <div className="mt-8 pt-4 border-t border-ink-100">
                   <LinkButton
-                    href="/contact"
+                    href={`/contact?plan=${plan.code}`}
                     variant={plan.popular ? "primary" : "secondary"}
                     className="w-full justify-center text-sm"
                   >

@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in";
 
 // TradeGrow server URL — hosts the AdvisoryWhatsAppService webhook endpoint
-const TRADEGROW_SERVER_URL = process.env.TRADEGROW_SERVER_URL ?? "http://127.0.0.1:3001";
+const TRADEGROW_SERVER_URL = process.env.TRADEGROW_SERVER_URL ?? (process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in");
 
 /**
  * Fire-and-forget: Trigger the Advisory WhatsApp welcome sequence via the

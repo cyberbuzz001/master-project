@@ -12,7 +12,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default async function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ plan?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const initialPlan = resolvedParams?.plan;
   const site = await getSiteData();
   const contact = site.ok ? (site.data.settings.contact ?? {}) : {};
 
@@ -34,7 +40,11 @@ export default async function ContactPage() {
       <Section>
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <Card className="p-6 sm:p-8">
-            <LeadForm formKey="contact" consentText={site.ok ? site.data.consent_text : null} />
+            <LeadForm
+              formKey="contact"
+              consentText={site.ok ? site.data.consent_text : null}
+              initialPlan={initialPlan}
+            />
           </Card>
           <div className="space-y-5">
             {rows.length > 0 ? (
