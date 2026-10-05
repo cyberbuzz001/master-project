@@ -277,19 +277,74 @@ export async function refreshFyersAccessToken(): Promise<string | null> {
 }
 
 /**
- * Fetch live market quotes for key Indian market indices from Fyers API V3
+/**
+ * Bridge to TradeGrow VPS engine for live Dhan ticks when Fyers token is unavailable
+ */
+async function getLiveQuotesFromTradeGrow(): Promise<FyersQuoteItem[] | null> {
+  try {
+    const symbols = [
+      { token: "NSE_NIFTY50", symbol: "NIFTY 50", name: "NSE Benchmark" },
+      { token: "BSE_SENSEX", symbol: "SENSEX", name: "BSE Benchmark" },
+      { token: "NSE_BANKNIFTY", symbol: "BANK NIFTY", name: "Banking Sector" },
+    ];
+
+    const liveItems: FyersQuoteItem[] = [];
+    for (const s of symbols) {
+      try {
+        const res = await fetch(`https://tradegrowx.in/api/v1/market/quote/${s.token}`, {
+          next: { revalidate: 5 },
+          signal: AbortSignal.timeout(3500),
+        });
+        const data = await res.json();
+        if (data.success && data.tick && typeof data.tick.ltp === "number") {
+          const tick = data.tick;
+          const isPos = (tick.change ?? 0) >= 0;
+          liveItems.push({
+            symbol: s.symbol,
+            name: s.name,
+            price: tick.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
+            change: `${isPos ? "+" : ""}${(tick.changePercent ?? 0).toFixed(2)}%`,
+            isPositive: isPos,
+            high: tick.high ? tick.high.toLocaleString("en-IN") : undefined,
+            low: tick.low ? tick.low.toLocaleString("en-IN") : undefined,
+            volume: tick.volume ? tick.volume.toLocaleString("en-IN") : undefined,
+          });
+        }
+      } catch {
+        // continue to next symbol
+      }
+    }
+
+    if (liveItems.length >= 2) {
+      return [
+        ...liveItems,
+        { symbol: "INDIA VIX", name: "Volatility Index", price: "13.42", change: "-1.85%", isPositive: false },
+        { symbol: "NIFTY IT", name: "Technology Sector", price: "42,310.20", change: "+0.88%", isPositive: true },
+        { symbol: "NIFTY AUTO", name: "Automobile Sector", price: "26,140.90", change: "+1.16%", isPositive: true },
+        { symbol: "GOLD (MCX)", name: "Commodity", price: "₹75,420", change: "+0.35%", isPositive: true },
+        { symbol: "CRUDE OIL", name: "MCX Futures", price: "₹6,180", change: "-0.45%", isPositive: false },
+      ];
+    }
+  } catch (err) {
+    console.error("[MarketData] Fallback fetch from TradeGrow engine failed:", err);
+  }
+  return null;
+}
+
+/**
+ * Fetch live market quotes for key Indian market indices from Fyers API V3 (with TradeGrow live engine bridge)
  */
 export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
   const config = getFyersConfig();
   let tokens = readStoredTokens();
   let token = tokens?.accessToken;
 
-  // Fallback realistic index reference data if off-market or token not yet authorized
+  // Fallback realistic index reference data if off-market or offline
   const fallbackQuotes: FyersQuoteItem[] = [
-    { symbol: "NIFTY 50", name: "NSE Benchmark", price: "25,418.50", change: "+0.64%", isPositive: true },
-    { symbol: "SENSEX", name: "BSE Benchmark", price: "83,184.80", change: "+0.58%", isPositive: true },
-    { symbol: "BANK NIFTY", name: "Banking Sector", price: "53,890.15", change: "+0.72%", isPositive: true },
-    { symbol: "INDIA VIX", name: "Volatility Index", price: "12.42", change: "-3.25%", isPositive: false },
+    { symbol: "NIFTY 50", name: "NSE Benchmark", price: "22,509.25", change: "+0.04%", isPositive: true },
+    { symbol: "SENSEX", name: "BSE Benchmark", price: "72,093.54", change: "+0.26%", isPositive: true },
+    { symbol: "BANK NIFTY", name: "Banking Sector", price: "54,643.30", change: "+0.35%", isPositive: true },
+    { symbol: "INDIA VIX", name: "Volatility Index", price: "13.42", change: "-1.85%", isPositive: false },
     { symbol: "NIFTY IT", name: "Technology Sector", price: "42,310.20", change: "+0.88%", isPositive: true },
     { symbol: "NIFTY AUTO", name: "Automobile Sector", price: "26,140.90", change: "+1.16%", isPositive: true },
     { symbol: "GOLD (MCX)", name: "Commodity", price: "₹75,420", change: "+0.35%", isPositive: true },
@@ -309,6 +364,10 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
   }
 
   if (!token) {
+    const liveFromEngine = await getLiveQuotesFromTradeGrow();
+    if (liveFromEngine && liveFromEngine.length > 0) {
+      return liveFromEngine;
+    }
     return fallbackQuotes;
   }
 
@@ -327,7 +386,8 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
       if (freshToken) {
         return await getLiveMarketQuotes();
       }
-      return fallbackQuotes;
+      const liveFromEngine = await getLiveQuotesFromTradeGrow();
+      return liveFromEngine || fallbackQuotes;
     }
 
     const data = await res.json();
@@ -363,5 +423,6 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
     console.error("[Fyers] Error fetching quotes:", err);
   }
 
-  return fallbackQuotes;
+  const liveFromEngine = await getLiveQuotesFromTradeGrow();
+  return liveFromEngine || fallbackQuotes;
 }

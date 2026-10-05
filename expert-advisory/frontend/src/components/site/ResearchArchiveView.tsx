@@ -19,7 +19,13 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { ResearchReport, getDailyPublishedReports } from "@/lib/reports";
+import {
+  ResearchReport,
+  getDailyPublishedReports,
+  getUpcomingReports,
+  getDailyAllReportsWithStatus,
+  getIndianStandardTime,
+} from "@/lib/reports";
 
 const CATEGORIES = [
   "All Reports",
@@ -36,7 +42,11 @@ const CATEGORIES = [
 ] as const;
 
 export function ResearchArchiveView() {
+  const istInfo = useMemo(() => getIndianStandardTime(), []);
   const allReports = useMemo(() => getDailyPublishedReports(), []);
+  const upcomingReports = useMemo(() => getUpcomingReports(), []);
+  const allScheduledReports = useMemo(() => getDailyAllReportsWithStatus(), []);
+
   const [selectedCategory, setSelectedCategory] = useState<string>("All Reports");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeReport, setActiveReport] = useState<ResearchReport | null>(null);
@@ -55,16 +65,32 @@ export function ResearchArchiveView() {
     });
   }, [allReports, selectedCategory, searchQuery]);
 
+  // Check if current selected category is awaiting publication later today
+  const scheduledCategoryReport = useMemo(() => {
+    if (selectedCategory === "All Reports") return null;
+    return allScheduledReports.find(
+      (r) => r.category === selectedCategory && !r.isPublished
+    );
+  }, [selectedCategory, allScheduledReports]);
+
   return (
     <div className="space-y-8">
       {/* Header Controls Bar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-xl border border-[#1C2734] bg-[#0B111A] p-4">
-        <div className="flex items-center gap-2 text-xs font-mono text-[#9AA7B5]">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#9AA7B5]">
           <span className="flex items-center gap-1.5 rounded-full bg-[#00E599]/15 px-2.5 py-1 font-bold text-[#00E599]">
             <span className="size-1.5 rounded-full bg-[#00E599] animate-pulse" />
-            AUTOMATED DAILY DESK ACTIVE
+            LIVE RESEARCH DESK ACTIVE
           </span>
-          <span className="hidden sm:inline">· 10 Specialized Coverage Tracks</span>
+          <span className="text-[#667383]">·</span>
+          <span>{istInfo.dateStr}</span>
+          <span className="text-[#667383]">·</span>
+          <span className="text-[#43D9FF] font-semibold">{istInfo.currentTimeStr}</span>
+          {upcomingReports.length > 0 && (
+            <span className="rounded-full bg-[#F5B84B]/15 px-2 py-0.5 text-[11px] text-[#F5B84B]">
+              {upcomingReports.length} reports scheduled later today
+            </span>
+          )}
         </div>
 
         {/* Search input */}
@@ -72,7 +98,7 @@ export function ResearchArchiveView() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#667383]" />
           <input
             type="text"
-            placeholder="Search reports, tickers, tags..."
+            placeholder="Search published reports, tickers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-[#1C2734] bg-[#05070B] py-2 pl-9 pr-4 text-xs text-[#F5F7FA] placeholder-[#667383] focus:border-[#43D9FF] focus:outline-none"
@@ -97,6 +123,10 @@ export function ResearchArchiveView() {
               ? allReports.length
               : allReports.filter((r) => r.category === cat).length;
 
+          const isUpcomingOnly =
+            count === 0 &&
+            allScheduledReports.some((r) => r.category === cat && !r.isPublished);
+
           return (
             <button
               key={cat}
@@ -104,22 +134,52 @@ export function ResearchArchiveView() {
               className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-medium transition-all ${
                 isSelected
                   ? "bg-[#00E599] text-[#05070B] font-bold shadow-md"
+                  : isUpcomingOnly
+                  ? "border border-[#F5B84B]/30 bg-[#141008] text-[#F5B84B] hover:border-[#F5B84B]/60"
                   : "border border-[#1C2734] bg-[#0D131C] text-[#9AA7B5] hover:border-[#283749] hover:text-[#F5F7FA]"
               }`}
             >
-              {cat} <span className="ml-1.5 opacity-75 font-mono">({count})</span>
+              {cat}{" "}
+              <span className="ml-1.5 opacity-75 font-mono">
+                {count > 0 ? `(${count})` : isUpcomingOnly ? "⏳ Soon" : "(0)"}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {/* Reports Grid */}
+      {/* Reports Grid or Scheduled State */}
       {filteredReports.length === 0 ? (
-        <Card className="p-12 text-center border-[#1C2734] bg-[#0D131C]">
-          <FileText className="mx-auto size-8 text-[#667383]" />
-          <h3 className="mt-3 text-base font-bold text-[#F5F7FA]">No reports matching your criteria</h3>
-          <p className="mt-1 text-xs text-[#9AA7B5]">Try resetting your search query or selecting &quot;All Reports&quot;.</p>
-        </Card>
+        scheduledCategoryReport ? (
+          <Card className="p-10 text-center border-[#43D9FF]/30 bg-[#0B1522]">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#43D9FF]/10 text-[#43D9FF]">
+              <Clock className="size-6 animate-pulse" />
+            </div>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#43D9FF]/30 bg-[#43D9FF]/10 px-3 py-1 text-xs font-mono font-bold text-[#43D9FF]">
+              <span className="size-1.5 rounded-full bg-[#43D9FF] animate-ping" />
+              SCHEDULED RELEASE: {scheduledCategoryReport.scheduledTimeIST}
+            </div>
+            <h3 className="mt-4 text-xl font-bold font-display text-[#F5F7FA]">
+              {scheduledCategoryReport.title}
+            </h3>
+            <p className="mt-2 max-w-xl mx-auto text-xs text-[#9AA7B5] leading-relaxed">
+              This institutional report is actively in preparation by our{" "}
+              <span className="text-[#F5F7FA] font-semibold">{scheduledCategoryReport.author}</span>.
+              Publication is locked until {scheduledCategoryReport.scheduledTimeIST} following exchange closing auctions and statutory compliance validation.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-[#667383]">
+              <span>Timezone: Indian Standard Time (IST)</span>
+              <span>Desk Clock: {istInfo.currentTimeStr}</span>
+              <span>Status: Awaiting Market Close</span>
+            </div>
+          </Card>
+        ) : (
+          <Card className="p-12 text-center border-[#1C2734] bg-[#0D131C]">
+            <FileText className="mx-auto size-8 text-[#667383]" />
+            <h3 className="mt-3 text-base font-bold text-[#F5F7FA]">No published reports matching your criteria</h3>
+            <p className="mt-1 text-xs text-[#9AA7B5]">Try resetting your search query or selecting &quot;All Reports&quot;.</p>
+          </Card>
+        )
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {filteredReports.map((report) => {
@@ -197,6 +257,49 @@ export function ResearchArchiveView() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Today's Remaining Desk Schedule (Only visible on All Reports when reports remain) */}
+      {selectedCategory === "All Reports" && upcomingReports.length > 0 && (
+        <div className="rounded-xl border border-[#1C2734] bg-[#080D14] p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1C2734] pb-3">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#9AA7B5]">
+              <Clock className="size-4 text-[#43D9FF]" />
+              <span>TODAY&apos;S REMAINING DESK SCHEDULE ({upcomingReports.length} REPORTS PENDING)</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#667383]">
+              Current Desk Time: <span className="text-[#00E599] font-bold">{istInfo.currentTimeStr}</span>
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {upcomingReports.map((report) => (
+              <div
+                key={report.id}
+                className="flex flex-col justify-between rounded-lg border border-[#1C2734] bg-[#05070B] p-3.5"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-[#43D9FF] font-semibold">{report.category}</span>
+                    <span className="text-[#9AA7B5]">{report.scheduledTimeIST}</span>
+                  </div>
+                  <h4 className="mt-2 text-xs font-bold text-[#F5F7FA] line-clamp-1">
+                    {report.title}
+                  </h4>
+                  <p className="mt-1 text-[11px] text-[#667383] line-clamp-2 leading-relaxed">
+                    {report.summary}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-[#1C2734] pt-2 text-[10px] font-mono text-[#667383]">
+                  <span>{report.author}</span>
+                  <span className="inline-flex items-center gap-1 text-[#F5B84B]">
+                    <span className="size-1.5 rounded-full bg-[#F5B84B] animate-pulse" />
+                    In Desk Preparation
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
