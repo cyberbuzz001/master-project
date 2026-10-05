@@ -1,4 +1,4 @@
-import { OptionChainItem, TickSource } from './types';
+import { OptionChainItem, TickSource, MarketTick } from './types';
 import { GreeksEngine } from './GreeksEngine';
 import { MarketDataEngine } from './MarketDataEngine';
 import { query } from '../db/schema';
@@ -13,11 +13,11 @@ export interface OptionChainFilterParams {
 
 export class OptionChainEngine {
   private static lastKnownSpotPrices: Map<string, number> = new Map([
-    ['BSE_SENSEX', 77250.00],
-    ['NSE_NIFTY50', 24350.00],
-    ['NSE_BANKNIFTY', 57600.00],
-    ['NSE_FINNIFTY', 25800.00],
-    ['NSE_MIDCPNIFTY', 13100.00]
+    ['BSE_SENSEX', 72150.00],
+    ['NSE_NIFTY50', 22480.00],
+    ['NSE_BANKNIFTY', 54780.00],
+    ['NSE_FINNIFTY', 24200.00],
+    ['NSE_MIDCPNIFTY', 12300.00]
   ]);
 
   private static responseCache: Map<string, { timestamp: number; data: any }> = new Map();
@@ -98,15 +98,22 @@ export class OptionChainEngine {
 
     // Fetch live spot price from MarketDataEngine
     const spotToken = isSensex ? 'BSE_SENSEX' : isBanknifty ? 'NSE_BANKNIFTY' : isFinnifty ? 'NSE_FINNIFTY' : isMidcp ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
-    const spotTick = MarketDataEngine.getInstance().getCachedTick(spotToken) ||
-                     (spotToken === 'NSE_NIFTY50' ? MarketDataEngine.getInstance().getCachedTick('NSE_NIFTY') : null) ||
-                     MarketDataEngine.getInstance().getCachedTick(rawSym);
+    let spotTick: MarketTick | null | undefined = MarketDataEngine.getInstance().getCachedTick(spotToken) ||
+                   (spotToken === 'NSE_NIFTY50' ? MarketDataEngine.getInstance().getCachedTick('NSE_NIFTY') : null) ||
+                   MarketDataEngine.getInstance().getCachedTick(rawSym);
+
+    if (!spotTick || spotTick.ltp <= 0) {
+      try {
+        const dhan = MarketDataEngine.getInstance().getDhanAdapter();
+        spotTick = await dhan.getQuote(spotToken);
+      } catch (_) {}
+    }
 
     if (spotTick && spotTick.ltp > 0) {
       OptionChainEngine.lastKnownSpotPrices.set(spotToken, spotTick.ltp);
     }
 
-    const defaultSpot = isSensex ? 77200.00 : isBanknifty ? 57600 : isFinnifty ? 25800 : 24350.00;
+    const defaultSpot = isSensex ? 72150.00 : isBanknifty ? 54780.00 : isFinnifty ? 24200.00 : 22480.00;
     const fallbackSpot = OptionChainEngine.lastKnownSpotPrices.get(spotToken) || defaultSpot;
 
     // Dual-Feed Spot Guard Verification

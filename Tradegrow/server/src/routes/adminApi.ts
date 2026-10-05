@@ -203,13 +203,14 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
   const search = req.query.search as string || '';
   const status = req.query.status as string || '';
   const role = req.query.role as string || '';
+  const kycStatus = ((req.query.kyc_status as string) || '').toUpperCase().trim();
 
   let where = 'WHERE 1=1';
   const params: any[] = [];
   let paramIdx = 1;
 
   if (search) {
-    where += ` AND (u.username ILIKE $${paramIdx} OR u.email ILIKE $${paramIdx} OR u.id ILIKE $${paramIdx} OR u.client_id ILIKE $${paramIdx})`;
+    where += ` AND (u.username ILIKE $${paramIdx} OR u.email ILIKE $${paramIdx} OR u.id ILIKE $${paramIdx} OR u.client_id ILIKE $${paramIdx} OR u.phone_number ILIKE $${paramIdx} OR u.full_name ILIKE $${paramIdx})`;
     params.push(`%${search}%`);
     paramIdx++;
   }
@@ -223,6 +224,32 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
     params.push(role);
     paramIdx++;
   }
+
+  const kycStatusExpr = `COALESCE(
+    (SELECT status FROM kyc_applications WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1),
+    (SELECT kyc_status FROM kyc_records WHERE customer_id = u.id ORDER BY created_at DESC LIMIT 1),
+    CASE WHEN u.is_kyc_completed THEN 'APPROVED' ELSE 'NOT_SUBMITTED' END
+  )`;
+
+  if (kycStatus) {
+    if (kycStatus === 'PENDING_ALL' || kycStatus === 'PENDING') {
+      // Incomplete / Pending / Unverified KYC (clients needing activation phone calls)
+      where += ` AND (u.is_kyc_completed = false AND ${kycStatusExpr} != 'APPROVED')`;
+    } else if (kycStatus === 'SUBMITTED' || kycStatus === 'UNDER_REVIEW') {
+      where += ` AND ${kycStatusExpr} IN ('SUBMITTED', 'PENDING', 'UNDER_REVIEW')`;
+    } else if (kycStatus === 'NOT_SUBMITTED' || kycStatus === 'UNVERIFIED') {
+      where += ` AND u.is_kyc_completed = false AND ${kycStatusExpr} = 'NOT_SUBMITTED'`;
+    } else if (kycStatus === 'APPROVED') {
+      where += ` AND (u.is_kyc_completed = true OR ${kycStatusExpr} = 'APPROVED')`;
+    } else if (kycStatus === 'REJECTED') {
+      where += ` AND ${kycStatusExpr} IN ('REJECTED', 'RESUBMISSION_REQUIRED')`;
+    } else {
+      where += ` AND ${kycStatusExpr} = $${paramIdx}`;
+      params.push(kycStatus);
+      paramIdx++;
+    }
+  }
+
   if (req.user!.role === 'MANAGER') {
     where += ` AND u.id IN (SELECT user_id FROM manager_assignments WHERE manager_id = $${paramIdx})`;
     params.push(req.user!.userId);
@@ -230,15 +257,15 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
   }
 
   const countRow = await queryOne<any>(`SELECT COUNT(*) as c FROM users u ${where}`, params);
+  const kycPendingCountRow = await queryOne<any>(
+    `SELECT COUNT(*) as c FROM users u WHERE u.is_kyc_completed = false AND ${kycStatusExpr} != 'APPROVED'`
+  );
+
   const users = await query(
     `SELECT u.id, u.client_id, u.username, u.email, u.full_name, u.phone_number, u.role, u.status, u.created_at, u.last_login_at, u.failed_login_attempts, u.is_kyc_completed,
             COALESCE(u.email_notifications_enabled, true) as email_notifications_enabled,
             w.cash_balance, w.used_margin,
-            COALESCE(
-              (SELECT status FROM kyc_applications WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1),
-              (SELECT kyc_status FROM kyc_records WHERE customer_id = u.id ORDER BY created_at DESC LIMIT 1),
-              CASE WHEN u.is_kyc_completed THEN 'APPROVED' ELSE 'NOT_SUBMITTED' END
-            ) as kyc_status
+            ${kycStatusExpr} as kyc_status
      FROM users u
      LEFT JOIN virtual_wallets w ON u.id = w.user_id
      ${where}
@@ -246,7 +273,13 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
     [...params, limit, offset]
   );
 
-  res.json({ success: true, customers: users, total: parseInt(countRow?.c || '0'), pagination: { limit, offset } });
+  res.json({
+    success: true,
+    customers: users,
+    total: parseInt(countRow?.c || '0'),
+    kycPendingCount: parseInt(kycPendingCountRow?.c || '0'),
+    pagination: { limit, offset }
+  });
 });
 
 // ============================================================

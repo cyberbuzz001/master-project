@@ -88,10 +88,10 @@ export function AppShell({
     return { text: `${isPos ? '+' : ''}${chg.toFixed(2)} (${isPos ? '+' : ''}${pct.toFixed(2)}%)`, isPos };
   };
   const indices = [
-    { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', tick: getNifty(), fallback: 24856.15, fbChg: 104.35, fbPct: 0.42 },
-    { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', tick: getSensex(), fallback: 73600.00, fbChg: 154.20, fbPct: 0.21 },
-    { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', tick: getBankNifty(), fallback: 52150.75, fbChg: -78.40, fbPct: -0.15 },
-    { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', tick: getFinNifty(), fallback: 23890.40, fbChg: 52.10, fbPct: 0.22 },
+    { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', tick: getNifty(), fallback: 22480.00, fbChg: 58.00, fbPct: 0.26 },
+    { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', tick: getSensex(), fallback: 72150.00, fbChg: 220.00, fbPct: 0.31 },
+    { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', tick: getBankNifty(), fallback: 54780.00, fbChg: 310.00, fbPct: 0.57 },
+    { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', tick: getFinNifty(), fallback: 24200.00, fbChg: 65.00, fbPct: 0.27 },
   ];
 
   const MOBILE_NAV_ITEMS: AppShellNavItem[] = [

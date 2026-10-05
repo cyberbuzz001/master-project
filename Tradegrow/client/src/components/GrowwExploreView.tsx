@@ -40,10 +40,10 @@ interface MoverRow {
 }
 
 const INDEX_META = [
-  { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', fallback: 24856.15, fbPct: 0.42 },
-  { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', fallback: 73600.00, fbPct: 0.38 },
-  { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', fallback: 52150.75, fbPct: -0.15 },
-  { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', fallback: 23890.40, fbPct: 0.22 },
+  { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', fallback: 22480.00, fbPct: 0.26 },
+  { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', fallback: 72150.00, fbPct: 0.31 },
+  { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', fallback: 54780.00, fbPct: 0.57 },
+  { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', fallback: 24200.00, fbPct: 0.27 },
 ];
 
 export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({

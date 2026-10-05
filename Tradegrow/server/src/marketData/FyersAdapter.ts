@@ -95,8 +95,10 @@ export class FyersAdapter implements IMarketDataProvider {
     console.log('[FyersAdapter] 🔄 Hot-swapping Fyers access token...');
     this.accessToken = newToken;
     this.appId = process.env.FYERS_APP_ID || this.appId;
-    await this.connectWebSocket();
-    console.log('[FyersAdapter] ✅ Access token updated and WebSocket reconnected.');
+    if (process.env.PRIMARY_MARKET_DATA_PROVIDER === 'FYERS') {
+      await this.connectWebSocket();
+    }
+    console.log('[FyersAdapter] ✅ Access token updated.');
   }
 
   public async initialize(): Promise<void> {
@@ -191,6 +193,11 @@ export class FyersAdapter implements IMarketDataProvider {
    * Connect to Fyers v3 Data WebSocket
    */
   private async connectWebSocket(): Promise<void> {
+    if (process.env.PRIMARY_MARKET_DATA_PROVIDER !== 'FYERS') {
+      console.log('[FyersAdapter] ⏭️ Fyers WebSocket disabled (running in Dhan-only mode).');
+      return;
+    }
+
     if (!this.appId || !this.accessToken) {
       console.warn('[FyersAdapter] Cannot connect WebSocket: Missing AppId or Access Token');
       return;
@@ -260,6 +267,8 @@ export class FyersAdapter implements IMarketDataProvider {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = null;
         }
+
+        if (process.env.PRIMARY_MARKET_DATA_PROVIDER !== 'FYERS') return;
 
         const backoffDelay = Math.min(60000, 5000 * Math.pow(1.5, Math.min(this.reconnectAttempts++, 6)));
         console.warn(`[FyersAdapter] WebSocket closed (code=${code}, reason=${reason?.toString() || 'None'}). Reconnecting in ${(backoffDelay / 1000).toFixed(0)}s...`);

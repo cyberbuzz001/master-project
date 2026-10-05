@@ -13,6 +13,8 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(initialFilter || '');
+  const [kycFilter, setKycFilter] = useState('');
+  const [kycPendingCount, setKycPendingCount] = useState<number | null>(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -94,8 +96,17 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
     const params = new URLSearchParams({ limit: '50', offset: String(page * 50) });
     if (search) params.set('search', search);
     if (statusFilter) params.set('status', statusFilter);
+    if (kycFilter) params.set('kyc_status', kycFilter);
     fetch(`/api/v1/admin/customers?${params}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => { if (d.success) { setCustomers(d.customers); setTotal(d.total); } })
+      .then(r => r.json()).then(d => {
+        if (d.success) {
+          setCustomers(d.customers);
+          setTotal(d.total);
+          if (typeof d.kycPendingCount === 'number') {
+            setKycPendingCount(d.kycPendingCount);
+          }
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -110,7 +121,7 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       .catch(() => setLoadingDuplicates(false));
   };
 
-  useEffect(() => { fetchCustomers(); }, [token, search, statusFilter, page]);
+  useEffect(() => { fetchCustomers(); }, [token, search, statusFilter, kycFilter, page]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -766,6 +777,44 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       render: (c) => <span className="text-[var(--text-muted)] font-mono text-[11px] truncate max-w-[160px] block" title={c.email}>{c.email}</span>,
     },
     {
+      key: 'contact',
+      header: 'Phone / Call',
+      className: 'min-w-[140px]',
+      render: (c) => {
+        const phone = c.phone_number?.trim();
+        const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
+        return (
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {phone ? (
+              <>
+                <a
+                  href={`tel:${phone}`}
+                  title={`Click to call ${phone}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 text-[11px] font-mono font-bold transition cursor-pointer"
+                >
+                  <Phone className="w-3 h-3 text-emerald-400" />
+                  <span>{phone}</span>
+                </a>
+                {cleanPhone && (
+                  <a
+                    href={`https://wa.me/91${cleanPhone.length === 10 ? cleanPhone : cleanPhone.slice(-10)}?text=${encodeURIComponent(`Hello ${c.username}, this is from TradeGrow Support. We noticed your trading account KYC is pending activation. Can we assist you in completing your KYC today?`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Send WhatsApp KYC Activation message"
+                    className="p-1 rounded-md bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 transition cursor-pointer"
+                  >
+                    <Send className="w-3 h-3 text-green-400" />
+                  </a>
+                )}
+              </>
+            ) : (
+              <span className="text-[10px] text-[var(--text-tertiary)] italic">No Phone</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       key: 'status',
       header: 'Status',
       className: 'min-w-[75px]',
@@ -781,21 +830,32 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
     },
     {
       key: 'kyc',
-      header: 'KYC',
-      className: 'min-w-[85px]',
+      header: 'KYC Status',
+      className: 'min-w-[110px]',
       render: (c) => {
         const isApproved = c.kyc_status === 'APPROVED' || c.is_kyc_completed;
         const isRejected = c.kyc_status === 'REJECTED';
         const isPending = c.kyc_status === 'SUBMITTED' || c.kyc_status === 'UNDER_REVIEW' || c.kyc_status === 'RESUBMISSION_REQUIRED';
         return (
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-            isApproved ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]' :
-            isRejected ? 'bg-[var(--loss-light)] text-[var(--loss)] border border-[var(--loss)]' :
-            isPending ? 'bg-[var(--warning-light)] text-[var(--warning)] border border-[var(--warning)]' :
-            'bg-[var(--bg-surface-elevated)] text-[var(--text-tertiary)] border border-[var(--border-color)]'
-          }`}>
-            {isApproved ? 'APPROVED' : isRejected ? 'REJECTED' : isPending ? 'PENDING' : 'UNVERIFIED'}
-          </span>
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+              isApproved ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]' :
+              isRejected ? 'bg-[var(--loss-light)] text-[var(--loss)] border border-[var(--loss)]' :
+              isPending ? 'bg-[var(--warning-light)] text-[var(--warning)] border border-[var(--warning)]' :
+              'bg-amber-950/40 text-amber-400 border border-amber-800/60'
+            }`}>
+              {isApproved ? 'APPROVED' : isRejected ? 'REJECTED' : isPending ? 'IN REVIEW' : 'PENDING'}
+            </span>
+            {!isApproved && (
+              <button
+                onClick={() => handleOpenEmailModal(c, 'KYC_REMINDER')}
+                title="Send KYC Activation Reminder Email"
+                className="p-1 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded transition cursor-pointer"
+              >
+                <Mail className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         );
       },
     },
@@ -881,6 +941,45 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
           <option value="CLOSED">Closed</option>
           <option value="DISABLED">Disabled</option>
         </select>
+
+        {/* KYC Status Filter */}
+        <select
+          value={kycFilter}
+          onChange={e => { setKycFilter(e.target.value); setPage(0); }}
+          aria-label="Filter by KYC status"
+          className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] font-semibold"
+        >
+          <option value="">All KYC Status</option>
+          <option value="PENDING_ALL">⚠️ Incomplete / Needs Call</option>
+          <option value="SUBMITTED">⏳ Submitted (Under Review)</option>
+          <option value="NOT_SUBMITTED">📝 Unverified (Not Started)</option>
+          <option value="APPROVED">✅ Approved (Trading Ready)</option>
+          <option value="REJECTED">❌ Rejected (Needs Resubmit)</option>
+        </select>
+
+        {/* 1-Click KYC Pending Calling Queue Button */}
+        <button
+          onClick={() => {
+            setKycFilter(kycFilter === 'PENDING_ALL' ? '' : 'PENDING_ALL');
+            setPage(0);
+          }}
+          className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border ${
+            kycFilter === 'PENDING_ALL'
+              ? 'bg-amber-500 text-black border-amber-400 shadow-md'
+              : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+          }`}
+          title="Filter all customers with pending or incomplete KYC for activation calling"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          <span>KYC Pending Calling List</span>
+          {kycPendingCount !== null && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              kycFilter === 'PENDING_ALL' ? 'bg-black text-amber-300' : 'bg-amber-500/20 text-amber-300'
+            }`}>
+              {kycPendingCount}
+            </span>
+          )}
+        </button>
 
         {/* Duplicate Identity Scanner Button */}
         <button

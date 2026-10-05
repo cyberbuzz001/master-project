@@ -104,7 +104,10 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
 
   console.log('[WebSocket] High-Performance Gateway running on /ws');
 
-  const defaultTokens = ['NSE_NIFTY50', 'NSE_BANKNIFTY', 'NSE_RELIANCE', 'NSE_TCS', 'NSE_INFY', 'NSE_HDFCBANK'];
+  const defaultTokens = [
+    'NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY', 'NSE_MIDCPNIFTY',
+    'NSE_RELIANCE', 'NSE_TCS', 'NSE_INFY', 'NSE_HDFCBANK'
+  ];
 
   wss.on('connection', (ws: ExtendedWebSocket, req) => {
     ws.isAlive = true;

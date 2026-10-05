@@ -95,12 +95,12 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
   // Static curated base lists with synchronized exchange lot sizes
   const indicesList: InstrumentItem[] = [
-    { symbol: 'NIFTY 50', token: 'NSE_NIFTY50', name: 'Nifty 50 Index', exchange: 'NSE', lotSize: 65, fallbackPrice: 24328.50, fallbackPct: 0.28 },
-    { symbol: 'BANKNIFTY', token: 'NSE_BANKNIFTY', name: 'Nifty Bank Index', exchange: 'NSE', lotSize: 30, fallbackPrice: 51840.20, fallbackPct: 0.45 },
-    { symbol: 'FINNIFTY', token: 'NSE_FINNIFTY', name: 'Fin Nifty Index', exchange: 'NSE', lotSize: 60, fallbackPrice: 23890.40, fallbackPct: 0.12 },
-    { symbol: 'SENSEX', token: 'BSE_SENSEX', name: 'BSE Sensex Index', exchange: 'BSE', lotSize: 20, fallbackPrice: 73600.00, fallbackPct: 0.05 },
-    { symbol: 'MIDCPNIFTY', token: 'NSE_MIDCPNIFTY', name: 'Nifty Midcap 50', exchange: 'NSE', lotSize: 120, fallbackPrice: 13120.60, fallbackPct: 0.62 },
-    { symbol: 'BANKEX', token: 'BSE_BANKEX', name: 'BSE Bankex Index', exchange: 'BSE', lotSize: 30, fallbackPrice: 58450.10, fallbackPct: 0.38 },
+    { symbol: 'NIFTY 50', token: 'NSE_NIFTY50', name: 'Nifty 50 Index', exchange: 'NSE', lotSize: 65, fallbackPrice: 22480.00, fallbackPct: 0.26 },
+    { symbol: 'BANKNIFTY', token: 'NSE_BANKNIFTY', name: 'Nifty Bank Index', exchange: 'NSE', lotSize: 30, fallbackPrice: 54780.00, fallbackPct: 0.57 },
+    { symbol: 'FINNIFTY', token: 'NSE_FINNIFTY', name: 'Fin Nifty Index', exchange: 'NSE', lotSize: 60, fallbackPrice: 24200.00, fallbackPct: 0.27 },
+    { symbol: 'SENSEX', token: 'BSE_SENSEX', name: 'BSE Sensex Index', exchange: 'BSE', lotSize: 20, fallbackPrice: 72150.00, fallbackPct: 0.31 },
+    { symbol: 'MIDCPNIFTY', token: 'NSE_MIDCPNIFTY', name: 'Nifty Midcap 50', exchange: 'NSE', lotSize: 120, fallbackPrice: 12300.00, fallbackPct: 0.40 },
+    { symbol: 'BANKEX', token: 'BSE_BANKEX', name: 'BSE Bankex Index', exchange: 'BSE', lotSize: 30, fallbackPrice: 61250.00, fallbackPct: 0.38 },
   ];
 
   const foList: InstrumentItem[] = [

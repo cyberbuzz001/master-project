@@ -163,7 +163,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
       .then(data => {
         if (data.success) {
           setChain(data.chain || []);
-          setSpotPrice(data.spotPrice || 24331.70);
+          setSpotPrice(data.spotPrice || (symbol === 'SENSEX' ? 72150.00 : symbol === 'BANKNIFTY' ? 54780.00 : 22480.00));
           setLotSize(data.lotSize || 65);
           if (typeof data.pcrRatio === 'number') setPcrRatio(data.pcrRatio);
           if (typeof data.maxPainStrike === 'number') setMaxPainStrike(data.maxPainStrike);
@@ -262,10 +262,10 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           {/* Index Tabs */}
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50', price: 24331.70, chg: -64.15, chgPct: -0.26 },
-              { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX', price: 73600.00, chg: -292.36, chgPct: -0.37 },
-              { id: 'BANKNIFTY', name: 'BANK NIFTY', ex: 'NSE', token: 'NSE_BANKNIFTY', price: 57600.00, chg: +120.40, chgPct: +0.21 },
-              { id: 'FINNIFTY', name: 'FIN NIFTY', ex: 'NSE', token: 'NSE_FINNIFTY', price: 25800.00, chg: +45.10, chgPct: +0.18 },
+              { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50', price: 22480.00, chg: 58.00, chgPct: 0.26 },
+              { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX', price: 72150.00, chg: 220.00, chgPct: 0.31 },
+              { id: 'BANKNIFTY', name: 'BANK NIFTY', ex: 'NSE', token: 'NSE_BANKNIFTY', price: 54780.00, chg: 310.00, chgPct: 0.57 },
+              { id: 'FINNIFTY', name: 'FIN NIFTY', ex: 'NSE', token: 'NSE_FINNIFTY', price: 24200.00, chg: 65.00, chgPct: 0.27 },
             ].map(item => {
               const isActive = symbol === item.id;
               const indexTick = spotFreshness.tick && isActive ? spotFreshness.tick : (freshnessMap.get(item.token)?.tick);
