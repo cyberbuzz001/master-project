@@ -166,7 +166,8 @@ export class PortfolioService {
           }
         }
       } else {
-        // Position was flat (netQty === 0)
+        // Position was flat (netQty === 0) — starting a fresh position
+        realizedPnl = 0;
         if (side === 'BUY') {
           buyQty = quantity;
           buyPrice = price;

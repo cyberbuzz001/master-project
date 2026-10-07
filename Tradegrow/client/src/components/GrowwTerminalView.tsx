@@ -34,8 +34,8 @@ interface InstrumentItem {
   exchange: 'NSE' | 'BSE' | 'MCX';
   segment?: string;
   lotSize: number;
-  fallbackPrice: number;
-  fallbackPct: number;
+  fallbackPrice?: number;
+  fallbackPct?: number;
 }
 
 export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
@@ -95,12 +95,12 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
   // Static curated base lists with synchronized exchange lot sizes
   const indicesList: InstrumentItem[] = [
-    { symbol: 'NIFTY 50', token: 'NSE_NIFTY50', name: 'Nifty 50 Index', exchange: 'NSE', lotSize: 65, fallbackPrice: 22480.00, fallbackPct: 0.26 },
-    { symbol: 'BANKNIFTY', token: 'NSE_BANKNIFTY', name: 'Nifty Bank Index', exchange: 'NSE', lotSize: 30, fallbackPrice: 54780.00, fallbackPct: 0.57 },
-    { symbol: 'FINNIFTY', token: 'NSE_FINNIFTY', name: 'Fin Nifty Index', exchange: 'NSE', lotSize: 60, fallbackPrice: 24200.00, fallbackPct: 0.27 },
-    { symbol: 'SENSEX', token: 'BSE_SENSEX', name: 'BSE Sensex Index', exchange: 'BSE', lotSize: 20, fallbackPrice: 72150.00, fallbackPct: 0.31 },
-    { symbol: 'MIDCPNIFTY', token: 'NSE_MIDCPNIFTY', name: 'Nifty Midcap 50', exchange: 'NSE', lotSize: 120, fallbackPrice: 12300.00, fallbackPct: 0.40 },
-    { symbol: 'BANKEX', token: 'BSE_BANKEX', name: 'BSE Bankex Index', exchange: 'BSE', lotSize: 30, fallbackPrice: 61250.00, fallbackPct: 0.38 },
+    { symbol: 'NIFTY 50', token: 'NSE_NIFTY50', name: 'Nifty 50 Index', exchange: 'NSE', lotSize: 65 },
+    { symbol: 'BANKNIFTY', token: 'NSE_BANKNIFTY', name: 'Nifty Bank Index', exchange: 'NSE', lotSize: 30 },
+    { symbol: 'FINNIFTY', token: 'NSE_FINNIFTY', name: 'Fin Nifty Index', exchange: 'NSE', lotSize: 60 },
+    { symbol: 'SENSEX', token: 'BSE_SENSEX', name: 'BSE Sensex Index', exchange: 'BSE', lotSize: 20 },
+    { symbol: 'MIDCPNIFTY', token: 'NSE_MIDCPNIFTY', name: 'Nifty Midcap 50', exchange: 'NSE', lotSize: 120 },
+    { symbol: 'BANKEX', token: 'BSE_BANKEX', name: 'BSE Bankex Index', exchange: 'BSE', lotSize: 30 },
   ];
 
   const foList: InstrumentItem[] = [
@@ -202,21 +202,42 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     ? commoditiesList
     : indicesList;
 
+  // Subscribe to all watchlist tokens so Dhan live ticks stream actively
+  const allTerminalTokens = React.useMemo(() => [
+    ...indicesList.map(i => i.token),
+    ...stocksList.map(i => i.token),
+    ...foList.map(i => i.token),
+    selectedToken
+  ], [selectedToken]);
+  useSubscribeTokens(allTerminalTokens);
+
   // --------------------------------------------------------------------------
   // Live Active Tick & Market Depth Calculation
   // --------------------------------------------------------------------------
+  const [selectedQuote, setSelectedQuote] = useState<MarketTick | null>(null);
+
+  useEffect(() => {
+    if (!selectedToken) return;
+    fetch(`/api/v1/market/quote/${selectedToken}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.tick) setSelectedQuote(d.tick);
+      })
+      .catch(() => {});
+  }, [selectedToken]);
+
   const getTick = (tok: string, sym: string): MarketTick | undefined => {
     return ticks.get(tok) || ticks.get(`NSE_${sym}`) || ticks.get(sym) || ticks.get(`BSE_${sym}`) || ticks.get(`MCX_${sym}`) || (sym === 'SENSEX' ? ticks.get('BSE_SENSEX') : undefined);
   };
 
-  const currentTick = getTick(selectedToken, selectedSymbol);
-  const currentLtp = currentTick?.ltp || 2456.30;
-  const currentChange = currentTick?.change ?? 12.50;
-  const currentChangePct = currentTick?.changePercent ?? 0.85;
-  const currentHigh = currentTick?.high || (currentLtp * 1.015);
-  const currentLow = currentTick?.low || (currentLtp * 0.985);
-  const currentOpen = currentTick?.open || (currentLtp * 0.995);
-  const currentVolume = currentTick?.volume || 1425800;
+  const currentTick = getTick(selectedToken, selectedSymbol) || selectedQuote || undefined;
+  const currentLtp = currentTick?.ltp || 0;
+  const currentChange = currentTick?.change ?? 0;
+  const currentChangePct = currentTick?.changePercent ?? 0;
+  const currentHigh = currentTick?.high || (currentLtp > 0 ? currentLtp * 1.015 : 0);
+  const currentLow = currentTick?.low || (currentLtp > 0 ? currentLtp * 0.985 : 0);
+  const currentOpen = currentTick?.open || (currentLtp > 0 ? currentLtp * 0.995 : 0);
+  const currentVolume = currentTick?.volume || 0;
   const isGain = currentChangePct >= 0;
 
   // Day Range percentage
@@ -257,8 +278,10 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     setLots(1);
     setQuantity(newLotSize);
     const tick = getTick(item.token, item.symbol);
-    const newPrice = tick?.ltp || item.fallbackPrice;
-    setPriceInput(newPrice.toFixed(2));
+    const newPrice = tick?.ltp || item.fallbackPrice || 0;
+    if (newPrice > 0) {
+      setPriceInput(newPrice.toFixed(2));
+    }
     setOrderFeedback(null);
     if (isMobileViewport) {
       setMobileWorkspaceTab('CHART');
@@ -916,9 +939,9 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
             {!isSearching && currentList.map((item) => {
               const tick = getTick(item.token, item.symbol);
-              const price = tick ? tick.ltp : item.fallbackPrice;
-              const changePct = tick ? tick.changePercent : item.fallbackPct;
-              const isItemGain = changePct >= 0;
+              const price = tick?.ltp;
+              const changePct = tick?.changePercent;
+              const isItemGain = (changePct ?? 0) >= 0;
               const isSelected = selectedToken === item.token;
 
               return (
@@ -942,16 +965,22 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
                   </div>
 
                   <div className="flex flex-col items-end font-mono tabular-nums flex-shrink-0">
-                    <LivePriceCell
-                      value={price}
-                      prefix=""
-                      decimals={2}
-                      className={`!text-xs !font-bold !p-0 !bg-transparent ${isItemGain ? '!text-emerald-400' : '!text-rose-400'}`}
-                    />
-                    <span className={`text-[10px] font-semibold flex items-center mt-0.5 ${isItemGain ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isItemGain ? <ArrowUp className="w-2.5 h-2.5 mr-0.5" /> : <ArrowDown className="w-2.5 h-2.5 mr-0.5" />}
-                      {Math.abs(changePct).toFixed(2)}%
-                    </span>
+                    {price ? (
+                      <LivePriceCell
+                        value={price}
+                        prefix=""
+                        decimals={2}
+                        className={`!text-xs !font-bold !p-0 !bg-transparent ${isItemGain ? '!text-emerald-400' : '!text-rose-400'}`}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-500 font-mono animate-pulse">--</span>
+                    )}
+                    {changePct !== undefined ? (
+                      <span className={`text-[10px] font-semibold flex items-center mt-0.5 ${isItemGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {isItemGain ? <ArrowUp className="w-2.5 h-2.5 mr-0.5" /> : <ArrowDown className="w-2.5 h-2.5 mr-0.5" />}
+                        {Math.abs(changePct).toFixed(2)}%
+                      </span>
+                    ) : null}
                   </div>
 
                   {/* Quick B / S Action Buttons on Hover */}

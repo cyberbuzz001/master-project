@@ -556,10 +556,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
   }, [openPositions, ticks]);
 
   const totalRealizedPnl = useMemo(() => {
-    return positions.length > 0
-      ? positions.reduce((acc, p) => acc + parseFloat(p.realizedPnl || p.realized_pnl || 0), 0)
-      : closedTrades.reduce((acc, ct) => acc + parseFloat(ct.netPnl || ct.realizedPnl || 0), 0);
-  }, [positions, closedTrades]);
+    return closedTrades.reduce((acc, ct) => acc + parseFloat(ct.netPnl || ct.grossPnl || ct.realizedPnl || 0), 0);
+  }, [closedTrades]);
 
   const totalPositionPnl = totalUnrealizedPnl + totalRealizedPnl;
 

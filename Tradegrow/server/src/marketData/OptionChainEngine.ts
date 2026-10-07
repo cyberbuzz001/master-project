@@ -12,13 +12,7 @@ export interface OptionChainFilterParams {
 }
 
 export class OptionChainEngine {
-  private static lastKnownSpotPrices: Map<string, number> = new Map([
-    ['BSE_SENSEX', 72150.00],
-    ['NSE_NIFTY50', 22480.00],
-    ['NSE_BANKNIFTY', 54780.00],
-    ['NSE_FINNIFTY', 24200.00],
-    ['NSE_MIDCPNIFTY', 12300.00]
-  ]);
+  private static lastKnownSpotPrices: Map<string, number> = new Map();
 
   private static responseCache: Map<string, { timestamp: number; data: any }> = new Map();
   private static pendingRequests: Map<string, Promise<any>> = new Map();
@@ -113,20 +107,14 @@ export class OptionChainEngine {
       OptionChainEngine.lastKnownSpotPrices.set(spotToken, spotTick.ltp);
     }
 
-    const defaultSpot = isSensex ? 72150.00 : isBanknifty ? 54780.00 : isFinnifty ? 24200.00 : 22480.00;
-    const fallbackSpot = OptionChainEngine.lastKnownSpotPrices.get(spotToken) || defaultSpot;
+    const spotPrice = (params.spotPrice && params.spotPrice > 0)
+      ? params.spotPrice
+      : (spotTick && spotTick.ltp > 0)
+      ? spotTick.ltp
+      : (OptionChainEngine.lastKnownSpotPrices.get(spotToken) || 0);
 
-    // Dual-Feed Spot Guard Verification
-    const verifiedSpot = nseOptionChainService.getVerifiedSpotPrice(
-      spotToken,
-      spotTick ? spotTick.ltp : 0,
-      spotTick ? spotTick.timestamp : undefined,
-      fallbackSpot
-    );
-
-    let spotPrice = (params.spotPrice && params.spotPrice > 0) ? params.spotPrice : verifiedSpot.spotPrice;
-    let spotSource = verifiedSpot.source;
-    let futuresPrice = spotPrice + (isBanknifty ? 140 : isSensex ? 210 : 65);
+    const spotSource = 'dhan';
+    const futuresPrice = spotPrice > 0 ? spotPrice + (isBanknifty ? 140 : isSensex ? 210 : 65) : 0;
 
     let expiry = params.expiry ? params.expiry.trim() : '';
     if (!expiry) {

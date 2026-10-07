@@ -3180,45 +3180,66 @@ router.post('/customers/:id/lock', authenticateToken, checkPermission('CUSTOMERS
 });
 
 // ============================================================
-// 22. UNLOCK CUSTOMER
+// 22. UNLOCK & UNBLOCK CUSTOMER (Clears security holds & failed login locks)
 // ============================================================
-router.post('/customers/:id/unlock', authenticateToken, checkPermission('CUSTOMERS_UNLOCK'), async (req: AuthenticatedRequest, res: Response) => {
+const handleUnblockOrUnlockCustomer = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const customerId = req.params.id as string;
-    const { reason } = req.body;
+    const { reason } = req.body || {};
 
-    const user = await queryOne<any>('SELECT id, username, status FROM users WHERE id = $1', [customerId]);
+    const user = await queryOne<any>(
+      'SELECT id, username, full_name, email, status, failed_login_attempts, locked_until FROM users WHERE id = $1',
+      [customerId]
+    );
     if (!user) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Customer not found' } });
       return;
     }
 
-    if (user.status !== 'LOCKED') {
-      res.status(400).json({ success: false, error: { code: 'NOT_LOCKED', message: 'Account is not currently locked' } });
-      return;
-    }
-
     await execute(
-      `UPDATE users SET status = 'ACTIVE', locked_reason = NULL, locked_by = NULL, locked_at = NULL,
-       unlocked_by = $1, unlocked_at = NOW(), updated_at = NOW() WHERE id = $2`,
+      `UPDATE users SET 
+         status = 'ACTIVE', 
+         failed_login_attempts = 0, 
+         locked_until = NULL, 
+         locked_reason = NULL, 
+         locked_by = NULL, 
+         locked_at = NULL,
+         unlocked_by = $1, 
+         unlocked_at = NOW(), 
+         risk_restriction = NULL,
+         updated_at = NOW() 
+       WHERE id = $2`,
       [req.user!.userId, customerId]
     );
 
     await logAuditAction(
       req.user!.userId, req.user!.role,
-      'ADMIN_UNLOCKED_CUSTOMER', 'USER', customerId,
-      { status: 'LOCKED' }, { status: 'ACTIVE', reason }, getClientIp(req)
+      'ADMIN_UNBLOCKED_CUSTOMER', 'USER', customerId,
+      { status: user.status, failedLoginAttempts: user.failed_login_attempts, lockedUntil: user.locked_until },
+      { status: 'ACTIVE', failedLoginAttempts: 0, lockedUntil: null, reason: reason || 'Manual Admin Unblock' },
+      getClientIp(req)
     );
 
     adminEventBus.emitUserEvent('USER_STATUS_UPDATED', customerId, {
-      status: 'ACTIVE', unlockedBy: req.user!.userId
+      status: 'ACTIVE',
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      unlockedBy: req.user!.userId
     });
 
-    res.json({ success: true, message: `Account for ${user.username} has been unlocked and reactivated.` });
+    const displayName = user.full_name || user.username || user.email;
+    res.json({
+      success: true,
+      message: `Account for ${displayName} has been successfully unblocked, security locks cleared, and reactivated.`
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
   }
-});
+};
+
+router.post('/customers/:id/unlock', authenticateToken, checkPermission('USER_LOCK_UNLOCK'), restrictManagerToOwnCustomer, handleUnblockOrUnlockCustomer);
+router.post('/customers/:id/unblock', authenticateToken, checkPermission('USER_LOCK_UNLOCK'), restrictManagerToOwnCustomer, handleUnblockOrUnlockCustomer);
+
 
 // ============================================================
 // 23. CLOSE CUSTOMER ACCOUNT (Soft Close — with dependency check)

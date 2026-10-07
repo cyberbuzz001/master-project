@@ -40,10 +40,10 @@ interface MoverRow {
 }
 
 const INDEX_META = [
-  { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', fallback: 22480.00, fbPct: 0.26 },
-  { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', fallback: 72150.00, fbPct: 0.31 },
-  { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', fallback: 54780.00, fbPct: 0.57 },
-  { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', fallback: 24200.00, fbPct: 0.27 },
+  { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE' },
+  { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE' },
+  { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE' },
+  { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE' },
 ];
 
 export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
@@ -80,6 +80,20 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
     'NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY',
   ];
   useSubscribeTokens(exploreTokens);
+
+  const [initialQuotes, setInitialQuotes] = useState<Record<string, MarketTick>>({});
+
+  useEffect(() => {
+    INDEX_META.forEach(async (idx) => {
+      try {
+        const res = await fetch(`/api/v1/market/quote/${idx.token}`);
+        const data = await res.json();
+        if (data.success && data.tick) {
+          setInitialQuotes(prev => ({ ...prev, [idx.token]: data.tick }));
+        }
+      } catch (_) {}
+    });
+  }, []);
 
   useEffect(() => {
     fetch('/api/v1/market/top-movers')
@@ -419,10 +433,10 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           {INDEX_META.map((idx) => {
-            const tick = ticks?.get(idx.token) || (idx.token === 'BSE_SENSEX' ? ticks?.get('SENSEX') || ticks?.get('BSE SENSEX') : undefined);
-            const price = tick?.ltp ?? idx.fallback;
-            const pct = tick?.changePercent ?? idx.fbPct;
-            const isGain = pct >= 0;
+            const tick = ticks?.get(idx.token) || (idx.token === 'BSE_SENSEX' ? ticks?.get('SENSEX') || ticks?.get('BSE SENSEX') : undefined) || initialQuotes[idx.token];
+            const price = tick?.ltp;
+            const pct = tick?.changePercent;
+            const isGain = (pct ?? 0) >= 0;
             return (
               <Card
                 key={idx.token}
@@ -432,10 +446,18 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
               >
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[11px] font-extrabold truncate">{idx.label}</span>
-                  <Badge variant={isGain ? 'gain' : 'loss'}>{isGain ? '+' : ''}{pct.toFixed(2)}%</Badge>
+                  {pct !== undefined ? (
+                    <Badge variant={isGain ? 'gain' : 'loss'}>{isGain ? '+' : ''}{pct.toFixed(2)}%</Badge>
+                  ) : (
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
+                  )}
                 </div>
                 <div className="font-mono text-xs font-black tabular-nums">
-                  <LivePrice value={price} prefix="" decimals={2} />
+                  {price ? (
+                    <LivePrice value={price} prefix="" decimals={2} />
+                  ) : (
+                    <span className="text-xs text-[var(--text-muted)] font-mono animate-pulse">--</span>
+                  )}
                 </div>
               </Card>
             );

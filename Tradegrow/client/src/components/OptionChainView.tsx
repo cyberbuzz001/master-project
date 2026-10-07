@@ -163,7 +163,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
       .then(data => {
         if (data.success) {
           setChain(data.chain || []);
-          setSpotPrice(data.spotPrice || (symbol === 'SENSEX' ? 72150.00 : symbol === 'BANKNIFTY' ? 54780.00 : 22480.00));
+          if (data.spotPrice && data.spotPrice > 0) {
+            setSpotPrice(data.spotPrice);
+          }
           setLotSize(data.lotSize || 65);
           if (typeof data.pcrRatio === 'number') setPcrRatio(data.pcrRatio);
           if (typeof data.maxPainStrike === 'number') setMaxPainStrike(data.maxPainStrike);
@@ -262,15 +264,15 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           {/* Index Tabs */}
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50', price: 22480.00, chg: 58.00, chgPct: 0.26 },
-              { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX', price: 72150.00, chg: 220.00, chgPct: 0.31 },
-              { id: 'BANKNIFTY', name: 'BANK NIFTY', ex: 'NSE', token: 'NSE_BANKNIFTY', price: 54780.00, chg: 310.00, chgPct: 0.57 },
-              { id: 'FINNIFTY', name: 'FIN NIFTY', ex: 'NSE', token: 'NSE_FINNIFTY', price: 24200.00, chg: 65.00, chgPct: 0.27 },
+              { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50' },
+              { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX' },
+              { id: 'BANKNIFTY', name: 'BANK NIFTY', ex: 'NSE', token: 'NSE_BANKNIFTY' },
+              { id: 'FINNIFTY', name: 'FIN NIFTY', ex: 'NSE', token: 'NSE_FINNIFTY' },
             ].map(item => {
               const isActive = symbol === item.id;
               const indexTick = spotFreshness.tick && isActive ? spotFreshness.tick : (freshnessMap.get(item.token)?.tick);
-              const displayPrice = isActive ? liveSpotLtp : (indexTick?.ltp && indexTick.ltp > 0 ? indexTick.ltp : item.price);
-              const displayChgPct = isActive ? liveSpotChangePct : (indexTick?.changePercent !== undefined ? indexTick.changePercent : item.chgPct);
+              const displayPrice = isActive ? liveSpotLtp : (indexTick?.ltp && indexTick.ltp > 0 ? indexTick.ltp : 0);
+              const displayChgPct = isActive ? liveSpotChangePct : (indexTick?.changePercent !== undefined ? indexTick.changePercent : 0);
               const isPos = displayChgPct >= 0;
 
               return (
@@ -293,16 +295,22 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                       <span className="text-[9px] bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] px-1 rounded">{item.ex}</span>
                     </div>
                     <div className="flex items-center gap-1 font-mono text-[11px] tabular-nums">
-                      <LivePriceCell
-                        value={displayPrice}
-                        prefix="₹"
-                        decimals={2}
-                        className="!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
-                      />
-                      <span className={`flex items-center text-[10px] font-semibold ${isPos ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
-                        {isPos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {isPos ? '+' : ''}{displayChgPct.toFixed(2)}%
-                      </span>
+                      {displayPrice > 0 ? (
+                        <>
+                          <LivePriceCell
+                            value={displayPrice}
+                            prefix="₹"
+                            decimals={2}
+                            className="!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
+                          />
+                          <span className={`flex items-center text-[10px] font-semibold ${isPos ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
+                            {isPos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {isPos ? '+' : ''}{displayChgPct.toFixed(2)}%
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
+                      )}
                     </div>
                   </div>
                 </button>

@@ -762,7 +762,7 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       mobilePrimary: true,
       className: 'min-w-[120px]',
       render: (c) => (
-        <div>
+        <div title={c.email ? `Email: ${c.email}` : undefined}>
           <div className="font-semibold text-[var(--text-main)]">{c.username}</div>
           {c.full_name && c.full_name !== c.username && (
             <div className="text-[10px] text-[var(--text-tertiary)] font-normal">{c.full_name}</div>
@@ -771,10 +771,32 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       ),
     },
     {
-      key: 'email',
-      header: 'Email Address',
-      className: 'min-w-[140px]',
-      render: (c) => <span className="text-[var(--text-muted)] font-mono text-[11px] truncate max-w-[160px] block" title={c.email}>{c.email}</span>,
+      key: 'funds',
+      header: 'Available Fund',
+      className: 'min-w-[125px]',
+      render: (c) => {
+        const cash = parseFloat(c.cash_balance || 0);
+        const used = parseFloat(c.used_margin || 0);
+        const available = Math.max(0, cash - used);
+        const hasBalance = available > 0;
+        return (
+          <div
+            className="flex flex-col"
+            title={`Available: ₹${available.toLocaleString('en-IN', { minimumFractionDigits: 2 })} | Total Cash: ₹${cash.toLocaleString('en-IN', { minimumFractionDigits: 2 })} | Used Margin: ₹${used.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+          >
+            <span className={`font-mono text-[12px] font-bold ${
+              hasBalance ? 'text-emerald-400' : 'text-slate-400'
+            }`}>
+              ₹{available.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {used > 0 && (
+              <span className="text-[10px] text-amber-400 font-mono">
+                Used: ₹{used.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'contact',
@@ -894,13 +916,6 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       render: (c) => (
         <span className="bg-[var(--bg-surface-elevated)] px-2 py-0.5 rounded text-[10px] text-[var(--warning)] border border-[var(--border-color)] font-bold">{c.role}</span>
       ),
-    },
-    {
-      key: 'funds',
-      header: 'Funds (₹)',
-      align: 'right',
-      className: 'min-w-[90px]',
-      render: (c) => <span className="font-mono font-bold text-[var(--primary)]">₹{(c.cash_balance || 0).toLocaleString('en-IN')}</span>,
     },
     {
       key: 'actions',

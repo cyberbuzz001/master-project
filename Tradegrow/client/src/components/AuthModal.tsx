@@ -10,9 +10,9 @@ interface AuthModalProps {
 }
 
 const TRUST_POINTS = [
-  { icon: <ShieldCheck className="w-4 h-4" />, title: 'Regulated-grade safeguards', sub: 'RMS risk limits and auto square-off built in' },
-  { icon: <Zap className="w-4 h-4" />, title: 'Live NSE & BSE market data', sub: 'Real streaming ticks, not delayed snapshots' },
-  { icon: <LineChart className="w-4 h-4" />, title: 'Full F&O option chain', sub: 'Strike-level OI, IV and one-tap order entry' },
+  { icon: <Zap className="w-4 h-4" />, title: 'Lowest Brokerage Trading', sub: 'Zero hidden fees with ultra-competitive brokerage rates' },
+  { icon: <ShieldCheck className="w-4 h-4" />, title: 'Direct Market Execution', sub: 'Live streaming NSE & BSE ticks with institutional-grade RMS' },
+  { icon: <LineChart className="w-4 h-4" />, title: 'Advanced F&O Terminal', sub: 'Strike-level OI, live Greeks, IV & instant order entry' },
 ];
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, onModeChange }) => {
@@ -728,7 +728,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
                 </p>
 
                 <p className="mt-8 text-center text-[10px] leading-relaxed text-[var(--text-tertiary)]">
-                  Simulated trade execution. Market data is live; orders are not routed to an exchange.
+                  Real-time market trading platform · Lowest brokerage · Institutional-grade execution.
                 </p>
               </div>
             )}

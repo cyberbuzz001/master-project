@@ -1,4 +1,5 @@
 import { MarketDataEngine } from '../marketData/MarketDataEngine';
+import { sendTelegramAlert } from '../utils/telegramAlert';
 
 export interface ReconciliationReport {
   timestamp: number;
@@ -21,6 +22,12 @@ export class ReconciliationMonitorService {
   private timer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
   private lastReport: ReconciliationReport | null = null;
+
+  // Auto-recovery: track consecutive all-miss checks to detect a totally dead feed
+  private consecutiveAllMissCount = 0;
+  private static readonly DEAD_FEED_THRESHOLD = 3;  // 3 checks × 5 min = 15 min dead before reconnect
+  private feedWasDown = false;
+  private autoRecoveryInProgress = false;
 
   public static getInstance(): ReconciliationMonitorService {
     if (!ReconciliationMonitorService.instance) {
@@ -122,17 +129,83 @@ export class ReconciliationMonitorService {
       results,
     };
 
-    // Surfaced separately from alertCount deliberately: a MISSING_DATA result
-    // (no cached tick at all for a sample token) previously fell through
-    // completely silently — indistinguishable in this log line from a
-    // genuinely clean check, which is exactly how this monitor's sample
-    // tokens sat unresolvable for as long as they did without anyone
-    // noticing. If this ever prints a nonzero missing count again, something
-    // is wrong with either the sample list or the feed itself, not just "no
-    // divergence found."
-    if (missingCount > 0) {
-      console.warn(`[ReconciliationMonitor] ⚠️  ${missingCount}/${sampleTokens.length} sample tokens had no cached tick at all (feed down, or a stale/incorrect token key).`);
+    // ── Dead-feed detection and auto-recovery ─────────────────────────────────
+    // A totally-dead feed (all 5 tokens missing from cache) is different from
+    // divergence. Track consecutive all-miss checks and force-reconnect the
+    // Dhan WebSocket after DEAD_FEED_THRESHOLD consecutive failures instead of
+    // waiting for an external restart (which caused a 1.5-hour LTP freeze).
+    const isMarketHours = (() => {
+      const now = new Date();
+      // Convert to IST (UTC+5:30)
+      const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+      const hours = ist.getUTCHours();
+      const minutes = ist.getUTCMinutes();
+      const totalMin = hours * 60 + minutes;
+      return totalMin >= 555 && totalMin <= 930; // 09:15 – 15:30 IST
+    })();
+
+    if (missingCount === sampleTokens.length) {
+      this.consecutiveAllMissCount++;
+      console.warn(
+        `[ReconciliationMonitor] ⚠️  ${missingCount}/${sampleTokens.length} sample tokens had no cached tick at all ` +
+        `(feed down, or a stale/incorrect token key). Consecutive dead checks: ${this.consecutiveAllMissCount}/${ReconciliationMonitorService.DEAD_FEED_THRESHOLD}.`
+      );
+
+      // First detection — send Telegram alert
+      if (this.consecutiveAllMissCount === 1 && !this.feedWasDown) {
+        this.feedWasDown = true;
+        const marketNote = isMarketHours ? '⚠️ <b>MARKET IS OPEN</b> — LTPs are frozen for clients!' : '(Market is closed — no client impact yet)';
+        sendTelegramAlert(
+          `🚨 <b>TradeGrow — Live Feed DOWN</b>\n\n` +
+          `${marketNote}\n\n` +
+          `📊 Dhan WebSocket: 0/5 core tokens producing ticks.\n` +
+          `🔄 Auto-recovery will trigger in ${ReconciliationMonitorService.DEAD_FEED_THRESHOLD - 1} more consecutive miss(es).`
+        ).catch(() => {});
+      }
+
+      // Threshold hit — force reconnect the WebSocket
+      if (!this.autoRecoveryInProgress && this.consecutiveAllMissCount >= ReconciliationMonitorService.DEAD_FEED_THRESHOLD) {
+        this.autoRecoveryInProgress = true;
+        console.warn('[ReconciliationMonitor] 🔄 Feed dead for 3+ consecutive checks. Triggering automatic Dhan WebSocket force-reconnect...');
+
+        const dhanAdapter = MarketDataEngine.getInstance().getDhanAdapter();
+        if (dhanAdapter && typeof dhanAdapter.setAccessToken === 'function') {
+          const currentToken = dhanAdapter.getAccessToken?.() ?? '';
+          dhanAdapter.setAccessToken(currentToken)
+            .then(() => {
+              console.log('[ReconciliationMonitor] ✅ Auto-recovery WebSocket reconnect issued.');
+              this.autoRecoveryInProgress = false;
+            })
+            .catch((err: any) => {
+              console.error('[ReconciliationMonitor] Auto-recovery reconnect failed:', err?.message);
+              this.autoRecoveryInProgress = false;
+            });
+        } else {
+          console.warn('[ReconciliationMonitor] DhanAdapter not accessible for auto-recovery reconnect.');
+          this.autoRecoveryInProgress = false;
+        }
+        // Reset counter so we give the reconnect time to work before trying again
+        this.consecutiveAllMissCount = 0;
+      }
+    } else {
+      // Feed is producing ticks — reset dead-feed state
+      if (this.feedWasDown) {
+        console.log(`[ReconciliationMonitor] ✅ Feed recovered! ${passedCount}/${sampleTokens.length} matched cleanly.`);
+        sendTelegramAlert(
+          `✅ <b>TradeGrow — Live Feed RECOVERED</b>\n\n` +
+          `📊 Dhan WebSocket: ${passedCount}/${sampleTokens.length} core tokens matched cleanly.\n` +
+          `🕐 Feed is live again. LTPs are updating normally.`
+        ).catch(() => {});
+        this.feedWasDown = false;
+      }
+      this.consecutiveAllMissCount = 0;
+
+      if (missingCount > 0) {
+        // Partial miss — some tokens missing but not all (partial degradation)
+        console.warn(`[ReconciliationMonitor] ⚠️  ${missingCount}/${sampleTokens.length} sample tokens had no cached tick at all (partial feed issue).`);
+      }
     }
+
     console.log(`[ReconciliationMonitor] Check complete. ${passedCount}/${sampleTokens.length} matched cleanly. Alerts: ${alertCount}. Missing: ${missingCount}.`);
     return this.lastReport;
   }
@@ -143,3 +216,4 @@ export class ReconciliationMonitorService {
 }
 
 export const reconciliationMonitor = ReconciliationMonitorService.getInstance();
+

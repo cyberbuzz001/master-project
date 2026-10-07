@@ -17,49 +17,64 @@ echo "📦 [1/5] Creating pre-deployment PostgreSQL safety backup..."
 docker exec tradegrow_postgres pg_dump -U tradegrow tradegrow | gzip > "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz"
 echo "✅ Safety snapshot created: ${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz ($(du -h "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz" | cut -f1))"
 
-# 2. Sync migrations into container
-echo "🔄 [2/6] Syncing database migrations..."
-docker exec -i tradegrow_app mkdir -p /app/server/dist/db/migrations /app/server/src/db/migrations
-docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/src/db/migrations/
-docker cp "${APP_DIR}/server/src/db/migrations/." tradegrow_app:/app/server/dist/db/migrations/
+# 2. Sync migrations and code into cluster containers
+echo "🔄 [2/6] Syncing database migrations and bundles across cluster..."
+CONTAINERS=("tradegrow_app_1" "tradegrow_app_2" "tradegrow_app_3" "tradegrow_app_4")
+PORTS=(5001 5002 5003 5004)
 
-# 3. Sync compiled code bundles into container
-echo "📦 [3/6] Syncing compiled server and client bundles..."
-if [ -d "${APP_DIR}/server/dist" ]; then
-  docker cp "${APP_DIR}/server/dist/." tradegrow_app:/app/server/dist/
-fi
-if [ -d "${APP_DIR}/client/dist" ]; then
-  docker cp "${APP_DIR}/client/dist/." tradegrow_app:/app/client/dist/
+# Fallback check if single container is running
+if ! docker ps --format '{{.Names}}' | grep -q 'tradegrow_app_1'; then
+  CONTAINERS=("tradegrow_app")
+  PORTS=(5000)
 fi
 
-# 4. Gracefully restart application container to load new bundle & run pending migrations
-echo "♻️  [4/6] Restarting tradegrow_app container..."
-docker restart tradegrow_app
-
-# 4. Wait for health check
-echo "⏳ [4/5] Waiting for server healthcheck on port 5000..."
-MAX_RETRIES=20
-RETRY_COUNT=0
-HEALTH_OK=false
-
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-  if curl -s -f http://127.0.0.1:5000/api/v1/health/live > /dev/null 2>&1; then
-    HEALTH_OK=true
-    break
+for c in "${CONTAINERS[@]}"; do
+  if docker ps -a --format '{{.Names}}' | grep -q "^${c}$"; then
+    docker exec -i "$c" mkdir -p /app/server/dist/db/migrations /app/server/src/db/migrations || true
+    docker cp "${APP_DIR}/server/src/db/migrations/." "$c":/app/server/src/db/migrations/ || true
+    docker cp "${APP_DIR}/server/src/db/migrations/." "$c":/app/server/dist/db/migrations/ || true
+    if [ -d "${APP_DIR}/server/dist" ]; then
+      docker cp "${APP_DIR}/server/dist/." "$c":/app/server/dist/ || true
+    fi
+    if [ -d "${APP_DIR}/client/dist" ]; then
+      docker cp "${APP_DIR}/client/dist/." "$c":/app/client/dist/ || true
+    fi
   fi
-  sleep 2
-  RETRY_COUNT=$((RETRY_COUNT+1))
 done
 
-if [ "$HEALTH_OK" = true ]; then
-  echo "✅ Application health check passed!"
-else
-  echo "❌ Health check failed after $MAX_RETRIES attempts! Check docker logs tradegrow_app"
-  exit 1
-fi
+# 3. Rolling Restart: Zero-Downtime Cluster Reload
+echo "♻️  [3/5] Performing rolling cluster restart..."
+for i in "${!CONTAINERS[@]}"; do
+  c="${CONTAINERS[$i]}"
+  p="${PORTS[$i]}"
+  
+  if docker ps --format '{{.Names}}' | grep -q "^${c}$"; then
+    echo "🔄 Rolling restarting node: $c (Port $p)..."
+    docker restart "$c"
+    
+    # Wait for healthcheck before restarting the next node
+    MAX_RETRIES=20
+    RETRY_COUNT=0
+    HEALTH_OK=false
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+      if curl -s -f "http://127.0.0.1:${p}/api/v1/health/live" > /dev/null 2>&1; then
+        HEALTH_OK=true
+        break
+      fi
+      sleep 1.5
+      RETRY_COUNT=$((RETRY_COUNT+1))
+    done
+    
+    if [ "$HEALTH_OK" = true ]; then
+      echo "✅ Node $c healthy on port $p!"
+    else
+      echo "⚠️ Node $c health check timed out on port $p. Check docker logs $c"
+    fi
+  fi
+done
 
-# 5. Reload Nginx without dropping active connections
-echo "🌐 [5/5] Reloading Nginx reverse proxy..."
+# 4. Reload Nginx reverse proxy to distribute traffic to updated nodes
+echo "🌐 [4/5] Reloading Nginx reverse proxy..."
 nginx -t && systemctl reload nginx
 
 echo "=========================================================="

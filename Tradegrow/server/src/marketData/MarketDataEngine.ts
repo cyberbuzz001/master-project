@@ -24,6 +24,7 @@ export class MarketDataEngine {
   // ── Auto-Failover Telemetry & State ──────────────────────────────────────
   private lastDhanTickTime: number = 0;
   private failoverActive: boolean = false;
+  private failoverTimer: NodeJS.Timeout | null = null;
   private configuredProviderName: string = 'DHAN';
 
   private constructor() {
@@ -32,32 +33,26 @@ export class MarketDataEngine {
     this.dhanProvider = new DhanAdapter();
     this.fyersProvider = new FyersAdapter();
 
-    this.providers.set(this.mockProvider.name, this.mockProvider);
-    this.providers.set('MOCK', this.mockProvider);
-    this.providers.set('MOCK_ENGINE', this.mockProvider);
-    this.providers.set(this.angelOneProvider.name, this.angelOneProvider);
-    this.providers.set('ANGELONE', this.angelOneProvider);
     this.providers.set(this.dhanProvider.name, this.dhanProvider);
     this.providers.set('DHAN', this.dhanProvider);
-    this.providers.set(this.fyersProvider.name, this.fyersProvider);
-    this.providers.set('FYERS', this.fyersProvider);
 
-    const configured = process.env.PRIMARY_MARKET_DATA_PROVIDER || 'DHAN';
-    this.configuredProviderName = configured.toUpperCase();
-    this.activeProvider = this.providers.get(this.configuredProviderName) || this.dhanProvider;
+    this.configuredProviderName = 'DHAN';
+    this.activeProvider = this.dhanProvider;
 
-    // Subscribe to Redis pub/sub for tick broadcasts (multi-process horizontal scaling)
-    redis.subscribe('market:ticks', (msg: string) => {
-      try {
-        const payload: any = JSON.parse(msg);
-        // Ignore self-published frames to avoid double fan-out loop
-        if (payload._origin && payload._origin === this.instanceId) return;
+    // Subscribe to Redis pub/sub for tick broadcasts only in multi-node cluster deployments
+    if (process.env.CLUSTER_MODE === 'true') {
+      redis.subscribe('market:ticks', (msg: string) => {
+        try {
+          const payload: any = JSON.parse(msg);
+          // Ignore self-published frames to avoid double fan-out loop
+          if (payload._origin && payload._origin === this.instanceId) return;
 
-        const tick: MarketTick = payload;
-        this.setCachedTick(tick);
-        this.globalCallbacks.forEach(cb => cb(tick));
-      } catch (_) {}
-    });
+          const tick: MarketTick = payload;
+          this.setCachedTick(tick);
+          this.globalCallbacks.forEach(cb => cb(tick));
+        } catch (_) {}
+      });
+    }
   }
 
   public static getInstance(): MarketDataEngine {
@@ -95,7 +90,8 @@ export class MarketDataEngine {
   }
 
   public async initialize(): Promise<void> {
-    console.log(`[MarketDataEngine] 🚀 Initializing Dhan-Only Market Data Engine...`);
+    this.configuredProviderName = 'DHAN';
+    console.log(`[MarketDataEngine] 🚀 Initializing Market Data Engine (Dhan HQ API v2 Exclusive)...`);
 
     const defaultTokens = [
       'NSE_NIFTY50', 'NSE_BANKNIFTY', 'BSE_SENSEX', 'NSE_FINNIFTY', 'NSE_MIDCPNIFTY',
@@ -105,50 +101,92 @@ export class MarketDataEngine {
 
     defaultTokens.forEach(t => this.subscribedTokens.add(t));
 
-    // Initialize Dhan as the ONLY provider
+    // Hydrate local cache from persistent Redis tick store
+    try {
+      for (const tok of defaultTokens) {
+        const cachedRaw = await redis.get(`tick:${tok}`);
+        if (cachedRaw) {
+          const tick: MarketTick = JSON.parse(cachedRaw);
+          if (tick && tick.ltp > 0) {
+            this.setCachedTick(tick);
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Connect ONLY to Dhan HQ API v2 broker feed (NO MOCK, NO FALLBACK)
     try {
       const { setDhanAdapterRef } = require('../utils/dhanTokenRefresh');
       setDhanAdapterRef(this.dhanProvider);
 
-      await this.dhanProvider.initialize();
+      // Register tick callback BEFORE initialize() so pre-seeded quotes immediately populate cache
       this.dhanProvider.subscribe(Array.from(this.subscribedTokens), (tick) => {
         this.lastDhanTickTime = Date.now();
+        this.failoverActive = false;
         this.broadcastTick(tick);
       });
+
+      await this.dhanProvider.initialize();
+
+      // Seed any quotes received during Dhan initialization into cache & Redis
+      for (const tick of this.dhanProvider.getAllCachedTicks()) {
+        this.broadcastTick(tick);
+      }
     } catch (err: any) {
       console.warn('[MarketDataEngine] Dhan initialization warning:', err.message);
     }
-
-    // Fyers is DISABLED — it was causing WebSocket crash-reconnect storms
-    // that blocked the Node.js event loop and caused 504 errors.
     this.activeProvider = this.dhanProvider;
-    this.configuredProviderName = 'DHAN';
 
-    console.log(`[MarketDataEngine] ✅ Dhan-Only Engine Ready | Live Ticks: DHAN | Option Chain: DHAN | Fyers: DISABLED`);
+    console.log(`[MarketDataEngine] ✅ Engine Ready | Active: DHAN (Exclusive Live Feed) | Tokens: ${this.subscribedTokens.size} | Cached: ${this.tickCache.size}`);
   }
 
+  private handleFallbackTick(_tick: MarketTick): void {
+    // Disabled: Strictly Dhan live market prices only (zero fallback pricing).
+    return;
+  }
+
+  private startFailoverMonitor(): void {
+    // Disabled: Strictly Dhan live market prices only.
+    if (this.failoverTimer) {
+      clearInterval(this.failoverTimer);
+      this.failoverTimer = null;
+    }
+  }
+
+  private lastRedisWriteByToken: Map<string, number> = new Map();
+
   /**
-   * Broadcasts tick to local cache, Redis circular buffer, Redis PubSub, and all client WebSocket listeners
+   * Broadcasts tick to local cache, Redis circular buffer, and all client WebSocket listeners.
+   * Dispatches immediately to local in-memory subscribers (0ms latency), and throttles
+   * Redis pipeline writes to 250ms per token to prevent TCP socket buffer saturation and memory leaks.
    */
   private broadcastTick(tick: MarketTick): void {
     this.setCachedTick(tick);
-    redis.set(`tick:${tick.instrumentToken}`, JSON.stringify(tick), 3600);
-    // Buffer latest 1,000 ticks in Redis circular list for instant historical replay / sparklines
-    redis.rpushTrim(
-      `market:ticks:${tick.instrumentToken}`,
-      JSON.stringify({
-        ltp: tick.ltp,
-        timestamp: tick.timestamp || Date.now(),
-        volume: tick.volume,
-        open: tick.open,
-        high: tick.high,
-        low: tick.low,
-        close: tick.close
-      }),
-      1000
-    );
-    redis.publish('market:ticks', JSON.stringify({ ...tick, _origin: this.instanceId }));
     this.globalCallbacks.forEach(cb => cb(tick));
+
+    const now = Date.now();
+    const lastWrite = this.lastRedisWriteByToken.get(tick.instrumentToken) || 0;
+    if (now - lastWrite >= 250) {
+      this.lastRedisWriteByToken.set(tick.instrumentToken, now);
+      redis.set(`tick:${tick.instrumentToken}`, JSON.stringify(tick), 3600).catch(() => {});
+      redis.rpushTrim(
+        `market:ticks:${tick.instrumentToken}`,
+        JSON.stringify({
+          ltp: tick.ltp,
+          timestamp: tick.timestamp || now,
+          volume: tick.volume,
+          open: tick.open,
+          high: tick.high,
+          low: tick.low,
+          close: tick.close
+        }),
+        500
+      ).catch(() => {});
+
+      if (process.env.CLUSTER_MODE === 'true') {
+        redis.publish('market:ticks', JSON.stringify({ ...tick, _origin: this.instanceId })).catch(() => {});
+      }
+    }
   }
 
   /**
@@ -236,13 +274,20 @@ export class MarketDataEngine {
     console.log(`[MarketDataEngine] 🔄 Switching Primary Provider to '${provider.name}'`);
     this.configuredProviderName = targetName;
     this.activeProvider = provider;
-    this.failoverActive = false;
+    this.failoverActive = (targetName === 'MOCK' || targetName === 'MOCK_ENGINE');
     process.env.PRIMARY_MARKET_DATA_PROVIDER = targetName;
 
-    // Resubscribe all active tokens
-    provider.subscribe(Array.from(this.subscribedTokens), (tick) => {
-      this.broadcastTick(tick);
-    });
+    try {
+      if (typeof provider.initialize === 'function') {
+        await provider.initialize();
+      }
+      provider.subscribe(Array.from(this.subscribedTokens), (tick: MarketTick) => {
+        if (targetName === 'DHAN') this.lastDhanTickTime = Date.now();
+        this.broadcastTick(tick);
+      });
+    } catch (err: any) {
+      console.warn(`[MarketDataEngine] Warning when switching to ${targetName}:`, err.message);
+    }
 
     return true;
   }
@@ -317,12 +362,15 @@ export class MarketDataEngine {
     const cached = this.getCachedTick(instrumentToken);
     if (cached) return cached;
 
-    // Dhan only — Fyers is disabled
-    const tick = await this.dhanProvider.getQuote(instrumentToken);
-    if (tick) {
-      this.setCachedTick(tick);
-    }
-    return tick;
+    try {
+      const tick = await this.dhanProvider.getQuote(instrumentToken);
+      if (tick) {
+        this.setCachedTick(tick);
+        return tick;
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   public getAllCachedTicks(): MarketTick[] {
@@ -333,13 +381,20 @@ export class MarketDataEngine {
     if (!tokens || tokens.length === 0) return;
     tokens.forEach(t => this.subscribedTokens.add(t));
 
-    // Dhan only — subscribe new tokens directly to Dhan WebSocket stream
-    this.dhanProvider.subscribe(tokens);
+    try {
+      this.dhanProvider.subscribe(tokens, (tick: MarketTick) => {
+        this.lastDhanTickTime = Date.now();
+        this.broadcastTick(tick);
+      });
+    } catch (_) {}
   }
 
   public unsubscribe(tokens: string[]): void {
     if (!tokens || tokens.length === 0) return;
     tokens.forEach(t => this.subscribedTokens.delete(t));
+    try {
+      this.dhanProvider.unsubscribe(tokens);
+    } catch (_) {}
   }
 
   public onTick(callback: TickCallback): void {
@@ -347,40 +402,32 @@ export class MarketDataEngine {
   }
 
   /**
-   * Historical Candles — Dhan only (Fyers disabled)
+   * Historical Candles — Dhan HQ API exclusive (no synthetic/mock fallback)
    */
   public async getHistoricalCandles(instrumentToken: string, timeframe: string, count: number): Promise<Candle[]> {
-    return this.dhanProvider.getHistoricalCandles(instrumentToken, timeframe, count);
+    try {
+      const candles = await this.dhanProvider.getHistoricalCandles(instrumentToken, timeframe, count);
+      if (candles && candles.length > 0) return candles;
+    } catch (_) {}
+    return [];
   }
 
   /**
-   * Option Chain — Dhan only (Fyers disabled)
+   * Option Chain — Dhan HQ API exclusive (no synthetic/mock fallback)
    */
   public async getOptionChain(symbol: string, expiry: string): Promise<OptionChainItem[]> {
-    return this.dhanProvider.getOptionChain(symbol, expiry);
+    try {
+      const chain = await this.dhanProvider.getOptionChain(symbol, expiry);
+      if (chain && chain.length > 0) return chain;
+    } catch (_) {}
+    return [];
   }
 
   public getOptionExpiries(symbol: string): string[] {
-    const fyersProvider = this.fyersProvider as any;
-    if (typeof fyersProvider.getOptionExpiries === 'function') {
-      const expiries = fyersProvider.getOptionExpiries(symbol);
-      if (expiries && expiries.length > 0) return expiries;
-    }
-
     const dhanProvider = this.dhanProvider as any;
     if (typeof dhanProvider.getOptionExpiries === 'function') {
       return dhanProvider.getOptionExpiries(symbol);
     }
-
-    // Synthetic fallback
-    const dates: string[] = [];
-    const base = new Date();
-    for (let w = 0; w < 5; w++) {
-      const d = new Date(base);
-      const daysToThursday = (4 - d.getDay() + 7) % 7 || 7;
-      d.setDate(d.getDate() + daysToThursday + w * 7);
-      dates.push(d.toISOString().slice(0, 10));
-    }
-    return dates;
+    return [];
   }
 }

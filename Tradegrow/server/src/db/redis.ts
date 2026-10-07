@@ -20,7 +20,7 @@ class RedisService {
 
     try {
       const options = {
-        maxRetriesPerRequest: null,
+        maxRetriesPerRequest: 3,
         enableOfflineQueue: true,
         connectTimeout: 10000,
         retryStrategy: (times: number) => {
@@ -239,7 +239,7 @@ class RedisService {
 
     if (!this.subClient) {
       this.subClient = this.client.duplicate({
-        maxRetriesPerRequest: null,
+        maxRetriesPerRequest: 3,
         enableOfflineQueue: true,
         connectTimeout: 10000,
         retryStrategy: (times: number) => Math.min(times * 200, 3000)

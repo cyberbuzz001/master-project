@@ -4,10 +4,11 @@ import {
   CheckCircle2, AlertTriangle, Wifi, WifiOff, Shield, CheckCircle, User, Phone, Mail,
   MapPin, Activity, Clock, ThumbsUp, ThumbsDown, RotateCcw, Briefcase, ListOrdered,
   Landmark, BookOpen, FileText, KeySquare, Zap, Sparkles, ExternalLink, Download,
-  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send
+  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock
 } from 'lucide-react';
 import { useMarketSocket, useAdminSubscribeUser, useSubscribeTokens } from '../../hooks/useMarketSocket';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
+import { normalizeToken } from '../../utils/symbology';
 
 interface Customer360Props {
   token: string;
@@ -161,6 +162,7 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
   // Risk & Margin sync states
   const [syncingMargin, setSyncingMargin] = useState(false);
   const [clearingRisk, setClearingRisk] = useState(false);
+  const [unblockingAccount, setUnblockingAccount] = useState(false);
 
   // Profile Edit State
   const [editingProfile, setEditingProfile] = useState(false);
@@ -225,6 +227,27 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
     }
   };
 
+  const handleUnblockAccount = async () => {
+    const custName = data?.profile?.full_name || data?.profile?.username || customerId;
+    if (!window.confirm(`Are you sure you want to unblock, clear login lock, and reactivate account for ${custName}?`)) return;
+    setUnblockingAccount(true);
+    setActionMsg(null);
+    try {
+      const res = await adminApi(`/api/v1/admin/customers/${customerId}/unblock`, 'POST');
+      if (res.success) {
+        setActionMsg({ type: 'success', text: res.message || 'Account successfully unblocked and reactivated' });
+        fetchCustomerData();
+        fetchLoginActivity();
+      } else {
+        setActionMsg({ type: 'error', text: res.error?.message || 'Failed to unblock account' });
+      }
+    } catch (err: any) {
+      setActionMsg({ type: 'error', text: err.message || 'Network error unblocking account' });
+    } finally {
+      setUnblockingAccount(false);
+    }
+  };
+
   // ── Real-time updates over the shared market-data socket ────────────
   // Replaces the old setInterval(fetchCustomerData, 5000) polling. Previously this
   // page opened its own separate WebSocket (useAdminUserSocket) — ported onto the
@@ -233,7 +256,25 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
   const wsConnected = socketStatus === 'CONNECTED';
   useAdminSubscribeUser(customerId);
   const getLiveLtp = useCallback((symbol?: string, instrumentToken?: string): number | undefined => {
-    return (symbol ? ticks.get(symbol)?.ltp : undefined) ?? (instrumentToken ? ticks.get(instrumentToken)?.ltp : undefined);
+    if (symbol) {
+      const direct = ticks.get(symbol)?.ltp;
+      if (direct !== undefined && direct > 0) return direct;
+      const aliases = normalizeToken(symbol);
+      for (const alias of aliases) {
+        const val = ticks.get(alias)?.ltp;
+        if (val !== undefined && val > 0) return val;
+      }
+    }
+    if (instrumentToken) {
+      const direct = ticks.get(instrumentToken)?.ltp;
+      if (direct !== undefined && direct > 0) return direct;
+      const aliases = normalizeToken(instrumentToken);
+      for (const alias of aliases) {
+        const val = ticks.get(alias)?.ltp;
+        if (val !== undefined && val > 0) return val;
+      }
+    }
+    return undefined;
   }, [ticks]);
 
   const fetchCustomerData = useCallback(() => {
@@ -253,12 +294,24 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
     if (!data) return [];
     const tokens = new Set<string>();
     (data.positions || []).forEach((p: any) => {
-      if (p.symbol) tokens.add(p.symbol);
-      if (p.instrument_token) tokens.add(p.instrument_token);
+      if (p.symbol) {
+        tokens.add(p.symbol);
+        normalizeToken(p.symbol).forEach(k => tokens.add(k));
+      }
+      if (p.instrument_token) {
+        tokens.add(p.instrument_token);
+        normalizeToken(p.instrument_token).forEach(k => tokens.add(k));
+      }
     });
     (data.holdings || []).forEach((h: any) => {
-      if (h.symbol) tokens.add(h.symbol);
-      if (h.instrument_token) tokens.add(h.instrument_token);
+      if (h.symbol) {
+        tokens.add(h.symbol);
+        normalizeToken(h.symbol).forEach(k => tokens.add(k));
+      }
+      if (h.instrument_token) {
+        tokens.add(h.instrument_token);
+        normalizeToken(h.instrument_token).forEach(k => tokens.add(k));
+      }
     });
     return Array.from(tokens);
   }, [data]);
@@ -576,6 +629,24 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
             >
               <ShieldAlert className="w-3.5 h-3.5" />
               <span>{clearingRisk ? 'Clearing...' : 'Lift Reduce-Only'}</span>
+            </button>
+          )}
+
+          {/* Unblock / Resolve Account button */}
+          {(data.profile.status !== 'ACTIVE' ||
+            (data.profile.failed_login_attempts && data.profile.failed_login_attempts > 0) ||
+            (data.profile.locked_until && new Date(data.profile.locked_until) > new Date()) ||
+            (loginActivity?.security?.lockedUntil && new Date(loginActivity.security.lockedUntil) > new Date()) ||
+            (loginActivity?.security?.failedLoginAttempts && loginActivity.security.failedLoginAttempts > 0)
+          ) && (
+            <button
+              onClick={handleUnblockAccount}
+              disabled={unblockingAccount}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer animate-pulse"
+              title="Click to resolve hold, reset failed login attempts, and unblock account"
+            >
+              <Unlock className="w-3.5 h-3.5" />
+              <span>{unblockingAccount ? 'Unblocking...' : 'Unblock Account'}</span>
             </button>
           )}
 
@@ -1294,13 +1365,24 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
                   {loginActivity?.security?.lastLoginAt ? new Date(loginActivity.security.lastLoginAt).toLocaleString() : 'Never'}
                 </div>
               </div>
-              <div className="bg-[var(--bg-surface)]/60 border border-[var(--border-color)] rounded-xl p-4 text-xs">
-                <div className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold mb-1">Account Lock Status</div>
-                <div className={`font-bold ${loginActivity?.security?.lockedUntil ? 'text-[var(--loss)]' : 'text-[var(--primary)]'}`}>
-                  {loginActivity?.security?.lockedUntil
-                    ? `Locked until ${new Date(loginActivity.security.lockedUntil).toLocaleString()}`
-                    : 'Not Locked'}
+              <div className="bg-[var(--bg-surface)]/60 border border-[var(--border-color)] rounded-xl p-4 text-xs flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold mb-1">Account Lock Status</div>
+                  <div className={`font-bold ${loginActivity?.security?.lockedUntil ? 'text-[var(--loss)]' : 'text-[var(--primary)]'}`}>
+                    {loginActivity?.security?.lockedUntil
+                      ? `Locked until ${new Date(loginActivity.security.lockedUntil).toLocaleString()}`
+                      : 'Not Locked'}
+                  </div>
                 </div>
+                <button
+                  onClick={handleUnblockAccount}
+                  disabled={unblockingAccount}
+                  className="mt-3 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                  title="Reset failed login attempts, clear lock, and reactivate account"
+                >
+                  <Unlock className="w-3.5 h-3.5" />
+                  <span>{unblockingAccount ? 'Unblocking...' : 'Resolve & Unblock Account'}</span>
+                </button>
               </div>
             </div>
 

@@ -78,6 +78,12 @@ export class MemoryWatchdogService {
       }
     } else if (stats.heapUsedMB >= this.warningThresholdMB) {
       console.warn(`[MemoryWatchdog] ⚠️ WARNING: Elevated Heap Usage! ${stats.heapUsedMB} MB exceeds warning threshold (${this.warningThresholdMB} MB)`);
+      // Proactively run gentle GC before heap becomes critical
+      if (global.gc) {
+        try {
+          global.gc();
+        } catch (_) {}
+      }
     } else {
       // Normal structured log
       console.log(formattedLog);

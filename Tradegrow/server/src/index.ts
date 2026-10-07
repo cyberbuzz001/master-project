@@ -244,6 +244,11 @@ async function startServer() {
           .then(({ reconciliationMonitor }) => reconciliationMonitor.start(300000))
           .catch((err) => console.error('[Startup] Failed to start ReconciliationMonitorService:', err.message));
 
+        // Start Memory Watchdog to monitor heap usage and trigger GC
+        import('./services/MemoryWatchdogService')
+          .then(({ memoryWatchdog }) => memoryWatchdog.start(60000))
+          .catch((err) => console.error('[Startup] Failed to start MemoryWatchdogService:', err.message));
+
         ExecutionEngine.start();
         setupWebSocketServer(server);
 

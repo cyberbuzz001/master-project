@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Bookmark, Layers, Briefcase, User as UserIcon, ShieldCheck,
@@ -77,21 +77,39 @@ export function AppShell({
   const GLOBAL_INDICES = ['NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY'];
   useSubscribeTokens(GLOBAL_INDICES);
 
-  const getNifty = () => ticks?.get('NSE_NIFTY50') || ticks?.get('NIFTY50') || ticks?.get('NIFTY 50');
-  const getSensex = () => ticks?.get('BSE_SENSEX') || ticks?.get('SENSEX') || ticks?.get('BSE SENSEX');
-  const getBankNifty = () => ticks?.get('NSE_BANKNIFTY') || ticks?.get('NIFTY BANK') || ticks?.get('BANKNIFTY');
-  const getFinNifty = () => ticks?.get('NSE_FINNIFTY') || ticks?.get('FINNIFTY');
-  const formatChange = (tick?: MarketTick, fallbackChange = 0, fallbackPct = 0) => {
-    const chg = tick ? tick.change : fallbackChange;
-    const pct = tick ? tick.changePercent : fallbackPct;
+  // Eagerly pre-seed initial live quotes from Dhan API if socket tick is arriving
+  const [initialQuotes, setInitialQuotes] = useState<Record<string, MarketTick>>({});
+
+  useEffect(() => {
+    GLOBAL_INDICES.forEach(async (tok) => {
+      try {
+        const res = await fetch(`/api/v1/market/quote/${tok}`);
+        const data = await res.json();
+        if (data.success && data.tick) {
+          setInitialQuotes(prev => ({ ...prev, [tok]: data.tick }));
+        }
+      } catch (_) {}
+    });
+  }, []);
+
+  const getNifty = () => ticks?.get('NSE_NIFTY50') || ticks?.get('NIFTY50') || ticks?.get('NIFTY 50') || initialQuotes['NSE_NIFTY50'];
+  const getSensex = () => ticks?.get('BSE_SENSEX') || ticks?.get('SENSEX') || ticks?.get('BSE SENSEX') || initialQuotes['BSE_SENSEX'];
+  const getBankNifty = () => ticks?.get('NSE_BANKNIFTY') || ticks?.get('NIFTY BANK') || ticks?.get('BANKNIFTY') || initialQuotes['NSE_BANKNIFTY'];
+  const getFinNifty = () => ticks?.get('NSE_FINNIFTY') || ticks?.get('FINNIFTY') || initialQuotes['NSE_FINNIFTY'];
+
+  const formatChange = (tick?: MarketTick) => {
+    if (!tick) return { text: '', isPos: true };
+    const chg = tick.change;
+    const pct = tick.changePercent;
     const isPos = chg >= 0;
     return { text: `${isPos ? '+' : ''}${chg.toFixed(2)} (${isPos ? '+' : ''}${pct.toFixed(2)}%)`, isPos };
   };
+
   const indices = [
-    { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', tick: getNifty(), fallback: 22480.00, fbChg: 58.00, fbPct: 0.26 },
-    { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', tick: getSensex(), fallback: 72150.00, fbChg: 220.00, fbPct: 0.31 },
-    { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', tick: getBankNifty(), fallback: 54780.00, fbChg: 310.00, fbPct: 0.57 },
-    { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', tick: getFinNifty(), fallback: 24200.00, fbChg: 65.00, fbPct: 0.27 },
+    { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE', tick: getNifty() },
+    { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE', tick: getSensex() },
+    { label: 'BANK NIFTY', token: 'NSE_BANKNIFTY', exchange: 'NSE', tick: getBankNifty() },
+    { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', tick: getFinNifty() },
   ];
 
   const MOBILE_NAV_ITEMS: AppShellNavItem[] = [
@@ -180,8 +198,8 @@ export function AppShell({
       {!isTerminalMode && (
         <div className="md:hidden flex items-center gap-2 overflow-x-auto scrollbar-none px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-surface)] font-mono text-xs tabular-nums">
           {indices.map((idx) => {
-            const chg = formatChange(idx.tick, idx.fbChg, idx.fbPct);
-            const ltp = idx.tick ? idx.tick.ltp : idx.fallback;
+            const chg = formatChange(idx.tick);
+            const ltp = idx.tick?.ltp;
             return (
               <button
                 key={idx.token}
@@ -189,15 +207,21 @@ export function AppShell({
                 className="flex items-center gap-1.5 flex-shrink-0 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)]/60 px-2 py-0.5 rounded-lg"
               >
                 <span className="font-bold text-[var(--text-muted)] text-[10px]">{idx.label}</span>
-                <LivePriceCell
-                  value={ltp}
-                  prefix=""
-                  decimals={2}
-                  className="!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
-                />
-                <span className={`text-[10px] font-bold ${chg.isPos ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {chg.isPos ? '+' : ''}{chg.text.split(' ')[1] || ''}
-                </span>
+                {ltp ? (
+                  <LivePriceCell
+                    value={ltp}
+                    prefix=""
+                    decimals={2}
+                    className="!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
+                  />
+                ) : (
+                  <span className="text-[11px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
+                )}
+                {idx.tick && chg.text ? (
+                  <span className={`text-[10px] font-bold ${chg.isPos ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {chg.isPos ? '+' : ''}{chg.text.split(' ')[1] || ''}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -334,8 +358,8 @@ export function AppShell({
       {/* ── DESKTOP TICKER STRIP ────────────────────────────────────────── */}
       <div className="hidden md:flex items-center gap-6 overflow-x-auto scrollbar-none px-6 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-surface)] font-mono text-xs tabular-nums">
         {indices.map((idx) => {
-          const chg = formatChange(idx.tick, idx.fbChg, idx.fbPct);
-          const ltp = idx.tick ? idx.tick.ltp : idx.fallback;
+          const chg = formatChange(idx.tick);
+          const ltp = idx.tick?.ltp;
           return (
             <button
               key={idx.token}
@@ -343,13 +367,17 @@ export function AppShell({
               className="flex items-center gap-2 flex-shrink-0 hover:bg-[var(--bg-surface-elevated)] px-2 py-0.5 rounded-lg transition-colors"
             >
               <span className="font-bold text-[var(--text-muted)] text-[11px]">{idx.label}</span>
-              <LivePriceCell
-                value={ltp}
-                prefix=""
-                decimals={2}
-                className="!text-xs !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
-              />
-              <Badge variant={chg.isPos ? 'gain' : 'loss'}>{chg.text}</Badge>
+              {ltp ? (
+                <LivePriceCell
+                  value={ltp}
+                  prefix=""
+                  decimals={2}
+                  className="!text-xs !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
+                />
+              ) : (
+                <span className="text-xs text-[var(--text-muted)] font-mono animate-pulse">--</span>
+              )}
+              {idx.tick && chg.text ? <Badge variant={chg.isPos ? 'gain' : 'loss'}>{chg.text}</Badge> : null}
             </button>
           );
         })}

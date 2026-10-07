@@ -288,8 +288,13 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
     targetClients.forEach((client: ExtendedWebSocket) => {
       if (client.readyState === WebSocket.OPEN) {
         try {
-          // Backpressure check: Skip frame if client write buffer is backlogged (>512KB)
-          if (client.bufferedAmount > 512 * 1024) {
+          // If a client socket is severely hung (>1MB backlog), terminate to release V8 memory
+          if (client.bufferedAmount > 1024 * 1024) {
+            client.terminate();
+            return;
+          }
+          // Backpressure check: Skip frame if client write buffer is backlogged (>128KB)
+          if (client.bufferedAmount > 128 * 1024) {
             totalDroppedFrames++;
             return;
           }

@@ -222,7 +222,7 @@ services:
       ADVISORY_WHATSAPP_WEBHOOK_SECRET:     ${ADVISORY_WHATSAPP_WEBHOOK_SECRET}
       ADVISORY_WHATSAPP_DAILY_LIMIT:        ${ADVISORY_WHATSAPP_DAILY_LIMIT:-80}
       INTERNAL_API_KEY:                     ${INTERNAL_API_KEY:-advisory_internal_2026_key}
-      NODE_OPTIONS:                 "--max-old-space-size=16384"
+      NODE_OPTIONS:                 "--max-old-space-size=4096 --expose-gc"
     ports:
       - "5000:5000"
     depends_on:

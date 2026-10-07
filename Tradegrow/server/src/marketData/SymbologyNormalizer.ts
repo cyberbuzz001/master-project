@@ -84,32 +84,61 @@ export class SymbologyNormalizer {
       keys.add('NSE MIDCPNIFTY');
     }
 
-    // Regex match option format: [UNDERLYING][STRIKE][CE|PE]
-    // Handles: NIFTY 24500 CE, NIFTY_24500_CE, NIFTY24500CE, NFO_NIFTY_24500_CE, SENSEX 78400 PE
-    const match = cleanedWithUnderscores.match(/^([A-Z0-9]+)_(\d+(?:\.\d+)?)_(CE|PE)$/) ||
-                  compactNoSpaces.match(/^([A-Z0-9]+?)(\d+(?:\.\d+)?)(CE|PE)$/);
+    // Regex match option format: [UNDERLYING][STRIKE][CE|PE] with optional [EXPIRY]
+    // Handles:
+    // - NIFTY 24500 CE, NIFTY_24500_CE, NIFTY24500CE, NFO_NIFTY_24500_CE, SENSEX 78400 PE
+    // - NIFTY-Oct2026-22600-CE, NIFTY_OCT2026_22600_CE, NIFTY_26OCT_22600_CE, SENSEX-Oct2026-77900-PE
+    const matchWithExpiry = cleanedWithUnderscores.match(/^([A-Z0-9]+)_([A-Z0-9]+)_(\d+(?:\.\d+)?)_(CE|PE)$/);
+    const matchDirect = cleanedWithUnderscores.match(/^([A-Z0-9]+)_(\d+(?:\.\d+)?)_(CE|PE)$/) ||
+                        compactNoSpaces.match(/^([A-Z0-9]+?)(\d+(?:\.\d+)?)(CE|PE)$/);
 
-    if (match) {
-      const underlying = match[1].replace(/^(NFO_|BFO_|NSE_|BSE_)/, '');
-      const strike = match[2];
-      const optType = match[3];
+    let underlying = '';
+    let strike = '';
+    let optType = '';
+    let expiry = '';
 
-      const segment = (underlying === 'SENSEX' || underlying.includes('BSE')) ? 'BFO' : 'NFO';
-      const exchSegment = (underlying === 'SENSEX' || underlying.includes('BSE')) ? 'BSE' : 'NSE';
+    if (matchWithExpiry) {
+      underlying = matchWithExpiry[1].replace(/^(NFO_|BFO_|NSE_|BSE_|MCX_)/, '');
+      expiry = matchWithExpiry[2];
+      strike = matchWithExpiry[3];
+      optType = matchWithExpiry[4];
+    } else if (matchDirect) {
+      underlying = matchDirect[1].replace(/^(NFO_|BFO_|NSE_|BSE_|MCX_)/, '');
+      strike = matchDirect[2];
+      optType = matchDirect[3];
+    }
 
-      // Internal standard token: NFO_NIFTY_24500_CE
+    if (underlying && strike && optType) {
+      const isBse = underlying === 'SENSEX' || underlying.includes('BSE') || underlying === 'BANKEX';
+      const isMcx = ['CRUDEOIL', 'GOLD', 'SILVER', 'NATURALGAS', 'COPPER'].includes(underlying);
+      const segment = isMcx ? 'MCX' : isBse ? 'BFO' : 'NFO';
+      const exchSegment = isMcx ? 'MCX' : isBse ? 'BSE' : 'NSE';
+
+      // Internal standard token: NFO_NIFTY_22600_CE or BFO_SENSEX_77900_PE
       keys.add(`${segment}_${underlying}_${strike}_${optType}`);
       keys.add(`${exchSegment}_${underlying}_${strike}_${optType}`);
 
-      // Compact standard token: NSE_NIFTY24500CE / NIFTY24500CE
+      // Compact standard token: NSE_NIFTY22600CE / NIFTY22600CE
       keys.add(`${exchSegment}_${underlying}${strike}${optType}`);
       keys.add(`${underlying}${strike}${optType}`);
 
-      // Underscore format: NIFTY_24500_CE
+      // Underscore format: NIFTY_22600_CE / SENSEX_77900_PE
       keys.add(`${underlying}_${strike}_${optType}`);
 
-      // Spaced format: NIFTY 24500 CE
+      // Spaced format: NIFTY 22600 CE / SENSEX 77900 PE
       keys.add(`${underlying} ${strike} ${optType}`);
+      keys.add(`${exchSegment} ${underlying} ${strike} ${optType}`);
+      keys.add(`${segment} ${underlying} ${strike} ${optType}`);
+
+      // If an expiry segment was extracted, also preserve variations with expiry
+      if (expiry) {
+        keys.add(`${underlying}-${expiry}-${strike}-${optType}`);
+        keys.add(`${underlying}_${expiry}_${strike}_${optType}`);
+        keys.add(`${underlying} ${expiry} ${strike} ${optType}`);
+        keys.add(`${segment}_${underlying}_${expiry}_${strike}_${optType}`);
+        keys.add(`${exchSegment}_${underlying}_${expiry}_${strike}_${optType}`);
+        keys.add(`${segment}_${underlying}_${strike}_${optType}_${expiry}`);
+      }
     }
 
     return Array.from(keys);

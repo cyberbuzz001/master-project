@@ -85,7 +85,7 @@ services:
         limits:
           memory: 512m
 
-  # ── 4. Trade Grow Application Node 1 (Stateless API & WS) ───────────────────
+  # ── 4. Trade Grow Primary Node (Broker Feed & Real-time Publisher) ──────────
   app-1:
     build:
       context: .
@@ -94,59 +94,17 @@ services:
     env_file:
       - .env.production
     environment:
-      PORT:                         5000
+      PORT:                         5001
       NODE_ENV:                     production
       PROCESS_ROLE:                 "primary"
+      CLUSTER_MODE:                 "true"
       INSTANCE_ID:                  "app-1"
       PG_HOST:                      postgres
       PG_PORT:                      "5432"
-      PG_POOL_MAX:                  "20"
+      PG_POOL_MAX:                  "25"
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
-      NODE_OPTIONS:                 "--max-old-space-size=3072"
-    ports:
-      - "5000:5000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - trading-net
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/v1/health/live')"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    volumes:
-      - kyc_uploads:/app/server/uploads/kyc
-    restart: unless-stopped
-    stop_grace_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 4g
-
-  # ── 5. Trade Grow Application Node 2 (Stateless Expansion Replica) ──────────
-  app-2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: tradegrow_app_2
-    env_file:
-      - .env.production
-    environment:
-      PORT:                         5001
-      NODE_ENV:                     production
-      PROCESS_ROLE:                 "worker"
-      INSTANCE_ID:                  "app-2"
-      PG_HOST:                      postgres
-      PG_PORT:                      "5432"
-      PG_POOL_MAX:                  "20"
-      PG_POOL_MIN:                  "2"
-      REDIS_URL:                    redis://redis:6379
-      NODE_OPTIONS:                 "--max-old-space-size=3072"
+      NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
     ports:
       - "5001:5001"
     depends_on:
@@ -169,5 +127,141 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          cpus: '1.5'
+          memory: 3g
+
+  # ── 5. Trade Grow Worker Node 2 (Stateless API & WS Replica) ────────────────
+  app-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradegrow_app_2
+    env_file:
+      - .env.production
+    environment:
+      PORT:                         5002
+      NODE_ENV:                     production
+      PROCESS_ROLE:                 "worker"
+      CLUSTER_MODE:                 "true"
+      INSTANCE_ID:                  "app-2"
+      PG_HOST:                      postgres
+      PG_PORT:                      "5432"
+      PG_POOL_MAX:                  "25"
+      PG_POOL_MIN:                  "2"
+      REDIS_URL:                    redis://redis:6379
+      NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5002/api/v1/health/live')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - kyc_uploads:/app/server/uploads/kyc
+    restart: unless-stopped
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3g
+
+  # ── 6. Trade Grow Worker Node 3 (Stateless API & WS Replica) ────────────────
+  app-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradegrow_app_3
+    env_file:
+      - .env.production
+    environment:
+      PORT:                         5003
+      NODE_ENV:                     production
+      PROCESS_ROLE:                 "worker"
+      CLUSTER_MODE:                 "true"
+      INSTANCE_ID:                  "app-3"
+      PG_HOST:                      postgres
+      PG_PORT:                      "5432"
+      PG_POOL_MAX:                  "25"
+      PG_POOL_MIN:                  "2"
+      REDIS_URL:                    redis://redis:6379
+      NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+    ports:
+      - "5003:5003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5003/api/v1/health/live')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - kyc_uploads:/app/server/uploads/kyc
+    restart: unless-stopped
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3g
+
+  # ── 7. Trade Grow Worker Node 4 (Stateless API & WS Replica) ────────────────
+  app-4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradegrow_app_4
+    env_file:
+      - .env.production
+    environment:
+      PORT:                         5004
+      NODE_ENV:                     production
+      PROCESS_ROLE:                 "worker"
+      CLUSTER_MODE:                 "true"
+      INSTANCE_ID:                  "app-4"
+      PG_HOST:                      postgres
+      PG_PORT:                      "5432"
+      PG_POOL_MAX:                  "25"
+      PG_POOL_MIN:                  "2"
+      REDIS_URL:                    redis://redis:6379
+      NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+    ports:
+      - "5004:5004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - trading-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5004/api/v1/health/live')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - kyc_uploads:/app/server/uploads/kyc
+    restart: unless-stopped
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3g
 
