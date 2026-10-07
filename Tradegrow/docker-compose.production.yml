@@ -87,6 +87,7 @@ services:
 
   # ── 4. Trade Grow Primary Node (Broker Feed & Real-time Publisher) ──────────
   app-1:
+    image: tradegrow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -99,6 +100,7 @@ services:
       PROCESS_ROLE:                 "primary"
       CLUSTER_MODE:                 "true"
       INSTANCE_ID:                  "app-1"
+      DATABASE_URL:                 ${DATABASE_URL}
       PG_HOST:                      postgres
       PG_PORT:                      "5432"
       PG_POOL_MAX:                  "25"
@@ -122,6 +124,10 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
+      - ./server/dist:/app/server/dist
+      - ./client/dist:/app/client/dist
+      - ./server/src/db/migrations:/app/server/src/db/migrations
+      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -132,6 +138,7 @@ services:
 
   # ── 5. Trade Grow Worker Node 2 (Stateless API & WS Replica) ────────────────
   app-2:
+    image: tradegrow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -144,6 +151,7 @@ services:
       PROCESS_ROLE:                 "worker"
       CLUSTER_MODE:                 "true"
       INSTANCE_ID:                  "app-2"
+      DATABASE_URL:                 ${DATABASE_URL}
       PG_HOST:                      postgres
       PG_PORT:                      "5432"
       PG_POOL_MAX:                  "25"
@@ -167,6 +175,10 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
+      - ./server/dist:/app/server/dist
+      - ./client/dist:/app/client/dist
+      - ./server/src/db/migrations:/app/server/src/db/migrations
+      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -177,6 +189,7 @@ services:
 
   # ── 6. Trade Grow Worker Node 3 (Stateless API & WS Replica) ────────────────
   app-3:
+    image: tradegrow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -189,6 +202,7 @@ services:
       PROCESS_ROLE:                 "worker"
       CLUSTER_MODE:                 "true"
       INSTANCE_ID:                  "app-3"
+      DATABASE_URL:                 ${DATABASE_URL}
       PG_HOST:                      postgres
       PG_PORT:                      "5432"
       PG_POOL_MAX:                  "25"
@@ -212,6 +226,10 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
+      - ./server/dist:/app/server/dist
+      - ./client/dist:/app/client/dist
+      - ./server/src/db/migrations:/app/server/src/db/migrations
+      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -222,6 +240,7 @@ services:
 
   # ── 7. Trade Grow Worker Node 4 (Stateless API & WS Replica) ────────────────
   app-4:
+    image: tradegrow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -234,6 +253,7 @@ services:
       PROCESS_ROLE:                 "worker"
       CLUSTER_MODE:                 "true"
       INSTANCE_ID:                  "app-4"
+      DATABASE_URL:                 ${DATABASE_URL}
       PG_HOST:                      postgres
       PG_PORT:                      "5432"
       PG_POOL_MAX:                  "25"
@@ -257,6 +277,10 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
+      - ./server/dist:/app/server/dist
+      - ./client/dist:/app/client/dist
+      - ./server/src/db/migrations:/app/server/src/db/migrations
+      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
