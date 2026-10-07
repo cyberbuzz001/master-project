@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertTriangle, Wifi, WifiOff, Shield, CheckCircle, User, Phone, Mail,
   MapPin, Activity, Clock, ThumbsUp, ThumbsDown, RotateCcw, Briefcase, ListOrdered,
   Landmark, BookOpen, FileText, KeySquare, Zap, Sparkles, ExternalLink, Download,
-  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock
+  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock, ShoppingCart
 } from 'lucide-react';
 import { useMarketSocket, useAdminSubscribeUser, useSubscribeTokens } from '../../hooks/useMarketSocket';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
@@ -27,6 +27,17 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
   const [fundAction, setFundAction] = useState<'ADD' | 'DEDUCT'>('ADD');
   const [fundReason, setFundReason] = useState<string>('Admin Manual Capital Adjustment');
   const [submittingFunds, setSubmittingFunds] = useState(false);
+
+  // Place Order on Behalf Modal State
+  const [showPlaceOrderModal, setShowPlaceOrderModal] = useState(false);
+  const [orderSymbol, setOrderSymbol] = useState('');
+  const [orderExchange, setOrderExchange] = useState('NSE');
+  const [orderSide, setOrderSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [orderType, setOrderType] = useState<'LIMIT' | 'MARKET'>('MARKET');
+  const [orderProduct, setOrderProduct] = useState<'MIS' | 'CNC' | 'NRML'>('MIS');
+  const [orderQty, setOrderQty] = useState(1);
+  const [orderPrice, setOrderPrice] = useState(0);
+  const [submittingOrder, setSubmittingOrder] = useState(false);
 
   // Reset Password State
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -544,6 +555,50 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
     }
   };
 
+  const handlePlaceAdminOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderSymbol || !orderQty) return;
+    setSubmittingOrder(true);
+    setActionMsg(null);
+    try {
+      const cleanSymbol = orderSymbol.trim().toUpperCase();
+      const liveLtp = getLiveLtp(cleanSymbol) || 0;
+      const finalPrice = orderType === 'MARKET' ? (liveLtp > 0 ? liveLtp : orderPrice || 1) : orderPrice;
+
+      const res = await adminApi('/api/v1/admin/orders/create', 'POST', {
+        userId: customerId,
+        symbol: cleanSymbol,
+        exchange: orderExchange,
+        side: orderSide,
+        orderType,
+        productType: orderProduct,
+        quantity: orderQty,
+        price: finalPrice
+      });
+
+      if (res.success) {
+        setActionMsg({
+          type: 'success',
+          text: `✅ ${orderSide} order placed successfully on behalf of ${data?.profile?.username || 'client'}! (Symbol: ${cleanSymbol}, Qty: ${orderQty}, Price: ₹${finalPrice})`
+        });
+        setShowPlaceOrderModal(false);
+        setOrderSymbol('');
+        setOrderQty(1);
+        setOrderPrice(0);
+        fetchCustomerData();
+      } else {
+        setActionMsg({
+          type: 'error',
+          text: res.error?.message || 'Failed to place order on behalf of client'
+        });
+      }
+    } catch (err: any) {
+      setActionMsg({ type: 'error', text: err.message || 'Error executing order' });
+    } finally {
+      setSubmittingOrder(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 h-full overflow-hidden select-none">
       {/* Header */}
@@ -594,6 +649,22 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
           >
             <KeyRound className="w-3.5 h-3.5" />
             <span>Reset Password</span>
+          </button>
+
+          {/* Place Trade on Behalf of Client */}
+          <button
+            onClick={() => {
+              setShowPlaceOrderModal(true);
+              setOrderSide('BUY');
+              setOrderType('MARKET');
+              setOrderQty(1);
+              setOrderPrice(0);
+            }}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer"
+            title="Place BUY or SELL order on behalf of this client"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>+ Place Order (Buy/Sell)</span>
           </button>
 
           <button
@@ -1902,6 +1973,236 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
                 >
                   {sendingEmail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
                   <span>{sendingEmail ? 'Sending Email...' : 'Send Email Now'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── PLACE ORDER ON BEHALF OF CLIENT MODAL ────────────────────────────────────── */}
+      {showPlaceOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl ${orderSide === 'BUY' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-main)] flex items-center gap-2">
+                    <span>Place Trade on Behalf of Client</span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${orderSide === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                      {orderSide}
+                    </span>
+                  </h3>
+                  <span className="text-[11px] text-[var(--text-muted)] font-mono">
+                    Client: <strong className="text-[var(--text-main)]">{data?.profile?.username}</strong> ({data?.profile?.client_id || data?.profile?.id})
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPlaceOrderModal(false)}
+                className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded-lg hover:bg-[var(--bg-surface-elevated)] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePlaceAdminOrder} className="space-y-4 text-xs">
+              {/* Side Selector (BUY vs SELL) */}
+              <div>
+                <label className="block text-[var(--text-muted)] font-bold mb-1.5">Trade Direction (Side) *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOrderSide('BUY')}
+                    className={`py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      orderSide === 'BUY'
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-500/50'
+                        : 'bg-[var(--bg-body)] border border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>▲ BUY (LONG)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOrderSide('SELL')}
+                    className={`py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      orderSide === 'SELL'
+                        ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 ring-2 ring-rose-500/50'
+                        : 'bg-[var(--bg-body)] border border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <span>▼ SELL (SHORT)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Symbol Input & Presets */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[var(--text-muted)] font-bold">Instrument Symbol *</label>
+                  {orderSymbol && (
+                    <span className="font-mono text-[11px] text-[var(--text-main)]">
+                      LTP: <strong className="text-emerald-400">₹{(getLiveLtp(orderSymbol) || 0).toFixed(2)}</strong>
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={orderSymbol}
+                  onChange={e => {
+                    const sym = e.target.value.toUpperCase();
+                    setOrderSymbol(sym);
+                    const ltp = getLiveLtp(sym);
+                    if (ltp && (!orderPrice || orderType === 'MARKET')) setOrderPrice(ltp);
+                  }}
+                  placeholder="e.g. NSE_RELIANCE, NSE_NIFTY50, MCX_GOLD"
+                  className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] font-mono focus:outline-none focus:border-[var(--primary)] uppercase font-bold"
+                  required
+                />
+                {/* Popular Quick Presets */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['NSE_NIFTY50', 'NSE_BANKNIFTY', 'NSE_RELIANCE', 'NSE_TCS', 'NSE_INFY', 'MCX_CRUDEOIL'].map(preset => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => {
+                        setOrderSymbol(preset);
+                        const ltp = getLiveLtp(preset);
+                        if (ltp) setOrderPrice(ltp);
+                      }}
+                      className="px-2 py-0.5 rounded-lg bg-[var(--bg-surface-elevated)] hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] text-[10px] font-mono text-[var(--text-muted)] border border-[var(--border-color)] transition cursor-pointer"
+                    >
+                      {preset.replace('NSE_', '').replace('MCX_', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Type & Product Type */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[var(--text-muted)] font-bold mb-1">Order Execution Type *</label>
+                  <select
+                    value={orderType}
+                    onChange={e => setOrderType(e.target.value as any)}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl p-2 text-xs text-[var(--text-main)] font-bold"
+                  >
+                    <option value="MARKET">MARKET (Instant Fill @ LTP)</option>
+                    <option value="LIMIT">LIMIT (Specified Price)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[var(--text-muted)] font-bold mb-1">Product Type *</label>
+                  <select
+                    value={orderProduct}
+                    onChange={e => setOrderProduct(e.target.value as any)}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl p-2 text-xs text-[var(--text-main)] font-bold"
+                  >
+                    <option value="MIS">MIS (Intraday Auto Square-Off)</option>
+                    <option value="CNC">CNC (Cash Delivery)</option>
+                    <option value="NRML">NRML (Normal F&O Margin)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Quantity & Price */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[var(--text-muted)] font-bold mb-1">Quantity (Lots/Shares) *</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={orderQty}
+                    onChange={e => setOrderQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border-color)] rounded-xl p-2 text-xs text-[var(--text-main)] font-mono font-bold"
+                    required
+                  />
+                  <div className="flex gap-1 mt-1.5">
+                    {[1, 5, 25, 50, 100].map(q => (
+                      <button
+                        type="button"
+                        key={q}
+                        onClick={() => setOrderQty(q)}
+                        className="px-1.5 py-0.5 rounded bg-[var(--bg-surface-elevated)] text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] transition"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[var(--text-muted)] font-bold mb-1">
+                    {orderType === 'MARKET' ? 'Estimated Price (₹)' : 'Limit Price (₹) *'}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    min={0.05}
+                    disabled={orderType === 'MARKET'}
+                    value={orderPrice || (getLiveLtp(orderSymbol) || 0)}
+                    onChange={e => setOrderPrice(parseFloat(e.target.value) || 0)}
+                    placeholder={orderType === 'MARKET' ? 'Market execution' : '0.00'}
+                    className={`w-full border rounded-xl p-2 text-xs font-mono font-bold ${
+                      orderType === 'MARKET'
+                        ? 'bg-[var(--bg-surface-elevated)] border-transparent text-[var(--text-muted)] cursor-not-allowed'
+                        : 'bg-[var(--bg-body)] border-[var(--border-color)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]'
+                    }`}
+                    required={orderType === 'LIMIT'}
+                  />
+                  <span className="text-[10px] text-[var(--text-muted)] mt-1 block">
+                    {orderType === 'MARKET' ? 'Fills at best available market price' : 'Fills when market reaches limit'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Order Summary Box */}
+              <div className="p-3 rounded-xl bg-[var(--bg-body)] border border-[var(--border-color)] space-y-1.5 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-muted)]">Order Summary:</span>
+                  <span className="font-bold text-[var(--text-main)]">
+                    {orderSide} {orderQty}x {orderSymbol || '---'} ({orderProduct})
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-muted)]">Estimated Turnover:</span>
+                  <span className="font-mono font-bold text-[var(--text-main)]">
+                    ₹{((orderQty * (orderPrice || getLiveLtp(orderSymbol) || 0))).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-muted)]">Execution Source:</span>
+                  <span className="font-bold text-amber-400">ADMIN BEHALF (Audit Logged)</span>
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex gap-2 pt-2 border-t border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => setShowPlaceOrderModal(false)}
+                  className="w-1/3 py-2 rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingOrder || !orderSymbol}
+                  className={`w-2/3 py-2.5 rounded-xl font-black text-xs text-white shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                    orderSide === 'BUY'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+                      : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+                  }`}
+                >
+                  {submittingOrder ? (
+                    <><RefreshCw className="w-3.5 h-3.5 animate-spin" /><span>Submitting Order...</span></>
+                  ) : (
+                    <><ShoppingCart className="w-3.5 h-3.5" /><span>Confirm & Execute {orderSide} Order</span></>
+                  )}
                 </button>
               </div>
             </form>
