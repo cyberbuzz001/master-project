@@ -5,6 +5,7 @@ import { WhatsAppAutomationService } from '../services/WhatsAppAutomationService
 import { EmailService } from '../services/EmailService';
 import { query, queryOne, execute } from '../db/schema';
 import { generateUUID } from '../utils/crypto';
+import { WebhookBridge } from '../services/WebhookBridge';
 
 export const warRoomRouter = Router();
 const warRoom = WarRoomService.getInstance();
@@ -266,6 +267,44 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
         templateType: 'CLIENT_CONFIRMATION',
         priority: 'NORMAL',
       });
+    }
+
+    // 4. Cross-Domain Webhook Bridge: Dispatch signed lead.captured event to Expert Stocks CRM
+    if (source !== 'EXPERT_STOCKS_SITE') {
+      try {
+        const webhookUrl = process.env.EXPERT_STOCKS_WEBHOOK_URL || 'https://expertstocks.in/api/v1/webhooks/tradegrow-leads';
+        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET || 'tg_webhook_shared_secret_2026';
+        WebhookBridge.getInstance().deliverEvent({
+          url: webhookUrl,
+          secret: webhookSecret,
+          event: 'lead.captured',
+          payload: {
+            leadCode: result?.leadCode,
+            fullName: fullName ? String(fullName).trim() : undefined,
+            phone: cleanPhone,
+            email: email ? String(email).trim() : undefined,
+            city,
+            state,
+            source: source || 'TRADEGROW_INGRESS',
+            capitalRange,
+            segments,
+            message,
+            assessment,
+            utmSource,
+            utmMedium,
+            utmCampaign,
+            utmTerm,
+            utmContent,
+            referralCode,
+            creatorCode,
+            timestamp: new Date().toISOString()
+          }
+        }).catch((whErr: any) => {
+          console.warn('[WebhookBridge] Expert Stocks CRM delivery deferred:', whErr.message);
+        });
+      } catch (whErr: any) {
+        console.warn('[WebhookBridge] Failed to enqueue event:', whErr.message);
+      }
     }
 
     return res.status(201).json({

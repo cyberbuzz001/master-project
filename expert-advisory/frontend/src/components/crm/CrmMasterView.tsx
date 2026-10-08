@@ -170,6 +170,95 @@ export function CrmMasterView() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Sync incoming bridge leads from persistent store
+  useEffect(() => {
+    const fetchLiveLeads = async () => {
+      try {
+        const res = await fetch("/api/v1/office/leads");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setLeads((prev) => {
+              const existingIds = new Set(prev.map((l) => l.id));
+              const mapped = json.data
+                .filter((sl: any) => !existingIds.has(sl.id))
+                .map((sl: any): CrmLead => {
+                  const cap = sl.capital || "";
+                  let aiScore = 55;
+                  if (cap.includes("25") || cap.includes("50")) aiScore = 92;
+                  else if (cap.includes("10")) aiScore = 82;
+                  else if (cap.includes("5")) aiScore = 68;
+
+                  let temperature: "VERY_HOT" | "HOT" | "WARM" | "COLD" = "WARM";
+                  if (aiScore >= 85) temperature = "VERY_HOT";
+                  else if (aiScore >= 70) temperature = "HOT";
+
+                  let status: LeadStatus = "NEW";
+                  if (sl.status === "contacted") status = "CONTACTED";
+                  else if (sl.status === "qualified") status = "QUALIFIED";
+                  else if (sl.status === "converted") status = "CONVERTED";
+                  else if (sl.status === "not_interested" || sl.status === "lost") status = "LOST";
+
+                  return {
+                    id: sl.id,
+                    name: sl.name,
+                    mobile: sl.mobile,
+                    email: sl.email,
+                    whatsapp: sl.mobile,
+                    city: sl.city || "Mumbai",
+                    state: "Maharashtra",
+                    country: "India",
+                    source: sl.source,
+                    campaign: "Direct / Unified Webhook Bridge",
+                    landingPage: "/contact",
+                    utmSource: "tradegrow_bridge",
+                    utmMedium: "webhook",
+                    utmCampaign: "inbound_leads_2026",
+                    utmContent: "lead_form",
+                    assignedAgent: sl.assignedTo || "Vikram Malhotra",
+                    status,
+                    temperature,
+                    aiScore,
+                    aiScoreRationale: `Ingested from ${sl.source}. Declared capital: ${sl.capital}, Preferred segment: ${sl.segment}.`,
+                    aiNextAction: "Dial immediately to qualify trading capital & review advisory tier.",
+                    aiNextActionWhy: "Fresh inbound lead captured via bridge with verified phone number.",
+                    investmentExperience: "1-3 Years",
+                    tradingExperience: "Index Options",
+                    preferredMarket: (sl.segment || "").includes("Option") ? "Nifty/BankNifty F&O" : "NSE Equities",
+                    preferredService: sl.segment || "Index Options Alpha",
+                    budget: sl.capital,
+                    estimatedValue: 45000,
+                    riskPreference: sl.assessment?.category?.toLowerCase().includes("aggressive") ? "Aggressive" : "Moderate",
+                    lastContacted: sl.lastContactedAt || "Not contacted yet",
+                    nextFollowUp: sl.nextFollowup || "Today, 11:30 AM",
+                    callsCount: sl.callLogs?.length || 0,
+                    npcAttempts: sl.npcAttempts || 0,
+                    whatsappCount: 1,
+                    conversationsCount: 1,
+                    tags: [sl.source.includes("TradeGrow") ? "TradeGrow Bridge" : "Inbound", (sl.priority || "STANDARD").toUpperCase()],
+                    notes: sl.message || "Captured via public web form.",
+                    createdAt: sl.createdAt,
+                    updatedAt: "Today, Just now",
+                  };
+                });
+
+              if (mapped.length > 0) {
+                return [...mapped, ...prev];
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[CRM Live Leads] Sync deferred:", err);
+      }
+    };
+
+    fetchLiveLeads();
+    const interval = setInterval(fetchLiveLeads, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleWorkLead = (lead: CrmLead) => {
     setWorkbenchLead(lead);
     setShowWorkbench(true);
