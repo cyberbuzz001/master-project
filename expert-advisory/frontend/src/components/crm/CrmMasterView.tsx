@@ -259,6 +259,13 @@ export function CrmMasterView() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/v1/auth/logout", { method: "POST" });
+    } catch (_) {}
+    window.location.href = "/login";
+  };
+
   const handleWorkLead = (lead: CrmLead) => {
     setWorkbenchLead(lead);
     setShowWorkbench(true);
@@ -378,14 +385,24 @@ export function CrmMasterView() {
               <option value="compliance">Compliance Officer</option>
             </select>
           </div>
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-full bg-brand-700 flex items-center justify-center font-bold text-xs text-white">
-              {currentUser.name.charAt(0)}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="size-8 rounded-full bg-brand-700 flex items-center justify-center font-bold text-xs text-white shrink-0">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="truncate">
+                <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+                <p className="text-[10px] text-ink-400 truncate">{currentUser.department}</p>
+              </div>
             </div>
-            <div className="truncate">
-              <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
-              <p className="text-[10px] text-ink-400 truncate">{currentUser.department}</p>
-            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out / Exit Desk"
+              className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+            >
+              <LogOut className="size-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -439,6 +456,17 @@ export function CrmMasterView() {
               </button>
               <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500 animate-pulse" />
             </div>
+
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer"
+              title="Sign Out"
+            >
+              <LogOut className="size-3.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
         </header>
 
@@ -462,6 +490,7 @@ export function CrmMasterView() {
               onWorkLead={handleWorkLead}
               onUpdateLeadStatus={handleUpdateLeadStatus}
               onAssignLead={handleAssignLead}
+              onAddLead={(newLead) => setLeads((prev) => [newLead, ...prev])}
             />
           )}
 
