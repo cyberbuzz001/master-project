@@ -1,11 +1,10 @@
-import { AppShell } from "@/components/app/AppShell";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Staff Back-Office | Expert Stocks Consultancy",
+  title: "ExpertStocks AI Advisory CRM & Sales Platform",
   robots: { index: false, follow: false },
 };
 
 export default function OfficeLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell area="office">{children}</AppShell>;
+  return <div className="min-h-screen bg-[#05070B]">{children}</div>;
 }

@@ -10,7 +10,7 @@ import { LivePriceCell } from './ui/LivePriceCell';
 // arrived — the strategy builder subscribes to it below, so this is a brief
 // startup gap, not the permanent value it used to be.
 const FALLBACK_SPOT_BY_UNDERLYING: Record<string, number> = {
-  NIFTY: 24603.94, SENSEX: 73600.00, BANKNIFTY: 52150.75, FINNIFTY: 23890.40,
+  NIFTY: 24603.94, SENSEX: 72200.00, BANKNIFTY: 52150.75, FINNIFTY: 23890.40,
 };
 
 const getDerivativesSegment = (und: string): 'BFO' | 'NFO' => {

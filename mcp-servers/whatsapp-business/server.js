@@ -9,15 +9,15 @@ const https = require('https');
 
 const DEFAULT_TOKEN = process.env.ADVISORY_WHATSAPP_META_TOKEN ||
   process.env.WHATSAPP_TOKEN ||
-  '';
+  'EAAPstDAc42kBSgoTczPmd95053NPLJzT1Gk67OoMeoITWFupZApqk2ZAGVyxD6WoMD2nEPhVbEBOV54Q7RuFqmfRaqdckgEicrOsdH4uBrxQyF8g9ZB61NwwwqTUagNZAFJamK75IQoj0Ex5BRezKc1S8gkoieuRBXCLVjT9dzB7vpBoo7LTHOav6nausoa4ZBQZDZD';
 
 const DEFAULT_PHONE_ID = process.env.ADVISORY_WHATSAPP_PHONE_NUMBER_ID ||
   process.env.WHATSAPP_PHONE_NUMBER_ID ||
-  '1059520793907690';
+  '1321132717756726';
 
 const DEFAULT_WABA_ID = process.env.ADVISORY_WHATSAPP_WABA_ID ||
   process.env.WHATSAPP_WABA_ID ||
-  '930969066677526';
+  '2586364155109405';
 
 function metaRequest(method, endpoint, body = null, token = DEFAULT_TOKEN) {
   return new Promise((resolve, reject) => {
@@ -205,7 +205,6 @@ async function handleToolCall(name, args) {
       const payload = {
         messaging_product: 'whatsapp'
       };
-      if (args.about) payload.about = args.about;
       if (args.description) payload.description = args.description;
       if (args.email) payload.email = args.email;
       if (args.websites) payload.websites = args.websites;

@@ -1,6 +1,6 @@
 /**
  * Meta WhatsApp Cloud API Webhook Handler
- * Expert Stocks Advisory Bot — +91 92388 37041
+ * Expert Stocks Advisory Bot — +91 92018 00995
  *
  * GET  /internal/advisory/meta-webhook  — Verification challenge (Meta calls this once on setup)
  * POST /internal/advisory/meta-webhook  — Inbound messages & delivery status updates

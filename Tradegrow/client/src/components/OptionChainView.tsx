@@ -52,11 +52,22 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
   const [activeLtpKey, setActiveLtpKey] = useState<string | null>(null);
 
+  const INDEX_FALLBACKS: Record<string, { price: number; change: number; pct: number; atm: number }> = useMemo(() => ({
+    SENSEX: { price: 72200.00, change: -440.00, pct: -0.61, atm: 72200 },
+    NIFTY: { price: 24600.00, change: -64.15, pct: -0.26, atm: 24600 },
+    BANKNIFTY: { price: 52150.00, change: 120.00, pct: 0.23, atm: 52100 },
+    FINNIFTY: { price: 23900.00, change: 15.00, pct: 0.06, atm: 23900 },
+    MIDCPNIFTY: { price: 12800.00, change: 30.00, pct: 0.23, atm: 12800 },
+  }), []);
+
+  const cleanSym = symbol.toUpperCase().replace(/^(NSE_|BSE_)/, '');
+  const initialFallback = INDEX_FALLBACKS[cleanSym] || INDEX_FALLBACKS.SENSEX;
+
   const [chain, setChain] = useState<OptionChainItem[]>([]);
-  const [spotPrice, setSpotPrice] = useState<number>(() => symbol.startsWith('SENSEX') ? 77350.00 : 24350.00);
-  const [spotChange, setSpotChange] = useState<number>(() => symbol.startsWith('SENSEX') ? -392.36 : -64.15);
-  const [spotChangePct, setSpotChangePct] = useState<number>(() => symbol.startsWith('SENSEX') ? -0.50 : -0.26);
-  const [atmStrike, setAtmStrike] = useState<number>(() => symbol.startsWith('SENSEX') ? 77300 : 24350);
+  const [spotPrice, setSpotPrice] = useState<number>(() => initialFallback.price);
+  const [spotChange, setSpotChange] = useState<number>(() => initialFallback.change);
+  const [spotChangePct, setSpotChangePct] = useState<number>(() => initialFallback.pct);
+  const [atmStrike, setAtmStrike] = useState<number>(() => initialFallback.atm);
   const [lotSize, setLotSize] = useState<number>(() => getLotSizeForSymbol(symbol));
   const [pcrRatio, setPcrRatio] = useState<number>(1.0);
   const [maxPainStrike, setMaxPainStrike] = useState<number | null>(null);
@@ -64,10 +75,18 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   const [totalPutOI, setTotalPutOI] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Sync default lot size on symbol switch
+  // Sync state on symbol switch
   useEffect(() => {
+    const sym = symbol.toUpperCase().replace(/^(NSE_|BSE_)/, '');
+    const fallback = INDEX_FALLBACKS[sym] || INDEX_FALLBACKS.NIFTY;
     setLotSize(getLotSizeForSymbol(symbol));
-  }, [symbol]);
+    setSpotPrice(fallback.price);
+    setSpotChange(fallback.change);
+    setSpotChangePct(fallback.pct);
+    setAtmStrike(fallback.atm);
+    setChain([]);
+    setLoading(true);
+  }, [symbol, INDEX_FALLBACKS]);
 
   // Strike Chart Modal State
   const [selectedChartContract, setSelectedChartContract] = useState<SelectedOptionContract | null>(null);
@@ -113,7 +132,13 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
   // Dynamic ATM Strike Recalculation from WebSocket Ticks
   useEffect(() => {
-    if (chain.length === 0) return;
+    if (chain.length === 0 || !liveSpotLtp || liveSpotLtp <= 0) return;
+
+    // Guard against cross-symbol race conditions
+    const minStrike = chain[0].strikePrice;
+    const maxStrike = chain[chain.length - 1].strikePrice;
+    if (liveSpotLtp < minStrike * 0.7 || liveSpotLtp > maxStrike * 1.3) return;
+
     let closestStrike = chain[0].strikePrice;
     let minDiff = Math.abs(chain[0].strikePrice - liveSpotLtp);
 
@@ -166,7 +191,16 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           if (data.spotPrice && data.spotPrice > 0) {
             setSpotPrice(data.spotPrice);
           }
-          setLotSize(data.lotSize || 65);
+          if (typeof data.spotChange === 'number') {
+            setSpotChange(data.spotChange);
+          }
+          if (typeof data.spotChangePercent === 'number') {
+            setSpotChangePct(data.spotChangePercent);
+          }
+          if (data.atmStrike && data.atmStrike > 0) {
+            setAtmStrike(data.atmStrike);
+          }
+          setLotSize(data.lotSize || getLotSizeForSymbol(symbol));
           if (typeof data.pcrRatio === 'number') setPcrRatio(data.pcrRatio);
           if (typeof data.maxPainStrike === 'number') setMaxPainStrike(data.maxPainStrike);
           if (typeof data.totalCallOI === 'number') setTotalCallOI(data.totalCallOI);
@@ -567,7 +601,8 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                 const peTick = freshnessMap.get(row.pe?.instrumentToken || '');
 
                 const nextRow = filteredChain[idx + 1];
-                const showSpotLine = spotPrice >= row.strikePrice && nextRow && spotPrice < nextRow.strikePrice;
+                const effectiveSpot = liveSpotLtp > 0 ? liveSpotLtp : spotPrice;
+                const showSpotLine = effectiveSpot >= row.strikePrice && nextRow && effectiveSpot < nextRow.strikePrice;
 
                 return (
                   <React.Fragment key={row.strikePrice}>
@@ -630,7 +665,8 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                 const peTick = freshnessMap.get(row.pe?.instrumentToken || '');
 
                 const nextRow = filteredChain[idx + 1];
-                const showSpotLine = spotPrice >= row.strikePrice && nextRow && spotPrice < nextRow.strikePrice;
+                const effectiveSpot = liveSpotLtp > 0 ? liveSpotLtp : spotPrice;
+                const showSpotLine = effectiveSpot >= row.strikePrice && nextRow && effectiveSpot < nextRow.strikePrice;
 
                 return (
                   <React.Fragment key={row.strikePrice}>

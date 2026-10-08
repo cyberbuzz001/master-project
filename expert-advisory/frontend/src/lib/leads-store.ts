@@ -1,6 +1,26 @@
 import fs from "fs";
 import path from "path";
 
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "qualified"
+  | "call_back"
+  | "follow_up"
+  | "expected_payment"
+  | "converted"
+  | "not_interested"
+  | "lost";
+
+export interface CallLogEntry {
+  id: string;
+  timestamp: string;
+  durationSec: number;
+  disposition: string;
+  notes?: string;
+  agent?: string;
+}
+
 export interface StoredLead {
   id: string;
   name: string;
@@ -8,7 +28,7 @@ export interface StoredLead {
   email: string;
   capital: string;
   segment: string;
-  status: "new" | "contacted" | "qualified" | "converted";
+  status: LeadStatus;
   createdAt: string;
   source: string;
   message?: string;
@@ -18,6 +38,12 @@ export interface StoredLead {
     category: string;
     suitability_summary?: string;
   };
+  npcAttempts?: number;
+  lastContactedAt?: string;
+  nextFollowup?: string;
+  assignedTo?: string;
+  priority?: "hni" | "high" | "standard";
+  callLogs?: CallLogEntry[];
 }
 
 export interface StoredKycRecord {
@@ -240,6 +266,58 @@ export const leadsStore = {
     const lead = store.leads.find((l) => l.id === id);
     if (!lead) return null;
     lead.status = status;
+    saveStore(store);
+    return lead;
+  },
+
+  updateLead(id: string, updates: Partial<StoredLead>): StoredLead | null {
+    const store = loadStore();
+    const lead = store.leads.find((l) => l.id === id);
+    if (!lead) return null;
+    Object.assign(lead, updates);
+    saveStore(store);
+    return lead;
+  },
+
+  recordCall(id: string, log: { durationSec: number; disposition: string; notes?: string; agent?: string }): StoredLead | null {
+    const store = loadStore();
+    const lead = store.leads.find((l) => l.id === id);
+    if (!lead) return null;
+
+    const newLog: CallLogEntry = {
+      id: `CALL-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      durationSec: log.durationSec,
+      disposition: log.disposition,
+      notes: log.notes,
+      agent: log.agent || "Advisory Rep",
+    };
+
+    lead.callLogs = [newLog, ...(lead.callLogs || [])];
+    lead.lastContactedAt = "Today, Just now";
+
+    // Auto-update status based on disposition
+    if (log.disposition === "NPC") {
+      lead.npcAttempts = (lead.npcAttempts || 0) + 1;
+      if (lead.npcAttempts >= 7) {
+        lead.status = "lost";
+      }
+    } else if (log.disposition === "Call Back") {
+      lead.status = "call_back";
+    } else if (log.disposition === "Follow Up") {
+      lead.status = "follow_up";
+    } else if (log.disposition === "Expected Payment") {
+      lead.status = "expected_payment";
+    } else if (log.disposition === "Converted") {
+      lead.status = "converted";
+    } else if (log.disposition === "Not Interested") {
+      lead.status = "not_interested";
+    } else if (log.disposition === "Qualified") {
+      lead.status = "qualified";
+    } else if (lead.status === "new") {
+      lead.status = "contacted";
+    }
+
     saveStore(store);
     return lead;
   },

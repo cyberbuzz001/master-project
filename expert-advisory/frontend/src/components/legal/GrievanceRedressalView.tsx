@@ -105,7 +105,7 @@ export function GrievanceRedressalView() {
               </a>
               <span className="text-[#1C2734]">│</span>
               <a
-                href="https://wa.me/919238837041"
+                href="https://wa.me/919201800995"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#22C55E] hover:underline"

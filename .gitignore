@@ -36,6 +36,8 @@ build/
 */*/dist/
 */*/build/
 *.tsbuildinfo
+*.tar.gz
+*.tar
 
 # Python artifacts
 __pycache__/
