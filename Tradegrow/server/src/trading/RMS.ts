@@ -123,16 +123,29 @@ export class RMS {
     const currentNetQty = existingPos ? parseInt(existingPos.net_qty, 10) : 0;
     const isOppositeSide = (currentNetQty > 0 && order.side === 'SELL') || (currentNetQty < 0 && order.side === 'BUY');
     const absCurrentNetQty = Math.abs(currentNetQty);
-    const isPureSquareOff = isOppositeSide && order.quantity <= absCurrentNetQty;
-    const isPositionFlip = isOppositeSide && order.quantity > absCurrentNetQty;
+
+    let uncoveredNetQty = absCurrentNetQty;
+    if (isOppositeSide && uncoveredNetQty > 0) {
+      const resting = await queryOne<any>(
+        `SELECT COALESCE(SUM(quantity), 0) AS total_qty FROM orders
+         WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND side = $4
+           AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+        [order.userId, order.symbol, order.productType, order.side]
+      );
+      const restingQty = parseInt(resting?.total_qty || '0', 10);
+      uncoveredNetQty = Math.max(0, uncoveredNetQty - restingQty);
+    }
+
+    const isPureSquareOff = isOppositeSide && order.quantity <= uncoveredNetQty;
+    const isPositionFlip = isOppositeSide && order.quantity > uncoveredNetQty;
     const isSquareOff = isPureSquareOff;
 
     // When reversing/flipping a position, the portion closing the existing position
     // is exempt from margin, but the excess new exposure (openingQty) must pass
     // full RMS limits and margin requirements.
     const openingQty = isPositionFlip
-      ? order.quantity - absCurrentNetQty
-      : (isOppositeSide ? 0 : order.quantity);
+      ? order.quantity - uncoveredNetQty
+      : (isOppositeSide && order.quantity <= uncoveredNetQty ? 0 : order.quantity);
 
     // 2b. Phase 2 risk-tier restriction — a user flagged REDUCE_ONLY (their
     // unrealized loss crossed the 70% CRITICAL tier) may still close/reduce

@@ -18,6 +18,8 @@ class ViewLead extends ViewRecord
             LeadActions::dial(),
             LeadActions::whatsapp(),
             LeadActions::logCall(),
+            LeadActions::startFreeTrial(),
+            LeadActions::createProposal(),
             LeadActions::scheduleFollowup(),
             LeadActions::changeStatus(),
             LeadActions::convertToClient(),

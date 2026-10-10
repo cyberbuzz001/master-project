@@ -333,16 +333,22 @@ export function CrmMasterView() {
         </div>
 
         {/* 24 Modules Grouped Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4 scrollbar-thin">
           {MODULE_GROUPS.map((grp) => (
             <div key={grp.group} className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-ink-400 font-bold px-2.5 block tracking-wider">
+              <span className="text-[10px] font-mono uppercase text-slate-500 font-bold px-2.5 block tracking-wider">
                 {grp.group}
               </span>
               <div className="space-y-0.5 pt-0.5">
                 {grp.items.map((item) => {
                   const Icon = item.icon;
                   const active = activeModule === item.id;
+                  let badge = null;
+                  if (item.id === "leads") badge = <span className="ml-auto text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">148</span>;
+                  if (item.id === "calling") badge = <span className="ml-auto text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1"><span className="size-1 rounded-full bg-emerald-400 animate-pulse" />Live</span>;
+                  if (item.id === "tasks") badge = <span className="ml-auto text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">9</span>;
+                  if (item.id === "payments") badge = <span className="ml-auto text-[10px] font-mono font-bold bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded border border-orange-500/30">1</span>;
+
                   return (
                     <button
                       key={item.id}
@@ -352,14 +358,15 @@ export function CrmMasterView() {
                         setMobileMenuOpen(false);
                       }}
                       className={cx(
-                        "w-full flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer text-left",
+                        "w-full flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer text-left group",
                         active
-                          ? "bg-brand-600 text-white font-bold shadow-sm"
-                          : "text-ink-300 hover:text-white hover:bg-[#121B2B]"
+                          ? "bg-gradient-to-r from-blue-600/30 via-indigo-600/20 to-transparent border border-blue-500/40 text-cyan-300 font-bold shadow-[0_0_15px_rgba(59,130,246,0.12)]"
+                          : "text-slate-300 hover:text-white hover:bg-slate-800/60"
                       )}
                     >
-                      <Icon className={cx("size-4 shrink-0", active ? "text-white" : "text-ink-400")} />
+                      <Icon className={cx("size-4 shrink-0 transition-transform group-hover:scale-110", active ? "text-cyan-400" : "text-slate-400")} />
                       <span className="truncate">{item.label}</span>
+                      {badge}
                     </button>
                   );
                 })}
@@ -371,11 +378,11 @@ export function CrmMasterView() {
         {/* User Footer & Persona Switcher */}
         <div className="p-3 border-t border-[#1E293B] bg-[#070B12]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-ink-400 uppercase">Active Persona:</span>
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold">Active Persona:</span>
             <select
               value={currentRole}
               onChange={(e) => setCurrentRole(e.target.value as CrmRole)}
-              className="rounded bg-[#121B2B] text-brand-300 text-[10px] font-mono px-2 py-0.5 border border-[#1E293B] focus:outline-none cursor-pointer"
+              className="rounded bg-[#121B2B] text-cyan-300 text-[10px] font-mono px-2 py-0.5 border border-[#1E293B] focus:outline-none cursor-pointer font-bold"
             >
               <option value="super_admin">Super Admin</option>
               <option value="sales_manager">Sales Manager</option>
@@ -387,19 +394,19 @@ export function CrmMasterView() {
           </div>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="size-8 rounded-full bg-brand-700 flex items-center justify-center font-bold text-xs text-white shrink-0">
+              <div className="size-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-sm">
                 {currentUser.name.charAt(0)}
               </div>
               <div className="truncate">
                 <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
-                <p className="text-[10px] text-ink-400 truncate">{currentUser.department}</p>
+                <p className="text-[10px] text-slate-400 truncate font-medium">{currentUser.department}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleLogout}
               title="Sign Out / Exit Desk"
-              className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="size-4" />
             </button>
@@ -410,12 +417,12 @@ export function CrmMasterView() {
       {/* MAIN VIEW AREA */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* TOP COMMAND BAR */}
-        <header className="h-16 border-b border-[#1E293B] bg-[#090E17]/80 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0">
+        <header className="h-16 border-b border-[#1E293B] bg-[#090E17]/90 backdrop-blur-xl px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 text-ink-300 hover:text-white"
+              className="lg:hidden p-2 text-slate-300 hover:text-white"
             >
               <Menu className="size-5" />
             </button>
@@ -424,24 +431,49 @@ export function CrmMasterView() {
             <button
               type="button"
               onClick={() => setShowCommandPalette(true)}
-              className="flex items-center gap-3 rounded-xl border border-[#1E293B] bg-[#0E1624] px-4 py-2 text-xs text-ink-400 hover:text-white hover:border-brand-500/50 transition-all cursor-pointer shadow-xs w-64 sm:w-80"
+              className="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0E1624] px-4 py-2 text-xs text-slate-400 hover:text-white hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(67,217,255,0.08)] transition-all cursor-pointer shadow-xs w-64 sm:w-80"
             >
-              <Search className="size-3.5 text-brand-400" />
+              <Search className="size-3.5 text-cyan-400" />
               <span className="truncate">Search leads, customers, calls...</span>
-              <kbd className="ml-auto rounded bg-[#162235] px-1.5 py-0.5 font-mono text-[10px] text-ink-300 border border-[#23354E]">
+              <kbd className="ml-auto rounded bg-[#162235] px-1.5 py-0.5 font-mono text-[10px] text-slate-300 border border-[#23354E]">
                 Ctrl K
               </kbd>
             </button>
+
+            {/* Live Indian Market Telemetry Ticker */}
+            <div className="hidden xl:flex items-center gap-3 text-[11px] font-mono px-3.5 py-1.5 rounded-xl bg-[#080D17] border border-slate-800/90 shadow-inner">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-bold">NIFTY 50</span>
+                <span className="text-emerald-400 font-extrabold">24,852.15</span>
+                <span className="text-emerald-400 text-[10px] font-semibold">▲ +0.65%</span>
+              </div>
+              <span className="text-slate-700">|</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-bold">BANKNIFTY</span>
+                <span className="text-emerald-400 font-extrabold">52,184.40</span>
+                <span className="text-emerald-400 text-[10px] font-semibold">▲ +0.82%</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Quick Add Lead Button */}
+            <button
+              type="button"
+              onClick={() => setActiveModule("leads")}
+              className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-sm shadow-blue-500/20"
+            >
+              <Users className="size-3.5" />
+              <span>+ Lead</span>
+            </button>
+
             {/* Daily Briefing Button */}
             <button
               type="button"
               onClick={() => setShowBriefingModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#131B2E] hover:bg-[#1A2640] text-cyan-300 border border-cyan-500/30 px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow-[0_0_15px_rgba(67,217,255,0.12)]"
             >
-              <Sparkles className="size-3.5" />
+              <Sparkles className="size-3.5 text-cyan-400" />
               <span className="hidden sm:inline">Daily AI Briefing</span>
             </button>
 
@@ -449,19 +481,19 @@ export function CrmMasterView() {
             <div className="relative">
               <button
                 type="button"
-                className="size-9 rounded-xl border border-[#1E293B] bg-[#0E1624] flex items-center justify-center text-ink-300 hover:text-white transition-colors cursor-pointer"
+                className="size-9 rounded-xl border border-slate-800 bg-[#0E1624] flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
                 title="Notifications"
               >
                 <Bell className="size-4" />
               </button>
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-rose-500 animate-pulse" />
             </div>
 
             {/* Logout Button */}
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="size-3.5" />

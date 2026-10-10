@@ -101,6 +101,8 @@ class LeadsTable
                     ViewAction::make(),
                     LeadActions::logCall(),
                     LeadActions::scheduleFollowup(),
+                    LeadActions::startFreeTrial(),
+                    LeadActions::createProposal(),
                     LeadActions::changeStatus(),
                     LeadActions::assign(),
                 ]),

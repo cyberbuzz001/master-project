@@ -67,23 +67,31 @@ class ObjectionScriptResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('objection')->label('When the client says…')->required()->maxLength(255),
-            TextInput::make('tag')->required()->maxLength(48)->datalist(['price', 'trust', 'timing', 'past-loss', 'family', 'competition']),
-            Textarea::make('response')
-                ->required()
-                ->rows(6)
-                ->maxLength(5000)
-                ->helperText('Never promise returns, accuracy or safety of capital. Editing an approved script sends it back for compliance review.'),
+            TextInput::make('category')->label('Category')->required()->maxLength(64),
+            TextInput::make('objection')->label('Client objection title')->required()->maxLength(255),
+            Textarea::make('exact_client_statement')->label('Exact client statement')->rows(2)->maxLength(1000),
+            TextInput::make('tag')->required()->maxLength(48),
+            Textarea::make('response')->label('General response')->required()->rows(3),
+            Textarea::make('response_ba')->label('Approved BA response')->rows(4),
+            Textarea::make('response_sba')->label('Approved SBA response')->rows(4),
+            Textarea::make('likely_concern_hypothesis')->label('Likely underlying concern (Hypothesis)')->rows(2),
+            TextInput::make('required_evidence_documentation')->label('Required evidence / documents'),
+            TextInput::make('suggested_followup_action')->label('Suggested follow-up action'),
+            TextInput::make('escalation_condition')->label('Escalation condition'),
+            Textarea::make('approved_template')->label('Approved WhatsApp/Email template')->rows(3),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('tag')
+            ->defaultSort('id')
             ->columns([
-                TextColumn::make('objection')->searchable()->weight('medium')->wrap()
-                    ->description(fn (ObjectionScript $record) => str($record->response)->limit(160)),
+                TextColumn::make('category')->badge()->color('info')->sortable(),
+                TextColumn::make('objection')->label('Objection')->searchable()->weight('bold')->wrap()
+                    ->description(fn (ObjectionScript $record) => $record->exact_client_statement ? '“'.$record->exact_client_statement.'”' : null),
+                TextColumn::make('response_ba')->label('BA Talking Point')->limit(90)->wrap(),
+                TextColumn::make('response_sba')->label('SBA Senior Response')->limit(90)->wrap()->toggleable(),
                 TextColumn::make('tag')->badge()->color('gray'),
                 TextColumn::make('status')->badge()->color(fn (string $state) => match ($state) {
                     ObjectionScript::APPROVED => 'success',
@@ -93,14 +101,15 @@ class ObjectionScriptResource extends Resource
                 TextColumn::make('approver.name')->label('Approved by')->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('category')->options(fn () => ObjectionScript::query()->distinct()->pluck('category', 'category')),
                 SelectFilter::make('tag')->options(fn () => ObjectionScript::query()->distinct()->pluck('tag', 'tag')),
             ])
             ->recordActions([
                 Action::make('read')
-                    ->label('Read')
+                    ->label('View Guide')
                     ->icon(Heroicon::OutlinedEye)
-                    ->modalHeading(fn (ObjectionScript $record) => $record->objection)
-                    ->modalContent(fn (ObjectionScript $record) => str($record->response)->markdown(['html_input' => 'strip', 'allow_unsafe_links' => false])->toHtmlString())
+                    ->modalHeading(fn (ObjectionScript $record) => 'Handling: '.$record->objection)
+                    ->modalContent(fn (ObjectionScript $record) => view('filament.leads.objection-script-detail', ['script' => $record]))
                     ->modalSubmitAction(false),
                 EditAction::make(),
                 Action::make('approve')

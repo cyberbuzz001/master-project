@@ -24,6 +24,7 @@ class ViewClient extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            ClientActions::recordPayment(),
             ClientActions::sellService(),
             ClientActions::takeAssessment(),
             ClientActions::uploadDocument(),

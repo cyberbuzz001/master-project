@@ -103,12 +103,13 @@ export class PortfolioService {
       avgPriceAfter = averagePrice;
     } else {
       const row = existing.rows[0];
+      const dbNet = parseInt(row.net_qty, 10);
       let buyQty      = parseInt(row.buy_qty, 10) || 0;
       let sellQty     = parseInt(row.sell_qty, 10) || 0;
       let buyPrice    = parseFloat(row.buy_price) || 0;
       let sellPrice   = parseFloat(row.sell_price) || 0;
       let realizedPnl = parseFloat(row.realized_pnl) || 0;
-      const currentNet = buyQty - sellQty;
+      const currentNet = !isNaN(dbNet) ? dbNet : (buyQty - sellQty);
 
       if (currentNet > 0) {
         // ── CURRENT POSITION IS LONG (netQty > 0) ─────────────────────────
@@ -133,8 +134,11 @@ export class PortfolioService {
             sellQty = remainingShortQty;
             sellPrice = price;
           } else {
-            sellQty += quantity;
-            if (sellPrice === 0) sellPrice = price;
+            buyQty = currentNet - closedQty;
+            sellQty = 0;
+            if (buyQty === 0) {
+              buyPrice = 0;
+            }
           }
         }
       } else if (currentNet < 0) {
@@ -161,8 +165,11 @@ export class PortfolioService {
             buyQty = remainingLongQty;
             buyPrice = price;
           } else {
-            buyQty += quantity;
-            if (buyPrice === 0) buyPrice = price;
+            sellQty = currentShortQty - closedQty;
+            buyQty = 0;
+            if (sellQty === 0) {
+              sellPrice = 0;
+            }
           }
         }
       } else {
@@ -181,7 +188,13 @@ export class PortfolioService {
         }
       }
 
-      const netQty = buyQty - sellQty;
+      let netQty = buyQty - sellQty;
+      if (netQty === 0) {
+        buyQty = 0;
+        sellQty = 0;
+        buyPrice = 0;
+        sellPrice = 0;
+      }
       const averagePrice = netQty > 0
         ? (buyPrice > 0 ? buyPrice : price)
         : (netQty < 0 ? (sellPrice > 0 ? sellPrice : price) : 0);
@@ -194,13 +207,29 @@ export class PortfolioService {
       await client.query(
         `UPDATE positions
          SET buy_qty = $1, sell_qty = $2, net_qty = $3, buy_price = $4, sell_price = $5,
-             average_price = $6, ltp = $7, realized_pnl = $8, unrealized_pnl = $9, updated_at = NOW()
+             average_price = $6, ltp = $7, realized_pnl = $8, unrealized_pnl = $9,
+             stop_loss_price = CASE WHEN $3 = 0 THEN NULL ELSE stop_loss_price END,
+             trailing_sl_step = CASE WHEN $3 = 0 THEN NULL ELSE trailing_sl_step END,
+             trailing_sl_jump = CASE WHEN $3 = 0 THEN NULL ELSE trailing_sl_jump END,
+             highest_ltp_since_sl = CASE WHEN $3 = 0 THEN NULL ELSE highest_ltp_since_sl END,
+             lowest_ltp_since_sl = CASE WHEN $3 = 0 THEN NULL ELSE lowest_ltp_since_sl END,
+             updated_at = NOW()
          WHERE id = $10`,
         [buyQty, sellQty, netQty, buyPrice, sellPrice, averagePrice, ltp, realizedPnl, unrealizedPnl, row.id]
       );
 
       netQtyAfter = netQty;
       avgPriceAfter = averagePrice;
+    }
+
+    // Auto-cancel any orphan/resting orders if position is now flat
+    if (netQtyAfter === 0) {
+      try {
+        const { OMS } = require('./OMS');
+        await OMS.cancelRestingOrdersForPosition(userId, symbol, productType, client);
+      } catch (err: any) {
+        console.error('[PortfolioService] Error auto-cancelling resting orders on position flatten:', err.message);
+      }
     }
 
     // Record permanent per-trade P&L record when position is closed/partially exited

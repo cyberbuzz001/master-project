@@ -10,7 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Sales scripts are client-facing speech, so staff only see approved versions.
  * Editing an approved script returns it to draft for compliance review.
  */
-#[Fillable(['objection', 'tag', 'response'])]
+#[Fillable([
+    'category', 'objection', 'exact_client_statement', 'tag', 'response',
+    'response_ba', 'response_sba', 'likely_concern_hypothesis',
+    'required_evidence_documentation', 'suggested_followup_action',
+    'escalation_condition', 'approved_template', 'status',
+    'approved_by', 'approved_at', 'is_demo',
+])]
 class ObjectionScript extends Model
 {
     public const DRAFT = 'draft';

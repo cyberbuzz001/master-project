@@ -90,6 +90,16 @@ class Client extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function installments(): HasMany
+    {
+        return $this->hasMany(PaymentInstallment::class)->orderBy('due_date');
+    }
+
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(SalesProposal::class)->latest('id');
+    }
+
     public function researchDistributions(): HasMany
     {
         return $this->hasMany(ResearchDistribution::class);

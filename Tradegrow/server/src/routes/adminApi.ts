@@ -2255,14 +2255,16 @@ router.post('/positions/:id/edit', authenticateToken, checkPermission('POSITIONS
 
     const nQty = netQty !== undefined ? parseInt(netQty, 10) : parseInt(pos.net_qty, 10);
     const avgPx = averagePrice !== undefined ? parseFloat(averagePrice) : parseFloat(pos.average_price);
-    const bPx = buyPrice !== undefined ? parseFloat(buyPrice) : parseFloat(pos.buy_price);
-    const sPx = sellPrice !== undefined ? parseFloat(sellPrice) : parseFloat(pos.sell_price);
+    const bQty = nQty > 0 ? nQty : 0;
+    const sQty = nQty < 0 ? Math.abs(nQty) : 0;
+    const bPx = nQty > 0 ? avgPx : 0;
+    const sPx = nQty < 0 ? avgPx : 0;
 
     await execute(
       `UPDATE positions
-       SET net_qty = $1, average_price = $2, buy_price = $3, sell_price = $4, updated_at = NOW()
-       WHERE id = $5`,
-      [nQty, avgPx, bPx, sPx, positionId]
+       SET net_qty = $1, average_price = $2, buy_qty = $3, sell_qty = $4, buy_price = $5, sell_price = $6, updated_at = NOW()
+       WHERE id = $7`,
+      [nQty, avgPx, bQty, sQty, bPx, sPx, positionId]
     );
 
     // B1 fix: every other code path that changes positions.net_qty (fills, cancels, square-off)
@@ -2314,6 +2316,9 @@ router.post('/positions/:id/square-off', authenticateToken, checkPermission('POS
         if (lockedPos.rows.length === 0 || parseInt(lockedPos.rows[0].net_qty, 10) !== netQty) {
           throw new Error('SQUAREOFF_POSITION_ALREADY_MODIFIED');
         }
+
+        const { OMS } = require('../trading/OMS');
+        await OMS.cancelRestingOrdersForPosition(pos.user_id, pos.symbol, pos.product_type || 'MIS', client);
 
         const res = await PortfolioService.recordExecutionInTransaction(
           client,

@@ -236,9 +236,22 @@ export class InstrumentMasterService {
       // 1. By SecurityId e.g. "35000"
       this.dhanLookupMap.set(securityId, rec);
 
-      // 2. By Trading Symbol e.g. "BANKNIFTY-Aug2026-72600-CE" or "CRUDEOIL-17Sep2026-7000-CE"
+      // 2. By Trading Symbol e.g. "BANKNIFTY-Aug2026-72600-CE" or "NIFTY-Oct2026-22600-CE"
       if (tradingSymbol) {
-        this.dhanLookupMap.set(tradingSymbol, rec);
+        const existing = this.dhanLookupMap.get(tradingSymbol);
+        if (!existing) {
+          this.dhanLookupMap.set(tradingSymbol, rec);
+        } else if (expiryDate) {
+          const existingExpired = existing.expiryDate < todayStr;
+          const candidateExpired = expiryDate < todayStr;
+          if ((existingExpired && !candidateExpired) ||
+              (!existingExpired && !candidateExpired && expiryDate < existing.expiryDate)) {
+            this.dhanLookupMap.set(tradingSymbol, rec);
+          }
+        }
+        if (expiryDate) {
+          this.dhanLookupMap.set(`${tradingSymbol}_${expiryDate}`, rec);
+        }
       }
 
       // 3. By Option format e.g. "NFO_BANKNIFTY_72600_CE", "BFO_SENSEX_77000_CE", "MCX_CRUDEOIL_7000_CE"

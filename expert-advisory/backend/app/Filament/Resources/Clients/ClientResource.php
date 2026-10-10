@@ -6,6 +6,7 @@ use App\Filament\Resources\Clients\Pages\ListClients;
 use App\Filament\Resources\Clients\Pages\ViewClient;
 use App\Filament\Resources\Clients\RelationManagers\AcceptancesRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\Clients\RelationManagers\InstallmentsRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\KycChecksRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\RiskProfilesRelationManager;
 use App\Filament\Resources\Clients\Schemas\ClientInfolist;
@@ -56,6 +57,7 @@ class ClientResource extends Resource
             DocumentsRelationManager::class,
             RiskProfilesRelationManager::class,
             AcceptancesRelationManager::class,
+            InstallmentsRelationManager::class,
         ];
     }
 

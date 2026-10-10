@@ -208,6 +208,15 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     setIsSubmittingExit(true);
     try {
       const pos = squareOffModalPos;
+      // Cancel any existing target order for this position to prevent duplicate/orphan limit orders
+      const existingTarget = getActiveTargetOrder(pos);
+      if (existingTarget) {
+        await fetch(`/api/v1/orders/${existingTarget.id || existingTarget.orderId || existingTarget.order_id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+
       const netQty = getNetQty(pos);
       const side = netQty > 0 ? 'SELL' : 'BUY';
       const quantity = Math.abs(netQty);
@@ -514,6 +523,17 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     if (isSubmittingExit || openPositions.length === 0) return;
     setIsSubmittingExit(true);
     try {
+      // Cancel all existing target orders for open positions first
+      for (const pos of openPositions) {
+        const existingTarget = getActiveTargetOrder(pos);
+        if (existingTarget) {
+          await fetch(`/api/v1/orders/${existingTarget.id || existingTarget.orderId || existingTarget.order_id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => {});
+        }
+      }
+
       for (const pos of openPositions) {
         const netQty = getNetQty(pos);
         const side = netQty > 0 ? 'SELL' : 'BUY';

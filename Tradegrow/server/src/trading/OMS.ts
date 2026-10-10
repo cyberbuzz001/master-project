@@ -276,10 +276,55 @@ export class OMS {
     });
 
     await this.recordOrderEvent(order.id, order.status, 'CANCELLED', 'User cancelled order');
-
     emitAdminOrderEvent(userId, 'ORDER_UPDATED', { ...order, status: 'CANCELLED' });
 
     return { success: true };
+  }
+
+  /**
+   * Cancel all resting/pending orders associated with a position.
+   * Called whenever a position is squared off, completely closed, or manually flattened.
+   */
+  public static async cancelRestingOrdersForPosition(
+    userId: string,
+    symbol: string,
+    productType: string,
+    txClient?: any
+  ): Promise<number> {
+    const runner = txClient || {
+      query: (sql: string, params: any[]) => query(sql, params)
+    };
+
+    const resting = await runner.query(
+      `SELECT id, order_id, status FROM orders 
+       WHERE user_id = $1 AND symbol = $2 AND product_type = $3 
+         AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+      [userId, symbol, productType]
+    );
+
+    if (!resting.rows || resting.rows.length === 0) {
+      return 0;
+    }
+
+    const { ExecutionEngine } = require('./ExecutionEngine');
+    for (const ord of resting.rows) {
+      ExecutionEngine.unregisterPendingOrder(ord.id);
+    }
+
+    await runner.query(
+      `UPDATE orders 
+       SET status = 'CANCELLED', rejection_reason = 'Position squared off / closed', updated_at = NOW() 
+       WHERE user_id = $1 AND symbol = $2 AND product_type = $3 
+         AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+      [userId, symbol, productType]
+    );
+
+    for (const ord of resting.rows) {
+      await this.recordOrderEvent(ord.id, ord.status, 'CANCELLED', 'Position squared off / closed').catch(() => {});
+      emitAdminOrderEvent(userId, 'ORDER_UPDATED', { id: ord.id, order_id: ord.order_id, status: 'CANCELLED' });
+    }
+
+    return resting.rows.length;
   }
 
   public static async modifyOrder(

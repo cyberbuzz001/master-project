@@ -35,6 +35,44 @@ use Illuminate\Support\Str;
  */
 final class ClientActions
 {
+    /**
+     * Header action on a client: record money or an installment received against them.
+     * Enters as PENDING_VERIFICATION to enforce separation of duties.
+     */
+    public static function recordPayment(): Action
+    {
+        return Action::make('recordPayment')
+            ->label('Record payment')
+            ->icon(Heroicon::OutlinedBanknotes)
+            ->color('success')
+            ->visible(fn (Client $record) => auth()->user()->can('payments.view') && auth()->user()->can('view', $record))
+            ->modalHeading(fn (Client $record) => 'Record Payment / Installment — '.$record->full_name)
+            ->modalDescription('Record an installment or payment received. This enters the system as PENDING VERIFICATION. It counts as confirmed collections only once authorized finance staff verifies it.')
+            ->schema(function (Client $record) {
+                $openInvoices = $record->invoices()
+                    ->whereIn('status', [\App\Models\Invoice::ISSUED, \App\Models\Invoice::PARTIALLY_PAID])
+                    ->pluck('invoice_number', 'id');
+
+                $invoiceSelect = Select::make('invoice_id')
+                    ->label('Apply to Invoice')
+                    ->options($openInvoices)
+                    ->placeholder('On-account installment (credit balance)')
+                    ->helperText('Select an open invoice to settle, or leave blank to record as on-account installment.')
+                    ->native(false);
+
+                return array_merge([$invoiceSelect], \App\Filament\Resources\Payments\Actions\PaymentActions::fields($record));
+            })
+            ->action(fn (array $data, Client $record, Action $action) => DomainAction::run(
+                $action,
+                fn () => app(\App\Domain\Billing\PaymentService::class)->record(
+                    auth()->user(),
+                    $record,
+                    \App\Filament\Resources\Payments\Actions\PaymentActions::payload($data, $data['invoice_id'] ?? null)
+                ),
+                'Payment installment recorded — awaiting finance verification'
+            ));
+    }
+
     public static function takeAssessment(): Action
     {
         return Action::make('takeAssessment')

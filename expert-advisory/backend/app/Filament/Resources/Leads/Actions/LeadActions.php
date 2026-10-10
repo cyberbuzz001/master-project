@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leads\Actions;
 
+use App\Domain\Billing\Money;
 use App\Domain\Compliance\ConsentRecorder;
 use App\Domain\Crm\LeadAssignmentService;
 use App\Domain\Crm\LeadStatus;
@@ -13,17 +14,21 @@ use App\Models\CallLog;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Followup;
+use App\Models\FreeTrial;
 use App\Models\Lead;
+use App\Models\SalesProposal;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Workflow actions shared by the lead table, lead view page and relation managers.
@@ -220,9 +225,91 @@ final class LeadActions
             ->label('WhatsApp')
             ->icon(Heroicon::OutlinedChatBubbleLeftRight)
             ->color('success')
-            ->url(fn (Lead $record) => 'https://wa.me/'.preg_replace('/\D/', '', (string) $record->mobile), shouldOpenInNewTab: true)
             ->visible(fn (Lead $record) => filled($record->mobile) && $record->status !== 'DND'
                 && app(ConsentRecorder::class)->hasConsent('lead', $record->id, 'whatsapp'));
+    }
+
+    public static function startFreeTrial(): Action
+    {
+        return Action::make('startFreeTrial')
+            ->label('Start free trial')
+            ->icon(Heroicon::OutlinedSparkles)
+            ->color('warning')
+            ->modalHeading(fn (Lead $record) => 'Enroll '.$record->full_name.' in Free Trial')
+            ->visible(fn (Lead $record) => auth()->user()->can('update', $record) && $record->status !== 'DND')
+            ->schema([
+                Select::make('trial_type')
+                    ->label('Segment')
+                    ->options([
+                        'equity' => 'Equity Intraday',
+                        'index_options' => 'Index F&O (Nifty/BankNifty)',
+                        'commodity' => 'MCX Commodity',
+                        'combo' => 'Combo Research Trial',
+                    ])
+                    ->default('index_options')
+                    ->required(),
+                TextInput::make('duration_days')->label('Duration (Days)')->numeric()->default(2)->required(),
+                Textarea::make('scope_description')
+                    ->label('Trial scope & limitations')
+                    ->default('2 trading sessions; 1 recommendation per session; strict stop-loss adherence.')
+                    ->rows(2),
+            ])
+            ->action(function (array $data, Lead $record, Action $action) {
+                FreeTrial::create([
+                    'trial_code' => 'TR-' . strtoupper(Str::random(6)),
+                    'lead_id' => $record->id,
+                    'employee_id' => auth()->user()->employee?->id,
+                    'trial_type' => $data['trial_type'],
+                    'start_date' => today(),
+                    'end_date' => today()->addDays((int) $data['duration_days']),
+                    'interim_checkin_date' => today()->addDay(),
+                    'review_meeting_date' => today()->addDays((int) $data['duration_days']),
+                    'scope_description' => $data['scope_description'] ?? null,
+                    'status' => 'active',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                ]);
+
+                $record->update(['status' => 'FOLLOWUP_SCHEDULED']);
+                Notification::make()->success()->title('48-hour free trial activated! Follow-up check-in scheduled.')->send();
+            });
+    }
+
+    public static function createProposal(): Action
+    {
+        return Action::make('createProposal')
+            ->label('Draft proposal')
+            ->icon(Heroicon::OutlinedDocumentCheck)
+            ->color('info')
+            ->modalHeading(fn (Lead $record) => 'Draft Advisory Proposal for '.$record->full_name)
+            ->visible(fn (Lead $record) => auth()->user()->can('update', $record) && $record->status !== 'DND')
+            ->schema([
+                TextInput::make('package_name')->label('Package title')->default('Index Momentum Advisory (Quarterly)')->required(),
+                TextInput::make('duration_days')->label('Duration (Days)')->numeric()->default(90)->required(),
+                TextInput::make('final_agreed_amount_rupees')->label('Net Agreed Fee (₹)')->numeric()->default(15000)->required(),
+                TextInput::make('installment_count')->label('Installments')->numeric()->default(1)->minValue(1)->maxValue(4)->required(),
+                Textarea::make('payment_terms')->label('Payment terms')->default('100% upfront before service activation.')->rows(2),
+            ])
+            ->action(function (array $data, Lead $record, Action $action) {
+                $finalPaise = Money::rupees((float) $data['final_agreed_amount_rupees'])->paise;
+                SalesProposal::create([
+                    'proposal_number' => 'PROP-' . date('ymd') . '-' . strtoupper(Str::random(4)),
+                    'lead_id' => $record->id,
+                    'employee_id' => auth()->user()->employee?->id,
+                    'package_name' => $data['package_name'],
+                    'duration_days' => $data['duration_days'],
+                    'approved_service_fee_paise' => $finalPaise,
+                    'final_agreed_amount_paise' => $finalPaise,
+                    'installment_count' => $data['installment_count'],
+                    'payment_terms' => $data['payment_terms'],
+                    'status' => 'sent',
+                    'expires_at' => today()->addDays(7),
+                    'created_by' => auth()->id(),
+                ]);
+
+                $record->update(['status' => 'EXPECTED_PAYMENT']);
+                Notification::make()->success()->title('Proposal drafted and recorded! Lead marked as Expected Payment.')->send();
+            });
     }
 
     /**
