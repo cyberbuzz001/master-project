@@ -24,14 +24,16 @@ export default async function RiskAssessmentPage() {
 
   return (
     <>
-      <PageHero
-        eyebrow="Mandatory Suitability Profiling (SEBI Aligned)"
-        title="Institutional Client Suitability & Risk Profiling"
-        lead="A comprehensive 20-factor evaluation across 4 financial dimensions. Accurately calculates your financial capacity, risk tolerance, market knowledge, and suitability tier."
-      />
-      <Section>
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_1.4fr]">
-          <div>
+      <div className="no-print">
+        <PageHero
+          eyebrow="Mandatory Suitability Profiling (SEBI Aligned)"
+          title="Institutional Client Suitability & Risk Profiling"
+          lead="A comprehensive 20-factor evaluation across 4 financial dimensions. Accurately calculates your financial capacity, risk tolerance, market knowledge, and suitability tier."
+        />
+      </div>
+      <Section className="print:py-0 print:border-none">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_1.4fr] print:block">
+          <div className="no-print">
             <h2 className="text-2xl font-bold tracking-tight text-[#F5F7FA] font-display">What the assessment evaluates</h2>
             <p className="mt-2 text-sm text-[#9AA7B5] leading-relaxed">
               In accordance with SEBI (Research Analysts) Regulations, 2014, research advice can only be extended to investors whose risk profiling aligns with the proposed asset class and financial capacity.

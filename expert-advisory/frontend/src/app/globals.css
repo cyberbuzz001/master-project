@@ -151,3 +151,51 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #283749;
 }
+
+/* Institutional Clean Print Stylesheet */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  /* Hide non-printable web chrome: headers, navbars, footers, cookies, breadcrumbs, action buttons */
+  header,
+  footer,
+  nav,
+  .glass-nav,
+  [data-cookie-banner],
+  button,
+  .no-print,
+  #cookie-consent {
+    display: none !important;
+  }
+
+  body,
+  html,
+  #main,
+  section,
+  main {
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Force cards, borders and text to crisp print contrast */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  p, span, h1, h2, h3, h4, h5, h6, dt, dd, li {
+    color: #0F172A !important;
+  }
+
+  div, article, section {
+    box-shadow: none !important;
+  }
+}
