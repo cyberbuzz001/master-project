@@ -271,16 +271,38 @@ export function CrmMasterView() {
     setShowWorkbench(true);
   };
 
-  const handleUpdateLeadStatus = (leadId: string, status: LeadStatus) => {
+  const handleUpdateLeadStatus = async (leadId: string, status: LeadStatus) => {
     setLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, status, updatedAt: "Today, Just now" } : l))
     );
+    try {
+      await fetch("/api/v1/office/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: leadId, status }),
+      });
+    } catch (_) {}
   };
 
-  const handleAssignLead = (leadId: string, agentName: string) => {
+  const handleAssignLead = async (leadId: string, agentName: string) => {
     setLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, assignedAgent: agentName } : l))
     );
+    try {
+      await fetch("/api/v1/office/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: leadId, assignedAgent: agentName }),
+      });
+    } catch (_) {}
+  };
+
+  const handleEditLead = (updated: CrmLead) => {
+    setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+  };
+
+  const handleDeleteLead = (leadId: string) => {
+    setLeads((prev) => prev.filter((l) => l.id !== leadId));
   };
 
   const handleCreateRecommendation = (newRec: AdvisoryRecommendation) => {
@@ -523,6 +545,8 @@ export function CrmMasterView() {
               onUpdateLeadStatus={handleUpdateLeadStatus}
               onAssignLead={handleAssignLead}
               onAddLead={(newLead) => setLeads((prev) => [newLead, ...prev])}
+              onEditLead={handleEditLead}
+              onDeleteLead={handleDeleteLead}
             />
           )}
 
@@ -560,6 +584,11 @@ export function CrmMasterView() {
               leads={leads}
               callLogs={callLogs}
               onWorkLead={handleWorkLead}
+              onLeadUpdated={(leadId, updates) =>
+                setLeads((prev) =>
+                  prev.map((l) => (l.id === leadId ? { ...l, ...updates } : l))
+                )
+              }
             />
           )}
 
@@ -573,6 +602,21 @@ export function CrmMasterView() {
               onInitiateRenewalCall={(c) => {
                 const asLead = leads.find((l) => l.mobile === c.mobile) || leads[0];
                 handleWorkLead(asLead);
+              }}
+              onUpdateCustomerSubscription={(customerId, newSub) => {
+                setCustomers((prev) =>
+                  prev.map((c) =>
+                    c.id === customerId
+                      ? {
+                          ...c,
+                          currentSubscription: {
+                            ...c.currentSubscription,
+                            ...newSub,
+                          },
+                        }
+                      : c
+                  )
+                );
               }}
             />
           )}
@@ -588,6 +632,7 @@ export function CrmMasterView() {
             <PaymentsInvoicingView
               payments={payments}
               onVerifyPayment={handleVerifyPayment}
+              onRecordPayment={(newPayment) => setPayments((prev) => [newPayment, ...prev])}
             />
           )}
 
@@ -595,6 +640,7 @@ export function CrmMasterView() {
             <TasksAppointmentsView
               tasks={tasks}
               onCompleteTask={handleCompleteTask}
+              onAddTask={(newTask) => setTasks((prev) => [newTask, ...prev])}
             />
           )}
 

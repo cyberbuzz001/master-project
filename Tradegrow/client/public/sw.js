@@ -1,8 +1,7 @@
 // TradeGrow High-Performance Service Worker
-const CACHE_NAME = 'tradegrow-shell-v1';
+const CACHE_NAME = 'tradegrow-shell-v2';
 const STATIC_ASSETS = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/favicon.svg',
 ];
@@ -64,18 +63,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Default StaleWhileRevalidate for JS/CSS bundles
+  // Network-first for JS/CSS bundles to prevent stale hash crashes, fallback to cache
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse.status === 200) {
-          const resClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(event.request, resClone));
-        }
-        return networkResponse;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request).then((networkResponse) => {
+      if (networkResponse.status === 200) {
+        const resClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(event.request, resClone));
+      }
+      return networkResponse;
+    }).catch(() => caches.match(event.request))
   );
 });
 

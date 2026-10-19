@@ -30,6 +30,45 @@
   </head>
   <body class="bg-[#0b0e14] text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-emerald-500 selection:text-white">
     <div id="root"></div>
+    <script>
+      // Autonomous Watchdog: Detects unhandled script failures or stuck blank screen in PWAs
+      (function() {
+        var healed = false;
+        function recover(reason) {
+          if (healed) return;
+          healed = true;
+          console.warn('[TradeGrow Watchdog] ' + reason + ' -> Auto-healing PWA...');
+          try {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                regs.forEach(function(r) { r.unregister(); });
+              });
+            }
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                names.forEach(function(k) { caches.delete(k); });
+              });
+            }
+          } catch(e) {}
+          setTimeout(function() {
+            window.location.replace(window.location.origin + window.location.pathname + '?v=' + Date.now());
+          }, 300);
+        }
+
+        window.addEventListener('error', function(e) {
+          if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+            recover('Asset failed to load');
+          }
+        }, true);
+
+        setTimeout(function() {
+          var root = document.getElementById('root');
+          if (root && root.children.length === 0) {
+            recover('Empty root watchdog');
+          }
+        }, 3500);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

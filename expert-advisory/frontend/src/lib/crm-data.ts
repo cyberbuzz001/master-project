@@ -92,6 +92,9 @@ export interface CrmLead {
   preferredMarket: "NSE Equities" | "Nifty/BankNifty F&O" | "MCX Commodities" | "Swing Equity";
   preferredService: string;
   budget: string;
+  capital?: string;
+  segment?: string;
+  assignedTo?: string;
   estimatedValue: number;
   riskPreference: "Conservative" | "Moderate" | "Aggressive";
   lastContacted: string;

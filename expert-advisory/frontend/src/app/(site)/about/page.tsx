@@ -94,15 +94,15 @@ export default function AboutPage() {
       />
 
       {/* High-Impact Trust Metrics */}
-      <Section className="border-b border-ink-100 bg-white py-12">
+      <Section tone="muted" className="py-12 border-b border-[#1C2734]">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center sm:text-left">
-              <p className="font-mono text-3xl font-extrabold tracking-tight text-teal-600 sm:text-4xl">
+              <p className="font-mono text-3xl font-extrabold tracking-tight text-[#43D9FF] sm:text-4xl">
                 {stat.value}
               </p>
-              <h3 className="mt-1 text-base font-bold text-ink-950">{stat.label}</h3>
-              <p className="mt-1 text-xs text-ink-600 leading-relaxed">{stat.description}</p>
+              <h3 className="mt-2 text-base font-bold text-[#F5F7FA]">{stat.label}</h3>
+              <p className="mt-1 text-xs text-[#9AA7B5] leading-relaxed">{stat.description}</p>
             </div>
           ))}
         </div>
@@ -111,16 +111,16 @@ export default function AboutPage() {
       {/* Main Company Story */}
       <Section>
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-          <div className="lg:col-span-7 space-y-5 text-base leading-7 text-ink-700">
-            <Badge tone="teal" className="mb-2">Empowering Traders & Investors</Badge>
-            <h2 className="text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl">
+          <div className="lg:col-span-7 space-y-5 text-base leading-7 text-[#9AA7B5]">
+            <Badge tone="cyan" className="mb-2">Empowering Traders & Investors</Badge>
+            <h2 className="text-2xl font-bold tracking-tight text-[#F5F7FA] sm:text-3xl font-display">
               Simplifying Stock Market Success Through Data and Discipline
             </h2>
             <p>
-              <strong>Expert Stocks Consultancy</strong> is a specialized financial consultation and market intelligence firm. We specialize in <strong>stock market advisory, portfolio management, and market research</strong>, ensuring that our clients receive the best strategies tailored to their unique investment horizons.
+              <strong className="text-[#F5F7FA]">Expert Stocks Consultancy</strong> is a specialized financial consultation and market intelligence firm. We specialize in <strong className="text-[#F5F7FA]">stock market advisory, portfolio management, and market research</strong>, ensuring that our clients receive the best strategies tailored to their unique investment horizons.
             </p>
             <p>
-              Our journey began with a clear mission: to simplify investing for everyone. Today, we pride ourselves on being a trusted destination for both active traders and long-term investors. We provide structured guidance across <strong>equity cash, index & stock options, futures, and mutual funds</strong>, backed by deep technical and quantitative market research.
+              Our journey began with a clear mission: to simplify investing for everyone. Today, we pride ourselves on being a trusted destination for both active traders and long-term investors. We provide structured guidance across <strong className="text-[#F5F7FA]">equity cash, index & stock options, futures, and mutual funds</strong>, backed by deep technical and quantitative market research.
             </p>
             <p>
               With a team of seasoned analysts and portfolio researchers, we focus on crafting strategies that strictly match your financial goals and risk tolerance. Recognized among the fastest-growing stock advisory firms in India, we are committed to transparency, disciplined execution, and delivering a standout experience in every interaction.
@@ -132,29 +132,29 @@ export default function AboutPage() {
           </div>
 
           <div className="lg:col-span-5">
-            <Card className="p-8 space-y-6 bg-gradient-to-br from-white to-ink-50/50 border border-ink-200/80 shadow-md">
+            <Card className="p-8 space-y-6 bg-[#0D131C] border border-[#1C2734] shadow-xl rounded-2xl">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-[#43D9FF]/10 text-[#43D9FF]">
                     <Target className="size-5" />
                   </div>
-                  <h3 className="text-xl font-bold text-ink-950">Our Mission</h3>
+                  <h3 className="text-xl font-bold text-[#F5F7FA]">Our Mission</h3>
                 </div>
-                <p className="text-sm leading-6 text-ink-600">
-                  At <strong>Expert Stocks Consultancy</strong>, we work continuously on training and updating our analytical staff, adopting modern technology, and refining market models to benefit our clients. Equipped with highly reliable market software, analytical newswires, and qualified representatives, we protect clients&apos; capital and help them build sustainable wealth.
+                <p className="text-sm leading-6 text-[#9AA7B5]">
+                  At <strong className="text-[#F5F7FA]">Expert Stocks Consultancy</strong>, we work continuously on training and updating our analytical staff, adopting modern technology, and refining market models to benefit our clients. Equipped with highly reliable market software, analytical newswires, and qualified representatives, we protect clients&apos; capital and help them build sustainable wealth.
                 </p>
               </div>
 
-              <hr className="border-ink-100" />
+              <hr className="border-[#1C2734]" />
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-[#7C5CFF]/10 text-[#7C5CFF]">
                     <Compass className="size-5" />
                   </div>
-                  <h3 className="text-xl font-bold text-ink-950">Our Vision</h3>
+                  <h3 className="text-xl font-bold text-[#F5F7FA]">Our Vision</h3>
                 </div>
-                <p className="text-sm leading-6 text-ink-600">
+                <p className="text-sm leading-6 text-[#9AA7B5]">
                   We strive to be acknowledged as a benchmark in client satisfaction, risk-aware performance, and analytical depth in India&apos;s financial markets. We continuously enhance our reputation for accessibility, professionalism, and enduring consultative partnerships with our clients.
                 </p>
               </div>
@@ -174,12 +174,12 @@ export default function AboutPage() {
           {TECHNICAL_PILLARS.map((pillar) => {
             const Icon = pillar.icon;
             return (
-              <Card key={pillar.title} className="p-6 transition-all hover:shadow-lg">
-                <div className="flex size-11 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+              <Card key={pillar.title} className="p-6 transition-all bg-[#0D131C] border border-[#1C2734] hover:border-[#43D9FF]/40 hover:-translate-y-1">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-[#43D9FF]/10 text-[#43D9FF]">
                   <Icon className="size-5" />
                 </div>
-                <h3 className="mt-4 text-base font-bold text-ink-950">{pillar.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-ink-600">{pillar.description}</p>
+                <h3 className="mt-4 text-base font-bold text-[#F5F7FA]">{pillar.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#9AA7B5]">{pillar.description}</p>
               </Card>
             );
           })}
@@ -195,14 +195,14 @@ export default function AboutPage() {
         />
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {WHY_CHOOSE_US.map((item, i) => (
-            <Card key={item.title} className="p-6">
+            <Card key={item.title} className="p-6 bg-[#0D131C] border border-[#1C2734] hover:border-[#43D9FF]/30">
               <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 font-mono text-xs font-bold text-teal-700">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-[#43D9FF]/10 font-mono text-xs font-bold text-[#43D9FF]">
                   0{i + 1}
                 </span>
-                <h3 className="text-lg font-semibold text-ink-950">{item.title}</h3>
+                <h3 className="text-lg font-semibold text-[#F5F7FA]">{item.title}</h3>
               </div>
-              <p className="mt-3 text-sm leading-6 text-ink-600">{item.description}</p>
+              <p className="mt-3 text-sm leading-6 text-[#9AA7B5]">{item.description}</p>
             </Card>
           ))}
         </div>
@@ -212,25 +212,25 @@ export default function AboutPage() {
       <Section tone="muted">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge tone="teal" className="mb-3">Connect With Us</Badge>
-            <h2 className="text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl">
+            <Badge tone="cyan" className="mb-3">Connect With Us</Badge>
+            <h2 className="text-2xl font-bold tracking-tight text-[#F5F7FA] sm:text-3xl font-display">
               Elevate Your Trading Journey with Expert Technical Analysis
             </h2>
-            <p className="mt-3 text-base text-ink-700">
+            <p className="mt-3 text-base text-[#9AA7B5]">
               Partner with our advisory desk today to identify high-probability setups and manage portfolio risks with confidence.
             </p>
-            <div className="mt-6 flex flex-wrap gap-4 text-sm text-ink-800">
+            <div className="mt-6 flex flex-wrap gap-4 text-sm">
               <a
                 href="https://wa.me/919201800995"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-emerald-600 hover:text-emerald-700"
+                className="inline-flex items-center gap-2 font-medium text-[#22C55E] hover:text-[#4ade80]"
               >
-                <MessageSquare className="size-4 text-emerald-600" />
+                <MessageSquare className="size-4" />
                 Chat on WhatsApp
               </a>
-              <a href="mailto:info@expertstocks.in" className="inline-flex items-center gap-2 font-medium hover:text-teal-600">
-                <Mail className="size-4 text-teal-600" />
+              <a href="mailto:info@expertstocks.in" className="inline-flex items-center gap-2 font-medium text-[#43D9FF] hover:text-[#7ce3ff]">
+                <Mail className="size-4" />
                 info@expertstocks.in
               </a>
             </div>
@@ -243,9 +243,9 @@ export default function AboutPage() {
       </Section>
 
       {/* Statutory Regulatory Notice */}
-      <Section className="py-8 bg-ink-50 border-t border-ink-100 text-xs text-ink-500 leading-relaxed">
+      <Section className="py-8 bg-[#030508] border-t border-[#1C2734] text-xs text-[#667383] leading-relaxed">
         <p>
-          <strong>Regulatory Notice:</strong> Investment in securities market are subject to market risks. Read all related documents carefully before investing. Registration granted by SEBI, membership of BASL and certification from NISM in no way guarantees performance of the intermediary or provide any assurance of returns to investors.
+          <strong className="text-[#9AA7B5]">Regulatory Notice:</strong> Investment in securities market are subject to market risks. Read all related documents carefully before investing. Registration granted by SEBI, membership of BASL and certification from NISM in no way guarantees performance of the intermediary or provide any assurance of returns to investors.
         </p>
       </Section>
     </>
