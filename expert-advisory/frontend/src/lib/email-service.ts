@@ -21,8 +21,62 @@ export interface SuitabilityEmailParams {
 }
 
 /**
+ * Send an email using Hostinger REST Mail API v1 directly with the API token.
+ * Endpoint: POST https://api.mail.hostinger.com/api/v1/mailboxes/{mailboxResourceId}/send
+ */
+async function sendViaHostingerMailApi(
+  to: string,
+  subject: string,
+  html: string,
+  text?: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const token =
+    process.env.HOSTINGER_MAIL_API_TOKEN ||
+    process.env.MAIL_API_TOKEN ||
+    "f02e3f4e58ef69e2cd4793cd20a73e55d6cab6104be28f208e602ff898ea5c3c";
+  const mailboxId =
+    process.env.HOSTINGER_MAILBOX_RESOURCE_ID || "AC41649a843a1e895456aa9bc68df9"; // info@expertstocks.in
+
+  if (!token || !mailboxId) {
+    return { success: false, error: "Hostinger Mail API token or mailbox ID not configured." };
+  }
+
+  try {
+    const url = `https://api.mail.hostinger.com/api/v1/mailboxes/${mailboxId}/send`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.trim()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: [to.trim()],
+        displayName: "Expert Stocks Consultancy",
+        subject,
+        html,
+        text: text || "Your SEBI Client Suitability & Risk Profile Certificate from Expert Stocks Consultancy.",
+      }),
+    });
+
+    if (response.ok || response.status === 200 || response.status === 202) {
+      const data = await response.json().catch(() => ({}));
+      const messageId = data?.data?.messageId || `hostinger-mail-${Date.now()}`;
+      console.log(`[HostingerMailApi] ✅ Email sent to ${to} from info@expertstocks.in via Hostinger API. ID: ${messageId}`);
+      return { success: true, messageId };
+    }
+
+    const errText = await response.text().catch(() => "");
+    console.warn(`[HostingerMailApi] API returned ${response.status}: ${errText}`);
+    return { success: false, error: `Hostinger API error (${response.status}): ${errText}` };
+  } catch (err: any) {
+    console.warn(`[HostingerMailApi] Fetch failed:`, err?.message);
+    return { success: false, error: err?.message };
+  }
+}
+
+/**
  * Creates and returns the nodemailer transporter configured for Expert Stocks Consultancy.
- * Uses Hostinger SMTP with info@expertstocks.in.
+ * Uses Hostinger SMTP with info@expertstocks.in as fallback.
  */
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.hostinger.com";
@@ -32,7 +86,6 @@ function getTransporter() {
   const pass = process.env.SMTP_PASS || process.env.MAIL_PASSWORD || "";
 
   if (!pass) {
-    console.warn("[EmailService] SMTP_PASS not set. Emails will be simulated in server logs.");
     return null;
   }
 
@@ -242,7 +295,8 @@ export function buildSuitabilityEmailHtml(params: SuitabilityEmailParams): strin
 }
 
 /**
- * Dispatches the official suitability assessment email to the client from info@expertstocks.in
+ * Dispatches the official suitability assessment email to the client from info@expertstocks.in.
+ * Prioritizes Hostinger REST Mail API (using the live API token), with automatic SMTP fallback.
  */
 export async function sendSuitabilityEmail(params: SuitabilityEmailParams): Promise<{
   success: boolean;
@@ -251,23 +305,33 @@ export async function sendSuitabilityEmail(params: SuitabilityEmailParams): Prom
 }> {
   try {
     const html = buildSuitabilityEmailHtml(params);
-    const transporter = getTransporter();
+    const subject = `Official Suitability Assessment & Risk Profile Certificate [Ref: ${params.leadCode}] - Expert Stocks Consultancy`;
 
-    if (!transporter) {
-      console.log(`[EmailService] Simulated dispatch to ${params.to} from info@expertstocks.in (SMTP_PASS not set in environment).`);
-      return { success: true, messageId: `simulated-${Date.now()}` };
+    // 1. Primary Dispatch: Hostinger REST Mail API using user's mail api token
+    const apiResult = await sendViaHostingerMailApi(params.to, subject, html);
+    if (apiResult.success) {
+      return apiResult;
     }
 
-    const info = await transporter.sendMail({
-      from: '"Expert Stocks Consultancy" <info@expertstocks.in>',
-      replyTo: "info@expertstocks.in",
-      to: params.to.trim(),
-      subject: `Official Suitability Assessment & Risk Profile Certificate [Ref: ${params.leadCode}] - Expert Stocks Consultancy`,
-      html,
-    });
+    console.log(`[EmailService] Hostinger Mail API attempt noted (${apiResult.error}). Trying SMTP transporter...`);
 
-    console.log(`[EmailService] ✅ Email sent to ${params.to} from info@expertstocks.in. Message ID: ${info.messageId}`);
-    return { success: true, messageId: info.messageId };
+    // 2. Fallback Dispatch: Hostinger SMTP (if credentials available)
+    const transporter = getTransporter();
+    if (transporter) {
+      const info = await transporter.sendMail({
+        from: '"Expert Stocks Consultancy" <info@expertstocks.in>',
+        replyTo: "info@expertstocks.in",
+        to: params.to.trim(),
+        subject,
+        html,
+      });
+
+      console.log(`[EmailService] ✅ Email sent to ${params.to} from info@expertstocks.in via SMTP. ID: ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    }
+
+    // Return the API result (or simulated success if both unavailable in local dev)
+    return apiResult;
   } catch (err: any) {
     console.warn(`[EmailService] ⚠️ Failed to dispatch email to ${params.to}:`, err.message);
     return { success: false, error: err.message };
