@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { leadsStore } from "@/lib/leads-store";
+import { sendSuitabilityEmail } from "@/lib/email-service";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in";
@@ -109,7 +110,21 @@ export async function POST(request: NextRequest) {
       console.warn("[Leads Store] Could not record to local store:", err.message);
     }
 
-    // 3. Trigger Expert Stocks Advisory WhatsApp welcome sequence (fire & forget)
+    // 3. Direct Client Suitability Email Dispatch from info@expertstocks.in
+    if (body.email && body.email.includes("@") && body.assessment) {
+      // Fire-and-forget async email dispatch from info@expertstocks.in
+      sendSuitabilityEmail({
+        to: body.email.trim(),
+        fullName,
+        phone: cleanMobile,
+        leadCode: dispatchedLeadCode,
+        assessment: body.assessment,
+      }).catch((err) => {
+        console.warn("[EmailService] Direct send error:", err);
+      });
+    }
+
+    // 4. Trigger Expert Stocks Advisory WhatsApp welcome sequence (fire & forget)
     // Calls AdvisoryWhatsAppService.triggerLeadWelcome via the TradeGrow server webhook
     triggerAdvisoryWelcome({
       phone: cleanMobile,

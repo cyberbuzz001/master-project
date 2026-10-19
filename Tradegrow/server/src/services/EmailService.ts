@@ -235,10 +235,12 @@ export class EmailService {
     templateType: string;
     userId?: string;
     priority?: EmailPriority;
+    from?: string;
+    replyTo?: string;
   }): void {
     // Run completely decoupled from current execution loop
     setImmediate(async () => {
-      const { to, subject, html, text, templateType, userId, priority } = params;
+      const { to, subject, html, text, templateType, userId, priority, from, replyTo } = params;
 
       try {
         const config = await this.getConfig();
@@ -287,7 +289,8 @@ export class EmailService {
         }
 
         await transporter.sendMail({
-          from: config.emailFrom,
+          from: from || config.emailFrom,
+          replyTo: replyTo || from || config.emailFrom,
           to,
           subject,
           text: text || subject,

@@ -237,36 +237,106 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
     }
 
     // 3. Send automated confirmation email to the client if email is provided
+    // 3. Send automated confirmation email to the client if email is provided
     if (email && email.includes('@')) {
-      const clientConfirmHtml = buildAlertEmailHtml({
-        badgeTitle: isRpm ? 'ASSESSMENT RECORDED' : 'REQUEST RECEIVED',
-        badgeColor: '#10B981',
-        headline: `Thank you, ${fullName || 'Investor'}!`,
-        summary: isRpm
-          ? `Your SEBI-aligned Risk Profile & Suitability Questionnaire has been successfully recorded. Your risk tier is: <strong>${assessment?.category || 'Under Review'}</strong>.`
-          : `We have received your enquiry. A registered advisory representative will reach out to you at +91 ${cleanPhone} during market hours.`,
-        details: [
-          { label: 'Reference Code', value: result?.leadCode || 'TG-LEAD-2026' },
-          { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
-          { label: 'Status', value: 'Acknowledged & In Queue' },
-          { label: 'Turnaround Time', value: 'Within 2 to 4 business hours' },
-        ],
-        extraHtml: `
-          <div style="background-color: #0F172A; border-radius: 8px; padding: 14px; border: 1px solid #1E293B; margin-bottom: 16px;">
-            <p style="margin: 0; color: #94A3B8; font-size: 13px; line-height: 1.5;">
-              If your request is urgent, connect with our support desk directly on WhatsApp at
-              <a href="https://wa.me/919589615649" style="color: #10B981; font-weight: 700; text-decoration: none;">+91 95896 15649</a>.
-            </p>
-          </div>`
-      });
+      if (isRpm) {
+        const tier = assessment?.category || 'Under Review';
+        const score = assessment?.score || 0;
+        const leadRef = result?.leadCode || 'ESC-RPM-2026';
 
-      emailService.sendMailAsync({
-        to: email.trim(),
-        subject: isRpm ? `TradeGrow & Expert Stocks: Your Risk Assessment Summary` : `We received your consultation request - TradeGrow & Expert Stocks`,
-        html: clientConfirmHtml,
-        templateType: 'CLIENT_CONFIRMATION',
-        priority: 'NORMAL',
-      });
+        const rpmClientHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Your Suitability & Risk Profile Certificate - Expert Stocks Consultancy</title></head>
+<body style="margin: 0; padding: 0; background-color: #05070B; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #F5F7FA;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #05070B; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #0D131C; border: 1px solid #1C2734; border-radius: 12px; overflow: hidden;">
+          <tr>
+            <td style="padding: 24px 32px; background: linear-gradient(180deg, #111923 0%, #0D131C 100%); border-bottom: 1px solid #1C2734;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td>
+                    <div style="font-size: 20px; font-weight: 800; color: #F5F7FA;">EXPERT STOCKS <span style="color: #43D9FF; font-size: 14px; font-weight: normal;">CONSULTANCY</span></div>
+                    <div style="font-size: 11px; color: #9AA7B5; text-transform: uppercase; margin-top: 2px;">Institutional Equity & Derivative Research Desk</div>
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: rgba(67, 217, 255, 0.1); color: #43D9FF; border: 1px solid rgba(67, 217, 255, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">SEBI AUDITED</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 28px 32px;">
+              <h2 style="margin: 0 0 10px; color: #F5F7FA; font-size: 18px; font-weight: 700;">Client Suitability & Risk Profile Certificate</h2>
+              <p style="margin: 0 0 20px; color: #9AA7B5; font-size: 14px; line-height: 1.6;">
+                Dear <strong>${fullName || 'Investor'}</strong>, your 20-factor client suitability assessment has been recorded and evaluated under SEBI (Research Analysts) Regulations, 2014.
+              </p>
+              <div style="background-color: #080D14; border: 1px solid #1C2734; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr><td style="padding: 6px 0; color: #64748B; font-size: 13px;">Risk Classification Tier</td><td style="padding: 6px 0; color: #43D9FF; font-size: 15px; font-weight: 800; text-align: right;">${tier.toUpperCase()}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748B; font-size: 13px;">Suitability Score</td><td style="padding: 6px 0; color: #F8FAFC; font-size: 14px; font-weight: 700; text-align: right;">${score} / 100</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748B; font-size: 13px;">Audit Reference</td><td style="padding: 6px 0; color: #F8FAFC; font-size: 13px; font-weight: 600; text-align: right;">${leadRef}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748B; font-size: 13px;">Contact Number</td><td style="padding: 6px 0; color: #F8FAFC; font-size: 13px; font-weight: 600; text-align: right;">+91 ${cleanPhone}</td></tr>
+                </table>
+              </div>
+              <p style="margin: 0 0 16px; color: #9AA7B5; font-size: 13px; line-height: 1.5;">${assessment?.suitability_summary || 'Your risk tier reflects your declared financial surplus and market experience.'}</p>
+              <div style="text-align: center; margin: 24px 0 10px;">
+                <a href="https://wa.me/919201800995" style="display: inline-block; background-color: #22C55E; color: #000; font-weight: 700; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 13px;">Discuss on WhatsApp &rarr;</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 32px; background-color: #060911; border-top: 1px solid #1C2734; text-align: center; font-size: 11px; color: #64748B;">
+              Expert Stocks Consultancy &bull; info@expertstocks.in &bull; +91 92018 00995 &bull; expertstocks.in
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+        emailService.sendMailAsync({
+          from: '"Expert Stocks Consultancy" <info@expertstocks.in>',
+          replyTo: 'info@expertstocks.in',
+          to: email.trim(),
+          subject: `Official Suitability Assessment & Risk Profile Certificate [Ref: ${leadRef}] - Expert Stocks Consultancy`,
+          html: rpmClientHtml,
+          templateType: 'SUITABILITY_REPORT',
+          priority: 'HIGH',
+        });
+      } else {
+        const clientConfirmHtml = buildAlertEmailHtml({
+          badgeTitle: 'REQUEST RECEIVED',
+          badgeColor: '#10B981',
+          headline: `Thank you, ${fullName || 'Investor'}!`,
+          summary: `We have received your enquiry. A registered advisory representative will reach out to you at +91 ${cleanPhone} during market hours.`,
+          details: [
+            { label: 'Reference Code', value: result?.leadCode || 'TG-LEAD-2026' },
+            { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
+            { label: 'Status', value: 'Acknowledged & In Queue' },
+            { label: 'Turnaround Time', value: 'Within 2 to 4 business hours' },
+          ],
+          extraHtml: `
+            <div style="background-color: #0F172A; border-radius: 8px; padding: 14px; border: 1px solid #1E293B; margin-bottom: 16px;">
+              <p style="margin: 0; color: #94A3B8; font-size: 13px; line-height: 1.5;">
+                If your request is urgent, connect with our support desk directly on WhatsApp at
+                <a href="https://wa.me/919589615649" style="color: #10B981; font-weight: 700; text-decoration: none;">+91 95896 15649</a>.
+              </p>
+            </div>`
+        });
+
+        emailService.sendMailAsync({
+          to: email.trim(),
+          subject: `We received your consultation request - TradeGrow & Expert Stocks`,
+          html: clientConfirmHtml,
+          templateType: 'CLIENT_CONFIRMATION',
+          priority: 'NORMAL',
+        });
+      }
     }
 
     // 4. Cross-Domain Webhook Bridge: Dispatch signed lead.captured event to Expert Stocks CRM

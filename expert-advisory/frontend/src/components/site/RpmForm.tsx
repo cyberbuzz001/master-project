@@ -17,10 +17,14 @@ import {
   Check,
   Edit3,
   RefreshCw,
-  Info
+  Info,
+  Download,
+  Mail,
+  CheckCheck
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { Button, Card, Field, Input, Select, Badge, Notice } from "../ui";
+import { generateSuitabilityPdfDocument } from "@/lib/pdf-generator";
 
 export interface QuestionDef {
   id: number;
@@ -547,6 +551,8 @@ export function RpmForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [emailStatusMsg, setEmailStatusMsg] = useState<string | null>(null);
   const [submissionResult, setSubmissionResult] = useState<{
     leadCode: string;
     compositeScore: number;
@@ -557,6 +563,7 @@ export function RpmForm({
     band: RiskBand;
     criticalNotes: string[];
     flags: string[];
+    questions?: Array<{ code: string; question: string; answer: string }>;
   } | null>(null);
 
   // Compute multi-dimensional scores and critical flags
@@ -757,6 +764,7 @@ export function RpmForm({
         band: evaluation.band,
         criticalNotes: evaluation.criticalNotes,
         flags: evaluation.flags,
+        questions: breakdown,
       });
       setViewState("result");
       window.scrollTo({ top: 250, behavior: "smooth" });
@@ -773,11 +781,75 @@ export function RpmForm({
         band: evaluation.band,
         criticalNotes: evaluation.criticalNotes,
         flags: evaluation.flags,
+        questions: breakdown,
       });
       setViewState("result");
       window.scrollTo({ top: 250, behavior: "smooth" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (!submissionResult) return;
+    generateSuitabilityPdfDocument({
+      leadCode: submissionResult.leadCode,
+      fullName: formData.fullName.trim() || "Valued Investor",
+      phone: formData.mobile,
+      email: formData.email,
+      city: formData.city,
+      state: formData.state,
+      capitalRange: formData.capitalRange,
+      compositeScore: submissionResult.compositeScore,
+      financialScore: submissionResult.financialScore,
+      riskScore: submissionResult.riskScore,
+      knowledgeScore: submissionResult.knowledgeScore,
+      disciplineScore: submissionResult.disciplineScore,
+      band: submissionResult.band,
+      criticalNotes: submissionResult.criticalNotes,
+      flags: submissionResult.flags,
+      questions: submissionResult.questions,
+    });
+  };
+
+  const handleResendEmail = async () => {
+    if (!submissionResult || !formData.email) return;
+    setResendingEmail(true);
+    setEmailStatusMsg(null);
+    try {
+      const resp = await fetch("/api/v1/public/send-assessment-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          fullName: formData.fullName,
+          phone: formData.mobile,
+          leadCode: submissionResult.leadCode,
+          assessment: {
+            score: submissionResult.compositeScore,
+            category: submissionResult.band.tier,
+            financial_capacity_score: submissionResult.financialScore,
+            risk_tolerance_score: submissionResult.riskScore,
+            knowledge_score: submissionResult.knowledgeScore,
+            discipline_score: submissionResult.disciplineScore,
+            flags: submissionResult.flags,
+            critical_notes: submissionResult.criticalNotes,
+            suitability_summary: submissionResult.band.summary,
+            suitability_recommendations: submissionResult.band.suitability,
+            warnings: submissionResult.band.warnings,
+          },
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        setEmailStatusMsg("Suitability certificate sent successfully from info@expertstocks.in!");
+      } else {
+        setEmailStatusMsg(data.message || "Failed to dispatch email.");
+      }
+    } catch {
+      setEmailStatusMsg("Network error. Please try again.");
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -885,17 +957,58 @@ export function RpmForm({
               {band.warnings}
             </Notice>
 
-            <div className="rounded-xl bg-[#080D14] p-4 border border-[#1C2734] text-xs text-[#9AA7B5] flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-[#43D9FF]" />
-                <span>A compliance record has been secured for audit reference: <strong>{leadCode}</strong>.</span>
+            {/* Automatic Email Notification Box */}
+            <div className="rounded-xl bg-[#080D14] p-4 border border-[#1C2734] flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-[#22C55E]/10 text-[#22C55E]">
+                  <Mail className="size-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-[#F5F7FA] block">
+                    Certificate Sent from info@expertstocks.in
+                  </span>
+                  <p className="text-[11px] text-[#9AA7B5]">
+                    {formData.email
+                      ? `Dispatched automatically to ${formData.email}. Please inspect your inbox or spam.`
+                      : "Provide an email during consultation or retake to receive digital copies."}
+                  </p>
+                </div>
               </div>
-              <button 
-                onClick={() => window.print()} 
-                className="inline-flex items-center gap-1.5 text-[#43D9FF] hover:text-[#7ce3ff] font-medium cursor-pointer"
+              {formData.email && (
+                <button
+                  type="button"
+                  onClick={handleResendEmail}
+                  disabled={resendingEmail}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#1C2734] bg-[#111923] px-3.5 py-1.5 text-xs font-medium text-[#43D9FF] hover:bg-[#162130] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`size-3 ${resendingEmail ? "animate-spin" : ""}`} />
+                  {resendingEmail ? "Sending..." : "Resend Email"}
+                </button>
+              )}
+            </div>
+            {emailStatusMsg && (
+              <div className="text-xs text-[#22C55E] flex items-center gap-1.5 font-medium px-1">
+                <CheckCheck className="size-4" /> {emailStatusMsg}
+              </div>
+            )}
+
+            {/* Official PDF Certificate Generator Bar */}
+            <div className="rounded-xl bg-gradient-to-r from-[#0B1522] to-[#080D14] p-4 border border-[#43D9FF]/30 text-xs text-[#9AA7B5] flex items-center justify-between flex-wrap gap-4 shadow-lg">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="size-5 text-[#43D9FF]" />
+                <div>
+                  <span className="font-bold text-[#F5F7FA] block">Official SEBI Suitability Certificate</span>
+                  <span className="text-[11px] text-[#9AA7B5]">A4 formatted with letterhead, score breakdown, and compliance seal.</span>
+                </div>
+              </div>
+              <Button 
+                type="button"
+                variant="primary"
+                onClick={handleDownloadPdf}
+                className="gap-2 font-bold shadow-md cursor-pointer"
               >
-                <Printer className="size-3.5" /> Print / Save Certificate PDF
-              </button>
+                <Download className="size-4" /> Download Official PDF Certificate
+              </Button>
             </div>
           </div>
 
