@@ -242,6 +242,57 @@ export interface CrmTicket {
   createdAt: string;
 }
 
+export interface CrmFreeTrial {
+  id: string; // TR-XXXX
+  leadId: string;
+  leadName: string;
+  mobile: string;
+  segment: "Index Options" | "Equity Intraday" | "MCX Commodity" | "Combo";
+  startDate: string;
+  endDate: string;
+  status: "ACTIVE" | "COMPLETED" | "CONVERTED" | "DROPPED";
+  touchpoint1Done: boolean; // Morning margin check
+  touchpoint2Done: boolean; // Post-market review
+  touchpoint3Done: boolean; // Closing interview
+  advisor: string;
+  notes?: string;
+}
+
+export interface CrmProposal {
+  id: string; // PROP-XXXX
+  leadId: string;
+  leadName: string;
+  mobile: string;
+  packageName: string;
+  durationDays: number;
+  standardFee: number;
+  discount: number;
+  finalFee: number;
+  installmentsCount: number;
+  status: "DRAFT" | "SENT" | "ACCEPTED" | "CONVERTED" | "EXPIRED";
+  createdAt: string;
+  advisor: string;
+}
+
+export interface CrmInstallment {
+  id: string; // INST-XXXX
+  proposalId?: string;
+  customerName: string;
+  customerId: string;
+  mobile: string;
+  installmentNumber: number;
+  totalInstallments: number;
+  amount: number;
+  dueDate: string;
+  status: "PENDING_VERIFICATION" | "APPROVED" | "OVERDUE" | "PENDING";
+  utrNumber?: string;
+  submittedBy?: string; // RM / Sales Rep
+  verifiedBy?: string; // Finance Manager
+  verifiedAt?: string;
+  nudgeCount: number;
+  lastNudgeAt?: string;
+}
+
 export interface CallLogItem {
   id: string;
   leadId: string;
@@ -1061,6 +1112,130 @@ export const INITIAL_TICKETS: CrmTicket[] = [
     assignedAgent: "Rajeshwar Rao (Compliance Officer)",
     slaRemainingDays: 20,
     createdAt: "2026-10-05 09:30 AM",
+  },
+];
+
+export const INITIAL_FREE_TRIALS: CrmFreeTrial[] = [
+  {
+    id: "TR-2026-001",
+    leadId: "TG-LD-901",
+    leadName: "Harish Raghavan",
+    mobile: "+91 98201 44521",
+    segment: "Index Options",
+    startDate: "2026-10-20",
+    endDate: "2026-10-22",
+    status: "ACTIVE",
+    touchpoint1Done: true,
+    touchpoint2Done: false,
+    touchpoint3Done: false,
+    advisor: "Vikram Malhotra",
+    notes: "Day 1 Nifty 24,800 PE setup executed smoothly with +35 pt profit. Touchpoint 2 scheduled post-market.",
+  },
+  {
+    id: "TR-2026-002",
+    leadId: "TG-LD-902",
+    leadName: "Sunita Verma",
+    mobile: "+91 99304 88721",
+    segment: "Equity Intraday",
+    startDate: "2026-10-19",
+    endDate: "2026-10-21",
+    status: "ACTIVE",
+    touchpoint1Done: true,
+    touchpoint2Done: true,
+    touchpoint3Done: false,
+    advisor: "Priya Sharma",
+    notes: "Day 2 review call pending. Capital: ₹8L. Pitching Quarterly Cash Alpha.",
+  },
+];
+
+export const INITIAL_PROPOSALS: CrmProposal[] = [
+  {
+    id: "PROP-261020-91",
+    leadId: "TG-LD-901",
+    leadName: "Harish Raghavan",
+    mobile: "+91 98201 44521",
+    packageName: "Index Options Alpha Desk — 6 Months",
+    durationDays: 180,
+    standardFee: 35000,
+    discount: 5000,
+    finalFee: 30000,
+    installmentsCount: 2,
+    status: "SENT",
+    createdAt: "Today, 11:30 AM",
+    advisor: "Vikram Malhotra",
+  },
+  {
+    id: "PROP-261019-84",
+    leadId: "TG-LD-903",
+    leadName: "Rajeshwar Rao",
+    mobile: "+91 94401 23901",
+    packageName: "HNI Bespoke Multi-Cap Desk — Annual",
+    durationDays: 365,
+    standardFee: 65000,
+    discount: 10000,
+    finalFee: 55000,
+    installmentsCount: 3,
+    status: "ACCEPTED",
+    createdAt: "Yesterday",
+    advisor: "Priya Sharma",
+  },
+];
+
+export const INITIAL_INSTALLMENTS: CrmInstallment[] = [
+  {
+    id: "INST-2026-101",
+    proposalId: "PROP-261020-91",
+    customerName: "Harish Raghavan",
+    customerId: "TG-LD-901",
+    mobile: "+91 98201 44521",
+    installmentNumber: 1,
+    totalInstallments: 2,
+    amount: 15000,
+    dueDate: "2026-10-22",
+    status: "PENDING",
+    nudgeCount: 1,
+    lastNudgeAt: "Today, 10:00 AM",
+  },
+  {
+    id: "INST-2026-102",
+    proposalId: "PROP-261020-91",
+    customerName: "Harish Raghavan",
+    customerId: "TG-LD-901",
+    mobile: "+91 98201 44521",
+    installmentNumber: 2,
+    totalInstallments: 2,
+    amount: 15000,
+    dueDate: "2026-11-06",
+    status: "PENDING",
+    nudgeCount: 0,
+  },
+  {
+    id: "INST-2026-094",
+    proposalId: "PROP-261019-84",
+    customerName: "Rajeshwar Rao",
+    customerId: "TG-LD-903",
+    mobile: "+91 94401 23901",
+    installmentNumber: 1,
+    totalInstallments: 3,
+    amount: 25000,
+    dueDate: "2026-10-20",
+    status: "PENDING_VERIFICATION",
+    utrNumber: "HDFC992817441",
+    submittedBy: "Priya Sharma (RM)",
+    nudgeCount: 2,
+  },
+  {
+    id: "INST-2026-088",
+    customerName: "Devendra Patel",
+    customerId: "CUST-1002",
+    mobile: "+91 98250 11984",
+    installmentNumber: 2,
+    totalInstallments: 2,
+    amount: 12500,
+    dueDate: "2026-10-18",
+    status: "OVERDUE",
+    nudgeCount: 3,
+    lastNudgeAt: "Yesterday, 04:30 PM",
   },
 ];
 

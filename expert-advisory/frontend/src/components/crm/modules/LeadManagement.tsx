@@ -25,9 +25,27 @@ import {
   AlertTriangle,
   Loader2,
   User,
+  Users,
+  ReceiptIndianRupee,
+  FileText,
+  CheckSquare,
+  Send,
+  Layers,
+  Calculator,
+  Percent,
+  DollarSign,
 } from "lucide-react";
 import { Badge, Card, cx } from "@/components/ui";
-import type { CrmLead, LeadTemperature, LeadStatus, CrmUser } from "@/lib/crm-data";
+import {
+  type CrmLead,
+  type LeadTemperature,
+  type LeadStatus,
+  type CrmUser,
+  type CrmFreeTrial,
+  type CrmProposal,
+  INITIAL_FREE_TRIALS,
+  INITIAL_PROPOSALS,
+} from "@/lib/crm-data";
 
 interface LeadManagementProps {
   leads: CrmLead[];
@@ -88,10 +106,47 @@ export function LeadManagement({
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
 
+  // Sub-tabs: "leads" | "trials" | "proposals"
+  const [activeTab, setActiveTab] = useState<"leads" | "trials" | "proposals">("leads");
+
+  // Free Trials & Proposals State (Sections 6 & 7)
+  const [freeTrials, setFreeTrials] = useState<CrmFreeTrial[]>(INITIAL_FREE_TRIALS);
+  const [proposals, setProposals] = useState<CrmProposal[]>(INITIAL_PROPOSALS);
+
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingLead, setEditingLead] = useState<CrmLead | null>(null);
   const [deletingLead, setDeletingLead] = useState<CrmLead | null>(null);
+
+  // Free Trial Modal State
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [trialLead, setTrialLead] = useState<CrmLead | null>(null);
+  const [trialForm, setTrialForm] = useState<{
+    segment: "Index Options" | "Equity Intraday" | "MCX Commodity" | "Combo";
+    startDate: string;
+    endDate: string;
+    advisor: string;
+    notes: string;
+  }>({
+    segment: "Index Options",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
+    advisor: users[0]?.name || "Vikram Malhotra",
+    notes: "SEBI Compliance: 2 sessions max, 1 rec/session, strict SL enforced.",
+  });
+
+  // Proposal Modal State
+  const [showProposalModal, setShowProposalModal] = useState(false);
+  const [proposalLead, setProposalLead] = useState<CrmLead | null>(null);
+  const [proposalForm, setProposalForm] = useState({
+    packageName: "Index Options Alpha Desk — 6 Months",
+    durationDays: 180,
+    standardFee: 35000,
+    discount: 5000,
+    finalFee: 30000,
+    installmentsCount: 2,
+    advisor: users[0]?.name || "Vikram Malhotra",
+  });
 
   // Toast / Feedback State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -336,6 +391,226 @@ export function LeadManagement({
     showToast(`Evenly distributed ${count} leads across ${salesAgents.length} sales agents!`);
   };
 
+  // 48-Hour Free Trial Workflow Handlers (Section 6)
+  const handleOpenTrialModal = (lead: CrmLead) => {
+    setTrialLead(lead);
+    const segMap = lead.preferredService?.toLowerCase().includes("options")
+      ? "Index Options"
+      : lead.preferredService?.toLowerCase().includes("equity") || lead.preferredService?.toLowerCase().includes("cash")
+      ? "Equity Intraday"
+      : lead.preferredService?.toLowerCase().includes("commodity")
+      ? "MCX Commodity"
+      : "Combo";
+
+    setTrialForm({
+      segment: segMap as any,
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
+      advisor: lead.assignedAgent || users[0]?.name || "Vikram Malhotra",
+      notes: "Strict 2-session adherence. Max 1 trade per session with predefined stop-loss.",
+    });
+    setShowTrialModal(true);
+  };
+
+  const handleStartTrialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trialLead) return;
+
+    const newTrial: CrmFreeTrial = {
+      id: `TR-2026-${Math.floor(100 + Math.random() * 900)}`,
+      leadId: trialLead.id,
+      leadName: trialLead.name,
+      mobile: trialLead.mobile,
+      segment: trialForm.segment,
+      startDate: trialForm.startDate,
+      endDate: trialForm.endDate,
+      status: "ACTIVE",
+      touchpoint1Done: false,
+      touchpoint2Done: false,
+      touchpoint3Done: false,
+      advisor: trialForm.advisor,
+      notes: trialForm.notes,
+    };
+
+    setFreeTrials((prev) => [newTrial, ...prev]);
+    onUpdateLeadStatus(trialLead.id, "QUALIFIED");
+
+    // Auto-dispatch WhatsApp confirmation
+    try {
+      await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: trialLead.id,
+          phone: trialLead.mobile,
+          templateName: "adv_lead_welcome",
+          templateParams: [trialLead.name, `${trialForm.segment} 48H Trial`],
+          clientName: trialLead.name,
+        }),
+      });
+    } catch (err) {
+      console.warn("[Free Trial WhatsApp Dispatch Deferred]", err);
+    }
+
+    setShowTrialModal(false);
+    showToast(`48-Hour Free Trial activated for ${trialLead.name}! WhatsApp welcome dispatched.`);
+  };
+
+  const handleToggleTouchpoint = (trialId: string, touchpointNum: 1 | 2 | 3) => {
+    setFreeTrials((prev) =>
+      prev.map((t) => {
+        if (t.id === trialId) {
+          const key = `touchpoint${touchpointNum}Done` as const;
+          const nextVal = !t[key];
+          return { ...t, [key]: nextVal };
+        }
+        return t;
+      })
+    );
+    showToast(`Touchpoint ${touchpointNum} logged successfully.`);
+  };
+
+  const handleConvertTrialToPaid = (trial: CrmFreeTrial) => {
+    setFreeTrials((prev) =>
+      prev.map((t) => (t.id === trial.id ? { ...t, status: "CONVERTED" } : t))
+    );
+    onUpdateLeadStatus(trial.leadId, "PAYMENT_PENDING");
+
+    // Open proposal modal for this lead
+    const matchedLead = leads.find((l) => l.id === trial.leadId);
+    if (matchedLead) {
+      handleOpenProposalModal(matchedLead);
+    } else {
+      showToast(`Trial ${trial.id} converted to paid! Status updated to PAYMENT_PENDING.`);
+    }
+  };
+
+  // Proposals & Installments Workflow Handlers (Section 7)
+  const handleOpenProposalModal = (lead: CrmLead) => {
+    setProposalLead(lead);
+    setProposalForm({
+      packageName: "Index Options Alpha Desk — 6 Months",
+      durationDays: 180,
+      standardFee: 35000,
+      discount: 5000,
+      finalFee: 30000,
+      installmentsCount: 2,
+      advisor: lead.assignedAgent || users[0]?.name || "Vikram Malhotra",
+    });
+    setShowProposalModal(true);
+  };
+
+  const handlePackageSelect = (pkgName: string) => {
+    let std = 35000;
+    let days = 180;
+    let disc = 5000;
+
+    if (pkgName.includes("3 Months")) {
+      std = 25000;
+      days = 90;
+      disc = 3000;
+    } else if (pkgName.includes("Annual") || pkgName.includes("Bespoke")) {
+      std = 65000;
+      days = 365;
+      disc = 10000;
+    } else if (pkgName.includes("Equity")) {
+      std = 30000;
+      days = 180;
+      disc = 5000;
+    } else if (pkgName.includes("Commodity")) {
+      std = 35000;
+      days = 180;
+      disc = 5000;
+    }
+
+    setProposalForm((prev) => ({
+      ...prev,
+      packageName: pkgName,
+      standardFee: std,
+      durationDays: days,
+      discount: disc,
+      finalFee: std - disc,
+    }));
+  };
+
+  const handleSaveAndDispatchProposal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proposalLead) return;
+
+    const newProposal: CrmProposal = {
+      id: `PROP-261021-${Math.floor(10 + Math.random() * 90)}`,
+      leadId: proposalLead.id,
+      leadName: proposalLead.name,
+      mobile: proposalLead.mobile,
+      packageName: proposalForm.packageName,
+      durationDays: proposalForm.durationDays,
+      standardFee: proposalForm.standardFee,
+      discount: proposalForm.discount,
+      finalFee: proposalForm.finalFee,
+      installmentsCount: proposalForm.installmentsCount,
+      status: "SENT",
+      createdAt: "Today, Just now",
+      advisor: proposalForm.advisor,
+    };
+
+    setProposals((prev) => [newProposal, ...prev]);
+    onUpdateLeadStatus(proposalLead.id, "PAYMENT_PENDING");
+
+    // Auto-dispatch WhatsApp with proposal summary
+    try {
+      await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: proposalLead.id,
+          phone: proposalLead.mobile,
+          templateName: "adv_plan_activation",
+          templateParams: [
+            proposalLead.name,
+            proposalForm.packageName,
+            `₹${proposalForm.finalFee.toLocaleString("en-IN")}`,
+          ],
+          clientName: proposalLead.name,
+        }),
+      });
+    } catch (err) {
+      console.warn("[Proposal WhatsApp Dispatch Deferred]", err);
+    }
+
+    setShowProposalModal(false);
+    showToast(`Proposal ${newProposal.id} dispatched via WhatsApp to ${proposalLead.mobile}!`);
+  };
+
+  const handleAcceptProposal = (proposalId: string) => {
+    setProposals((prev) =>
+      prev.map((p) => (p.id === proposalId ? { ...p, status: "ACCEPTED" } : p))
+    );
+    showToast(`Proposal ${proposalId} marked as ACCEPTED. Milestones registered in Installment Recovery Book.`);
+  };
+
+  const handleResendProposalWhatsApp = async (p: CrmProposal) => {
+    try {
+      await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: p.leadId,
+          phone: p.mobile,
+          templateName: "adv_plan_activation",
+          templateParams: [
+            p.leadName,
+            p.packageName,
+            `₹${p.finalFee.toLocaleString("en-IN")}`,
+          ],
+          clientName: p.leadName,
+        }),
+      });
+      showToast(`Proposal details re-sent to ${p.mobile} via Meta WhatsApp.`);
+    } catch (err) {
+      showToast("Failed to dispatch WhatsApp message.", "error");
+    }
+  };
+
   const filteredLeads = leads.filter((lead) => {
     const q = search.toLowerCase();
     const matchesSearch =
@@ -470,8 +745,62 @@ export function LeadManagement({
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0B121E] border border-[#1E293B] p-4 rounded-2xl">
+      {/* Workflow Navigation Sub-tabs: Leads Matrix | 48h Free Trials (Sec 6) | Proposals & Closures (Sec 7) */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#1E293B] pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("leads")}
+          className={cx(
+            "flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
+            activeTab === "leads"
+              ? "bg-brand-600 text-white shadow-lg shadow-brand-500/25"
+              : "text-ink-300 hover:text-white hover:bg-[#0E1624] border border-[#1E293B]"
+          )}
+        >
+          <Users className="size-4" />
+          <span>Leads & Inbound Matrix ({filteredLeads.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("trials")}
+          className={cx(
+            "flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
+            activeTab === "trials"
+              ? "bg-orange-600 text-white shadow-lg shadow-orange-500/25"
+              : "text-ink-300 hover:text-white hover:bg-[#0E1624] border border-[#1E293B]"
+          )}
+        >
+          <Flame className="size-4 text-orange-400" />
+          <span>48-Hour Free Trials ({freeTrials.length})</span>
+          <span className="ml-1 rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] text-orange-300 font-mono">
+            Section 6
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("proposals")}
+          className={cx(
+            "flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
+            activeTab === "proposals"
+              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+              : "text-ink-300 hover:text-white hover:bg-[#0E1624] border border-[#1E293B]"
+          )}
+        >
+          <ReceiptIndianRupee className="size-4 text-indigo-400" />
+          <span>Proposals & Milestone Closures ({proposals.length})</span>
+          <span className="ml-1 rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] text-indigo-300 font-mono">
+            Section 7
+          </span>
+        </button>
+      </div>
+
+      {/* TAB 1: ALL LEADS MATRIX */}
+      {activeTab === "leads" && (
+        <div className="space-y-6">
+          {/* Filter and Search Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0B121E] border border-[#1E293B] p-4 rounded-2xl">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-2.5 size-4 text-ink-400" />
           <input
@@ -708,6 +1037,24 @@ export function LeadManagement({
 
                         <button
                           type="button"
+                          onClick={() => handleOpenTrialModal(lead)}
+                          className="rounded-lg bg-orange-600/20 border border-orange-500/30 text-orange-300 p-2 hover:bg-orange-600/30 transition-colors cursor-pointer"
+                          title="Start 48h Free Trial (Section 6)"
+                        >
+                          <Flame className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProposalModal(lead)}
+                          className="rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 p-2 hover:bg-indigo-600/30 transition-colors cursor-pointer"
+                          title="Draft Proposal & Split Installments (Section 7)"
+                        >
+                          <ReceiptIndianRupee className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => setEditingLead({ ...lead })}
                           className="rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 p-2 hover:bg-cyan-600/30 transition-colors cursor-pointer"
                           title="Edit Lead Details"
@@ -732,6 +1079,390 @@ export function LeadManagement({
           </table>
         </div>
       </div>
+    </div>
+  )}
+
+      {/* TAB 2: 48-HOUR FREE TRIAL PLAYBOOK (SECTION 6) */}
+      {activeTab === "trials" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Trial KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-orange-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Active 48h Trials</span>
+                <Flame className="size-4 text-orange-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                {freeTrials.filter((t) => t.status === "ACTIVE").length}
+              </p>
+              <span className="text-[11px] text-orange-300">Live 2-session demo trading</span>
+            </div>
+
+            <div className="rounded-2xl border border-blue-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Touchpoint 1 (Margin)</span>
+                <Clock className="size-4 text-blue-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                {freeTrials.filter((t) => !t.touchpoint1Done && t.status === "ACTIVE").length} Pending
+              </p>
+              <span className="text-[11px] text-blue-300">Pre-market margin verification</span>
+            </div>
+
+            <div className="rounded-2xl border border-amber-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Touchpoint 3 (Closing)</span>
+                <Calendar className="size-4 text-amber-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                {freeTrials.filter((t) => t.touchpoint2Done && !t.touchpoint3Done && t.status === "ACTIVE").length} Ready
+              </p>
+              <span className="text-[11px] text-amber-300">Day-2 closing conversion review</span>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Converted to Paid</span>
+                <CheckCircle2 className="size-4 text-emerald-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                {freeTrials.filter((t) => t.status === "CONVERTED").length}
+              </p>
+              <span className="text-[11px] text-emerald-300">Moved to payment pending</span>
+            </div>
+          </div>
+
+          {/* Section 6 Playbook Banner */}
+          <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-950/40 via-[#0E1624] to-[#090E17] p-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Flame className="size-5 text-orange-400" />
+                  <h3 className="font-bold text-white text-base">Section 6: The 48-Hour Free Trial Playbook</h3>
+                </div>
+                <p className="text-xs text-ink-300 max-w-2xl">
+                  Enforces 2 trading sessions, maximum 1 recommendation per session, and strict stop-loss adherence.
+                  Execute Touchpoint 1 (Morning margin check), Touchpoint 2 (Post-market review), and Touchpoint 3 (Closing conversion interview) to hit target 45%+ trial-to-paid ratios.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (leads[0]) handleOpenTrialModal(leads[0]);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-md shadow-orange-500/20 cursor-pointer shrink-0"
+              >
+                <Plus className="size-4" />
+                <span>+ Enroll New Lead to 48h Trial</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Trials Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {freeTrials.map((trial) => (
+              <div
+                key={trial.id}
+                className={cx(
+                  "rounded-2xl border p-5 transition-all space-y-4",
+                  trial.status === "CONVERTED"
+                    ? "border-emerald-500/30 bg-[#091510]"
+                    : trial.status === "ACTIVE"
+                    ? "border-orange-500/30 bg-[#0B101B]"
+                    : "border-[#1E293B] bg-[#090E17]"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-white text-base">{trial.leadName}</h4>
+                      <span className="font-mono text-[10px] text-ink-400 border border-[#1E293B] px-2 py-0.5 rounded bg-[#0E1624]">
+                        {trial.id}
+                      </span>
+                    </div>
+                    <div className="text-xs text-ink-400 font-mono mt-0.5">
+                      {trial.mobile} • Advisor: <span className="text-white">{trial.advisor}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[11px] font-bold px-2.5 py-1">
+                      {trial.segment}
+                    </span>
+                    <span
+                      className={cx(
+                        "rounded-full text-[10px] font-mono font-bold px-2.5 py-1 border",
+                        trial.status === "ACTIVE"
+                          ? "bg-blue-500/15 border-blue-500/30 text-blue-300"
+                          : trial.status === "CONVERTED"
+                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                          : "bg-ink-700/50 border-ink-600 text-ink-400"
+                      )}
+                    >
+                      {trial.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3 Touchpoints Checklist */}
+                <div className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3.5 space-y-2.5">
+                  <div className="text-[11px] font-mono uppercase text-ink-400 font-bold">
+                    Mandatory 3-Touchpoint Cadence
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <label className="flex items-center gap-2.5 cursor-pointer text-ink-200 hover:text-white">
+                      <input
+                        type="checkbox"
+                        checked={trial.touchpoint1Done}
+                        onChange={() => handleToggleTouchpoint(trial.id, 1)}
+                        className="rounded border-[#1E293B] bg-[#090E17] text-orange-500 focus:ring-0 cursor-pointer size-4"
+                      />
+                      <span className={trial.touchpoint1Done ? "line-through text-ink-400" : ""}>
+                        <strong>Touchpoint 1 (09:00 AM):</strong> Confirm Telegram/WhatsApp signal delivery & margin readiness
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer text-ink-200 hover:text-white">
+                      <input
+                        type="checkbox"
+                        checked={trial.touchpoint2Done}
+                        onChange={() => handleToggleTouchpoint(trial.id, 2)}
+                        className="rounded border-[#1E293B] bg-[#090E17] text-orange-500 focus:ring-0 cursor-pointer size-4"
+                      />
+                      <span className={trial.touchpoint2Done ? "line-through text-ink-400" : ""}>
+                        <strong>Touchpoint 2 (03:45 PM):</strong> Review Day-1 trade execution & validate strict stop-loss adherence
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer text-ink-200 hover:text-white">
+                      <input
+                        type="checkbox"
+                        checked={trial.touchpoint3Done}
+                        onChange={() => handleToggleTouchpoint(trial.id, 3)}
+                        className="rounded border-[#1E293B] bg-[#090E17] text-orange-500 focus:ring-0 cursor-pointer size-4"
+                      />
+                      <span className={trial.touchpoint3Done ? "line-through text-ink-400" : ""}>
+                        <strong>Touchpoint 3 (Day-2 Close):</strong> Conduct formal closing interview & pitch structured advisory package
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Trial Validity & Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-[#1E293B]/60 text-xs">
+                  <div className="text-ink-400 font-mono text-[11px]">
+                    Window: <span className="text-white">{trial.startDate}</span> to{" "}
+                    <span className="text-white">{trial.endDate}</span> (2 sessions)
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const matched = leads.find((l) => l.id === trial.leadId);
+                        if (matched) handleInstantWhatsApp(matched);
+                        else showToast(`WhatsApp touchpoint sent to ${trial.mobile}`);
+                      }}
+                      className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <MessageSquare className="size-3.5" />
+                      <span>WhatsApp Nudge</span>
+                    </button>
+
+                    {trial.status !== "CONVERTED" && (
+                      <button
+                        type="button"
+                        onClick={() => handleConvertTrialToPaid(trial)}
+                        className="rounded-xl bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-orange-500/20"
+                      >
+                        <ReceiptIndianRupee className="size-3.5" />
+                        <span>Convert to Paid</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: PROPOSALS & MILESTONE CLOSURES (SECTION 7) */}
+      {activeTab === "proposals" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Proposals KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-indigo-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Total Proposals</span>
+                <ReceiptIndianRupee className="size-4 text-indigo-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">{proposals.length}</p>
+              <span className="text-[11px] text-indigo-300">Drafted or in negotiation</span>
+            </div>
+
+            <div className="rounded-2xl border border-cyan-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Pipeline Value</span>
+                <DollarSign className="size-4 text-cyan-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                ₹{proposals.reduce((acc, p) => acc + p.finalFee, 0).toLocaleString("en-IN")}
+              </p>
+              <span className="text-[11px] text-cyan-300">Net receivable post-discounts</span>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Accepted Closures</span>
+                <CheckCircle2 className="size-4 text-emerald-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">
+                {proposals.filter((p) => p.status === "ACCEPTED" || p.status === "CONVERTED").length}
+              </p>
+              <span className="text-[11px] text-emerald-300">Installments ledger generated</span>
+            </div>
+
+            <div className="rounded-2xl border border-purple-500/30 bg-[#0E1624] p-4">
+              <div className="flex items-center justify-between text-ink-400">
+                <span className="text-xs font-mono uppercase">Avg Milestone Split</span>
+                <Layers className="size-4 text-purple-400" />
+              </div>
+              <p className="mt-2 text-2xl font-bold font-mono text-white">2.2 Installments</p>
+              <span className="text-[11px] text-purple-300">50% upfront / 50% milestone</span>
+            </div>
+          </div>
+
+          {/* Section 7 Guidance Banner */}
+          <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-[#0E1624] to-[#090E17] p-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <ReceiptIndianRupee className="size-5 text-indigo-400" />
+                  <h3 className="font-bold text-white text-base">Section 7: Sales Proposals & Milestone Closures</h3>
+                </div>
+                <p className="text-xs text-ink-300 max-w-2xl">
+                  Draft formal proposals with transparent standard fees, authorized discounts, and duration. Split fees into 2 or 3 structured installments (e.g. 50% upfront, 50% after 15 trading days). Dispatch proposal breakdown directly via Meta WhatsApp Cloud API.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (leads[0]) handleOpenProposalModal(leads[0]);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-md shadow-indigo-500/20 cursor-pointer shrink-0"
+              >
+                <Plus className="size-4" />
+                <span>+ Draft New Proposal</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Proposals List */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {proposals.map((prop) => (
+              <div
+                key={prop.id}
+                className={cx(
+                  "rounded-2xl border p-5 transition-all space-y-4",
+                  prop.status === "ACCEPTED"
+                    ? "border-emerald-500/30 bg-[#091510]"
+                    : prop.status === "SENT"
+                    ? "border-indigo-500/30 bg-[#0B101B]"
+                    : "border-[#1E293B] bg-[#090E17]"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-white text-base">{prop.leadName}</h4>
+                      <span className="font-mono text-[10px] text-ink-400 border border-[#1E293B] px-2 py-0.5 rounded bg-[#0E1624]">
+                        {prop.id}
+                      </span>
+                    </div>
+                    <div className="text-xs text-ink-400 font-mono mt-0.5">
+                      {prop.mobile} • RM: <span className="text-white">{prop.advisor}</span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={cx(
+                      "rounded-full text-[10px] font-mono font-bold px-2.5 py-1 border",
+                      prop.status === "SENT"
+                        ? "bg-indigo-500/15 border-indigo-500/30 text-indigo-300"
+                        : prop.status === "ACCEPTED"
+                        ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                        : "bg-ink-700/50 border-ink-600 text-ink-400"
+                    )}
+                  >
+                    {prop.status}
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3.5 space-y-2 text-xs">
+                  <div className="font-bold text-white flex items-center justify-between">
+                    <span>{prop.packageName}</span>
+                    <span className="font-mono text-cyan-400">{prop.durationDays} Days</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#1E293B] text-[11px] font-mono">
+                    <div>
+                      <span className="text-ink-400 block text-[10px]">Standard Fee</span>
+                      <span className="text-ink-300 line-through">₹{prop.standardFee.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div>
+                      <span className="text-ink-400 block text-[10px]">Discount</span>
+                      <span className="text-emerald-400">-₹{prop.discount.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div>
+                      <span className="text-ink-400 block text-[10px]">Final Fee</span>
+                      <span className="text-white font-bold text-sm">₹{prop.finalFee.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px]">
+                    <span className="text-ink-400 font-mono">Installment Structure:</span>
+                    <span className="font-bold text-indigo-300">
+                      {prop.installmentsCount} Milestone{prop.installmentsCount > 1 ? "s" : ""}{" "}
+                      (₹{Math.round(prop.finalFee / prop.installmentsCount).toLocaleString("en-IN")} / installment)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#1E293B]/60 text-xs">
+                  <span className="text-[11px] text-ink-400 font-mono">Created: {prop.createdAt}</span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleResendProposalWhatsApp(prop)}
+                      className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <MessageSquare className="size-3.5" />
+                      <span>WhatsApp Proposal</span>
+                    </button>
+
+                    {prop.status !== "ACCEPTED" && (
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptProposal(prop.id)}
+                        className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
+                      >
+                        <CheckCircle2 className="size-3.5" />
+                        <span>Mark Accepted</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CREATE NEW LEAD MODAL */}
       {showAddModal && (
@@ -1159,17 +1890,58 @@ export function LeadManagement({
             </div>
 
             {/* Quick Actions Row */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
                   onWorkLead(selectedLead);
                   setShowDrawer(false);
                 }}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-md"
+                className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-md"
               >
                 <PhoneCall className="size-4" />
                 <span>Call Lead via CTI</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={waSendingId === selectedLead.id}
+                onClick={() => handleInstantWhatsApp(selectedLead)}
+                className="rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] px-3.5 py-2.5 text-xs font-bold hover:bg-[#22C55E]/25 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                title="Send Official Meta WhatsApp Welcome"
+              >
+                {waSendingId === selectedLead.id ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="size-4" />
+                )}
+                <span>WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleOpenTrialModal(selectedLead);
+                  setShowDrawer(false);
+                }}
+                className="rounded-xl bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-orange-500/20"
+                title="Start 48h Free Trial (Section 6)"
+              >
+                <Flame className="size-4" />
+                <span>48h Trial</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleOpenProposalModal(selectedLead);
+                  setShowDrawer(false);
+                }}
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
+                title="Draft Proposal & Split Installments (Section 7)"
+              >
+                <ReceiptIndianRupee className="size-4" />
+                <span>Proposal</span>
               </button>
 
               <button
@@ -1178,24 +1950,10 @@ export function LeadManagement({
                   setEditingLead({ ...selectedLead });
                   setShowDrawer(false);
                 }}
-                className="rounded-xl bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 px-4 py-2.5 text-xs font-bold hover:bg-cyan-600/30 transition-colors cursor-pointer"
+                className="rounded-xl bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 p-2.5 text-xs font-bold hover:bg-cyan-600/30 transition-colors cursor-pointer"
+                title="Edit Lead"
               >
                 <Edit2 className="size-4" />
-              </button>
-
-              <button
-                type="button"
-                disabled={waSendingId === selectedLead.id}
-                onClick={() => handleInstantWhatsApp(selectedLead)}
-                className="rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] px-4 py-2.5 text-xs font-bold hover:bg-[#22C55E]/25 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                title="Send Official Meta WhatsApp Welcome"
-              >
-                {waSendingId === selectedLead.id ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <MessageSquare className="size-4" />
-                )}
-                <span>WhatsApp Welcome</span>
               </button>
             </div>
 
@@ -1248,6 +2006,317 @@ export function LeadManagement({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: 48-HOUR FREE TRIAL ENROLLMENT (SECTION 6) */}
+      {showTrialModal && trialLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl border border-orange-500/30 bg-[#090E17] shadow-2xl p-6 text-white space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
+              <div className="flex items-center gap-2">
+                <Flame className="size-5 text-orange-400" />
+                <h3 className="font-bold text-lg font-display">Start 48-Hour Free Trial</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTrialModal(false)}
+                className="text-ink-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 p-3 text-xs text-orange-300">
+              <span className="font-bold block mb-0.5">Section 6 Compliance Framework:</span>
+              Free trials are strictly restricted to 2 trading sessions, maximum 1 recommendation per session, with predefined stop-loss orders.
+            </div>
+
+            <form onSubmit={handleStartTrialSubmit} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Lead Name</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={trialLead.name}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624]/60 p-2.5 text-white/80 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Mobile</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={trialLead.mobile}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624]/60 p-2.5 text-white/80 font-mono cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-ink-300 font-semibold mb-1">Advisory Segment</label>
+                <select
+                  value={trialForm.segment}
+                  onChange={(e) =>
+                    setTrialForm({
+                      ...trialForm,
+                      segment: e.target.value as any,
+                    })
+                  }
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-orange-500 focus:outline-none cursor-pointer"
+                >
+                  <option value="Index Options">Index Options (Nifty & Bank Nifty)</option>
+                  <option value="Equity Intraday">Equity Intraday (High Beta Cash)</option>
+                  <option value="MCX Commodity">MCX Commodity (Crude Oil & Gold)</option>
+                  <option value="Combo">Combo (Index + Equity Alpha)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={trialForm.startDate}
+                    onChange={(e) => setTrialForm({ ...trialForm, startDate: e.target.value })}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-orange-500 focus:outline-none cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">End Date (48 Hours)</label>
+                  <input
+                    type="date"
+                    required
+                    value={trialForm.endDate}
+                    onChange={(e) => setTrialForm({ ...trialForm, endDate: e.target.value })}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-orange-500 focus:outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-ink-300 font-semibold mb-1">Assigned Telecaller / Advisor</label>
+                <select
+                  value={trialForm.advisor}
+                  onChange={(e) => setTrialForm({ ...trialForm, advisor: e.target.value })}
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-orange-500 focus:outline-none cursor-pointer"
+                >
+                  {users.map((u) => (
+                    <option key={u.id} value={u.name}>
+                      {u.name} ({u.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-ink-300 font-semibold mb-1">Trial Guidelines & Notes</label>
+                <textarea
+                  rows={2}
+                  value={trialForm.notes}
+                  onChange={(e) => setTrialForm({ ...trialForm, notes: e.target.value })}
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1E293B]">
+                <button
+                  type="button"
+                  onClick={() => setShowTrialModal(false)}
+                  className="rounded-xl border border-[#1E293B] px-4 py-2 text-ink-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 font-bold shadow-md shadow-orange-500/20 transition-colors cursor-pointer"
+                >
+                  <Flame className="size-4" />
+                  <span>Activate 48h Trial & Send WhatsApp</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: PROPOSAL & STRUCTURED INSTALLMENTS (SECTION 7) */}
+      {showProposalModal && proposalLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl border border-indigo-500/30 bg-[#090E17] shadow-2xl p-6 text-white space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
+              <div className="flex items-center gap-2">
+                <ReceiptIndianRupee className="size-5 text-indigo-400" />
+                <h3 className="font-bold text-lg font-display">Draft Proposal & Split Installments</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProposalModal(false)}
+                className="text-ink-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-3 text-xs text-indigo-300">
+              <span className="font-bold block mb-0.5">Section 7 Milestone Closures:</span>
+              Structure standard advisory fees with transparent discounts and 1 to 3 milestone installments.
+            </div>
+
+            <form onSubmit={handleSaveAndDispatchProposal} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Client Name</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={proposalLead.name}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624]/60 p-2.5 text-white/80 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Mobile</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={proposalLead.mobile}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624]/60 p-2.5 text-white/80 font-mono cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-ink-300 font-semibold mb-1">Advisory Package</label>
+                <select
+                  value={proposalForm.packageName}
+                  onChange={(e) => handlePackageSelect(e.target.value)}
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-indigo-500 focus:outline-none cursor-pointer"
+                >
+                  <option value="Index Options Alpha Desk — 3 Months">Index Options Alpha Desk — 3 Months (Std ₹25,000)</option>
+                  <option value="Index Options Alpha Desk — 6 Months">Index Options Alpha Desk — 6 Months (Std ₹35,000)</option>
+                  <option value="Equity Intraday & Swing Desk — 6 Months">Equity Intraday & Swing Desk — 6 Months (Std ₹30,000)</option>
+                  <option value="HNI Bespoke Multi-Cap Desk — Annual">HNI Bespoke Multi-Cap Desk — Annual (Std ₹65,000)</option>
+                  <option value="Commodity MCX Alpha Desk — 6 Months">Commodity MCX Alpha Desk — 6 Months (Std ₹35,000)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Standard Fee (₹)</label>
+                  <input
+                    type="number"
+                    value={proposalForm.standardFee}
+                    onChange={(e) => {
+                      const std = Number(e.target.value) || 0;
+                      setProposalForm((prev) => ({
+                        ...prev,
+                        standardFee: std,
+                        finalFee: Math.max(0, std - prev.discount),
+                      }));
+                    }}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white font-mono focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Approved Discount (₹)</label>
+                  <input
+                    type="number"
+                    value={proposalForm.discount}
+                    onChange={(e) => {
+                      const disc = Number(e.target.value) || 0;
+                      setProposalForm((prev) => ({
+                        ...prev,
+                        discount: disc,
+                        finalFee: Math.max(0, prev.standardFee - disc),
+                      }));
+                    }}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white font-mono focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-ink-300 font-semibold mb-1">Final Payable (₹)</label>
+                  <input
+                    type="number"
+                    disabled
+                    value={proposalForm.finalFee}
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624]/60 p-2.5 text-emerald-400 font-bold font-mono cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-ink-300 font-semibold mb-1">Installment Split</label>
+                <select
+                  value={proposalForm.installmentsCount}
+                  onChange={(e) =>
+                    setProposalForm({
+                      ...proposalForm,
+                      installmentsCount: Number(e.target.value) || 1,
+                    })
+                  }
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-indigo-500 focus:outline-none cursor-pointer font-mono"
+                >
+                  <option value={1}>1 Installment (100% Upfront: ₹{proposalForm.finalFee.toLocaleString("en-IN")})</option>
+                  <option value={2}>
+                    2 Installments (50% Upfront: ₹{Math.round(proposalForm.finalFee / 2).toLocaleString("en-IN")}, 50% in 15 Days: ₹{Math.round(proposalForm.finalFee / 2).toLocaleString("en-IN")})
+                  </option>
+                  <option value={3}>
+                    3 Installments (40%: ₹{Math.round(proposalForm.finalFee * 0.4).toLocaleString("en-IN")}, 30%: ₹{Math.round(proposalForm.finalFee * 0.3).toLocaleString("en-IN")}, 30%: ₹{Math.round(proposalForm.finalFee * 0.3).toLocaleString("en-IN")})
+                  </option>
+                </select>
+              </div>
+
+              {/* Installment Milestone Schedule Preview */}
+              <div className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3 space-y-2 text-xs">
+                <span className="text-[10px] uppercase font-mono text-ink-400 font-bold block">
+                  Milestone Schedule Preview
+                </span>
+                <div className="space-y-1.5 font-mono text-[11px]">
+                  <div className="flex items-center justify-between text-ink-200">
+                    <span>Milestone 1 (Immediate / Activation):</span>
+                    <span className="font-bold text-white">
+                      ₹{Math.round(proposalForm.finalFee / proposalForm.installmentsCount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  {proposalForm.installmentsCount >= 2 && (
+                    <div className="flex items-center justify-between text-ink-400">
+                      <span>Milestone 2 (15 Trading Days):</span>
+                      <span className="font-bold text-white">
+                        ₹{Math.round(proposalForm.finalFee / proposalForm.installmentsCount).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  {proposalForm.installmentsCount >= 3 && (
+                    <div className="flex items-center justify-between text-ink-400">
+                      <span>Milestone 3 (30 Trading Days):</span>
+                      <span className="font-bold text-white">
+                        ₹{Math.round(proposalForm.finalFee / proposalForm.installmentsCount).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1E293B]">
+                <button
+                  type="button"
+                  onClick={() => setShowProposalModal(false)}
+                  className="rounded-xl border border-[#1E293B] px-4 py-2 text-ink-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 font-bold shadow-md shadow-indigo-500/20 transition-colors cursor-pointer"
+                >
+                  <Send className="size-4" />
+                  <span>Dispatch Proposal via WhatsApp & Save</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
