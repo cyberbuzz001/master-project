@@ -1,0 +1,257 @@
+/**
+ * Meta WhatsApp Cloud API Service
+ * Official SEBI-Compliant WhatsApp Integration for Expert Stocks Advisory (+91 92018 00995)
+ */
+
+export interface WhatsAppSendResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  response?: any;
+}
+
+const META_TOKEN =
+  process.env.ADVISORY_WHATSAPP_META_TOKEN ||
+  "EAAPstDAc42kBSgoTczPmd95053NPLJzT1Gk67OoMeoITWFupZApqk2ZAGVyxD6WoMD2nEPhVbEBOV54Q7RuFqmfRaqdckgEicrOsdH4uBrxQyF8g9ZB61NwwwqTUagNZAFJamK75IQoj0Ex5BRezKc1S8gkoieuRBXCLVjT9dzB7vpBoo7LTHOav6nausoa4ZBQZDZD";
+
+const PHONE_NUMBER_ID =
+  process.env.ADVISORY_WHATSAPP_PHONE_NUMBER_ID || "1321132717756726";
+
+/**
+ * Standardize phone number into WhatsApp E.164 without '+' (e.g. 918602467804)
+ */
+export function normalizeWhatsAppNumber(rawPhone: string): string {
+  if (!rawPhone) return "";
+  const digits = rawPhone.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `91${digits}`;
+  }
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits;
+  }
+  if (digits.startsWith("0") && digits.length === 11) {
+    return `91${digits.slice(1)}`;
+  }
+  return digits;
+}
+
+/**
+ * Send an approved Meta WhatsApp template to a client.
+ */
+export async function sendWhatsAppTemplate(params: {
+  to: string;
+  templateName: string;
+  languageCode?: string;
+  parameters?: string[];
+}): Promise<WhatsAppSendResult> {
+  const cleanPhone = normalizeWhatsAppNumber(params.to);
+  if (!cleanPhone || cleanPhone.length < 10) {
+    return { success: false, error: "Invalid phone number" };
+  }
+
+  const payload: any = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanPhone,
+    type: "template",
+    template: {
+      name: params.templateName,
+      language: {
+        code: params.languageCode || "en",
+      },
+    },
+  };
+
+  if (params.parameters && params.parameters.length > 0) {
+    payload.template.components = [
+      {
+        type: "body",
+        parameters: params.parameters.map((p) => ({
+          type: "text",
+          text: String(p),
+        })),
+      },
+    ];
+  }
+
+  try {
+    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${META_TOKEN.trim()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("[WhatsAppService] API Error:", data);
+      return {
+        success: false,
+        error: data.error?.message || `HTTP ${response.status}`,
+        response: data,
+      };
+    }
+
+    const messageId = data.messages?.[0]?.id;
+    console.log(`[WhatsAppService] Dispatched template "${params.templateName}" to ${cleanPhone}: ${messageId}`);
+    return {
+      success: true,
+      messageId,
+      response: data,
+    };
+  } catch (err: any) {
+    console.error("[WhatsAppService] Network exception:", err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Send a 1-on-1 freeform text message (allowed within 24h conversation window or session replies)
+ */
+export async function sendWhatsAppText(params: {
+  to: string;
+  text: string;
+}): Promise<WhatsAppSendResult> {
+  const cleanPhone = normalizeWhatsAppNumber(params.to);
+  if (!cleanPhone || cleanPhone.length < 10) {
+    return { success: false, error: "Invalid phone number" };
+  }
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanPhone,
+    type: "text",
+    text: {
+      preview_url: false,
+      body: params.text,
+    },
+  };
+
+  try {
+    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${META_TOKEN.trim()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("[WhatsAppService] Text Send Error:", data);
+      return {
+        success: false,
+        error: data.error?.message || `HTTP ${response.status}`,
+        response: data,
+      };
+    }
+
+    const messageId = data.messages?.[0]?.id;
+    console.log(`[WhatsAppService] Dispatched text message to ${cleanPhone}: ${messageId}`);
+    return {
+      success: true,
+      messageId,
+      response: data,
+    };
+  } catch (err: any) {
+    console.error("[WhatsAppService] Network exception:", err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRE-APPROVED SEBI ADVISORY TEMPLATE SHORTCUTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 1. adv_lead_welcome
+ * Body: Thank you for your interest in Expert Stocks Advisory, {{1}}.
+ * Our SEBI-registered research team has noted your profile (Ref: {{2}}) and an advisory specialist will reach out shortly.
+ */
+export async function sendAdvisoryLeadWelcome(
+  to: string,
+  fullName: string,
+  leadRef: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_lead_welcome",
+    parameters: [fullName || "Investor", leadRef || "EXP-2026"],
+  });
+}
+
+/**
+ * 2. adv_risk_assessment_cert
+ * Body: Hello {{1}}, Your Risk Assessment with Expert Stocks Consultancy has been completed successfully.
+ * Assigned Risk Tier: {{2}}. Assessment Reference: {{3}}.
+ */
+export async function sendRiskAssessmentCertWhatsApp(
+  to: string,
+  fullName: string,
+  tierName: string,
+  refCode: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_risk_assessment_cert",
+    parameters: [fullName || "Investor", tierName || "Moderate / Growth", refCode || "RPM-2026"],
+  });
+}
+
+/**
+ * 3. adv_kyc_nudge
+ * Body: Hello {{1}}, This is a gentle reminder from Expert Stocks Consultancy regarding your onboarding profile (Ref: {{2}})...
+ */
+export async function sendKycNudgeWhatsApp(
+  to: string,
+  fullName: string,
+  leadRef: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_kyc_nudge",
+    parameters: [fullName || "Investor", leadRef || "EXP-2026"],
+  });
+}
+
+/**
+ * 4. adv_plan_activation
+ * Body: Welcome to Expert Stocks Consultancy, {{1}}! Your subscription to the {{2}} advisory plan is now active. Client ID: {{3}}...
+ */
+export async function sendPlanActivationWhatsApp(
+  to: string,
+  fullName: string,
+  planName: string,
+  clientId: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_plan_activation",
+    parameters: [fullName || "Valued Client", planName || "Index Options Alpha", clientId || "CLI-2026"],
+  });
+}
+
+/**
+ * 5. adv_research_report
+ * Body: Hello {{1}}, Our research analysts have published a new market research report: {{2}}. Report Reference: {{3}}...
+ */
+export async function sendResearchReportAlertWhatsApp(
+  to: string,
+  fullName: string,
+  reportTitle: string,
+  reportRef: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_research_report",
+    parameters: [fullName || "Investor", reportTitle || "Nifty Weekly Technical Outlook", reportRef || "REP-2026"],
+  });
+}

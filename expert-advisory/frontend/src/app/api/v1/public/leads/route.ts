@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { leadsStore } from "@/lib/leads-store";
 import { sendSuitabilityEmail } from "@/lib/email-service";
+import {
+  sendAdvisoryLeadWelcome,
+  sendRiskAssessmentCertWhatsApp,
+} from "@/lib/whatsapp-service";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 const TRADEGROW_API_URL = process.env.TRADEGROW_API_URL ?? "https://tradegrowx.in";
@@ -124,8 +128,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 4. Trigger Expert Stocks Advisory WhatsApp welcome sequence (fire & forget)
-    // Calls AdvisoryWhatsAppService.triggerLeadWelcome via the TradeGrow server webhook
+    // 4. Trigger Expert Stocks Advisory WhatsApp official template (fire & forget)
+    const isRpmAssessment = Boolean(body.assessment) || body.form_key === "risk_assessment";
+    if (isRpmAssessment) {
+      sendRiskAssessmentCertWhatsApp(
+        cleanMobile,
+        fullName,
+        body.assessment?.category || "Moderate / Growth",
+        dispatchedLeadCode
+      )
+        .then((res) => {
+          if (res.success) {
+            leadsStore.recordWhatsAppMessage(dispatchedLeadCode, {
+              text: `[Template: adv_risk_assessment_cert] Sent Risk Assessment confirmation to +91 ${cleanMobile} (Tier: ${body.assessment?.category || "Growth"}).`,
+              sender: "system",
+              status: "sent",
+              templateName: "adv_risk_assessment_cert",
+            });
+          }
+        })
+        .catch((err) => console.warn("[WhatsAppService] RPM alert error:", err));
+    } else {
+      sendAdvisoryLeadWelcome(cleanMobile, fullName, dispatchedLeadCode)
+        .then((res) => {
+          if (res.success) {
+            leadsStore.recordWhatsAppMessage(dispatchedLeadCode, {
+              text: `[Template: adv_lead_welcome] Sent Welcome message to +91 ${cleanMobile} with SEBI compliance notes.`,
+              sender: "system",
+              status: "sent",
+              templateName: "adv_lead_welcome",
+            });
+          }
+        })
+        .catch((err) => console.warn("[WhatsAppService] Welcome error:", err));
+    }
+
+    // Also notify TradeGrow server webhook if reachable
     triggerAdvisoryWelcome({
       phone: cleanMobile,
       leadId: dispatchedLeadCode,

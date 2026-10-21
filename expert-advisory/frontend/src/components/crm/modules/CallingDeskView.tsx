@@ -18,6 +18,8 @@ import {
   X,
   Flame,
   Volume2,
+  MessageSquare,
+  Loader2,
 } from "lucide-react";
 import { Badge, Card, cx } from "@/components/ui";
 import type { CrmLead, CallLogItem } from "@/lib/crm-data";
@@ -73,6 +75,41 @@ export function CallingDeskView({
         }),
       });
     } catch (_) {}
+  };
+
+  const [waSendingId, setWaSendingId] = useState<string | null>(null);
+
+  const handleQuickWhatsApp = async (lead: CrmLead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (waSendingId) return;
+    setWaSendingId(lead.id);
+
+    try {
+      const res = await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          phone: lead.mobile,
+          templateName: "adv_lead_welcome",
+          templateParams: [lead.name, lead.id],
+          clientName: lead.name,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`WhatsApp Welcome sent via Meta API to ${lead.name}`);
+        if (onLeadUpdated) {
+          onLeadUpdated(lead.id, { lastContacted: "Today, Just now" });
+        }
+      } else {
+        showToast(`WhatsApp failed: ${data.message || "API error"}`);
+      }
+    } catch (err: any) {
+      showToast(`Network error sending WhatsApp: ${err.message}`);
+    } finally {
+      setWaSendingId(null);
+    }
   };
 
   const filtered = leads.filter((l) => {
@@ -185,16 +222,31 @@ export function CallingDeskView({
                   <button
                     type="button"
                     onClick={() => onWorkLead(lead)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 text-xs font-bold transition-colors cursor-pointer shadow-md"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 text-xs font-bold transition-colors cursor-pointer shadow-md"
                   >
-                    <PhoneCall className="size-4" />
-                    <span>Launch CTI Bridge</span>
+                    <PhoneCall className="size-3.5" />
+                    <span>CTI Bridge</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={waSendingId === lead.id}
+                    onClick={(e) => handleQuickWhatsApp(lead, e)}
+                    className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-2.5 py-2.5 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                    title="Send 1-Click WhatsApp Welcome via Meta API"
+                  >
+                    {waSendingId === lead.id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <MessageSquare className="size-3.5" />
+                    )}
+                    <span>WA</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={(e) => handleQuickNpc(lead, e)}
-                    className="rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 px-3 py-2.5 text-xs font-mono font-bold transition-colors cursor-pointer"
+                    className="rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 px-2.5 py-2.5 text-xs font-mono font-bold transition-colors cursor-pointer"
                     title="Log Not-Picked-Call (+1 Attempt)"
                   >
                     +1 NPC

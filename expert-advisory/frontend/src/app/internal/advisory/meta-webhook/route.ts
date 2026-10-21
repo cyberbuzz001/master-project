@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ success: true }, { status: 200 });
 }
 
+import { leadsStore } from '@/lib/leads-store';
+
 async function forwardToTradeGrow(payload: any) {
   if (!payload) return;
 
@@ -77,7 +79,33 @@ async function forwardToTradeGrow(payload: any) {
 
   if (object !== 'whatsapp_business_account' || entries.length === 0) return;
 
-  // Process inbound messages and status updates locally if TradeGrow server not reachable
+  // 1. Process inbound messages and persist locally in CRM leadsStore
+  try {
+    for (const entry of entries) {
+      for (const change of entry?.changes || []) {
+        const value = change?.value;
+        for (const msg of value?.messages || []) {
+          const fromPhone = String(msg?.from || '');
+          const textBody = msg?.text?.body || (msg?.type ? `[${msg.type} message]` : '[Inbound message]');
+          console.log(`[Meta Webhook] Inbound from ${fromPhone}: "${textBody}"`);
+          if (fromPhone) {
+            leadsStore.recordWhatsAppMessage(fromPhone, {
+              text: textBody,
+              sender: 'client',
+              status: 'delivered',
+            });
+          }
+        }
+        for (const status of value?.statuses || []) {
+          console.log(`[Meta Webhook] Status update msgId=${status?.id} → ${status?.status}`);
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Meta Webhook] Error recording inbound message to leadsStore:', err.message);
+  }
+
+  // 2. Forward payload to TradeGrow server for centralized event bus/automation
   try {
     await fetch(`${TRADEGROW_SERVER_URL}/internal/advisory/meta-webhook`, {
       method: 'POST',
@@ -90,18 +118,6 @@ async function forwardToTradeGrow(payload: any) {
     });
     console.log('[Meta Webhook] ✅ Forwarded payload to TradeGrow server.');
   } catch (err: any) {
-    console.warn('[Meta Webhook] TradeGrow server unreachable — logging locally:', err.message);
-    // Log message details locally for manual review
-    for (const entry of entries) {
-      for (const change of entry?.changes || []) {
-        const value = change?.value;
-        for (const msg of value?.messages || []) {
-          console.log(`[Meta Webhook] Inbound from ${msg?.from}: "${msg?.text?.body || '[non-text]'}"`);
-        }
-        for (const status of value?.statuses || []) {
-          console.log(`[Meta Webhook] Status update msgId=${status?.id} → ${status?.status}`);
-        }
-      }
-    }
+    console.warn('[Meta Webhook] TradeGrow server unreachable:', err.message);
   }
 }

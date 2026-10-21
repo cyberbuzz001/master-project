@@ -17,6 +17,7 @@
 8. [Client 360 Onboarding, KYC & Risk Suitability (RPM)](#8-client-360-onboarding-kyc--risk-suitability-rpm)
 9. [Installment Recovery & Financial Controls (Separation of Duties)](#9-installment-recovery--financial-controls-separation-of-duties)
 10. [Daily Productivity & Telecalling KPIs](#10-daily-productivity--telecalling-kpis)
+11. [Meta WhatsApp Cloud API Lead Cadence & Pre-Approved SEBI Templates](#11-meta-whatsapp-cloud-api-lead-cadence--pre-approved-sebi-templates)
 
 ---
 
@@ -134,3 +135,33 @@ To comply with SEBI Research Analyst guidelines:
 - **Talk Time Benchmark:** Minimum 120 minutes daily.
 - **Active Trials Pipeline:** Maintain 5 - 8 concurrent free trials at all times.
 - **Proposal Conversion Rate:** Target 35%+ conversion from accepted proposals to verified payments.
+
+---
+
+## 11. Meta WhatsApp Cloud API Lead Cadence & Pre-Approved SEBI Templates
+
+All official WhatsApp communication with leads and clients is routed strictly through our verified Meta Cloud API number: **`+91 92018 00995`**.
+
+### Operational Rules for Telecallers & RMs:
+1. **Never use personal phone WhatsApp:** Communicating via personal WhatsApp numbers breaches SEBI Research Analyst regulations and risks immediate disciplinary review.
+2. **1-Click WhatsApp Trigger in Calling Desk:** When working high-priority leads in the Calling Desk (`/office`), use the green **WA** button to immediately dispatch the official Welcome message if the prospect does not pick up or requests text info.
+3. **2-Way Synchronization:** When a client replies on WhatsApp, the message is automatically captured by our Meta Webhook, logged into the lead's timeline, and visible in real time inside the **WhatsApp Cockpit**.
+4. **NPC (Not Picked Call) Recycling:**
+   - Log each unanswered call using **+1 NPC**.
+   - On Attempt #1 and #4, pair the call with an automated **`adv_lead_welcome`** or **`adv_kyc_nudge`** template.
+   - At 7 failed attempts, the system automatically transitions the lead to `LOST` to protect agent productivity.
+
+### Approved SEBI WhatsApp Template Library:
+
+| Template Identifier | Category | Trigger Scenario | Dynamic Variables |
+|---|---|---|---|
+| **`adv_lead_welcome`** | Marketing / Utility | Inbound lead submission or 1-click dialer follow-up | `{{1}}`: Full Name, `{{2}}`: Lead Ref Code |
+| **`adv_risk_assessment_cert`** | Utility / Compliance | Immediate client submission of Risk Profile (RPM) | `{{1}}`: Full Name, `{{2}}`: Risk Tier, `{{3}}`: Assessment Ref |
+| **`adv_kyc_nudge`** | Utility / Onboarding | Prospect registered but RPM/KYC documents pending | `{{1}}`: Full Name, `{{2}}`: Lead Ref Code |
+| **`adv_plan_activation`** | Utility / Operations | Payment verified and advisory subscription active | `{{1}}`: Full Name, `{{2}}`: Plan Name, `{{3}}`: Client ID |
+| **`adv_research_report`** | Marketing / Research | Research team publishes a formal market report | `{{1}}`: Full Name, `{{2}}`: Report Title, `{{3}}`: Report Ref |
+
+### Compliance Mandate:
+- Inbound inquiries grant a 24-hour customer service window for free-form replies.
+- Outside the 24-hour window, only pre-approved Meta templates may be sent.
+- Never guarantee returns or share unauthorized tips in free-form messages.

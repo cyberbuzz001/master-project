@@ -21,6 +21,16 @@ export interface CallLogEntry {
   agent?: string;
 }
 
+export interface WhatsAppMessage {
+  id: string;
+  text: string;
+  sender: "rep" | "client" | "system";
+  time: string;
+  timestamp: number;
+  status?: "sent" | "delivered" | "read" | "failed";
+  templateName?: string;
+}
+
 export interface StoredLead {
   id: string;
   name: string;
@@ -288,6 +298,7 @@ interface StoreSchema {
   leads: StoredLead[];
   kyc: StoredKycRecord[];
   subscriptions: StoredSubscription[];
+  whatsappThreads?: Record<string, WhatsAppMessage[]>;
 }
 
 let memoryStore: StoreSchema | null = null;
@@ -313,6 +324,7 @@ function loadStore(): StoreSchema {
           leads: data.leads,
           kyc: Array.isArray(data.kyc) ? data.kyc : [...DEFAULT_KYC],
           subscriptions: Array.isArray(data.subscriptions) ? data.subscriptions : [...DEFAULT_SUBSCRIPTIONS],
+          whatsappThreads: data.whatsappThreads || {},
         };
         return memoryStore;
       }
@@ -325,6 +337,7 @@ function loadStore(): StoreSchema {
     leads: [...DEFAULT_LEADS],
     kyc: [...DEFAULT_KYC],
     subscriptions: [...DEFAULT_SUBSCRIPTIONS],
+    whatsappThreads: {},
   };
   saveStore(memoryStore);
   return memoryStore;
@@ -614,5 +627,65 @@ export const leadsStore = {
       return true;
     }
     return false;
+  },
+
+  // ── WHATSAPP THREADS & MESSAGES ───────────────────────────────────────────
+  getWhatsAppMessages(leadIdOrPhone: string): WhatsAppMessage[] {
+    const store = loadStore();
+    const threads = store.whatsappThreads || {};
+    const digits = leadIdOrPhone.replace(/\D/g, "").slice(-10);
+    return threads[digits] || threads[leadIdOrPhone] || [];
+  },
+
+  getAllWhatsAppThreads(): Record<string, WhatsAppMessage[]> {
+    const store = loadStore();
+    return store.whatsappThreads || {};
+  },
+
+  recordWhatsAppMessage(
+    leadIdOrPhone: string,
+    msg: {
+      text: string;
+      sender: "rep" | "client" | "system";
+      status?: "sent" | "delivered" | "read" | "failed";
+      templateName?: string;
+    }
+  ): WhatsAppMessage {
+    const store = loadStore();
+    if (!store.whatsappThreads) store.whatsappThreads = {};
+
+    const digits = leadIdOrPhone.replace(/\D/g, "").slice(-10);
+    const key = digits || leadIdOrPhone;
+    const now = new Date();
+    const newMsg: WhatsAppMessage = {
+      id: `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      text: msg.text,
+      sender: msg.sender,
+      status: msg.status || "sent",
+      templateName: msg.templateName,
+      time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      timestamp: now.getTime(),
+    };
+
+    const existing = store.whatsappThreads[key] || [];
+    store.whatsappThreads[key] = [...existing, newMsg];
+    if (leadIdOrPhone !== key) {
+      store.whatsappThreads[leadIdOrPhone] = store.whatsappThreads[key];
+    }
+
+    // If client sent a message, update lead's status/interaction
+    const lead = store.leads.find(
+      (l) => l.id === leadIdOrPhone || l.mobile.replace(/\D/g, "").slice(-10) === digits
+    );
+    if (lead) {
+      lead.lastContactedAt = "Today, Just now";
+      lead.updatedAt = "Today, Just now";
+      if (msg.sender === "client" && lead.status === "new") {
+        lead.status = "contacted";
+      }
+    }
+
+    saveStore(store);
+    return newMsg;
   },
 };
