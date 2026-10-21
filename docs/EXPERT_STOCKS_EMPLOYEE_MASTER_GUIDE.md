@@ -78,11 +78,24 @@ Access the library at **CRM -> Objection Library**. Click **View Script Details*
 
 | Objection Category | Core Hypothesis | Recommended Response Summary |
 |---|---|---|
-| **Past Losses** | Loss aversion, past bad tips | Emphasize quantitative research, strict SL, and risk-reward ratio over random tips. |
-| **High Pricing** | Value perception gap | Frame quarterly fee against the cost of 1 bad undisciplined trade. |
-| **Guaranteed Return Ask** | Unrealistic expectation | Explain SEBI compliance prohibits guaranteed profits; guarantee discipline and research rigor. |
-| **Think & Decide Later** | Procrastination / hidden doubt | Identify the specific doubt right now; offer a 48h live demo trial. |
-| **SEBI Registration Doubt** | Authenticity / trust fear | Share SEBI registration number, official website, and compliance disclosures. |
+| **1. Past Losses** | Loss aversion, past bad tips | Emphasize quantitative research, strict SL, and risk-reward ratio over random tips. |
+| **2. High Pricing** | Value perception gap | Frame quarterly fee against the cost of 1 bad undisciplined trade. |
+| **3. Guaranteed Return Ask** | Unrealistic expectation | Explain SEBI compliance prohibits guaranteed profits; guarantee discipline and research rigor. |
+| **4. Think & Decide Later** | Procrastination / hidden doubt | Identify the specific doubt right now; offer a 48h live demo trial. |
+| **5. SEBI Registration Doubt** | Authenticity / trust fear | Share SEBI registration number, official website, and compliance disclosures. |
+| **6. Capital Shortage** | Capital hesitation | Recommend Cash Equity delivery alpha with 2% maximum single-trade risk limit. |
+| **7. Options / F&O Fear** | High drawdown anxiety | Affirm SEBI 9/10 F&O loss study; propose hedged structures or pure cash alternative. |
+| **8. Lack of Screen Time** | Execution friction | Pitch Positional/BTST plans using pre-market GTT orders requiring < 5 mins/day. |
+| **9. Free Telegram Channels** | Free alternative lure | Explain zero statutory accountability, front-running risk, and lack of verified audit logs. |
+| **10. Algo Bot Comparison** | Automation hype | Clarify bots fail on black-swan events; institutional models require senior human risk controls. |
+| **11. Family / Spouse Delay** | Decision postponement | Provide official institutional PDF summary for transparent evening family review. |
+| **12. Trial Extension Ask** | Free-riding tendency | Reiterate compliance rule: trial is strictly 48h demo; paid enrollment required for live calls. |
+| **13. Demat Transfer Fear** | Custody anxiety | Clarify client retains 100% custody of existing broker; Expert Stocks never touches funds. |
+| **14. Past Fraud Trauma** | Scammer comparison | Provide audited SCORES portal verification; prove GST invoicing and corporate bank accounts. |
+| **15. Mutual Funds vs Alpha** | Passive benchmark doubt | Validate MF for core savings; position advisory for tactical alpha and cyclical momentum. |
+| **16. Taxation on F&O** | Tax confusion | Explain F&O non-speculative business income status, expense write-offs, and GST tax credit. |
+| **17. Market Crash / Volatility** | Regime shift fear | Explain sector rotation and hedging strategies that protect capital during index pullbacks. |
+| **18. Suitability Override** | High risk demand | SEBI Mandatory: Enforce conservative boundaries; never override low suitability score for F&O. |
 
 ---
 

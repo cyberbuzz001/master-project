@@ -6,20 +6,25 @@ import {
   PhoneOff,
   Clock,
   CheckCircle2,
-  AlertCircle,
-  BookOpen,
-  Calendar,
-  MessageSquare,
-  ShieldCheck,
-  User,
-  Mic,
-  MicOff,
+  AlertTriangle,
   RotateCcw,
   Sparkles,
+  BookOpen,
+  Mic,
+  MicOff,
+  ShieldCheck,
+  Search,
+  Check,
   X,
+  Flame,
+  Volume2,
+  MessageSquare,
+  Send,
+  Loader2,
+  Copy,
+  ChevronRight,
+  RefreshCw,
   FileText,
-  TrendingUp,
-  Tag,
 } from "lucide-react";
 import { Badge, Card, cx } from "@/components/ui";
 import type { StoredLead, LeadStatus } from "@/lib/leads-store";
@@ -32,7 +37,7 @@ interface TelecallerWorkbenchProps {
   operatorName?: string;
 }
 
-const OBJECTION_SCRIPTS = [
+export const OBJECTION_SCRIPTS = [
   {
     id: "fees",
     title: "Fee Justification vs Free Tips",
@@ -69,6 +74,132 @@ const OBJECTION_SCRIPTS = [
       "Volatility is where professional research provides the highest value. In strong bull runs, almost everything rises; in volatile or sideways markets, sector rotation and hedging strategies protect capital and identify accumulation zones before the public recognizes the breakout.",
     sebiNote: "Explain how hedged strategies mitigate downside risk during index pullbacks.",
   },
+  {
+    id: "think_later",
+    title: "Think & Decide Later (Procrastination)",
+    tag: "Objection Handling",
+    question: "I will think about it and let you know next week.",
+    script:
+      "Understood, taking an informed financial decision is important. May I ask what specific factor you'd like to evaluate—is it the capital allocation, our research methodology, or the market segment? I can send our audited performance disclosures and sample risk charter directly on WhatsApp right now so you have all facts in front of you.",
+    sebiNote: "Respect client autonomy. Avoid aggressive pressure; offer transparent regulatory disclosures.",
+  },
+  {
+    id: "sebi_proof",
+    title: "SEBI Registration & Verification Fear",
+    tag: "Regulatory Legitimacy",
+    question: "How do I verify if you are genuinely SEBI registered?",
+    script:
+      "You can verify our registration directly on SEBI's official portal (sebi.gov.in) under Recognized Intermediaries -> Research Analysts. Our SEBI Registration Number, compliance officer details, and grievance escalation matrix are published publicly on expertstocks.in/trust-center.",
+    sebiNote: "Always share official sebi.gov.in verification path and registered corporate address.",
+  },
+  {
+    id: "capital_low",
+    title: "Capital Shortage / Starting Small",
+    tag: "Capital Allocation",
+    question: "I only have ₹50,000 to ₹1,00,000 right now. Is that enough?",
+    script:
+      "Yes, starting with modest capital is actually ideal for learning our discipline. For portfolios under ₹2 Lakhs, we recommend our Cash Equity Intraday or Delivery Alpha setup rather than high-lot F&O, ensuring position sizing never exposes more than 2% of your total capital to risk on any single trade.",
+    sebiNote: "Never recommend index options to clients with capital below ₹2 Lakhs without conservative risk disclosure.",
+  },
+  {
+    id: "options_fear",
+    title: "Fear of F&O / Options Trading",
+    tag: "Risk & Suitability",
+    question: "I heard 9 out of 10 people lose money in F&O. Isn't it too risky?",
+    script:
+      "You are completely right—SEBI's official study revealed 93% of individual F&O traders make losses due to emotional revenge trading and zero stop-loss discipline. That is precisely why an institutionally researched plan with predefined risk limits and stop-loss invalidation is necessary if you choose to participate, or we can guide you strictly in Cash Equity.",
+    sebiNote: "Affirm SEBI's 9/10 F&O loss disclosure. Offer Cash Equity as the conservative alternative.",
+  },
+  {
+    id: "no_time",
+    title: "Lack of Screen Time During Market Hours",
+    tag: "Execution Feasibility",
+    question: "I have a day job and cannot watch screens between 9:15 AM and 3:30 PM.",
+    script:
+      "For working professionals, our Positional & BTST (Buy Today Sell Tomorrow) Equity delivery desk is tailored specifically. Recommendations are dispatched with predefined GTT/limit orders before market open or after 3:00 PM, requiring no more than 5 minutes of order placement on your mobile broker app.",
+    sebiNote: "Recommend swing and positional plans with GTT orders rather than scalping/intraday.",
+  },
+  {
+    id: "telegram_groups",
+    title: "Comparison to Free Telegram/WhatsApp Groups",
+    tag: "Channel Accountability",
+    question: "I already get 5 free tips daily on Telegram.",
+    script:
+      "Free Telegram groups have zero statutory liability. When trades go wrong, admins delete the messages or block members. As SEBI Research Analysts, every recommendation we publish is recorded in immutable audit logs with SEBI audit trails. We trade for quality and capital preservation, not random call volume.",
+    sebiNote: "Highlight lack of auditability and pump-and-dump risks in anonymous messaging channels.",
+  },
+  {
+    id: "algo_bot",
+    title: "Algo Bot vs Human Research Analysts",
+    tag: "Methodology",
+    question: "Why should I use advisory when automated algo bots trade automatically?",
+    script:
+      "Algo bots follow rigid mathematical scripts that frequently fail during regime shifts, geopolitical black-swan events, or policy rate announcements. Our advisory combines quantitative screening models with senior macroeconomic oversight, ensuring human risk control halts strategies when volatility breaches normal bounds.",
+    sebiNote: "SEBI requires human oversight on all advisory strategies and prohibits unauthorized automated trade guarantees.",
+  },
+  {
+    id: "spouse_partner",
+    title: "Need to Consult Family or Spouse",
+    tag: "Decision Alignment",
+    question: "I need to discuss this with my spouse/business partner first.",
+    script:
+      "That is a great approach—financial planning should always involve family alignment. I will share a concise PDF summary outlining our SEBI registration, risk-management protocols, fee schedule, and sample trade rationale so both of you can review together this evening.",
+    sebiNote: "Offer institutional overview PDF via WhatsApp for transparent household review.",
+  },
+  {
+    id: "free_trial_ext",
+    title: "Request for Free Trial Extension",
+    tag: "Trial Discipline",
+    question: "Can you give me another 3-4 days of free trial calls?",
+    script:
+      "Our 48-Hour Free Trial is designed strictly to demonstrate signal delivery speed, stop-loss adherence, and research formatting. Under compliance guidelines, continued live advisory beyond the trial window requires formal client enrollment and KYC completion. We can structure your first month with installment flexibility.",
+    sebiNote: "Do not provide perpetual unauthenticated trial calls. Comply with KYC enrollment requirements.",
+  },
+  {
+    id: "demat_transfer",
+    title: "Do I Need to Open a New Demat Account?",
+    tag: "Account Independence",
+    question: "Will I have to transfer my shares or open a new demat account with you?",
+    script:
+      "Not at all. You retain 100% custody of your existing Demat account with your chosen broker (Zerodha, Groww, AngelOne, Dhan, Upstox, etc.). You execute recommendations on your own terminal. Expert Stocks never asks for your trading credentials or Demat funds.",
+    sebiNote: "Reiterate strict separation: RAs never take custody of client funds or Demat assets.",
+  },
+  {
+    id: "bad_experience_tips",
+    title: "Past Fraud / Unauthorized Tip Provider",
+    tag: "Trust Recovery",
+    question: "An Indore/Surat firm took ₹50,000 from me and vanished.",
+    script:
+      "We deeply regret that you experienced that. Unscrupulous, unregistered operators often make false promises. Expert Stocks is an audited SEBI Registered Research Analyst with official bank accounts, GST invoicing, and strict adherence to the SEBI SCORES grievance redressal mechanism.",
+    sebiNote: "Inform client about SEBI SCORES portal (scores.gov.in) for legitimate regulatory recourse.",
+  },
+  {
+    id: "mutual_funds",
+    title: "Why Not Just Invest in Mutual Funds?",
+    tag: "Active vs Passive Alpha",
+    question: "Isn't investing in Nifty 50 Index funds or SIP safer?",
+    script:
+      "Mutual funds and index SIPs are excellent for core baseline wealth accumulation over 10-15 years. However, advisory research aims for tactical alpha—capitalizing on momentum breakouts, sector rotation, and cyclical swings to generate differentiated returns on your active tactical capital.",
+    sebiNote: "Validate mutual funds as core holdings; position advisory as tactical alpha allocation.",
+  },
+  {
+    id: "taxation_losses",
+    title: "Taxation on F&O and Capital Gains",
+    tag: "Financial Literacy",
+    question: "How do I account for advisory fees and trading gains for income tax?",
+    script:
+      "All our advisory subscriptions include official GST tax invoices (18% GST). In accordance with Income Tax guidelines, equity trading gains are taxed under STCG/LTCG, while F&O is categorized as non-speculative business income, where legitimate advisory and trading expenses can be claimed against business revenue.",
+    sebiNote: "Provide factual tax information while advising the client to consult a certified Chartered Accountant.",
+  },
+  {
+    id: "suitability_conservative",
+    title: "Conservative Profile Demanding Aggressive F&O",
+    tag: "Suitability Enforcement",
+    question: "I want only high-leverage hero-or-zero options calls.",
+    script:
+      "Under SEBI suitability norms, we cannot recommend aggressive derivatives if your financial capacity or risk tolerance indicates a conservative profile. We are legally bound to protect your capital. We can offer you high-conviction momentum equity trades with lower drawdown risk.",
+    sebiNote: "SEBI MANDATORY: Never override a low suitability score to sell aggressive options advisory.",
+  },
 ];
 
 const QUICK_NOTES = [
@@ -76,8 +207,10 @@ const QUICK_NOTES = [
   "Requested evening call back (after 6:30 PM)",
   "Sent pricing PDF & SEBI disclosures on WhatsApp",
   "Capital currently tied up; will start next month",
-  "Completed Risk Assessment; suitability pending",
+  "Completed Risk Assessment; suitability approved",
   "Budget constraints; pitched quarterly cash equity",
+  "Sent Welcome message via Meta Cloud API",
+  "NPC Attempt logged; queued for next day follow-up",
 ];
 
 const DISPOSITIONS: Array<{
@@ -103,7 +236,7 @@ export function TelecallerWorkbench({
   onLeadUpdated,
   operatorName = "Priya Sharma",
 }: TelecallerWorkbenchProps) {
-  const [activeTab, setActiveTab] = useState<"dialer" | "playbook" | "history">("dialer");
+  const [activeTab, setActiveTab] = useState<"dialer" | "playbook" | "whatsapp" | "history">("dialer");
   const [callState, setCallState] = useState<"idle" | "dialing" | "connected" | "ended">("idle");
   const [callDuration, setCallDuration] = useState<number>(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -112,8 +245,21 @@ export function TelecallerWorkbench({
   const [nextFollowup, setNextFollowup] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [activeScriptId, setActiveScriptId] = useState<string>("fees");
+  const [scriptSearch, setScriptSearch] = useState<string>("");
+  const [toast, setToast] = useState<string | null>(null);
+
+  // WhatsApp Tab State
+  const [waMessages, setWaMessages] = useState<any[]>([]);
+  const [waLoading, setWaLoading] = useState(false);
+  const [waText, setWaText] = useState("");
+  const [waSending, setWaSending] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
+  };
 
   // Reset state when lead changes
   useEffect(() => {
@@ -124,6 +270,9 @@ export function TelecallerWorkbench({
       setNotes("");
       setNextFollowup("");
       setSelectedDisposition("Answered - Qualified");
+      if (lead) {
+        fetchWhatsAppThread(lead.id, lead.mobile);
+      }
     }
   }, [isOpen, lead?.id]);
 
@@ -141,137 +290,251 @@ export function TelecallerWorkbench({
     };
   }, [callState]);
 
-  if (!isOpen || !lead) return null;
-
-  const formatDuration = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  const fetchWhatsAppThread = async (leadId: string, phone: string) => {
+    if (!leadId && !phone) return;
+    setWaLoading(true);
+    try {
+      const res = await fetch(
+        `/api/v1/office/whatsapp?leadId=${encodeURIComponent(leadId)}&phone=${encodeURIComponent(phone)}`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setWaMessages(json.data);
+        }
+      }
+    } catch (_) {
+    } finally {
+      setWaLoading(false);
+    }
   };
 
   const handleStartCall = () => {
     setCallState("dialing");
-    setCallDuration(0);
-    // Simulate CTI bridge connect after 2 seconds
     setTimeout(() => {
       setCallState("connected");
-    }, 2000);
+      setCallDuration(0);
+    }, 1500);
   };
 
   const handleEndCall = () => {
     setCallState("ended");
   };
 
+  const handleQuickWhatsAppSend = async (templateName: string, customParams?: string[]) => {
+    if (!lead || waSending) return;
+    setWaSending(true);
+    try {
+      const res = await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          phone: lead.mobile,
+          templateName,
+          templateParams: customParams || [lead.name, lead.id],
+          clientName: lead.name,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`Template "${templateName}" dispatched via Meta API to ${lead.name}`);
+        fetchWhatsAppThread(lead.id, lead.mobile);
+        setNotes((prev) => (prev ? `${prev}; Sent WhatsApp template: ${templateName}` : `Sent WhatsApp template: ${templateName}`));
+      } else {
+        showToast(`WhatsApp failed: ${data.message || "API Error"}`);
+      }
+    } catch (err: any) {
+      showToast(`Network error: ${err.message}`);
+    } finally {
+      setWaSending(false);
+    }
+  };
+
+  const handleSendWhatsAppText = async () => {
+    if (!lead || !waText.trim() || waSending) return;
+    setWaSending(true);
+    try {
+      const res = await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          phone: lead.mobile,
+          text: waText.trim(),
+          clientName: lead.name,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`WhatsApp message sent to ${lead.name}`);
+        setWaText("");
+        if (data.data) {
+          setWaMessages((prev) => [...prev, data.data]);
+        } else {
+          fetchWhatsAppThread(lead.id, lead.mobile);
+        }
+      } else {
+        showToast(`WhatsApp failed: ${data.message || "API error"}`);
+      }
+    } catch (err: any) {
+      showToast(`Network error: ${err.message}`);
+    } finally {
+      setWaSending(false);
+    }
+  };
+
   const handleSaveInteraction = async () => {
+    if (!lead) return;
     setSubmitting(true);
-    const dispConfig = DISPOSITIONS.find((d) => d.label === selectedDisposition);
-    const isNpc = dispConfig?.isNpc || false;
-    const finalDispositionName = isNpc ? "NPC" : selectedDisposition;
 
     try {
-      const response = await fetch("/api/v1/office/leads", {
+      const dispObj = DISPOSITIONS.find((d) => d.label === selectedDisposition);
+      const targetStatus = dispObj?.status || "contacted";
+
+      const res = await fetch("/api/v1/office/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: lead.id,
           action: "call",
           durationSec: callDuration,
-          disposition: finalDispositionName,
+          disposition: selectedDisposition,
           notes: notes.trim(),
           agent: operatorName,
+          nextFollowup: nextFollowup.trim() || undefined,
         }),
       });
 
-      if (response.ok) {
-        const json = await response.json();
-        if (json?.data) {
-          // If a next follow-up date was set, patch that as well
-          if (nextFollowup) {
-            await fetch("/api/v1/office/leads", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: lead.id,
-                updates: { nextFollowup },
-              }),
-            });
-            json.data.nextFollowup = nextFollowup;
-          }
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
           onLeadUpdated(json.data);
           onClose();
+          return;
         }
       }
+
+      // Fallback optimistic update
+      const updatedNpc = dispObj?.isNpc ? (lead.npcAttempts || 0) + 1 : lead.npcAttempts || 0;
+      const optimisticLead: StoredLead = {
+        ...lead,
+        status: targetStatus,
+        npcAttempts: updatedNpc,
+        lastContactedAt: "Today, Just now",
+        nextFollowup: nextFollowup.trim() || lead.nextFollowup,
+        callLogs: [
+          {
+            id: `CALL-${Date.now()}`,
+            timestamp: "Just now",
+            durationSec: callDuration,
+            disposition: selectedDisposition,
+            notes: notes.trim(),
+            agent: operatorName,
+          },
+          ...(lead.callLogs || []),
+        ],
+      };
+
+      onLeadUpdated(optimisticLead);
+      onClose();
     } catch (err) {
       console.error("[TelecallerWorkbench] Error saving interaction:", err);
+      onClose();
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (!isOpen || !lead) return null;
+
   const currentNpc = lead.npcAttempts || 0;
+  const formatDuration = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const filteredScripts = OBJECTION_SCRIPTS.filter((s) => {
+    const q = scriptSearch.toLowerCase();
+    return !q || s.title.toLowerCase().includes(q) || s.question.toLowerCase().includes(q) || s.tag.toLowerCase().includes(q);
+  });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fade-in">
-      <div className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-2xl bg-white shadow-2xl border border-ink-200 overflow-hidden">
-        {/* Header Bar */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/80 backdrop-blur-xs p-4 animate-fade-in">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-60 flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-[#0B1A14]/95 px-4 py-3 text-xs font-bold text-emerald-300 shadow-2xl backdrop-blur-md animate-fade-in">
+          <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+          <span>{toast}</span>
+        </div>
+      )}
+
+      <div className="relative w-full max-w-5xl rounded-2xl border border-ink-200 bg-white shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-ink-200 bg-ink-900 px-6 py-4 text-white">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-300">
+            <div className="size-10 rounded-xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-300 font-bold">
               <PhoneCall className="size-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold font-display">{lead.name}</h2>
-                <span className="font-mono text-xs text-brand-300 bg-brand-950/60 px-2 py-0.5 rounded border border-brand-700/50">
+                <h3 className="font-bold text-base font-display">{lead.name}</h3>
+                <span className="rounded bg-brand-500/20 px-2 py-0.5 font-mono text-xs font-semibold text-brand-300">
                   {lead.id}
                 </span>
-                {lead.capital && lead.capital.includes("25L") && (
-                  <span className="rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold px-1.5 py-0.5 border border-amber-500/40">
-                    ★ HNI CLIENT
-                  </span>
-                )}
+                <span className="rounded bg-white/10 px-2 py-0.5 font-mono text-xs text-ink-300">
+                  {lead.mobile}
+                </span>
               </div>
-              <p className="text-xs text-ink-300 flex items-center gap-2 mt-0.5">
-                <span>{lead.mobile}</span>
-                <span>•</span>
-                <span>{lead.city || "Pan India"}</span>
-                <span>•</span>
-                <span>Capital: {lead.capital}</span>
+              <p className="text-xs text-ink-400 mt-0.5 font-mono">
+                Assigned Rep: {operatorName} • City: {lead.city || "Mumbai"} • Source: {lead.source}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-2 text-ink-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="size-5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-ink-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            <X className="size-5" />
+          </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-ink-200 bg-ink-50 px-6">
+        {/* Modal Tabs Bar */}
+        <div className="flex border-b border-ink-200 bg-ink-50 px-6 text-xs overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab("dialer")}
             className={cx(
-              "flex items-center gap-2 border-b-2 py-3 px-4 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer",
+              "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "dialer"
                 ? "border-brand-600 text-brand-700 bg-white"
                 : "border-transparent text-ink-500 hover:text-ink-900"
             )}
           >
             <PhoneCall className="size-4" />
-            <span>CTI Calling Desk</span>
+            <span>CTI Cloud Dialer</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("whatsapp")}
+            className={cx(
+              "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
+              activeTab === "whatsapp"
+                ? "border-emerald-600 text-emerald-700 bg-white"
+                : "border-transparent text-ink-500 hover:text-ink-900"
+            )}
+          >
+            <MessageSquare className="size-4 text-emerald-600" />
+            <span>WhatsApp Bridge ({waMessages.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("playbook")}
             className={cx(
-              "flex items-center gap-2 border-b-2 py-3 px-4 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer",
+              "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "playbook"
                 ? "border-brand-600 text-brand-700 bg-white"
                 : "border-transparent text-ink-500 hover:text-ink-900"
@@ -284,14 +547,14 @@ export function TelecallerWorkbench({
             type="button"
             onClick={() => setActiveTab("history")}
             className={cx(
-              "flex items-center gap-2 border-b-2 py-3 px-4 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer",
+              "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "history"
                 ? "border-brand-600 text-brand-700 bg-white"
                 : "border-transparent text-ink-500 hover:text-ink-900"
             )}
           >
             <Clock className="size-4" />
-            <span>Call Logs ({lead.callLogs?.length || 0})</span>
+            <span>Call History ({lead.callLogs?.length || 0})</span>
           </button>
         </div>
 
@@ -383,6 +646,46 @@ export function TelecallerWorkbench({
                     <span>Bridge: Tata Tele / Exotel</span>
                   </div>
                 </Card>
+
+                {/* 1-Click WhatsApp Quick Dispatch Bar */}
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                      <MessageSquare className="size-3.5 text-emerald-600" />
+                      <span>Instant Meta WhatsApp Cloud Dispatch:</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-emerald-700">+91 92018 00995 Verified</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      disabled={waSending}
+                      onClick={() => handleQuickWhatsAppSend("adv_lead_welcome", [lead.name, lead.id])}
+                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <p className="font-bold text-[11px] text-emerald-950 truncate">Welcome & Intro</p>
+                      <p className="text-[9px] font-mono text-emerald-700">adv_lead_welcome</p>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={waSending}
+                      onClick={() => handleQuickWhatsAppSend("adv_kyc_nudge", [lead.name, lead.id])}
+                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <p className="font-bold text-[11px] text-emerald-950 truncate">KYC / RPM Nudge</p>
+                      <p className="text-[9px] font-mono text-emerald-700">adv_kyc_nudge</p>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={waSending}
+                      onClick={() => handleQuickWhatsAppSend("adv_plan_activation", [lead.name, lead.segment || "Index Options", lead.id])}
+                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <p className="font-bold text-[11px] text-emerald-950 truncate">Plan Activation</p>
+                      <p className="text-[9px] font-mono text-emerald-700">adv_plan_activation</p>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Dispositioning Buttons */}
                 <div className="space-y-2">
@@ -535,7 +838,7 @@ export function TelecallerWorkbench({
                       Risk Assessment Questionnaire Pending
                     </span>
                     <p className="text-[11px] text-ink-400 mt-0.5">
-                      Prompt client to take assessment via SMS/WhatsApp link.
+                      Prompt client to complete suitability declaration.
                     </p>
                   </div>
                 )}
@@ -547,67 +850,197 @@ export function TelecallerWorkbench({
                     <p className="text-xs text-ink-800 italic mt-1">&quot;{lead.message}&quot;</p>
                   </div>
                 )}
-
-                {/* Direct WhatsApp Action */}
-                <a
-                  href={`https://wa.me/${lead.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
-                    `Hello ${lead.name}, this is ${operatorName} from Expert Stocks Consultancy regarding your inquiry (Ref: ${lead.id}). How may our advisory desk assist you today?`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 p-2.5 text-xs font-bold text-[#16A34A] hover:bg-[#22C55E]/25 transition-colors"
-                >
-                  <MessageSquare className="size-4" />
-                  <span>Send Pre-Formatted WhatsApp Message</span>
-                </a>
               </div>
             </div>
           )}
 
-          {/* TAB 2: OBJECTION HANDLING PLAYBOOK */}
+          {/* TAB 2: WHATSAPP DIRECT BRIDGE */}
+          {activeTab === "whatsapp" && (
+            <div className="rounded-2xl border border-ink-200 bg-[#090E17] text-white overflow-hidden shadow-lg space-y-0">
+              <div className="p-4 border-b border-[#1E293B] bg-[#0E1624] flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                    <span>{lead.name}</span>
+                    <span className="font-mono text-xs text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded">
+                      {lead.mobile}
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-ink-400 font-mono mt-0.5">
+                    Official Sender: +91 92018 00995 • Ref: {lead.id}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fetchWhatsAppThread(lead.id, lead.mobile)}
+                  className="rounded-lg border border-[#1E293B] bg-[#162235] px-3 py-1.5 text-xs text-ink-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className={cx("size-3.5", waLoading && "animate-spin")} />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              {/* Chat Thread Messages */}
+              <div className="p-5 h-[320px] overflow-y-auto space-y-3 bg-[radial-gradient(#1E293B_1px,transparent_1px)] [background-size:16px_16px]">
+                {waLoading ? (
+                  <div className="py-12 flex items-center justify-center gap-2 text-ink-400 text-xs">
+                    <Loader2 className="size-4 animate-spin text-emerald-400" />
+                    <span>Loading conversation...</span>
+                  </div>
+                ) : waMessages.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-ink-400 italic">
+                    No WhatsApp interactions recorded for this lead yet. Send a pre-approved template below.
+                  </div>
+                ) : (
+                  waMessages.map((m, idx) => {
+                    const isRep = m.sender === "rep" || m.sender === "system";
+                    return (
+                      <div
+                        key={idx}
+                        className={cx(
+                          "flex flex-col max-w-md rounded-2xl p-3 text-xs leading-relaxed",
+                          isRep
+                            ? "ml-auto bg-[#0A3D28] text-white border border-[#166534]"
+                            : "mr-auto bg-[#162235] text-white border border-[#23354E]"
+                        )}
+                      >
+                        {m.templateName && (
+                          <span className="text-[9px] font-mono font-bold text-emerald-300 uppercase mb-1">
+                            {m.templateName}
+                          </span>
+                        )}
+                        <p>{m.text}</p>
+                        <span className="text-[10px] text-ink-400 self-end mt-1 font-mono">{m.time}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Template Buttons & Text Dispatch */}
+              <div className="p-4 border-t border-[#1E293B] bg-[#0B121E] space-y-3">
+                <div className="flex items-center gap-2 overflow-x-auto text-[11px] font-mono">
+                  <span className="text-ink-400 shrink-0 font-bold uppercase">Quick Templates:</span>
+                  <button
+                    type="button"
+                    disabled={waSending}
+                    onClick={() => handleQuickWhatsAppSend("adv_lead_welcome", [lead.name, lead.id])}
+                    className="rounded-lg bg-[#162235] hover:bg-[#1E2D44] text-emerald-300 px-2.5 py-1 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  >
+                    + Welcome ({lead.name})
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waSending}
+                    onClick={() => handleQuickWhatsAppSend("adv_risk_assessment_cert", [lead.name, lead.segment || "Growth", lead.id])}
+                    className="rounded-lg bg-[#162235] hover:bg-[#1E2D44] text-emerald-300 px-2.5 py-1 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  >
+                    + RPM Certificate
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waSending}
+                    onClick={() => handleQuickWhatsAppSend("adv_kyc_nudge", [lead.name, lead.id])}
+                    className="rounded-lg bg-[#162235] hover:bg-[#1E2D44] text-emerald-300 px-2.5 py-1 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  >
+                    + KYC Nudge
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={waText}
+                    disabled={waSending}
+                    onChange={(e) => setWaText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSendWhatsAppText();
+                    }}
+                    placeholder="Type custom compliance reply to client..."
+                    className="flex-1 rounded-xl border border-[#1E293B] bg-[#0E1624] px-4 py-2.5 text-xs text-white placeholder-ink-400 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={waSending || !waText.trim()}
+                    onClick={handleSendWhatsAppText}
+                    className="rounded-xl bg-[#22C55E] hover:bg-[#16A34A] text-black px-4 py-2.5 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {waSending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                    <span>Send</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: OBJECTION HANDLING PLAYBOOK */}
           {activeTab === "playbook" && (
             <div className="grid gap-6 md:grid-cols-12">
               {/* Objection Index List (4 cols) */}
-              <div className="md:col-span-4 space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-ink-500 block mb-2">
-                  Select Objection:
-                </span>
-                {OBJECTION_SCRIPTS.map((script) => {
-                  const isSelected = activeScriptId === script.id;
-                  return (
-                    <button
-                      key={script.id}
-                      type="button"
-                      onClick={() => setActiveScriptId(script.id)}
-                      className={cx(
-                        "w-full text-left rounded-xl p-3 border transition-all cursor-pointer",
-                        isSelected
-                          ? "bg-brand-50 border-brand-500 shadow-xs"
-                          : "bg-white border-ink-200 hover:bg-ink-50"
-                      )}
-                    >
-                      <span className="text-[10px] font-mono uppercase text-brand-700 font-bold block">
-                        {script.tag}
-                      </span>
-                      <p className="text-xs font-bold text-ink-900 mt-0.5">{script.title}</p>
-                    </button>
-                  );
-                })}
+              <div className="md:col-span-5 space-y-2">
+                <div className="flex items-center justify-between pb-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ink-700">
+                    Objection Library ({filteredScripts.length})
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={scriptSearch}
+                  onChange={(e) => setScriptSearch(e.target.value)}
+                  placeholder="Filter scripts (e.g. fees, loss, sebi)..."
+                  className="w-full rounded-xl border border-ink-300 px-3 py-1.5 text-xs text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:outline-none mb-2"
+                />
+
+                <div className="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
+                  {filteredScripts.map((script) => {
+                    const isSelected = activeScriptId === script.id;
+                    return (
+                      <button
+                        key={script.id}
+                        type="button"
+                        onClick={() => setActiveScriptId(script.id)}
+                        className={cx(
+                          "w-full text-left rounded-xl p-2.5 border transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-brand-50 border-brand-500 shadow-xs"
+                            : "bg-white border-ink-200 hover:bg-ink-50"
+                        )}
+                      >
+                        <span className="text-[9px] font-mono uppercase text-brand-700 font-bold block">
+                          {script.tag}
+                        </span>
+                        <p className="text-xs font-bold text-ink-900 mt-0.5 leading-snug">{script.title}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Selected Script Detail (8 cols) */}
-              <div className="md:col-span-8">
+              {/* Selected Script Detail (7 cols) */}
+              <div className="md:col-span-7">
                 {(() => {
                   const active = OBJECTION_SCRIPTS.find((s) => s.id === activeScriptId) || OBJECTION_SCRIPTS[0];
                   return (
                     <Card className="p-5 space-y-4 border-l-4 border-l-brand-600">
-                      <div>
-                        <span className="rounded bg-brand-100 text-brand-800 text-[10px] font-mono font-bold px-2 py-0.5">
-                          {active.tag}
-                        </span>
-                        <h4 className="text-sm font-bold text-ink-900 mt-2 font-display">
-                          &quot;{active.question}&quot;
-                        </h4>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="rounded bg-brand-100 text-brand-800 text-[10px] font-mono font-bold px-2 py-0.5">
+                            {active.tag}
+                          </span>
+                          <h4 className="text-sm font-bold text-ink-900 mt-2 font-display">
+                            &quot;{active.question}&quot;
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNotes((prev) => (prev ? `${prev}; Handled objection: ${active.title}` : `Handled objection: ${active.title}`));
+                            showToast(`Appended "${active.title}" to consultation notes`);
+                          }}
+                          className="flex items-center gap-1 rounded-lg border border-ink-300 bg-white px-2 py-1 text-[11px] font-mono text-ink-700 hover:bg-ink-50 transition-colors cursor-pointer"
+                        >
+                          <Copy className="size-3" />
+                          <span>Add to Notes</span>
+                        </button>
                       </div>
 
                       <div className="rounded-xl bg-ink-50 p-4 border border-ink-200">
@@ -628,7 +1061,7 @@ export function TelecallerWorkbench({
             </div>
           )}
 
-          {/* TAB 3: CALL HISTORY TIMELINE */}
+          {/* TAB 4: CALL HISTORY TIMELINE */}
           {activeTab === "history" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b border-ink-200 pb-2">

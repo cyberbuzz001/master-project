@@ -284,6 +284,38 @@ export function LeadManagement({
     }
   };
 
+  const [waSendingId, setWaSendingId] = useState<string | null>(null);
+
+  const handleInstantWhatsApp = async (lead: CrmLead) => {
+    if (waSendingId) return;
+    setWaSendingId(lead.id);
+    try {
+      const res = await fetch("/api/v1/office/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          phone: lead.mobile,
+          templateName: "adv_lead_welcome",
+          templateParams: [lead.name, lead.id],
+          clientName: lead.name,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(
+          `Meta WhatsApp Welcome sent to ${lead.name} (+91 ${lead.mobile.replace(/\D/g, "").slice(-10)})`
+        );
+      } else {
+        showToast(`WhatsApp dispatch error: ${data.message || "Failed to send"}`, "error");
+      }
+    } catch (err: any) {
+      showToast(`Network error: ${err.message}`, "error");
+    } finally {
+      setWaSendingId(null);
+    }
+  };
+
   const handleAutoDistribute = () => {
     if (onDistributeLeads) {
       onDistributeLeads();
@@ -660,17 +692,19 @@ export function LeadManagement({
                           <PhoneCall className="size-3.5" />
                         </button>
 
-                        <a
-                          href={`https://wa.me/${lead.mobile.replace(/\D/g, "")}?text=${encodeURIComponent(
-                            `Hello ${lead.name}, regarding your inquiry with Expert Stocks Advisory (Ref: ${lead.id})...`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-lg bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] p-2 hover:bg-[#22C55E]/25 transition-colors"
-                          title="WhatsApp Chat"
+                        <button
+                          type="button"
+                          disabled={waSendingId === lead.id}
+                          onClick={() => handleInstantWhatsApp(lead)}
+                          className="rounded-lg bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] p-2 hover:bg-[#22C55E]/25 transition-colors cursor-pointer disabled:opacity-50"
+                          title="Send Official Meta WhatsApp Welcome (+91 92018 00995)"
                         >
-                          <MessageSquare className="size-3.5" />
-                        </a>
+                          {waSendingId === lead.id ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <MessageSquare className="size-3.5" />
+                          )}
+                        </button>
 
                         <button
                           type="button"
@@ -1149,14 +1183,20 @@ export function LeadManagement({
                 <Edit2 className="size-4" />
               </button>
 
-              <a
-                href={`https://wa.me/${selectedLead.mobile.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] px-4 py-2.5 text-xs font-bold hover:bg-[#22C55E]/25 transition-colors"
+              <button
+                type="button"
+                disabled={waSendingId === selectedLead.id}
+                onClick={() => handleInstantWhatsApp(selectedLead)}
+                className="rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#22C55E] px-4 py-2.5 text-xs font-bold hover:bg-[#22C55E]/25 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                title="Send Official Meta WhatsApp Welcome"
               >
-                <MessageSquare className="size-4" />
-              </a>
+                {waSendingId === selectedLead.id ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="size-4" />
+                )}
+                <span>WhatsApp Welcome</span>
+              </button>
             </div>
 
             {/* AI Insights Card */}
