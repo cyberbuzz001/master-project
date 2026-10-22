@@ -58,13 +58,13 @@
   --color-ink-50: #0B1220;
   --color-ink-100: #0E1624;
   --color-ink-200: #1E293B;
-  --color-ink-300: #334155;
-  --color-ink-400: #64748B;
-  --color-ink-500: #94A3B8;
-  --color-ink-600: #CBD5E1;
-  --color-ink-700: #E2E8F0;
-  --color-ink-800: #F1F5F9;
-  --color-ink-900: #F8FAFC;
+  --color-ink-300: #94A3B8;
+  --color-ink-400: #A8B4C4;
+  --color-ink-500: #CBD5E1;
+  --color-ink-600: #E2E8F0;
+  --color-ink-700: #F1F5F9;
+  --color-ink-800: #F8FAFC;
+  --color-ink-900: #FFFFFF;
   --color-ink-950: #FFFFFF;
 
   --animate-marquee: marquee 35s linear infinite;

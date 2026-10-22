@@ -185,7 +185,7 @@ export function AdvisoryRecommendationsView({
   }, [entryRange, target1, stopLoss]);
 
   // Submit New Draft
-  const handleCreateDraft = (e: React.FormEvent) => {
+  const handleCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!symbol || !entryRange || !stopLoss || !target1) {
       showToast("Please fill in all mandatory pricing levels.");
@@ -195,6 +195,30 @@ export function AdvisoryRecommendationsView({
     if (!declarationNoInterest || !declarationNoBeneficial || !declarationNoConflict) {
       showToast("All 3 SEBI statutory conflict declarations must be certified.");
       return;
+    }
+
+    let calculatedHash = "";
+    try {
+      const payloadString = JSON.stringify({
+        symbol: symbol.toUpperCase(),
+        exchange,
+        direction,
+        instrumentType,
+        entryRange,
+        target1,
+        target2: target2 || target1,
+        stopLoss,
+        horizon,
+        rationale,
+        timestamp: new Date().toISOString(),
+      });
+      const data = new TextEncoder().encode(payloadString);
+      const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+      calculatedHash = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    } catch {
+      calculatedHash = `sha256-${Math.random().toString(36).substring(2, 10)}${Date.now()}`;
     }
 
     const newDraft: ExtendedRecommendation = {
@@ -223,7 +247,7 @@ export function AdvisoryRecommendationsView({
       ],
       rrRatio: computedRrRatio ? computedRrRatio.ratio : "1 : 2.10",
       conflictDeclared: true,
-      contentHash: `sha256-${Math.random().toString(36).substring(2, 10)}${Date.now()}`,
+      contentHash: calculatedHash,
     };
 
     setApprovalQueue((prev) => [newDraft, ...prev]);
@@ -370,7 +394,7 @@ export function AdvisoryRecommendationsView({
             </span>
           </div>
           <p className="text-xs text-ink-300 mt-1">
-            Junior Draft $\to$ Senior RA Review $\to$ Compliance Guardian Gate $\to$ 1-Click WhatsApp & Portal Broadcast.
+            Junior Draft → Senior RA Review → Compliance Guardian Gate → 1-Click WhatsApp & Portal Broadcast.
           </p>
         </div>
 
@@ -605,7 +629,7 @@ export function AdvisoryRecommendationsView({
                   <span>Dual-Analyst & Compliance Sign-Off Queue</span>
                 </h3>
                 <p className="text-xs text-ink-300 mt-1">
-                  Enforces SEBI Separation of Duties: Junior Analyst Drafts $\to$ Senior RA Review $\to$ Compliance Officer Clearance $\to$ Broadcast.
+                  Enforces SEBI Separation of Duties: Junior Analyst Drafts → Senior RA Review → Compliance Officer Clearance → Broadcast.
                 </p>
               </div>
               <Badge tone="brand">{approvalQueue.length} In Review Pipeline</Badge>
@@ -839,7 +863,7 @@ export function AdvisoryRecommendationsView({
                       <span className="text-emerald-400 font-bold">{item.dir}</span>
                     </td>
                     <td className="py-3 text-ink-200">
-                      ₹{item.entry} $\to$ <span className="text-emerald-400 font-bold">₹{item.target}</span>
+                      ₹{item.entry} → <span className="text-emerald-400 font-bold">₹{item.target}</span>
                     </td>
                     <td className="py-3 text-rose-400">₹{item.sl}</td>
                     <td className="py-3 text-emerald-400 font-bold">{item.mfe}</td>
@@ -1169,6 +1193,12 @@ export function AdvisoryRecommendationsView({
               <div className="text-[11px] font-mono text-cyan-400 pt-1 border-t border-[#1E293B]">
                 Dual-Signatures: Verified by Dr. Ananya Ray & Adv. Rajesh Kothari
               </div>
+              {broadcastModalRec.contentHash && (
+                <div className="text-[10px] font-mono text-slate-400 truncate pt-1">
+                  <span className="text-slate-500">SHA-256: </span>
+                  {broadcastModalRec.contentHash}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 text-xs text-ink-300">

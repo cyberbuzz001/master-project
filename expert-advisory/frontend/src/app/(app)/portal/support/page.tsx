@@ -158,14 +158,14 @@ export default function SupportDeskPage() {
       />
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-ink-200 gap-2 mb-6">
+      <div className="flex border-b border-[#1E293B] gap-2 mb-6">
         <button
           onClick={() => setTab("tickets")}
           className={cx(
-            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors",
+            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors cursor-pointer",
             tab === "tickets"
-              ? "border-brand-600 text-brand-700"
-              : "border-transparent text-ink-500 hover:text-ink-900"
+              ? "border-cyan-400 text-cyan-300 font-bold"
+              : "border-transparent text-slate-400 hover:text-white"
           )}
         >
           Support Tickets
@@ -173,10 +173,10 @@ export default function SupportDeskPage() {
         <button
           onClick={() => setTab("grievance")}
           className={cx(
-            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors",
+            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors cursor-pointer",
             tab === "grievance"
-              ? "border-brand-600 text-brand-700"
-              : "border-transparent text-ink-500 hover:text-ink-900"
+              ? "border-cyan-400 text-cyan-300 font-bold"
+              : "border-transparent text-slate-400 hover:text-white"
           )}
         >
           Lodge SEBI Grievance
@@ -184,10 +184,10 @@ export default function SupportDeskPage() {
         <button
           onClick={() => setTab("track")}
           className={cx(
-            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors",
+            "pb-3 px-4 text-sm font-semibold border-b-2 transition-colors cursor-pointer",
             tab === "track"
-              ? "border-brand-600 text-brand-700"
-              : "border-transparent text-ink-500 hover:text-ink-900"
+              ? "border-cyan-400 text-cyan-300 font-bold"
+              : "border-transparent text-slate-400 hover:text-white"
           )}
         >
           Track Grievance
@@ -198,33 +198,33 @@ export default function SupportDeskPage() {
       {tab === "tickets" && (
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-ink-900">Your Support Tickets</h3>
+            <h3 className="text-base font-semibold text-white">Your Support Tickets</h3>
             {tickets.loading && !tickets.data ? (
               <Spinner />
             ) : tickets.error ? (
               <ApiErrorView error={tickets.error} />
             ) : !tickets.data || tickets.data.length === 0 ? (
-              <Card className="p-8 text-center">
-                <HelpCircle className="mx-auto size-8 text-ink-400 mb-2" />
-                <p className="text-sm font-medium text-ink-900">No support tickets found</p>
-                <p className="text-xs text-ink-500 mt-1">Submit a request using the form on the right.</p>
+              <Card className="p-8 text-center bg-[#090E1A] border-[#1E293B]">
+                <HelpCircle className="mx-auto size-8 text-cyan-400 mb-2" />
+                <p className="text-sm font-medium text-white">No support tickets found</p>
+                <p className="text-xs text-slate-400 mt-1">Submit a request using the form on the right.</p>
               </Card>
             ) : (
               <div className="space-y-3">
                 {tickets.data.map((t) => (
-                  <Card key={t.id} className="p-5 flex items-start justify-between gap-4">
+                  <Card key={t.id} className="p-5 flex items-start justify-between gap-4 bg-[#090E1A] border-[#1E293B]">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-ink-500">{t.ticket_number}</span>
+                        <span className="font-mono text-xs font-bold text-cyan-300">{t.ticket_number}</span>
                         <Badge tone={t.status === "open" ? "warning" : t.status === "closed" ? "neutral" : "brand"}>
                           {humanize(t.status)}
                         </Badge>
-                        <span className="text-xs text-ink-400 capitalize">{t.category}</span>
+                        <span className="text-xs text-slate-400 capitalize">{t.category}</span>
                       </div>
-                      <p className="mt-1.5 text-sm font-semibold text-ink-900">{t.subject}</p>
+                      <p className="mt-1.5 text-sm font-semibold text-white">{t.subject}</p>
                       {t.last_reply_at && (
-                        <p className="mt-1 text-xs text-ink-500 flex items-center gap-1">
-                          <Clock className="size-3" /> Updated {new Date(t.last_reply_at).toLocaleString("en-IN")}
+                        <p className="mt-1 text-xs text-slate-400 flex items-center gap-1">
+                          <Clock className="size-3 text-cyan-400" /> Updated {new Date(t.last_reply_at).toLocaleString("en-IN")}
                         </p>
                       )}
                     </div>
@@ -235,36 +235,36 @@ export default function SupportDeskPage() {
           </div>
 
           <div>
-            <Card className="p-6">
-              <h3 className="text-base font-semibold text-ink-900 mb-1">Create Support Request</h3>
-              <p className="text-xs text-ink-500 mb-4">Our operations desk responds within 24 business hours.</p>
+            <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+              <h3 className="text-base font-semibold text-white mb-1">Create Support Request</h3>
+              <p className="text-xs text-slate-400 mb-4">Our operations desk responds within 24 business hours.</p>
 
               {ticketSuccess && (
-                <div className="mb-4 rounded-lg bg-positive-50 border border-positive-200 p-3 text-xs text-positive-800 flex items-center gap-2">
-                  <CheckCircle className="size-4 shrink-0 text-positive-600" />
+                <div className="mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-300 flex items-center gap-2">
+                  <CheckCircle className="size-4 shrink-0 text-emerald-400" />
                   {ticketSuccess}
                 </div>
               )}
 
               <form onSubmit={handleCreateTicket} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink-700 mb-1">Subject</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Subject</label>
                   <input
                     type="text"
                     required
                     value={ticketSubject}
                     onChange={(e) => setTicketSubject(e.target.value)}
                     placeholder="e.g. Question regarding invoice payment"
-                    className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                    className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-ink-700 mb-1">Category</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Category</label>
                   <select
                     value={ticketCategory}
                     onChange={(e) => setTicketCategory(e.target.value)}
-                    className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                    className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="billing">Billing & Invoices</option>
                     <option value="kyc">KYC & Verification</option>
@@ -275,14 +275,14 @@ export default function SupportDeskPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-ink-700 mb-1">Message</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Message</label>
                   <textarea
                     required
                     rows={4}
                     value={ticketMessage}
                     onChange={(e) => setTicketMessage(e.target.value)}
                     placeholder="Describe your issue with transaction reference or details..."
-                    className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                    className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
 
@@ -299,12 +299,12 @@ export default function SupportDeskPage() {
       {tab === "grievance" && (
         <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-6">
-            <Card className="p-6 border-l-4 border-l-brand-600">
+            <Card className="p-6 border-l-4 border-l-cyan-400 bg-[#090E1A] border-[#1E293B]">
               <div className="flex gap-3">
-                <ShieldCheck className="size-6 text-brand-600 shrink-0" />
+                <ShieldCheck className="size-6 text-cyan-400 shrink-0" />
                 <div>
-                  <h3 className="text-base font-bold text-ink-900">Dedicated Grievance Redressal Mechanism</h3>
-                  <p className="mt-1 text-xs text-ink-600 leading-relaxed">
+                  <h3 className="text-base font-bold text-white">Dedicated Grievance Redressal Mechanism</h3>
+                  <p className="mt-1 text-xs text-slate-300 leading-relaxed">
                     Every complaint submitted through this desk is tracked with an official reference code and directly reviewed and audited by our Compliance and Grievance Officer.
                   </p>
                 </div>
@@ -312,17 +312,17 @@ export default function SupportDeskPage() {
             </Card>
 
             {grievanceResult ? (
-              <Card className="p-8 text-center border-l-4 border-l-positive-600">
-                <ShieldCheck className="mx-auto size-12 text-positive-600 mb-3" />
-                <h3 className="text-lg font-bold text-ink-900">Grievance Registered Successfully</h3>
-                <p className="mt-1 text-sm text-ink-600">Your complaint tracking reference number is:</p>
-                <div className="my-4 inline-block bg-ink-100 px-4 py-2 rounded-lg font-mono font-bold text-base text-ink-900 border border-ink-300">
+              <Card className="p-8 text-center border-l-4 border-l-emerald-400 bg-[#090E1A] border-[#1E293B]">
+                <ShieldCheck className="mx-auto size-12 text-emerald-400 mb-3" />
+                <h3 className="text-lg font-bold text-white">Grievance Registered Successfully</h3>
+                <p className="mt-1 text-sm text-slate-300">Your complaint tracking reference number is:</p>
+                <div className="my-4 inline-block bg-[#0B101B] px-5 py-2.5 rounded-lg font-mono font-bold text-lg text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(67,217,255,0.15)]">
                   {grievanceResult.tracking_number}
                 </div>
-                <p className="text-xs text-ink-500">
-                  Statutory SLA Due Date: <strong>{new Date(grievanceResult.sla_due_at).toLocaleDateString("en-IN")}</strong>
+                <p className="text-xs text-slate-400">
+                  Statutory SLA Due Date: <strong className="text-white">{new Date(grievanceResult.sla_due_at).toLocaleDateString("en-IN")}</strong>
                 </p>
-                <p className="mt-4 text-xs text-ink-500">
+                <p className="mt-4 text-xs text-slate-400">
                   Please save this number for tracking and escalating to SEBI SCORES if unresolved.
                 </p>
                 <Button className="mt-4" onClick={() => setGrievanceResult(null)}>
@@ -330,51 +330,51 @@ export default function SupportDeskPage() {
                 </Button>
               </Card>
             ) : (
-              <Card className="p-6">
-                <h3 className="text-base font-semibold text-ink-900 mb-1">Formal Complaint Submission</h3>
-                <p className="text-xs text-ink-500 mb-4">Please provide detailed facts and any transaction or recommendation reference.</p>
+              <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+                <h3 className="text-base font-semibold text-white mb-1">Formal Complaint Submission</h3>
+                <p className="text-xs text-slate-400 mb-4">Please provide detailed facts and any transaction or recommendation reference.</p>
 
                 <form onSubmit={handleSubmitGrievance} className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-ink-700 mb-1">Complainant Full Name</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Complainant Full Name</label>
                       <input
                         type="text"
                         required
                         value={grievanceName}
                         onChange={(e) => setGrievanceName(e.target.value)}
-                        className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                        className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-ink-700 mb-1">Contact Email</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Contact Email</label>
                       <input
                         type="email"
                         required
                         value={grievanceEmail}
                         onChange={(e) => setGrievanceEmail(e.target.value)}
-                        className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                        className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-ink-700 mb-1">Mobile Number</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Mobile Number</label>
                       <input
                         type="tel"
                         value={grievanceMobile}
                         onChange={(e) => setGrievanceMobile(e.target.value)}
                         placeholder="+91..."
-                        className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                        className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-ink-700 mb-1">Complaint Category</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Complaint Category</label>
                       <select
                         value={grievanceCategory}
                         onChange={(e) => setGrievanceCategory(e.target.value)}
-                        className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                        className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
                       >
                         <option value="advisory">Advisory / Research Advice</option>
                         <option value="research">Research Report Disclosures</option>
@@ -387,26 +387,26 @@ export default function SupportDeskPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-ink-700 mb-1">Subject</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Subject</label>
                     <input
                       type="text"
                       required
                       value={grievanceSubject}
                       onChange={(e) => setGrievanceSubject(e.target.value)}
                       placeholder="Brief summary of your grievance"
-                      className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                      className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-ink-700 mb-1">Detailed Facts & Description</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Detailed Facts & Description</label>
                     <textarea
                       required
                       rows={5}
                       value={grievanceDescription}
                       onChange={(e) => setGrievanceDescription(e.target.value)}
                       placeholder="Include dates, reports cited, payment transactions, and exact grievance facts..."
-                      className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+                      className="w-full rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
 
@@ -419,33 +419,33 @@ export default function SupportDeskPage() {
           </div>
 
           <div className="space-y-4">
-            <Card className="p-6">
-              <h4 className="text-sm font-bold text-ink-900 mb-2">Designated Grievance Officer</h4>
-              <p className="text-xs text-ink-600 leading-relaxed">
+            <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+              <h4 className="text-sm font-bold text-white mb-2">Designated Grievance Officer</h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
                 In compliance with SEBI circulars, all unresolved complaints can be escalated directly to the designated officer:
               </p>
               <dl className="mt-3 space-y-2 text-xs">
                 <div>
-                  <dt className="text-ink-400">Designation:</dt>
-                  <dd className="font-semibold text-ink-800">Head of Compliance & Grievance Redressal</dd>
+                  <dt className="text-slate-400">Designation:</dt>
+                  <dd className="font-semibold text-white">Head of Compliance & Grievance Redressal</dd>
                 </div>
                 <div>
-                  <dt className="text-ink-400">Email:</dt>
-                  <dd className="font-mono text-ink-800">grievance@expertstocks.in</dd>
+                  <dt className="text-slate-400">Email:</dt>
+                  <dd className="font-mono text-cyan-300">grievance@expertstocks.in</dd>
                 </div>
                 <div>
-                  <dt className="text-ink-400">Address:</dt>
-                  <dd className="text-ink-800">Expert Stocks Consultancy Pvt. Ltd., Mumbai, Maharashtra</dd>
+                  <dt className="text-slate-400">Address:</dt>
+                  <dd className="text-slate-300">Expert Stocks Consultancy Pvt. Ltd., Mumbai, Maharashtra</dd>
                 </div>
               </dl>
             </Card>
 
-            <Card className="p-6 bg-ink-50">
-              <h4 className="text-sm font-bold text-ink-900 mb-1">Resolution Escalation Stages</h4>
-              <ol className="mt-2 text-xs text-ink-600 space-y-2 list-decimal list-inside">
-                <li><strong>Stage 1:</strong> Dedicated Helpdesk Support acknowledgment within 24 hours.</li>
-                <li><strong>Stage 2:</strong> Direct evaluation & resolution by Grievance Redressal Officer.</li>
-                <li><strong>Stage 3:</strong> Final executive review by Head of Compliance Cell.</li>
+            <Card className="p-6 bg-[#0E1624] border-[#1E293B]">
+              <h4 className="text-sm font-bold text-white mb-1">Resolution Escalation Stages</h4>
+              <ol className="mt-2 text-xs text-slate-300 space-y-2 list-decimal list-inside">
+                <li><strong className="text-white">Stage 1:</strong> Dedicated Helpdesk Support acknowledgment within 24 hours.</li>
+                <li><strong className="text-white">Stage 2:</strong> Direct evaluation & resolution by Grievance Redressal Officer.</li>
+                <li><strong className="text-white">Stage 3:</strong> Final executive review by Head of Compliance Cell.</li>
               </ol>
             </Card>
           </div>
@@ -455,9 +455,9 @@ export default function SupportDeskPage() {
       {/* Tab 3: Track Grievance Status */}
       {tab === "track" && (
         <div className="max-w-xl mx-auto space-y-6">
-          <Card className="p-6">
-            <h3 className="text-base font-semibold text-ink-900 mb-1">Track Grievance Status</h3>
-            <p className="text-xs text-ink-500 mb-4">Enter the tracking reference number (e.g. GRV-2026-00001).</p>
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <h3 className="text-base font-semibold text-white mb-1">Track Grievance Status</h3>
+            <p className="text-xs text-slate-400 mb-4">Enter the tracking reference number (e.g. GRV-2026-00001).</p>
 
             <form onSubmit={handleTrackGrievance} className="flex gap-2">
               <input
@@ -466,7 +466,7 @@ export default function SupportDeskPage() {
                 value={trackNumber}
                 onChange={(e) => setTrackNumber(e.target.value)}
                 placeholder="GRV-2026-XXXXX"
-                className="flex-1 rounded-lg border border-ink-200 px-3 py-2 text-sm font-mono focus:border-brand-600 focus:outline-none"
+                className="flex-1 rounded-lg border border-[#1E293B] bg-[#0E1624] px-3 py-2 text-sm font-mono text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
               />
               <Button type="submit" disabled={trackLoading}>
                 {trackLoading ? "Searching..." : "Track"}
@@ -474,19 +474,19 @@ export default function SupportDeskPage() {
             </form>
 
             {trackError && (
-              <div className="mt-4 rounded-lg bg-danger-50 border border-danger-200 p-3 text-xs text-danger-800 flex items-center gap-2">
-                <AlertCircle className="size-4 shrink-0 text-danger-600" />
+              <div className="mt-4 rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300 flex items-center gap-2">
+                <AlertCircle className="size-4 shrink-0 text-rose-400" />
                 {trackError}
               </div>
             )}
           </Card>
 
           {trackedItem && (
-            <Card className="p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-ink-100 pb-3">
+            <Card className="p-6 space-y-4 bg-[#090E1A] border-[#1E293B]">
+              <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
                 <div>
-                  <span className="font-mono text-xs text-ink-500">Tracking Reference</span>
-                  <p className="text-sm font-bold text-ink-900">{trackedItem.tracking_number}</p>
+                  <span className="font-mono text-xs text-slate-400">Tracking Reference</span>
+                  <p className="text-sm font-bold text-cyan-300 font-mono">{trackedItem.tracking_number}</p>
                 </div>
                 <Badge tone={trackedItem.status === "resolved" ? "positive" : trackedItem.status === "new" ? "warning" : "brand"}>
                   {trackedItem.status_label}
@@ -495,27 +495,27 @@ export default function SupportDeskPage() {
 
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-ink-400">Subject:</span>
-                  <p className="font-semibold text-ink-800 text-sm mt-0.5">{trackedItem.subject}</p>
+                  <span className="text-slate-400">Subject:</span>
+                  <p className="font-semibold text-white text-sm mt-0.5">{trackedItem.subject}</p>
                 </div>
                 <div>
-                  <span className="text-ink-400">Category:</span>
-                  <p className="text-ink-800 capitalize">{trackedItem.category}</p>
+                  <span className="text-slate-400">Category:</span>
+                  <p className="text-slate-200 capitalize">{trackedItem.category}</p>
                 </div>
                 <div>
-                  <span className="text-ink-400">Statutory SLA Target Date:</span>
-                  <p className="text-ink-800 font-semibold">{new Date(trackedItem.sla_due_at).toLocaleDateString("en-IN")}</p>
+                  <span className="text-slate-400">Statutory SLA Target Date:</span>
+                  <p className="text-white font-semibold">{new Date(trackedItem.sla_due_at).toLocaleDateString("en-IN")}</p>
                 </div>
                 {trackedItem.resolved_at && (
                   <div>
-                    <span className="text-ink-400">Resolution Date:</span>
-                    <p className="text-positive-700 font-semibold">{new Date(trackedItem.resolved_at).toLocaleString("en-IN")}</p>
+                    <span className="text-slate-400">Resolution Date:</span>
+                    <p className="text-emerald-400 font-semibold">{new Date(trackedItem.resolved_at).toLocaleString("en-IN")}</p>
                   </div>
                 )}
                 {trackedItem.resolution_notes && (
-                  <div className="mt-3 p-3 bg-positive-50 border border-positive-200 rounded-lg">
-                    <span className="text-positive-900 font-bold block mb-1">Grievance Officer Written Resolution:</span>
-                    <p className="text-positive-800 whitespace-pre-wrap">{trackedItem.resolution_notes}</p>
+                  <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                    <span className="text-emerald-300 font-bold block mb-1">Grievance Officer Written Resolution:</span>
+                    <p className="text-slate-200 whitespace-pre-wrap">{trackedItem.resolution_notes}</p>
                   </div>
                 )}
               </div>

@@ -48,9 +48,9 @@ const STATUS_TONE: Record<string, "positive" | "warning" | "danger" | "neutral">
 };
 
 function StepIcon({ status }: { status: string }) {
-  if (status === "completed") return <CheckCircle2 className="size-5 text-positive-600" aria-hidden="true" />;
-  if (status === "skipped") return <MinusCircle className="size-5 text-ink-400" aria-hidden="true" />;
-  return <CircleDashed className="size-5 text-ink-400" aria-hidden="true" />;
+  if (status === "completed") return <CheckCircle2 className="size-5 text-emerald-400" aria-hidden="true" />;
+  if (status === "skipped") return <MinusCircle className="size-5 text-slate-500" aria-hidden="true" />;
+  return <CircleDashed className="size-5 text-slate-500" aria-hidden="true" />;
 }
 
 export default function OnboardingPage() {
@@ -110,23 +110,23 @@ export default function OnboardingPage() {
         badge={<Badge tone={client.onboarding_status === "ACTIVE" ? "positive" : "brand"}>{humanize(client.onboarding_status.toLowerCase())}</Badge>}
       />
 
-      {notice && <p className="mb-4 rounded-xl bg-positive-50 px-4 py-3 text-sm text-positive-700">{notice}</p>}
-      {error && <p className="mb-4 rounded-xl bg-danger-50 px-4 py-3 text-sm text-danger-700">{error}</p>}
+      {notice && <p className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 text-sm text-emerald-300">{notice}</p>}
+      {error && <p className="mb-4 rounded-xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 text-sm text-rose-300">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="space-y-6">
-          <Card className="p-6">
-            <p className="text-sm font-semibold text-ink-900">Your checklist</p>
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <p className="text-sm font-semibold text-white">Your checklist</p>
             <ul className="mt-4 space-y-3">
               {steps.map((step) => (
                 <li key={step.key} className="flex items-start gap-3">
                   <StepIcon status={step.status} />
                   <div>
-                    <p className={cx("text-sm", step.status === "completed" ? "text-ink-600" : "font-medium text-ink-900")}>
+                    <p className={cx("text-sm", step.status === "completed" ? "text-slate-400" : "font-medium text-white")}>
                       {step.label}
-                      {!step.is_required && <span className="ml-2 text-xs uppercase tracking-wide text-ink-400">optional</span>}
+                      {!step.is_required && <span className="ml-2 text-xs uppercase tracking-wide text-slate-500">optional</span>}
                     </p>
-                    {step.completed_at && <p className="text-xs text-ink-500">{formatDate(step.completed_at)}</p>}
+                    {step.completed_at && <p className="text-xs text-slate-400">{formatDate(step.completed_at)}</p>}
                   </div>
                 </li>
               ))}
@@ -134,14 +134,14 @@ export default function OnboardingPage() {
           </Card>
 
           {agreements.length > 0 && (
-            <Card className="p-6">
-              <p className="text-sm font-semibold text-ink-900">Agreements to accept</p>
+            <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+              <p className="text-sm font-semibold text-white">Agreements to accept</p>
               {agreements.map((agreement) => (
-                <div key={agreement.id} className="mt-4 rounded-xl border border-ink-100 p-4">
-                  <p className="text-sm font-semibold text-ink-900">
-                    {agreement.title} <span className="text-xs font-normal text-ink-500">version {agreement.version}</span>
+                <div key={agreement.id} className="mt-4 rounded-xl border border-[#1E293B] bg-[#070B14] p-4">
+                  <p className="text-sm font-semibold text-white">
+                    {agreement.title} <span className="text-xs font-normal text-slate-400">version {agreement.version}</span>
                   </p>
-                  <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-ink-50 p-3 text-xs leading-5 text-ink-700">{agreement.body_markdown}</pre>
+                  <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-[#04060A] border border-[#1E293B]/60 p-3 text-xs leading-5 text-slate-300 font-mono">{agreement.body_markdown}</pre>
                   <Button
                     className="mt-3"
                     disabled={busy === `agreement-${agreement.id}`}
@@ -154,16 +154,16 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          <Card className="p-6">
-            <p className="text-sm font-semibold text-ink-900">Documents</p>
-            <p className="mt-1 text-sm text-ink-600">Files are stored encrypted. Only our verification team can open them, and every access is logged.</p>
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <p className="text-sm font-semibold text-white">Documents</p>
+            <p className="mt-1 text-sm text-slate-400">Files are stored encrypted. Only our verification team can open them, and every access is logged.</p>
 
             <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={uploadDocument}>
               <div className="min-w-40">
               <Field label="Type" htmlFor="document-category">
-                <Select id="document-category" name="category" defaultValue="pan">
+                <Select id="document-category" name="category" defaultValue="pan" className="bg-[#0B101B] border-[#1E293B] text-white">
                   {Object.entries(categories).map(([value, label]) => (
-                    <option key={value} value={value}>
+                    <option key={value} value={value} className="bg-[#090E1A] text-white">
                       {label}
                     </option>
                   ))}
@@ -172,7 +172,13 @@ export default function OnboardingPage() {
               </div>
               <div className="min-w-56">
               <Field label="File" htmlFor="document-file">
-                <input id="document-file" type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-ink-100 file:px-3 file:py-2 file:text-sm file:font-medium" />
+                <input
+                  id="document-file"
+                  type="file"
+                  name="file"
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                  className="block w-full text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-cyan-500/20 cursor-pointer"
+                />
               </Field>
               </div>
               <Button type="submit" disabled={busy === "upload"}>
@@ -180,16 +186,16 @@ export default function OnboardingPage() {
               </Button>
             </form>
 
-            <ul className="mt-5 divide-y divide-ink-100">
-              {documents.length === 0 && <li className="py-3 text-sm text-ink-500">Nothing uploaded yet.</li>}
+            <ul className="mt-5 divide-y divide-[#1E293B]">
+              {documents.length === 0 && <li className="py-3 text-sm text-slate-400">Nothing uploaded yet.</li>}
               {documents.map((document) => (
                 <li key={document.uuid} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div className="flex items-center gap-3">
-                    <FileText className="size-4 text-ink-400" aria-hidden="true" />
+                    <FileText className="size-4 text-cyan-400" aria-hidden="true" />
                     <div>
-                      <p className="text-sm text-ink-900">{document.title}</p>
-                      <p className="text-xs text-ink-500">Uploaded {formatDate(document.uploaded_at)}</p>
-                      {document.rejection_reason && <p className="text-xs text-danger-600">{document.rejection_reason}</p>}
+                      <p className="text-sm font-medium text-white">{document.title}</p>
+                      <p className="text-xs text-slate-400">Uploaded {formatDate(document.uploaded_at)}</p>
+                      {document.rejection_reason && <p className="text-xs text-rose-400 font-medium">{document.rejection_reason}</p>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -205,11 +211,11 @@ export default function OnboardingPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="p-6">
-            <p className="text-sm font-semibold text-ink-900">Risk profile</p>
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <p className="text-sm font-semibold text-white">Risk profile</p>
             {risk === null ? (
               <>
-                <p className="mt-2 text-sm text-ink-600">
+                <p className="mt-2 text-sm text-slate-400">
                   The questionnaire helps us understand your experience, time horizon and comfort with losses. It takes a couple of minutes.
                 </p>
                 <LinkButton className="mt-4" href="/portal/risk-profile">
@@ -218,27 +224,27 @@ export default function OnboardingPage() {
               </>
             ) : (
               <>
-                <p className="mt-3 text-2xl font-semibold text-ink-950">{risk.category_label}</p>
-                {risk.description && <p className="mt-1 text-sm text-ink-600">{risk.description}</p>}
+                <p className="mt-3 text-2xl font-semibold text-cyan-300 font-mono">{risk.category_label}</p>
+                {risk.description && <p className="mt-1 text-sm text-slate-400">{risk.description}</p>}
                 <dl className="mt-4 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-ink-500">Score</dt>
-                    <dd className="text-ink-900">
+                    <dt className="text-slate-400">Score</dt>
+                    <dd className="text-white font-mono">
                       {risk.score} / {risk.max_score}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-ink-500">Method</dt>
-                    <dd className="text-ink-900">{risk.methodology_version}</dd>
+                    <dt className="text-slate-400">Method</dt>
+                    <dd className="text-white font-mono">{risk.methodology_version}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-ink-500">Completed</dt>
-                    <dd className="text-ink-900">{formatDate(risk.taken_at)}</dd>
+                    <dt className="text-slate-400">Completed</dt>
+                    <dd className="text-white">{formatDate(risk.taken_at)}</dd>
                   </div>
                   {risk.expires_at && (
                     <div className="flex justify-between">
-                      <dt className="text-ink-500">Review by</dt>
-                      <dd className="text-ink-900">{formatDate(risk.expires_at)}</dd>
+                      <dt className="text-slate-400">Review by</dt>
+                      <dd className="text-white">{formatDate(risk.expires_at)}</dd>
                     </div>
                   )}
                 </dl>
@@ -251,7 +257,7 @@ export default function OnboardingPage() {
                     This reflects my circumstances
                   </Button>
                 ) : (
-                  <p className="mt-4 text-sm text-positive-700">You confirmed this on {formatDate(risk.acknowledged_at)}.</p>
+                  <p className="mt-4 text-sm text-emerald-400 font-medium">You confirmed this on {formatDate(risk.acknowledged_at)}.</p>
                 )}
                 <LinkButton variant="ghost" className="mt-2" href="/portal/risk-profile">
                   Retake the questionnaire
@@ -260,16 +266,16 @@ export default function OnboardingPage() {
             )}
           </Card>
 
-          <Card className="p-6">
-            <p className="text-sm font-semibold text-ink-900">Identity checks</p>
-            <p className="mt-1 text-sm text-ink-600">We record only a masked reference — never your full number.</p>
-            <ul className="mt-4 divide-y divide-ink-100">
-              {kyc.length === 0 && <li className="py-3 text-sm text-ink-500">Nothing recorded yet. Upload your documents and our team will take it from there.</li>}
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <p className="text-sm font-semibold text-white">Identity checks</p>
+            <p className="mt-1 text-sm text-slate-400">We record only a masked reference — never your full number.</p>
+            <ul className="mt-4 divide-y divide-[#1E293B]">
+              {kyc.length === 0 && <li className="py-3 text-sm text-slate-400">Nothing recorded yet. Upload your documents and our team will take it from there.</li>}
               {kyc.map((check) => (
                 <li key={check.type} className="flex items-center justify-between gap-3 py-3">
                   <div>
-                    <p className="text-sm text-ink-900">{check.label}</p>
-                    {check.remarks && <p className="text-xs text-danger-600">{check.remarks}</p>}
+                    <p className="text-sm font-medium text-white">{check.label}</p>
+                    {check.remarks && <p className="text-xs text-rose-400">{check.remarks}</p>}
                   </div>
                   <Badge tone={STATUS_TONE[check.status] ?? "neutral"}>{humanize(check.status)}</Badge>
                 </li>
@@ -277,9 +283,9 @@ export default function OnboardingPage() {
             </ul>
           </Card>
 
-          <Card className="p-6">
-            <p className="text-sm font-semibold text-ink-900">Need help?</p>
-            <p className="mt-1 text-sm text-ink-600">
+          <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+            <p className="text-sm font-semibold text-white">Need help?</p>
+            <p className="mt-1 text-sm text-slate-400">
               {client.relationship_manager ? `${client.relationship_manager} is looking after your account.` : "A relationship manager will be assigned shortly."}
             </p>
           </Card>

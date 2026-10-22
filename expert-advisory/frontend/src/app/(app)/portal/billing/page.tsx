@@ -88,20 +88,20 @@ export default function BillingPage() {
     <>
       <PageTitle title="Services & billing" description="Your services, invoices and the payments we have received." />
 
-      {error && <p className="mb-4 rounded-xl bg-danger-50 px-4 py-3 text-sm text-danger-700">{error}</p>}
+      {error && <p className="mb-4 rounded-xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 text-sm text-rose-300">{error}</p>}
 
       <div className="space-y-6">
-        <Card className="p-6">
-          <p className="text-sm font-semibold text-ink-900">Your services</p>
-          <ul className="mt-4 divide-y divide-ink-100">
-            {subscriptions.length === 0 && <li className="py-3 text-sm text-ink-500">No service has been set up yet.</li>}
+        <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+          <p className="text-sm font-semibold text-white">Your services</p>
+          <ul className="mt-4 divide-y divide-[#1E293B]">
+            {subscriptions.length === 0 && <li className="py-3 text-sm text-slate-400">No service has been set up yet.</li>}
             {subscriptions.map((subscription) => (
               <li key={subscription.uuid} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div>
-                  <p className="text-sm font-medium text-ink-900">
-                    {subscription.service} {subscription.plan && <span className="text-ink-500">· {subscription.plan}</span>}
+                  <p className="text-sm font-medium text-white">
+                    {subscription.service} {subscription.plan && <span className="text-cyan-400">· {subscription.plan}</span>}
                   </p>
-                  <p className="text-xs text-ink-500">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     {subscription.starts_on ? `From ${formatDate(subscription.starts_on)}` : "Starts once payment is confirmed"}
                     {subscription.ends_on ? ` · until ${formatDate(subscription.ends_on)}` : ""}
                     {subscription.days_remaining !== null ? ` · ${subscription.days_remaining} days left` : ""}
@@ -113,23 +113,23 @@ export default function BillingPage() {
           </ul>
         </Card>
 
-        <Card className="p-6">
-          <p className="text-sm font-semibold text-ink-900">Invoices</p>
-          <ul className="mt-4 divide-y divide-ink-100">
-            {invoices.length === 0 && <li className="py-3 text-sm text-ink-500">No invoice has been raised yet.</li>}
+        <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+          <p className="text-sm font-semibold text-white">Invoices</p>
+          <ul className="mt-4 divide-y divide-[#1E293B]">
+            {invoices.length === 0 && <li className="py-3 text-sm text-slate-400">No invoice has been raised yet.</li>}
             {invoices.map((invoice) => (
               <li key={invoice.uuid} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="flex items-start gap-3">
-                  <FileText className="mt-0.5 size-4 text-ink-400" aria-hidden="true" />
+                  <FileText className="mt-0.5 size-4 text-cyan-400" aria-hidden="true" />
                   <div>
-                    <p className="font-mono text-sm text-ink-900">{invoice.number}</p>
-                    <p className="text-xs text-ink-500">
+                    <p className="font-mono text-sm font-semibold text-cyan-300">{invoice.number}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
                       Raised {formatDate(invoice.invoice_date)} · due {formatDate(invoice.due_date)} · balance {invoice.balance}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-ink-900">{invoice.total}</span>
+                  <span className="text-sm font-mono font-bold text-white">{invoice.total}</span>
                   <Badge tone={TONES[invoice.status] ?? "neutral"}>{humanize(invoice.status)}</Badge>
                   <Button variant="ghost" onClick={() => open(`/client/invoices/${invoice.uuid}/pdf`)}>
                     Open
@@ -140,19 +140,19 @@ export default function BillingPage() {
           </ul>
         </Card>
 
-        <Card className="p-6">
-          <p className="text-sm font-semibold text-ink-900">Payments received</p>
-          <ul className="mt-4 divide-y divide-ink-100">
-            {payments.length === 0 && <li className="py-3 text-sm text-ink-500">Nothing received yet.</li>}
+        <Card className="p-6 bg-[#090E1A] border-[#1E293B]">
+          <p className="text-sm font-semibold text-white">Payments received</p>
+          <ul className="mt-4 divide-y divide-[#1E293B]">
+            {payments.length === 0 && <li className="py-3 text-sm text-slate-400">Nothing received yet.</li>}
             {payments.map((payment) => (
               <li key={payment.uuid} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="flex items-start gap-3">
-                  <ReceiptIcon className="mt-0.5 size-4 text-ink-400" aria-hidden="true" />
+                  <ReceiptIcon className="mt-0.5 size-4 text-emerald-400" aria-hidden="true" />
                   <div>
-                    <p className="text-sm text-ink-900">
-                      {payment.amount} <span className="text-ink-500">· {payment.method}</span>
+                    <p className="text-sm font-medium text-white">
+                      <span className="font-mono font-bold text-emerald-400">{payment.amount}</span> <span className="text-slate-400 font-normal">· {payment.method}</span>
                     </p>
-                    <p className="text-xs text-ink-500">
+                    <p className="text-xs text-slate-400 mt-0.5">
                       {payment.received_at ? formatDate(payment.received_at) : "—"}
                       {payment.invoice_number ? ` · against ${payment.invoice_number}` : ""}
                     </p>
@@ -169,7 +169,7 @@ export default function BillingPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs leading-5 text-ink-500">
+          <p className="mt-4 text-xs leading-5 text-slate-400">
             A payment shows as received once our team has confirmed it against the bank account. {notice}
           </p>
         </Card>
