@@ -426,3 +426,209 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
   const liveFromEngine = await getLiveQuotesFromTradeGrow();
   return liveFromEngine || fallbackQuotes;
 }
+
+/**
+ * Helper to ensure an active access token is retrieved or refreshed
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  let tokens = readStoredTokens();
+  let token = tokens?.accessToken;
+  if (!token) {
+    token = (await refreshFyersAccessToken()) || "";
+    if (!token) {
+      const auto = await autoLoginFyers();
+      if (auto.success && auto.accessToken) {
+        token = auto.accessToken;
+      }
+    }
+  }
+  return token || null;
+}
+
+export interface FyersOrderParams {
+  symbol: string;
+  qty: number;
+  side: "BUY" | "SELL" | 1 | -1;
+  type?: "LIMIT" | "MARKET" | "STOP" | "STOP_LIMIT" | 1 | 2 | 3 | 4;
+  productType?: "CNC" | "INTRADAY" | "MARGIN";
+  limitPrice?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  validity?: "DAY" | "IOC";
+}
+
+export interface FyersOrderResult {
+  success: boolean;
+  orderId: string;
+  status: "PLACED" | "EXECUTED" | "REJECTED" | "SIMULATED";
+  broker: "FYERS";
+  symbol: string;
+  qty: number;
+  message: string;
+  rawResponse?: any;
+  placedAt: string;
+}
+
+/**
+ * Normalize human symbol (e.g. "HDFCBANK", "NIFTY 22500 CE") to Fyers V3 symbol format
+ */
+export function formatFyersSymbol(symbol: string, exchange: string = "NSE"): string {
+  let s = symbol.trim().toUpperCase();
+  if (s.startsWith("NSE:") || s.startsWith("BSE:") || s.startsWith("MCX:")) {
+    return s;
+  }
+  if (s.includes("NIFTY") && (s.includes("CE") || s.includes("PE"))) {
+    // Format options symbol
+    return `NSE:${s.replace(/\s+/g, "")}`;
+  }
+  return `${exchange}:${s}-EQ`;
+}
+
+/**
+ * Execute real order placement via Fyers V3 REST API (with sandbox fallback)
+ */
+export async function placeFyersOrder(params: FyersOrderParams): Promise<FyersOrderResult> {
+  const config = getFyersConfig();
+  const token = await getValidAccessToken();
+  const fyersSymbol = formatFyersSymbol(params.symbol);
+
+  const sideNumber = params.side === "BUY" || params.side === 1 ? 1 : -1;
+  let typeNumber = 1; // Default LIMIT
+  if (params.type === "MARKET" || params.type === 2) typeNumber = 2;
+  else if (params.type === "STOP" || params.type === 3) typeNumber = 3;
+  else if (params.type === "STOP_LIMIT" || params.type === 4) typeNumber = 4;
+
+  const orderPayload = {
+    symbol: fyersSymbol,
+    qty: params.qty,
+    type: typeNumber,
+    side: sideNumber,
+    productType: params.productType || "CNC",
+    limitPrice: params.limitPrice || 0,
+    stopPrice: params.stopLoss || 0,
+    validity: params.validity || "DAY",
+    disclosedQty: 0,
+    offlineOrder: false,
+    stopLoss: params.stopLoss || 0,
+    takeProfit: params.takeProfit || 0,
+  };
+
+  const timestamp = new Date().toISOString();
+
+  if (!token) {
+    // In sandbox or when broker credentials not yet linked in environment
+    const sandboxOrderId = `FYERS-SBX-${Math.floor(100000 + Math.random() * 900000)}`;
+    return {
+      success: true,
+      orderId: sandboxOrderId,
+      status: "SIMULATED",
+      broker: "FYERS",
+      symbol: fyersSymbol,
+      qty: params.qty,
+      message: `[Fyers Sandbox] Pre-market GTT Order for ${params.qty} units of ${fyersSymbol} simulated successfully. Real execution activates with production API keys.`,
+      placedAt: timestamp,
+    };
+  }
+
+  try {
+    const res = await fetch("https://api-t1.fyers.in/api/v3/orders/sync", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `${config.appId}:${token}`,
+      },
+      body: JSON.stringify(orderPayload),
+    });
+
+    const data = await res.json();
+    if (data.s === "ok" && data.id) {
+      return {
+        success: true,
+        orderId: data.id,
+        status: "PLACED",
+        broker: "FYERS",
+        symbol: fyersSymbol,
+        qty: params.qty,
+        message: `Fyers V3 live order placed successfully: Order ID ${data.id}`,
+        rawResponse: data,
+        placedAt: timestamp,
+      };
+    }
+
+    // If order was rejected by exchange or RMS (e.g. market closed, insufficient balance)
+    return {
+      success: false,
+      orderId: data.id || `FYERS-REJ-${Date.now()}`,
+      status: "REJECTED",
+      broker: "FYERS",
+      symbol: fyersSymbol,
+      qty: params.qty,
+      message: data.message || `Fyers order failed: ${JSON.stringify(data)}`,
+      rawResponse: data,
+      placedAt: timestamp,
+    };
+  } catch (err: any) {
+    console.error("[Fyers] Order execution error:", err);
+    return {
+      success: false,
+      orderId: `FYERS-ERR-${Date.now()}`,
+      status: "REJECTED",
+      broker: "FYERS",
+      symbol: fyersSymbol,
+      qty: params.qty,
+      message: `Network error reaching Fyers OMS: ${err.message}`,
+      placedAt: timestamp,
+    };
+  }
+}
+
+/**
+ * Fetch open positions from Fyers API V3
+ */
+export async function getFyersPositions(): Promise<any[]> {
+  const config = getFyersConfig();
+  const token = await getValidAccessToken();
+  if (!token) return [];
+
+  try {
+    const res = await fetch("https://api-t1.fyers.in/api/v3/positions", {
+      headers: {
+        Authorization: `${config.appId}:${token}`,
+      },
+      next: { revalidate: 10 },
+    });
+    const data = await res.json();
+    if (data.s === "ok" && Array.isArray(data.netPositions)) {
+      return data.netPositions;
+    }
+  } catch (e) {
+    console.warn("[Fyers] Failed fetching positions:", e);
+  }
+  return [];
+}
+
+/**
+ * Fetch Demat holdings from Fyers API V3
+ */
+export async function getFyersHoldings(): Promise<any[]> {
+  const config = getFyersConfig();
+  const token = await getValidAccessToken();
+  if (!token) return [];
+
+  try {
+    const res = await fetch("https://api-t1.fyers.in/api/v3/holdings", {
+      headers: {
+        Authorization: `${config.appId}:${token}`,
+      },
+      next: { revalidate: 60 },
+    });
+    const data = await res.json();
+    if (data.s === "ok" && Array.isArray(data.holdings)) {
+      return data.holdings;
+    }
+  } catch (e) {
+    console.warn("[Fyers] Failed fetching holdings:", e);
+  }
+  return [];
+}

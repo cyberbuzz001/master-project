@@ -204,3 +204,28 @@ All official WhatsApp communication with leads and clients is routed strictly th
 - Inbound inquiries grant a 24-hour customer service window for free-form replies.
 - Outside the 24-hour window, only pre-approved Meta templates may be sent.
 - Never guarantee returns or share unauthorized tips in free-form messages.
+
+---
+
+## 12. Attribution, CAC Analytics & Creator Revenue Share Engine (Phase 3 & 4)
+
+Located at **CRM -> Campaigns & CAC** (`/office`).
+
+### Multi-Touch UTM Attribution:
+- **First-Touch Attribution:** Identifies top-of-funnel awareness (Google Search Ads, YouTube podcasts, educational blogs) that first attracted the prospect.
+- **Last-Touch Attribution:** Identifies the immediate converting campaign (e.g. Free Trial retargeting, WhatsApp broadcast).
+- **Linear Attribution:** Distributes credit equally across touchpoints.
+- **Key Metrics:** Blended CAC (target &lt; ₹5,000), Paid-Only CAC (&lt; ₹7,500), ROAS multiplier (target &gt; 4.0x), and LTV/CAC ratio (&gt; 5.0x).
+
+### Creator, Influencer & Partner RevShare Tiers:
+Commissions are calculated automatically upon client payment verification:
+- **Bronze Partner (0–10 Clients):** 10% on Advisory + ₹5/traded Demat order.
+- **Silver Partner (11–25 Clients):** 15% on Advisory + ₹8/traded Demat order.
+- **Gold Creator (26–50 Clients):** 20% on Advisory + ₹12/traded Demat order.
+- **Institutional Master (&gt;50 Clients):** 25% on Advisory + ₹15/traded Demat order.
+
+### Statutory TDS (Section 194H) & Bank Payout Protocol:
+1. **Automated 5% TDS Withholding:** Under Section 194H of the Income Tax Act, 1961, 5% TDS is deducted from all partner commissions exceeding ₹15,000 per financial year.
+2. **Bank Payout Action:** Click **Process Bank NEFT** to open the payout modal.
+3. **UTR Reconciliation:** Enter the actual bank UTR reference number (e.g., `NEFT-20261022-984210`).
+4. **Audit Immutability:** Once confirmed, the ledger item locks to `PAID` with verified timestamp.

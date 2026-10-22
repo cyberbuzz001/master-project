@@ -73,6 +73,31 @@ export interface StoredLead {
   tags?: string[];
   notes?: string;
   updatedAt?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  gclid?: string;
+  fbclid?: string;
+  refCode?: string;
+  vendorCode?: string;
+  firstTouch?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    landingPage?: string;
+    referrer?: string;
+    timestamp: string;
+  };
+  lastTouch?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    landingPage?: string;
+    referrer?: string;
+    timestamp: string;
+  };
 }
 
 export interface StoredKycRecord {
@@ -387,6 +412,17 @@ export const leadsStore = {
     assignedAgent?: string;
     notes?: string;
     status?: LeadStatus;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+    gclid?: string;
+    fbclid?: string;
+    refCode?: string;
+    vendorCode?: string;
+    firstTouch?: any;
+    lastTouch?: any;
   }): StoredLead {
     const store = loadStore();
 
@@ -428,6 +464,17 @@ export const leadsStore = {
       tags: ["Inbound", input.source ? input.source.slice(0, 16) : "CRM Added"],
       notes: input.notes || input.message || "Added via CRM Lead Management.",
       updatedAt: "Today, Just now",
+      utmSource: input.utmSource || input.firstTouch?.utm_source,
+      utmMedium: input.utmMedium || input.firstTouch?.utm_medium,
+      utmCampaign: input.utmCampaign || input.firstTouch?.utm_campaign,
+      utmTerm: input.utmTerm,
+      utmContent: input.utmContent,
+      gclid: input.gclid || input.firstTouch?.gclid,
+      fbclid: input.fbclid || input.firstTouch?.fbclid,
+      refCode: input.refCode || input.firstTouch?.referral_code,
+      vendorCode: input.vendorCode || input.firstTouch?.vendor_code,
+      firstTouch: input.firstTouch,
+      lastTouch: input.lastTouch,
       assessment: input.assessment
         ? {
             score: input.assessment.score || 0,

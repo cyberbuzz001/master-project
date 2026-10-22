@@ -98,6 +98,10 @@ export async function POST(request: NextRequest) {
 
     // 2. Save directly in Expert Stocks persistent storage so /office shows it immediately!
     try {
+      const attr = body.attribution || {};
+      const firstTouch = attr.firstTouch || attr.multiTouch?.firstTouch || (attr.utm_source ? attr : undefined);
+      const lastTouch = attr.lastTouch || attr.multiTouch?.lastTouch || (attr.utm_source ? attr : undefined);
+
       leadsStore.addLead({
         leadCode: dispatchedLeadCode,
         fullName,
@@ -106,9 +110,20 @@ export async function POST(request: NextRequest) {
         city: body.city,
         capitalRange: body.capital_range,
         segments: body.segments,
-        source: body.form_key || body.source || "Contact Form",
+        source: attr.utm_source ? `${attr.utm_source} (${attr.utm_medium || "campaign"})` : (body.form_key || body.source || "Contact Form"),
         message: body.message,
         assessment: body.assessment,
+        utmSource: attr.utm_source || firstTouch?.utm_source,
+        utmMedium: attr.utm_medium || firstTouch?.utm_medium,
+        utmCampaign: attr.utm_campaign || firstTouch?.utm_campaign,
+        utmTerm: attr.utm_term || firstTouch?.utm_term,
+        utmContent: attr.utm_content || firstTouch?.utm_content,
+        gclid: attr.gclid || firstTouch?.gclid,
+        fbclid: attr.fbclid || firstTouch?.fbclid,
+        refCode: attr.referral_code || attr.ref || firstTouch?.referral_code,
+        vendorCode: attr.vendor_code || firstTouch?.vendor_code,
+        firstTouch,
+        lastTouch,
       });
     } catch (err: any) {
       console.warn("[Leads Store] Could not record to local store:", err.message);
