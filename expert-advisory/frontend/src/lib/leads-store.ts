@@ -363,6 +363,12 @@ export const leadsStore = {
     return loadStore().leads.find((l) => l.id === id) || null;
   },
 
+  getLeadByPhone(phone: string): StoredLead | null {
+    const clean = phone.replace(/\D/g, "").slice(-10);
+    if (!clean) return null;
+    return loadStore().leads.find((l) => l.mobile.replace(/\D/g, "").slice(-10) === clean) || null;
+  },
+
   getKycRecords(): StoredKycRecord[] {
     return loadStore().kyc;
   },
