@@ -255,3 +255,51 @@ export async function sendResearchReportAlertWhatsApp(
     parameters: [fullName || "Investor", reportTitle || "Nifty Weekly Technical Outlook", reportRef || "REP-2026"],
   });
 }
+
+/**
+ * 6. adv_order_execution (Transactional)
+ * Body: Hello {{1}}, Your order for {{2}} (Qty: {{3}} @ ₹{{4}}) has been executed. Order ID: {{5}}.
+ */
+export async function sendOrderFilledWhatsApp(
+  to: string,
+  fullName: string,
+  symbol: string,
+  qty: number | string,
+  price: number | string,
+  orderId: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_order_execution",
+    parameters: [
+      fullName || "Trader",
+      symbol || "NIFTY",
+      String(qty),
+      typeof price === "number" ? price.toFixed(2) : String(price),
+      orderId,
+    ],
+  });
+}
+
+/**
+ * 7. adv_margin_alert (Risk / Compliance)
+ * Body: URGENT RISK ALERT: Hello {{1}}, Your trading margin is in deficit by ₹{{2}}. Please deposit funds by {{3}} to prevent square-off (Client ID: {{4}}).
+ */
+export async function sendMarginAlertWhatsApp(
+  to: string,
+  fullName: string,
+  shortfallAmount: number | string,
+  deadlineTime: string,
+  clientId: string
+): Promise<WhatsAppSendResult> {
+  return sendWhatsAppTemplate({
+    to,
+    templateName: "adv_margin_alert",
+    parameters: [
+      fullName || "Valued Trader",
+      typeof shortfallAmount === "number" ? shortfallAmount.toLocaleString("en-IN") : String(shortfallAmount),
+      deadlineTime || "15:15 IST Today",
+      clientId || "TG-CLI-2026",
+    ],
+  });
+}

@@ -229,3 +229,24 @@ Commissions are calculated automatically upon client payment verification:
 2. **Bank Payout Action:** Click **Process Bank NEFT** to open the payout modal.
 3. **UTR Reconciliation:** Enter the actual bank UTR reference number (e.g., `NEFT-20261022-984210`).
 4. **Audit Immutability:** Once confirmed, the ledger item locks to `PAID` with verified timestamp.
+
+---
+
+## 13. Event-Driven Automation Hub & Operational War Room (Phase 5 & 6)
+
+Located at **CRM -> Automation Builder** and **Dashboard -> Operational War Room** (`/office`).
+
+### Core Event Bus Topics (Redis Streams):
+- **`lead.captured`:** Instant Meta WhatsApp Welcome (`adv_lead_welcome`) + 5-min speed-to-lead task.
+- **`kyc.verified`:** 20-Point Suitability Certificate (`adv_risk_assessment_cert`) dispatched via WhatsApp.
+- **`rec.published`:** Compliance-approved research broadcast to Portal, WhatsApp (`adv_research_report`), and Telegram.
+- **`order.filled`:** Sub-3s digital execution confirmation slip (`adv_order_execution`) via Fyers V3 / TradeGrow OMS.
+- **`margin.breached`:** High-urgency margin deficit notification (`adv_margin_alert`) with 15:15 IST square-off countdown.
+- **`sub.renewal.due`:** Automated T-7 day retention notice with 10% loyalty credit.
+
+### Operational War Room & Risk Desk Controls:
+- **System Telemetry:** Live latency monitors for TradeGrow OMS (42ms), Fyers V3 tick feeds (2,410 ticks/s), and Redis Streams (1.4ms).
+- **Market Exposure Gauges:** Gross Derivatives Notional (₹18.42 Cr), Collateral Margin Pool (₹8.95 Cr pool, 68.4% utilization), and Net Bullish Delta.
+- **Research Analyst Alpha Scorecards:** Separate strike rate, profit factor, and max drawdown tracking for registered RAs (`Dr. Ananya Ray`, `Vikram Malhotra`, `Priya Sharma`).
+- **RMS Margin Deficit Matrix:** Real-time account tiers with 1-click **Dispatch Deficit Alerts (WA)**.
+- **SEBI Chinese Wall Verification:** Continuous algorithmic verification preventing cross-contamination between Sales telecallers and licensed Research Analysts.

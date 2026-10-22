@@ -29,8 +29,16 @@ import {
   Trophy,
   AlertCircle,
   FileText,
-  BadgePercent,
   CalendarCheck,
+  Server,
+  Gauge,
+  Radio,
+  Scale,
+  Headphones,
+  MessageSquare,
+  Mail,
+  Send,
+  BadgePercent,
 } from "lucide-react";
 import { Badge, Card, cx } from "@/components/ui";
 import type { CrmLead, Customer360, CrmPayment, CrmUser, CrmModuleId } from "@/lib/crm-data";
@@ -54,6 +62,8 @@ export function ExecutiveDashboard({
 }: ExecutiveDashboardProps) {
   const [revenueTab, setRevenueTab] = useState<"monthly" | "weekly" | "service" | "agent">("monthly");
   const [timeRange, setTimeRange] = useState<"today" | "week" | "mtd" | "quarter">("mtd");
+  const [viewMode, setViewMode] = useState<"overview" | "war_room">("overview");
+  const [deficitAlertSent, setDeficitAlertSent] = useState(false);
 
   // Calculate 18 KPIs
   const totalLeads = leads.length;
@@ -115,6 +125,37 @@ export function ExecutiveDashboard({
 
           {/* Action Tools & Filters */}
           <div className="flex flex-wrap items-center gap-2.5 pt-1 lg:pt-0">
+            {/* View Mode Switcher: CRM Overview vs Operational War Room */}
+            <div className="flex items-center bg-[#070B14] p-1 rounded-xl border border-slate-800 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("overview")}
+                className={cx(
+                  "px-3 py-1.5 rounded-lg font-mono text-[11px] font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5",
+                  viewMode === "overview"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                <BarChart3 className="size-3.5" />
+                <span>CRM Overview</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("war_room")}
+                className={cx(
+                  "px-3 py-1.5 rounded-lg font-mono text-[11px] font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5",
+                  viewMode === "war_room"
+                    ? "bg-gradient-to-r from-amber-600 to-red-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                <Activity className="size-3.5 text-amber-300" />
+                <span>Operational War Room</span>
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </button>
+            </div>
+
             {/* Time Filter Pills */}
             <div className="flex items-center bg-[#070B14] p-1 rounded-xl border border-slate-800 text-xs">
               {(["today", "week", "mtd", "quarter"] as const).map((t) => (
@@ -155,8 +196,349 @@ export function ExecutiveDashboard({
         </div>
       </div>
 
-      {/* ─── 4 HERO PERFORMANCE METRIC CARDS ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {viewMode === "war_room" ? (
+        <div className="space-y-6">
+          {/* Live System Telemetry Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="rounded-xl border border-slate-800 bg-[#0A101C]/90 p-3 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="flex items-center gap-1 font-bold">
+                  <Server className="size-3 text-emerald-400" />
+                  TradeGrow OMS
+                </span>
+                <span className="text-emerald-400 font-bold">42ms</span>
+              </div>
+              <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                PORT 8000 LIVE
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-[#0A101C]/90 p-3 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="flex items-center gap-1 font-bold">
+                  <Radio className="size-3 text-cyan-400" />
+                  Fyers V3 WebSocket
+                </span>
+                <span className="text-cyan-400 font-bold">2,410/s</span>
+              </div>
+              <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                NSE / BSE / MCX
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-[#0A101C]/90 p-3 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="flex items-center gap-1 font-bold">
+                  <Zap className="size-3 text-amber-400" />
+                  Redis Streams
+                </span>
+                <span className="text-amber-400 font-bold">1.4ms</span>
+              </div>
+              <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+                6 ACTIVE STREAMS
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-[#0A101C]/90 p-3 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="flex items-center gap-1 font-bold">
+                  <MessageSquare className="size-3 text-emerald-400" />
+                  Meta WhatsApp API
+                </span>
+                <span className="text-emerald-400 font-bold">99.4%</span>
+              </div>
+              <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                +91 92018 00995
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-[#0A101C]/90 p-3 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span className="flex items-center gap-1 font-bold">
+                  <Mail className="size-3 text-purple-400" />
+                  Hostinger SMTP
+                </span>
+                <span className="text-purple-400 font-bold">Port 465</span>
+              </div>
+              <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-purple-400 animate-pulse" />
+                info@expertstocks.in
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Big War Room Gauges */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-blue-500/30 bg-[#090E1A] p-5 space-y-2 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                <span className="font-bold">GROSS MARKET EXPOSURE</span>
+                <Scale className="size-4 text-blue-400" />
+              </div>
+              <div className="text-3xl font-extrabold font-mono text-white tracking-tight">₹18.42 Cr</div>
+              <div className="text-xs font-mono text-emerald-400">
+                Net Delta: <strong>+₹2.15 Cr</strong> (Bullish Hedge)
+              </div>
+              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono text-slate-400 flex justify-between">
+                <span>F&O: ₹14.80 Cr</span>
+                <span>Cash Delivery: ₹3.62 Cr</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-cyan-500/30 bg-[#090E1A] p-5 space-y-2 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                <span className="font-bold">TOTAL MARGIN UTILIZATION</span>
+                <Gauge className="size-4 text-cyan-400" />
+              </div>
+              <div className="text-3xl font-extrabold font-mono text-cyan-300 tracking-tight">68.4%</div>
+              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1">
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full" style={{ width: "68.4%" }} />
+              </div>
+              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono text-slate-400 flex justify-between">
+                <span>Deployed: ₹6.12 Cr</span>
+                <span>Buffer: ₹2.83 Cr</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-500/30 bg-[#090E1A] p-5 space-y-2 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                <span className="font-bold">ADVISORY STRIKE RATE (ALPHA)</span>
+                <Trophy className="size-4 text-emerald-400" />
+              </div>
+              <div className="text-3xl font-extrabold font-mono text-emerald-400 tracking-tight">85.4%</div>
+              <div className="text-xs font-mono text-slate-300">
+                Profit Factor: <strong className="text-white">2.88</strong> • 146 Calls
+              </div>
+              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono text-slate-400 flex justify-between">
+                <span>124 Target Hit</span>
+                <span>22 Stop Loss Exit</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-amber-500/30 bg-[#090E1A] p-5 space-y-2 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                <span className="font-bold">TELECALLER FLOOR VELOCITY</span>
+                <Headphones className="size-4 text-amber-400" />
+              </div>
+              <div className="text-3xl font-extrabold font-mono text-amber-300 tracking-tight">384 / 500</div>
+              <div className="text-xs font-mono text-slate-300">
+                Talk Time: <strong className="text-white">862 mins</strong> (14.4h)
+              </div>
+              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono text-slate-400 flex justify-between">
+                <span>28 Active 48h Trials</span>
+                <span className="text-emerald-400 font-bold">42.6% Conv</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Research Analyst Performance Desk */}
+          <div className="rounded-2xl border border-slate-800 bg-[#090E17] overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-slate-800 bg-[#0B1220] flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white font-mono flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-emerald-400" />
+                  Research Analyst Alpha Scorecard (SEBI Chinese Wall Separated)
+                </h3>
+                <p className="text-[11px] font-mono text-slate-400">
+                  Performance audited under SEBI (Research Analysts) Regulations, 2014 • Registration: INH00001842
+                </p>
+              </div>
+              <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20 font-bold">
+                Alpha Multiple: 3.42x Benchmark
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#070B14] border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400">
+                  <tr>
+                    <th className="px-5 py-3.5">Research Analyst</th>
+                    <th className="px-4 py-3.5">Primary Specialization</th>
+                    <th className="px-4 py-3.5">Published Calls</th>
+                    <th className="px-4 py-3.5">Win / Strike Rate</th>
+                    <th className="px-4 py-3.5">Profit Factor</th>
+                    <th className="px-4 py-3.5">Avg Gain / Lot</th>
+                    <th className="px-4 py-3.5">Max Drawdown</th>
+                    <th className="px-5 py-3.5 text-right">Risk Mandate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-mono text-slate-200">
+                  <tr className="hover:bg-[#0E1626] transition-colors">
+                    <td className="px-5 py-4 font-sans">
+                      <div className="font-bold text-white text-sm">Dr. Ananya Ray</div>
+                      <span className="text-[10px] text-cyan-400 font-mono">Chief Research Analyst (RA Lead)</span>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-slate-300">Index Derivatives & Macro Trends</td>
+                    <td className="px-4 py-4 text-white font-bold">48</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">89.6% (43/48)</td>
+                    <td className="px-4 py-4 text-cyan-300 font-bold">3.12</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">+₹84,500</td>
+                    <td className="px-4 py-4 text-slate-400">4.2%</td>
+                    <td className="px-5 py-4 text-right">
+                      <Badge tone="positive">Conservative Alpha</Badge>
+                    </td>
+                  </tr>
+
+                  <tr className="hover:bg-[#0E1626] transition-colors">
+                    <td className="px-5 py-4 font-sans">
+                      <div className="font-bold text-white text-sm">Vikram Malhotra</div>
+                      <span className="text-[10px] text-blue-400 font-mono">Senior Derivatives Specialist</span>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-slate-300">Stock Options & Expiry Day Gamma</td>
+                    <td className="px-4 py-4 text-white font-bold">62</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">82.3% (51/62)</td>
+                    <td className="px-4 py-4 text-cyan-300 font-bold">2.65</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">+₹62,100</td>
+                    <td className="px-4 py-4 text-slate-400">6.8%</td>
+                    <td className="px-5 py-4 text-right">
+                      <Badge tone="warning">Moderate Dynamic</Badge>
+                    </td>
+                  </tr>
+
+                  <tr className="hover:bg-[#0E1626] transition-colors">
+                    <td className="px-5 py-4 font-sans">
+                      <div className="font-bold text-white text-sm">Priya Sharma</div>
+                      <span className="text-[10px] text-purple-400 font-mono">Senior Technical Strategist</span>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-slate-300">Equity Cash Breakout & Positional</td>
+                    <td className="px-4 py-4 text-white font-bold">36</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">86.1% (31/36)</td>
+                    <td className="px-4 py-4 text-cyan-300 font-bold">2.88</td>
+                    <td className="px-4 py-4 text-emerald-400 font-bold">+₹54,200</td>
+                    <td className="px-4 py-4 text-slate-400">3.9%</td>
+                    <td className="px-5 py-4 text-right">
+                      <Badge tone="positive">Low Beta Cash</Badge>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* RMS Real-Time Margin Deficit & Exposure Matrix */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-slate-800 bg-[#090E17] p-5 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-white font-mono flex items-center gap-2">
+                    <AlertTriangle className="size-4 text-amber-400" />
+                    RMS Client Margin Health (1,420 Active Accounts)
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-400">
+                    Real-time collateral vs position margin requirement
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-slate-300">Cut-off: 15:15 IST</span>
+              </div>
+
+              <div className="space-y-3 font-mono text-xs">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-emerald-400">Normal Margin (&gt; 125%)</span>
+                    <span className="text-white font-bold">1,388 accounts (97.7%)</span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: "97.7%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-amber-400">Watchlist Margin (100% - 110%)</span>
+                    <span className="text-white font-bold">26 accounts (1.8%)</span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className="bg-amber-500 h-full rounded-full" style={{ width: "1.8%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-rose-400">Margin Deficit (&lt; 100%)</span>
+                    <span className="text-rose-400 font-bold">6 accounts (0.4%) • Shortfall: ₹1.42L</span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className="bg-rose-500 h-full rounded-full" style={{ width: "0.4%" }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between">
+                <span className="text-[11px] font-mono text-slate-400">
+                  Trigger automated deficit notices to prevent RMS square-off:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeficitAlertSent(true);
+                    setTimeout(() => setDeficitAlertSent(false), 3000);
+                  }}
+                  className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Send className="size-3" />
+                  {deficitAlertSent ? "Alerts Dispatched via WhatsApp!" : "Dispatch Deficit Alerts (WA)"}
+                </button>
+              </div>
+            </div>
+
+            {/* Regulatory Chinese Wall Compliance Checklist */}
+            <div className="rounded-2xl border border-slate-800 bg-[#090E17] p-5 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-white font-mono flex items-center gap-2">
+                    <ShieldCheck className="size-4 text-emerald-400" />
+                    SEBI Compliance & Chinese Wall Safeguards
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-400">
+                    Statutory oversight under SEBI Research Analyst Guidelines
+                  </p>
+                </div>
+                <Badge tone="positive">100% COMPLIANT</Badge>
+              </div>
+
+              <div className="space-y-2.5 text-xs font-mono">
+                <div className="p-2.5 rounded-xl bg-[#0B1220] border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-bold block">1. Research & Sales Chinese Wall</span>
+                    <span className="text-[10px] text-slate-400">Regulation 16: Zero incentive links between RA calls and telecaller commissions</span>
+                  </div>
+                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#0B1220] border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-bold block">2. 20-Point SEBI Risk Suitability Gate</span>
+                    <span className="text-[10px] text-slate-400">Zero conservative investors allocated to high-risk F&O derivatives</span>
+                  </div>
+                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#0B1220] border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-bold block">3. Immutable SHA-256 Agreement Vault</span>
+                    <span className="text-[10px] text-slate-400">Advisory agreements signed & logged under IT Act 2000 Section 65B</span>
+                  </div>
+                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#0B1220] border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-bold block">4. Official Meta WhatsApp Cloud API</span>
+                    <span className="text-[10px] text-slate-400">All outbound communication routed strictly via +91 92018 00995</span>
+                  </div>
+                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* ─── 4 HERO PERFORMANCE METRIC CARDS ─── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Hero 1: Revenue MTD */}
         <div
           onClick={() => onNavigateModule("payments")}
@@ -721,6 +1103,8 @@ export function ExecutiveDashboard({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
