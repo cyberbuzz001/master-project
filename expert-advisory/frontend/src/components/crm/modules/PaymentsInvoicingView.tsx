@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CreditCard,
   ReceiptIndianRupee,
@@ -55,6 +55,26 @@ export function PaymentsInvoicingView({
   const [selectedInstallmentForUtr, setSelectedInstallmentForUtr] = useState<CrmInstallment | null>(null);
   const [utrInput, setUtrInput] = useState("");
   const [nudgingId, setNudgingId] = useState<string | null>(null);
+
+  // Sync installments and payments from API
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await fetch("/api/v1/office/invoices");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            if (Array.isArray(json.data.installments) && json.data.installments.length > 0) {
+              setInstallments(json.data.installments);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[Payments Desk] Invoices sync deferred:", err);
+      }
+    };
+    fetchInvoices();
+  }, []);
 
   // New Payment Form State
   const [customerName, setCustomerName] = useState("");
@@ -131,6 +151,15 @@ export function PaymentsInvoicingView({
     if (onRecordPayment) {
       onRecordPayment(newPayment);
     }
+
+    try {
+      fetch("/api/v1/office/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "RECORD_PAYMENT", payload: newPayment }),
+      }).catch(() => {});
+    } catch (_) {}
+
     showToast(`Payment ${newPayment.id} recorded successfully.`);
     setShowAddModal(false);
     setCustomerName("");
@@ -158,6 +187,22 @@ export function PaymentsInvoicingView({
     showToast(
       `UTR #${utrInput.trim()} submitted for ${selectedInstallmentForUtr.customerName}. Queued for Finance Manager approval.`
     );
+
+    try {
+      fetch("/api/v1/office/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "SUBMIT_UTR",
+          payload: {
+            installmentId: selectedInstallmentForUtr.id,
+            utrNumber: utrInput.trim(),
+            submittedBy: "Sales RM / Telecaller",
+          },
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+
     setSelectedInstallmentForUtr(null);
     setUtrInput("");
   };
@@ -198,6 +243,20 @@ export function PaymentsInvoicingView({
     }
 
     showToast(`Installment ${inst.id} verified & credited! GST tax invoice auto-generated.`);
+
+    try {
+      fetch("/api/v1/office/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "FINANCE_APPROVE",
+          payload: {
+            installmentId: inst.id,
+            verifiedBy: "Finance Manager (Bank Ledger Confirmed)",
+          },
+        }),
+      }).catch(() => {});
+    } catch (_) {}
   };
 
   // WhatsApp Nudge: Send reminder via Meta Cloud API

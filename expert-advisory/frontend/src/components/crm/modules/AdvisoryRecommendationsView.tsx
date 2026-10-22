@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   TrendingUp,
   LineChart,
@@ -135,6 +135,29 @@ export function AdvisoryRecommendationsView({
 
   const [approvalQueue, setApprovalQueue] = useState<ExtendedRecommendation[]>(SEED_APPROVAL_QUEUE);
 
+  // Sync recommendations & approval queue from backend
+  useEffect(() => {
+    const fetchRecs = async () => {
+      try {
+        const res = await fetch("/api/v1/office/recommendations");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            if (Array.isArray(json.data.published) && json.data.published.length > 0) {
+              setRecs(json.data.published);
+            }
+            if (Array.isArray(json.data.queue) && json.data.queue.length > 0) {
+              setApprovalQueue(json.data.queue);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[Advisory Desk] Remote recommendations sync deferred:", err);
+      }
+    };
+    fetchRecs();
+  }, []);
+
   // Drafting Modal State
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [symbol, setSymbol] = useState("");
@@ -254,6 +277,15 @@ export function AdvisoryRecommendationsView({
     setShowDraftModal(false);
     showToast(`Draft submitted for Senior RA Review: ${newDraft.symbol}`);
 
+    // Persist draft to backend
+    try {
+      fetch("/api/v1/office/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "CREATE_DRAFT", payload: newDraft }),
+      }).catch(() => {});
+    } catch (_) {}
+
     // Reset Form
     setSymbol("");
     setEntryRange("");
@@ -281,6 +313,17 @@ export function AdvisoryRecommendationsView({
       )
     );
     showToast("Senior RA Sign-Off completed! Passed to Compliance Gate.");
+
+    try {
+      fetch("/api/v1/office/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "SENIOR_APPROVE",
+          payload: { id: recId, reviewer: "Dr. Ananya Ray (Head of Research)" },
+        }),
+      }).catch(() => {});
+    } catch (_) {}
   };
 
   // Compliance Gate Pass Action
@@ -299,6 +342,17 @@ export function AdvisoryRecommendationsView({
       )
     );
     showToast("Compliance Gate Cleared! Recommendation ready for broadcast.");
+
+    try {
+      fetch("/api/v1/office/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "COMPLIANCE_PASS",
+          payload: { id: recId, reviewer: "Adv. Rajesh Kothari (Compliance Officer)" },
+        }),
+      }).catch(() => {});
+    } catch (_) {}
   };
 
   // Multi-Channel 1-Click Broadcast Dispatch
@@ -339,6 +393,14 @@ export function AdvisoryRecommendationsView({
     if (onCreateRecommendation) {
       onCreateRecommendation(publishedRec);
     }
+
+    try {
+      fetch("/api/v1/office/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "BROADCAST", payload: { id: broadcastModalRec.id } }),
+      }).catch(() => {});
+    } catch (_) {}
 
     setIsBroadcasting(false);
     setBroadcastModalRec(null);

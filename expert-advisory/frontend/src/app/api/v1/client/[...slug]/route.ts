@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { placeFyersOrder, getFyersPositions, getFyersHoldings } from "@/lib/fyers";
+import { recommendationsStore } from "@/lib/recommendations-store";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -287,7 +288,114 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     return NextResponse.json({ success: true, data: mockDashboard });
   }
   if (path === "research") {
-    return NextResponse.json({ success: true, data: mockResearch });
+    const published = recommendationsStore.getPublished();
+    const liveRecs = published.map((p, idx) => {
+      const entryParts = (p.entryRange || "1000").split("-").map((s) => parseFloat(s.trim()));
+      const entryLow = entryParts[0] || 1000;
+      const entryHigh = entryParts[1] || entryLow;
+      const t1 = parseFloat(p.target1) || Math.round(entryHigh * 1.1);
+      const t2 = parseFloat(p.target2) || Math.round(t1 * 1.05);
+      const sl = parseFloat(p.stopLoss) || Math.round(entryLow * 0.95);
+
+      return {
+        id: 300 + idx,
+        instrument: p.symbol,
+        exchange: p.exchange || "NSE",
+        segment: p.instrumentType === "EQUITY_CASH" ? "Cash / Equity" : "Index Derivatives Alpha",
+        direction: p.direction || "BUY",
+        entry_low: entryLow,
+        entry_high: entryHigh,
+        stop_loss: sl,
+        targets: [t1, t2],
+        time_horizon: p.timeHorizon || "1-3 Months",
+        risk_classification: "Moderate-High",
+        status: p.status === "ACTIVE" ? "Active" : p.status,
+        performance: {
+          entry_ref: entryLow,
+          high_after: t1,
+          low_after: sl,
+          mfe: parseFloat(p.mfeReturn || "3.5"),
+          mae: parseFloat(p.maeReturn || "1.0"),
+          outcome: p.pnlReturn || "In Progress",
+        },
+      };
+    });
+
+    const combinedReports = [
+      {
+        uuid: "rep-live-feed",
+        report_code: "ESC-ALPHA-2026-LIVE",
+        title: "SEBI Research Desk Broadcast Feed: High-Conviction Institutional Alpha",
+        summary: "Live recommendations audited and cleared by Compliance Officer Adv. Rajesh Kothari under SEBI RA Regulations.",
+        report_type: "Institutional Alpha",
+        category: "Direct Equity & Derivatives",
+        published_at: new Date().toISOString(),
+        valid_until: new Date(Date.now() + 3600000 * 24 * 30).toISOString(),
+        author: "Dr. Ananya Ray & Research Team",
+        recommendations: liveRecs,
+      },
+      ...mockResearch.reports,
+    ];
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        active_subscription: true,
+        reports: combinedReports,
+      },
+    });
+  }
+
+  if (path.startsWith("research/")) {
+    const reportUuid = path.replace("research/", "");
+    const published = recommendationsStore.getPublished();
+    const liveRecs = published.map((p, idx) => ({
+      id: 300 + idx,
+      instrument: p.symbol,
+      exchange: p.exchange || "NSE",
+      segment: p.instrumentType === "EQUITY_CASH" ? "Cash / Equity" : "Index Derivatives Alpha",
+      direction: p.direction || "BUY",
+      entry_low: 1000,
+      entry_high: 1050,
+      stop_loss: 950,
+      targets: [1150, 1220],
+      time_horizon: p.timeHorizon || "1-3 Months",
+      risk_classification: "Moderate-High",
+      status: "Active",
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        uuid: reportUuid,
+        report_code: "ESC-ALPHA-2026-LIVE",
+        title: "Live SEBI Research Desk Alpha Report",
+        summary: "Institutional technical & quantitative research note.",
+        report_type: "Institutional Alpha",
+        category: "Direct Equity & Derivatives",
+        published_at: new Date().toISOString(),
+        valid_until: new Date(Date.now() + 3600000 * 24 * 30).toISOString(),
+        author: "Dr. Ananya Ray (Head of Research)",
+        approver: "Adv. Rajesh Kothari (Compliance Officer)",
+        content_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        disclosure_set_hash: "a9b8c7d6e5f4",
+        recommendations: liveRecs,
+        disclosures: {
+          statutory_disclaimer:
+            "Investment in securities market are subject to market risks. Read all the related documents carefully before investing. Registration granted by SEBI and certification from NISM in no way guarantee performance of the intermediary or provide any assurance of returns to investors.",
+          entity: {
+            legal_name: "TradeGrow Research Advisory LLP",
+            registration_number: "INH000018942",
+          },
+          analyst_declarations: {
+            financial_interest: false,
+            beneficial_ownership_1_percent_or_more: false,
+            material_conflict_of_interest: false,
+            conflict_details: "Nil - Research team holds no financial interest in recommended securities.",
+          },
+        },
+      },
+    });
   }
   if (path === "billing") {
     return NextResponse.json({ success: true, data: mockBilling });

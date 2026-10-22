@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Megaphone,
   Share2,
@@ -128,6 +128,33 @@ export function CampaignsReferralsView() {
   const [campaigns, setCampaigns] = useState<CrmCampaign[]>(INITIAL_CAMPAIGNS);
   const [referrals, setReferrals] = useState<CrmReferral[]>(INITIAL_REFERRALS);
 
+  // Sync campaigns and referrals from API
+  useEffect(() => {
+    const fetchCampaignsAndPayouts = async () => {
+      try {
+        const [campRes, payoutRes] = await Promise.all([
+          fetch("/api/v1/office/campaigns"),
+          fetch("/api/v1/office/payouts"),
+        ]);
+        if (campRes.ok) {
+          const campJson = await campRes.json();
+          if (campJson.success && Array.isArray(campJson.data?.campaigns) && campJson.data.campaigns.length > 0) {
+            setCampaigns(campJson.data.campaigns);
+          }
+        }
+        if (payoutRes.ok) {
+          const payoutJson = await payoutRes.json();
+          if (payoutJson.success && Array.isArray(payoutJson.data?.referrals) && payoutJson.data.referrals.length > 0) {
+            setReferrals(payoutJson.data.referrals);
+          }
+        }
+      } catch (err) {
+        console.warn("[Campaigns Desk] Data sync deferred:", err);
+      }
+    };
+    fetchCampaignsAndPayouts();
+  }, []);
+
   // New Campaign Modal State
   const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
   const [newCampName, setNewCampName] = useState("");
@@ -189,6 +216,15 @@ export function CampaignsReferralsView() {
     setCampaigns([newCamp, ...campaigns]);
     setShowNewCampaignModal(false);
     setNewCampName("");
+
+    // Persist campaign to backend
+    try {
+      fetch("/api/v1/office/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCamp),
+      }).catch(() => {});
+    } catch (_) {}
   }
 
   function handleProcessPayout(e: React.FormEvent) {
@@ -203,6 +239,19 @@ export function CampaignsReferralsView() {
       )
     );
     setUtrSuccess(true);
+
+    // Persist payout to backend with UTR & Section 194H TDS
+    try {
+      fetch("/api/v1/office/payouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          referralId: selectedPayout.id,
+          utrNumber: utrNumber.trim(),
+          processedBy: "Finance Desk",
+        }),
+      }).catch(() => {});
+    } catch (_) {}
     setTimeout(() => {
       setSelectedPayout(null);
       setUtrNumber("");
