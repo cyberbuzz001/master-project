@@ -5,6 +5,7 @@ import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { queryOne, execute } from '../db/schema';
 import { SSOTicketPayload, SSOTicketExchangeRequest, SSOTicketExchangeResponse } from '../contracts/SSO';
 import { AdvisoryRecommendationPayload, AdvisoryOrderPreviewResponse } from '../contracts/Advisory';
+import { OMS } from '../trading/OMS';
 
 export const ssoRouter = Router();
 
@@ -258,5 +259,79 @@ ssoRouter.post('/advisory/preview-order', authenticateToken, async (req: Authent
     res.json({ success: true, preview });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: 'ADVISORY_PREVIEW_ERROR', message: err.message } });
+  }
+});
+
+/**
+ * POST /api/v1/advisory/execute-order
+ * Direct 1-Click Advisory Order Execution via TradeGrow OMS
+ * Executes advisory trade on client's behalf upon explicit discretionary consent.
+ */
+ssoRouter.post('/advisory/execute-order', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+      return;
+    }
+
+    const {
+      symbol,
+      exchange = 'NSE',
+      action,
+      quantity,
+      price = 0,
+      stopLoss,
+      targetPrice,
+      productType = 'CNC',
+      advisoryReportId = '',
+    } = req.body;
+
+    if (!symbol || !action || !quantity) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_PAYLOAD', message: 'Symbol, action, and quantity are required' } });
+      return;
+    }
+
+    const result = await OMS.submitOrder({
+      userId: String(userId),
+      instrumentToken: `${exchange}:${symbol}`,
+      exchange,
+      symbol,
+      side: action.toUpperCase() === 'BUY' ? 'BUY' : 'SELL',
+      quantity: Number(quantity),
+      price: Number(price),
+      triggerPrice: stopLoss ? Number(stopLoss) : undefined,
+      orderType: price > 0 ? 'LIMIT' : 'MARKET',
+      productType: productType as any,
+      source: 'ADVISORY_1CLICK',
+      reason: `Advisory Report ${advisoryReportId}`,
+      idempotencyKey: `adv_${advisoryReportId}_${userId}_${Date.now()}`,
+    });
+
+    if (!result.success) {
+      res.status(400).json({ success: false, error: { code: 'ORDER_REJECTED', message: result.error || 'Failed to place order' } });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        orderId: result.orderId,
+        broker: 'TRADEGROW_OMS',
+        symbol,
+        exchange,
+        action,
+        quantity: Number(quantity),
+        price,
+        stopLoss,
+        targetPrice,
+        status: 'PLACED',
+        advisoryReportId,
+        timestamp: new Date().toISOString(),
+        disclaimer: 'Discretionary order transmitted to exchange via TradeGrow OMS upon client authorization.',
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'EXECUTION_ERROR', message: err.message } });
   }
 });
