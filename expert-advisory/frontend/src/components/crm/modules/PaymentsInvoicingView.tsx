@@ -784,58 +784,58 @@ export function PaymentsInvoicingView({
       {/* VIEW TAX INVOICE MODAL */}
       {viewInvoicePayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-[#1E293B] bg-white text-ink-950 shadow-2xl p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-[#1E293B] bg-[#090E1A] text-[#F5F7FA] shadow-2xl p-8 space-y-6 max-h-[90vh] overflow-y-auto">
             {/* Invoice Printable Header */}
-            <div className="flex items-start justify-between border-b pb-6 border-ink-200">
+            <div className="flex items-start justify-between border-b pb-6 border-[#1E293B]">
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="size-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 font-bold text-sm">
                     ES
                   </div>
-                  <h2 className="text-xl font-bold font-display text-ink-900">Expert Stocks Consultancy</h2>
+                  <h2 className="text-xl font-bold font-display text-white">Expert Stocks Consultancy</h2>
                 </div>
-                <p className="text-xs text-ink-600 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   SEBI Registered Research Analyst • INH000000000<br />
                   GSTIN: 27AABCE1234F1Z5 • SAC Code: 997159
                 </p>
               </div>
 
               <div className="text-right">
-                <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold px-2 py-0.5 uppercase">
+                <span className="rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold px-2 py-0.5 uppercase">
                   TAX INVOICE (ORIGINAL)
                 </span>
-                <p className="text-sm font-bold font-mono text-ink-900 mt-1">{viewInvoicePayment.invoiceNumber}</p>
-                <p className="text-xs text-ink-500 font-mono">{viewInvoicePayment.date}</p>
+                <p className="text-sm font-bold font-mono text-white mt-1">{viewInvoicePayment.invoiceNumber}</p>
+                <p className="text-xs text-slate-400 font-mono">{viewInvoicePayment.date}</p>
               </div>
             </div>
 
             {/* Bill To Info */}
             <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="rounded-xl bg-ink-50 p-4 border border-ink-200">
-                <span className="text-[10px] uppercase font-mono text-ink-500 font-bold block mb-1">
+              <div className="rounded-xl bg-[#0E1624] p-4 border border-[#1E293B]">
+                <span className="text-[10px] uppercase font-mono text-slate-400 font-bold block mb-1">
                   Billed To (Client):
                 </span>
-                <p className="font-bold text-ink-900 text-sm">{viewInvoicePayment.customerName}</p>
-                <p className="text-ink-600 font-mono text-xs mt-0.5">Client Code: {viewInvoicePayment.customerId}</p>
+                <p className="font-bold text-white text-sm">{viewInvoicePayment.customerName}</p>
+                <p className="text-slate-400 font-mono text-xs mt-0.5">Client Code: {viewInvoicePayment.customerId}</p>
               </div>
 
-              <div className="rounded-xl bg-ink-50 p-4 border border-ink-200">
-                <span className="text-[10px] uppercase font-mono text-ink-500 font-bold block mb-1">
+              <div className="rounded-xl bg-[#0E1624] p-4 border border-[#1E293B]">
+                <span className="text-[10px] uppercase font-mono text-slate-400 font-bold block mb-1">
                   Payment Reference:
                 </span>
-                <p className="text-ink-700 font-mono">
-                  Gateway: <strong>{viewInvoicePayment.gateway}</strong>
+                <p className="text-slate-300 font-mono">
+                  Gateway: <strong className="text-white">{viewInvoicePayment.gateway}</strong>
                 </p>
-                <p className="text-ink-700 font-mono text-[11px] truncate">
-                  UTR / Ref: <strong>{viewInvoicePayment.transactionRef}</strong>
+                <p className="text-slate-300 font-mono text-[11px] truncate">
+                  UTR / Ref: <strong className="text-white">{viewInvoicePayment.transactionRef}</strong>
                 </p>
               </div>
             </div>
 
             {/* Invoice Line Items */}
-            <div className="rounded-xl border border-ink-200 overflow-hidden text-xs">
+            <div className="rounded-xl border border-[#1E293B] overflow-hidden text-xs bg-[#0E1624]">
               <table className="w-full text-left">
-                <thead className="bg-ink-100 font-mono uppercase text-[10px] text-ink-700 border-b border-ink-200">
+                <thead className="bg-[#070B14] font-mono uppercase text-[10px] text-slate-400 border-b border-[#1E293B]">
                   <tr>
                     <th className="py-2.5 px-3">Service Description</th>
                     <th className="py-2.5 px-3">SAC</th>
@@ -844,17 +844,17 @@ export function PaymentsInvoicingView({
                     <th className="py-2.5 px-3 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ink-200">
+                <tbody className="divide-y divide-[#1E293B]">
                   <tr>
-                    <td className="py-3 px-3 font-semibold text-ink-900">{viewInvoicePayment.service}</td>
-                    <td className="py-3 px-3 font-mono">997159</td>
-                    <td className="py-3 px-3 text-right font-mono">
+                    <td className="py-3 px-3 font-semibold text-white">{viewInvoicePayment.service}</td>
+                    <td className="py-3 px-3 font-mono text-slate-400">997159</td>
+                    <td className="py-3 px-3 text-right font-mono text-slate-300">
                       ₹{(viewInvoicePayment.amount - viewInvoicePayment.gstAmount).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono text-cyan-800">
+                    <td className="py-3 px-3 text-right font-mono text-cyan-400">
                       ₹{viewInvoicePayment.gstAmount.toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-ink-900">
+                    <td className="py-3 px-3 text-right font-mono font-bold text-white">
                       ₹{viewInvoicePayment.amount.toLocaleString("en-IN")}
                     </td>
                   </tr>
@@ -863,8 +863,8 @@ export function PaymentsInvoicingView({
             </div>
 
             {/* Footer & Actions */}
-            <div className="flex items-center justify-between border-t border-ink-200 pt-4">
-              <div className="text-[11px] text-ink-500 font-mono">
+            <div className="flex items-center justify-between border-t border-[#1E293B] pt-4">
+              <div className="text-[11px] text-slate-400 font-mono">
                 Digitally generated and verified under SEBI RA Compliance Framework.
               </div>
 
@@ -872,15 +872,15 @@ export function PaymentsInvoicingView({
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="rounded-xl border border-ink-300 bg-white hover:bg-ink-50 px-4 py-2 text-xs font-bold text-ink-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="rounded-xl border border-[#1E293B] bg-[#0E1624] hover:bg-[#162235] px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
-                  <Printer className="size-3.5" />
+                  <Printer className="size-3.5 text-cyan-400" />
                   <span>Print Invoice</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewInvoicePayment(null)}
-                  className="rounded-xl bg-ink-900 hover:bg-ink-800 px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer"
+                  className="rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer"
                 >
                   Close
                 </button>

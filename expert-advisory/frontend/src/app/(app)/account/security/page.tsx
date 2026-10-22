@@ -18,10 +18,10 @@ export default function SecurityPage() {
   const { me, refresh, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-ink-50">
-      <header className="border-b border-ink-200 bg-white">
+    <div className="min-h-screen bg-[#05070B] text-[#F5F7FA]">
+      <header className="border-b border-[#1C2734] bg-[#080D14]">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <a href={homeFor(me)} className="flex items-center gap-2 text-sm font-semibold text-ink-900">
+          <a href={homeFor(me)} className="flex items-center gap-2 text-sm font-semibold text-white hover:text-cyan-400 transition-colors">
             <LogoMark className="size-6" /> Account security
           </a>
           <Button variant="ghost" size="sm" onClick={() => void logout()}>
@@ -31,8 +31,8 @@ export default function SecurityPage() {
       </header>
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink-950">{me.name}</h1>
-          <p className="text-sm text-ink-600">
+          <h1 className="text-2xl font-bold tracking-tight text-white">{me.name}</h1>
+          <p className="text-sm text-slate-400">
             {me.email} · {me.roles.map((r) => r.label).join(", ")}
           </p>
         </div>
@@ -84,13 +84,13 @@ function TwoFactorCard({ onChange }: { onChange: () => Promise<void> }) {
     return (
       <Card className="p-6">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="size-5 text-positive-600" aria-hidden="true" />
-          <h2 className="text-lg font-semibold text-ink-950">Two-factor authentication is on</h2>
+          <ShieldCheck className="size-5 text-emerald-400" aria-hidden="true" />
+          <h2 className="text-lg font-semibold text-white">Two-factor authentication is on</h2>
         </div>
         <Notice tone="warning" className="mt-4" title="Save your recovery codes now">
           Each code works once if you lose access to your authenticator. They won&apos;t be shown again.
         </Notice>
-        <ul className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-ink-50 p-4 font-mono text-sm sm:grid-cols-4">
+        <ul className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-[#0E1624] border border-[#1E293B] p-4 font-mono text-sm text-slate-200 sm:grid-cols-4">
           {codes.map((c) => (
             <li key={c}>{c}</li>
           ))}
@@ -117,8 +117,8 @@ function TwoFactorCard({ onChange }: { onChange: () => Promise<void> }) {
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {me.two_factor.enabled ? <ShieldCheck className="size-5 text-positive-600" aria-hidden="true" /> : <ShieldAlert className="size-5 text-warning-700" aria-hidden="true" />}
-          <h2 className="text-lg font-semibold text-ink-950">Two-factor authentication</h2>
+          {me.two_factor.enabled ? <ShieldCheck className="size-5 text-emerald-400" aria-hidden="true" /> : <ShieldAlert className="size-5 text-amber-400" aria-hidden="true" />}
+          <h2 className="text-lg font-semibold text-white">Two-factor authentication</h2>
         </div>
         {me.two_factor.enabled ? <Badge tone="positive">On</Badge> : me.two_factor.required ? <Badge tone="warning">Required for your role</Badge> : <Badge>Off</Badge>}
       </div>
@@ -132,7 +132,7 @@ function TwoFactorCard({ onChange }: { onChange: () => Promise<void> }) {
 
       {!me.two_factor.enabled && !enrollment && (
         <div className="mt-4">
-          <p className="text-sm leading-6 text-ink-600">Use an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password.</p>
+          <p className="text-sm leading-6 text-slate-300">Use an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password.</p>
           <Button className="mt-4" onClick={() => void begin()} disabled={busy}>
             {busy && <Loader2 className="size-4 animate-spin" aria-hidden="true" />} Set up two-factor authentication
           </Button>
@@ -204,8 +204,8 @@ function PasswordCard() {
 
   return (
     <Card className="p-6">
-      <h2 className="text-lg font-semibold text-ink-950">Password</h2>
-      <p className="mt-1 text-sm text-ink-600">At least 12 characters with upper- and lower-case letters, a number and a symbol.</p>
+      <h2 className="text-lg font-semibold text-white">Password</h2>
+      <p className="mt-1 text-sm text-slate-300">At least 12 characters with upper- and lower-case letters, a number and a symbol.</p>
       {message && <Notice tone={message.tone} className="mt-4">{message.text}</Notice>}
       <form onSubmit={submit} className="mt-4 grid gap-4 sm:grid-cols-3">
         <Field label="Current password" htmlFor="current_password" error={errors.current_password?.[0]}>
@@ -233,16 +233,16 @@ function SessionsCard() {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-semibold text-ink-950">Active sessions</h2>
+      <h2 className="mb-3 text-lg font-semibold text-white">Active sessions</h2>
       {error && <Notice tone="danger" className="mb-3">{error}</Notice>}
       <Table head={["Device", "IP address", "Last active", ""]}>
         {(sessions.data ?? []).map((s) => (
           <tr key={s.id}>
-            <td className="max-w-xs truncate px-4 py-3 text-ink-700" title={s.user_agent ?? ""}>
+            <td className="max-w-xs truncate px-4 py-3 text-slate-200" title={s.user_agent ?? ""}>
               {s.user_agent ?? "Unknown device"} {s.is_current && <Badge tone="brand">This device</Badge>}
             </td>
-            <td className="px-4 py-3 font-mono text-xs text-ink-600">{s.ip_address ?? "—"}</td>
-            <td className="whitespace-nowrap px-4 py-3 text-ink-600">{formatDateTime(s.last_active_at)}</td>
+            <td className="px-4 py-3 font-mono text-xs text-slate-400">{s.ip_address ?? "—"}</td>
+            <td className="whitespace-nowrap px-4 py-3 text-slate-300">{formatDateTime(s.last_active_at)}</td>
             <td className="px-4 py-3 text-right">
               {!s.is_current && (
                 <Button
@@ -273,18 +273,18 @@ function LoginHistoryCard() {
   const history = useApiGet<LoginRow[]>("/me/login-history");
   return (
     <section>
-      <h2 className="mb-3 text-lg font-semibold text-ink-950">Recent sign-in activity</h2>
+      <h2 className="mb-3 text-lg font-semibold text-white">Recent sign-in activity</h2>
       <Table head={["Result", "IP address", "Device", "Time"]}>
         {(history.data ?? []).map((row, i) => (
           <tr key={`${row.created_at}-${i}`}>
             <td className="px-4 py-3">
               <StatusBadge status={row.outcome} />
             </td>
-            <td className="px-4 py-3 font-mono text-xs text-ink-600">{row.ip ?? "—"}</td>
-            <td className="max-w-xs truncate px-4 py-3 text-ink-600" title={row.user_agent ?? ""}>
+            <td className="px-4 py-3 font-mono text-xs text-slate-400">{row.ip ?? "—"}</td>
+            <td className="max-w-xs truncate px-4 py-3 text-slate-300" title={row.user_agent ?? ""}>
               {row.user_agent ?? "—"}
             </td>
-            <td className="whitespace-nowrap px-4 py-3 text-ink-600">{formatDateTime(row.created_at)}</td>
+            <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(row.created_at)}</td>
           </tr>
         ))}
         {!history.loading && (history.data ?? []).length === 0 && <EmptyRow colSpan={4}>No sign-in activity yet.</EmptyRow>}

@@ -100,7 +100,7 @@ export function AppShell({ area, children }: { area: keyof typeof NAV; children:
   );
 
   return (
-    <div className="min-h-screen bg-ink-50 lg:grid lg:grid-cols-[256px_1fr]">
+    <div className="min-h-screen bg-[#05070B] text-[#F5F7FA] lg:grid lg:grid-cols-[256px_1fr]">
       <aside className="hidden bg-ink-950 lg:block">
         <div className="sticky top-0 h-screen">{sidebar}</div>
       </aside>
@@ -118,11 +118,11 @@ export function AppShell({ area, children }: { area: keyof typeof NAV; children:
       )}
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-ink-200 bg-white/90 px-4 backdrop-blur lg:hidden">
-          <button type="button" onClick={() => setOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-ink-100" aria-label="Open navigation">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-[#1C2734] bg-[#05070B]/90 text-white px-4 backdrop-blur lg:hidden">
+          <button type="button" onClick={() => setOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-white/10 text-white" aria-label="Open navigation">
             <Menu className="size-5" />
           </button>
-          <p className="text-sm font-semibold">{NAV[area].title}</p>
+          <p className="text-sm font-semibold text-white">{NAV[area].title}</p>
           <span className="size-9" />
         </header>
         {me.demo_mode && (

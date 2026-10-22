@@ -113,13 +113,13 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <button type="button" className="absolute inset-0 bg-ink-950/40" aria-label="Close dialog" onClick={onClose} />
-      <div ref={ref} className={cx("relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 shadow-[var(--shadow-lift)] sm:rounded-2xl animate-rise", wide ? "sm:max-w-3xl" : "sm:max-w-lg")}>
+      <button type="button" className="absolute inset-0 bg-black/70 backdrop-blur-xs" aria-label="Close dialog" onClick={onClose} />
+      <div ref={ref} className={cx("relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-[#090E1A] text-[#F5F7FA] border border-[#1E293B] p-6 shadow-2xl sm:rounded-2xl animate-rise", wide ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 id={titleId} className="text-lg font-semibold text-ink-950">
+          <h2 id={titleId} className="text-lg font-semibold text-white">
             {title}
           </h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-ink-500 hover:bg-ink-100" aria-label="Close">
+          <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors" aria-label="Close">
             <X className="size-5" />
           </button>
         </div>
@@ -170,7 +170,7 @@ export function ReasonDialog({
   return (
     <Modal title={title} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        {description && <p className="text-sm leading-6 text-ink-600">{description}</p>}
+        {description && <p className="text-sm leading-6 text-slate-300">{description}</p>}
         <Field label="Reason (recorded in the audit log)" htmlFor={id} error={error ?? undefined}>
           <Textarea id={id} name="reason" rows={3} maxLength={500} required />
         </Field>
@@ -190,8 +190,8 @@ export function ReasonDialog({
 export function EmptyRow({ colSpan, children }: { colSpan: number; children: ReactNode }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-ink-500">
-        <CircleDashed className="mx-auto mb-2 size-5 text-ink-400" aria-hidden="true" />
+      <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-slate-400">
+        <CircleDashed className="mx-auto mb-2 size-5 text-slate-500" aria-hidden="true" />
         {children}
       </td>
     </tr>
@@ -200,19 +200,19 @@ export function EmptyRow({ colSpan, children }: { colSpan: number; children: Rea
 
 export function Table({ head, children }: { head: string[]; children: ReactNode }) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border border-[#1E293B]">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-ink-100 text-left text-sm">
-          <thead className="bg-ink-50">
+        <table className="min-w-full divide-y divide-[#1E293B] text-left text-sm">
+          <thead className="bg-[#070B14] border-b border-[#1E293B]">
             <tr>
               {head.map((h) => (
-                <th key={h} scope="col" className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                <th key={h} scope="col" className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 font-mono">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink-100">{children}</tbody>
+          <tbody className="divide-y divide-[#1E293B]">{children}</tbody>
         </table>
       </div>
     </Card>
@@ -222,10 +222,10 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
 export function Pagination({ meta, page, onPage }: { meta?: Record<string, unknown>; page: number; onPage: (page: number) => void }) {
   const last = Number(meta?.last_page ?? 1);
   const total = Number(meta?.total ?? 0);
-  if (last <= 1) return total > 0 ? <p className="mt-3 text-xs text-ink-500">{total} records</p> : null;
+  if (last <= 1) return total > 0 ? <p className="mt-3 text-xs text-slate-400 font-mono">{total} records</p> : null;
   return (
     <div className="mt-4 flex items-center justify-between text-sm">
-      <p className="text-ink-500">
+      <p className="text-slate-400 font-mono text-xs">
         Page {page} of {last} · {total} records
       </p>
       <div className="flex gap-2">

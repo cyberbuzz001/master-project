@@ -41,6 +41,32 @@
   --color-negative: #F05252;
   --color-warning: #F5B84B;
 
+  /* Brand Palette (Cyan / Electric Blue) */
+  --color-brand-50: #061A24;
+  --color-brand-100: #0B2B3C;
+  --color-brand-200: #0F435C;
+  --color-brand-300: #196D94;
+  --color-brand-400: #43D9FF;
+  --color-brand-500: #38bdf8;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+  --color-brand-950: #082f49;
+
+  /* Institutional Ink Ramp (High contrast dark theme surfaces & typography) */
+  --color-ink-50: #0B1220;
+  --color-ink-100: #0E1624;
+  --color-ink-200: #1E293B;
+  --color-ink-300: #334155;
+  --color-ink-400: #64748B;
+  --color-ink-500: #94A3B8;
+  --color-ink-600: #CBD5E1;
+  --color-ink-700: #E2E8F0;
+  --color-ink-800: #F1F5F9;
+  --color-ink-900: #F8FAFC;
+  --color-ink-950: #FFFFFF;
+
   --animate-marquee: marquee 35s linear infinite;
   --animate-pulse-subtle: pulse-subtle 4s ease-in-out infinite;
 

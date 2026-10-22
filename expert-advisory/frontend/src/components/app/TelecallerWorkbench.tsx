@@ -219,14 +219,14 @@ const DISPOSITIONS: Array<{
   color: string;
   isNpc?: boolean;
 }> = [
-  { label: "Answered - Qualified", status: "qualified", color: "bg-brand-50 border-brand-300 text-brand-700 hover:bg-brand-100" },
-  { label: "Call Back Scheduled", status: "call_back", color: "bg-warning-50 border-warning-300 text-warning-800 hover:bg-warning-100" },
-  { label: "Follow Up (Nurture)", status: "follow_up", color: "bg-blue-50 border-blue-300 text-blue-800 hover:bg-blue-100" },
-  { label: "Expected Payment", status: "expected_payment", color: "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100" },
-  { label: "NPC (Not Picked / Switch Off)", status: "contacted", color: "bg-orange-50 border-orange-300 text-orange-800 hover:bg-orange-100", isNpc: true },
-  { label: "Converted & Enrolled", status: "converted", color: "bg-positive-50 border-positive-300 text-positive-800 hover:bg-positive-100" },
-  { label: "Not Interested", status: "not_interested", color: "bg-ink-100 border-ink-300 text-ink-700 hover:bg-ink-200" },
-  { label: "Lost / DND", status: "lost", color: "bg-red-50 border-red-300 text-red-700 hover:bg-red-100" },
+  { label: "Answered - Qualified", status: "qualified", color: "bg-cyan-500/20 border-cyan-400 text-cyan-300" },
+  { label: "Call Back Scheduled", status: "call_back", color: "bg-amber-500/20 border-amber-400 text-amber-300" },
+  { label: "Follow Up (Nurture)", status: "follow_up", color: "bg-blue-500/20 border-blue-400 text-blue-300" },
+  { label: "Expected Payment", status: "expected_payment", color: "bg-emerald-500/20 border-emerald-400 text-emerald-300" },
+  { label: "NPC (Not Picked / Switch Off)", status: "contacted", color: "bg-orange-500/20 border-orange-400 text-orange-300", isNpc: true },
+  { label: "Converted & Enrolled", status: "converted", color: "bg-teal-500/20 border-teal-400 text-teal-300" },
+  { label: "Not Interested", status: "not_interested", color: "bg-slate-700/40 border-slate-500 text-slate-300" },
+  { label: "Lost / DND", status: "lost", color: "bg-red-500/20 border-red-400 text-red-300" },
 ];
 
 export function TelecallerWorkbench({
@@ -470,25 +470,25 @@ export function TelecallerWorkbench({
         </div>
       )}
 
-      <div className="relative w-full max-w-5xl rounded-2xl border border-ink-200 bg-white shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+      <div className="relative w-full max-w-5xl rounded-2xl border border-[#1E293B] bg-[#090E1A] text-[#F5F7FA] shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-ink-200 bg-ink-900 px-6 py-4 text-white">
+        <div className="flex items-center justify-between border-b border-[#1E293B] bg-[#070B14] px-6 py-4 text-white">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-300 font-bold">
+            <div className="size-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 font-bold">
               <PhoneCall className="size-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base font-display">{lead.name}</h3>
-                <span className="rounded bg-brand-500/20 px-2 py-0.5 font-mono text-xs font-semibold text-brand-300">
+                <h3 className="font-bold text-base font-display text-white">{lead.name}</h3>
+                <span className="rounded bg-cyan-500/20 border border-cyan-500/30 px-2 py-0.5 font-mono text-xs font-semibold text-cyan-300">
                   {lead.id}
                 </span>
-                <span className="rounded bg-white/10 px-2 py-0.5 font-mono text-xs text-ink-300">
+                <span className="rounded bg-white/10 px-2 py-0.5 font-mono text-xs text-slate-300">
                   {lead.mobile}
                 </span>
               </div>
-              <p className="text-xs text-ink-400 mt-0.5 font-mono">
-                Assigned Rep: {operatorName} • City: {lead.city || "Mumbai"} • Source: {lead.source}
+              <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                Assigned Rep: <span className="text-slate-200">{operatorName}</span> • City: {lead.city || "Mumbai"} • Source: {lead.source}
               </p>
             </div>
           </div>
@@ -496,22 +496,22 @@ export function TelecallerWorkbench({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-ink-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             <X className="size-5" />
           </button>
         </div>
 
         {/* Modal Tabs Bar */}
-        <div className="flex border-b border-ink-200 bg-ink-50 px-6 text-xs overflow-x-auto">
+        <div className="flex border-b border-[#1E293B] bg-[#070B14] px-6 text-xs overflow-x-auto gap-1">
           <button
             type="button"
             onClick={() => setActiveTab("dialer")}
             className={cx(
               "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "dialer"
-                ? "border-brand-600 text-brand-700 bg-white"
-                : "border-transparent text-ink-500 hover:text-ink-900"
+                ? "border-cyan-400 text-cyan-300 bg-[#0E1624] rounded-t-lg"
+                : "border-transparent text-slate-400 hover:text-white hover:bg-[#0E1624]/60"
             )}
           >
             <PhoneCall className="size-4" />
@@ -523,11 +523,11 @@ export function TelecallerWorkbench({
             className={cx(
               "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "whatsapp"
-                ? "border-emerald-600 text-emerald-700 bg-white"
-                : "border-transparent text-ink-500 hover:text-ink-900"
+                ? "border-emerald-500 text-emerald-300 bg-[#0E1624] rounded-t-lg"
+                : "border-transparent text-slate-400 hover:text-white hover:bg-[#0E1624]/60"
             )}
           >
-            <MessageSquare className="size-4 text-emerald-600" />
+            <MessageSquare className="size-4 text-emerald-400" />
             <span>WhatsApp Bridge ({waMessages.length})</span>
           </button>
           <button
@@ -536,8 +536,8 @@ export function TelecallerWorkbench({
             className={cx(
               "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "playbook"
-                ? "border-brand-600 text-brand-700 bg-white"
-                : "border-transparent text-ink-500 hover:text-ink-900"
+                ? "border-cyan-400 text-cyan-300 bg-[#0E1624] rounded-t-lg"
+                : "border-transparent text-slate-400 hover:text-white hover:bg-[#0E1624]/60"
             )}
           >
             <BookOpen className="size-4" />
@@ -549,8 +549,8 @@ export function TelecallerWorkbench({
             className={cx(
               "flex items-center gap-2 border-b-2 py-3 px-4 font-semibold uppercase tracking-wider transition-colors cursor-pointer",
               activeTab === "history"
-                ? "border-brand-600 text-brand-700 bg-white"
-                : "border-transparent text-ink-500 hover:text-ink-900"
+                ? "border-cyan-400 text-cyan-300 bg-[#0E1624] rounded-t-lg"
+                : "border-transparent text-slate-400 hover:text-white hover:bg-[#0E1624]/60"
             )}
           >
             <Clock className="size-4" />
@@ -566,13 +566,13 @@ export function TelecallerWorkbench({
               {/* Left Column: CTI Dialer + Call Action Panel (7 cols) */}
               <div className="md:col-span-7 space-y-5">
                 {/* Active Call State Box */}
-                <Card
+                <div
                   className={cx(
-                    "p-5 border-2 transition-all shadow-xs",
-                    callState === "idle" && "border-ink-200 bg-ink-50/50",
-                    callState === "dialing" && "border-amber-400 bg-amber-50/40 animate-pulse",
-                    callState === "connected" && "border-emerald-500 bg-emerald-50/30",
-                    callState === "ended" && "border-ink-300 bg-white"
+                    "rounded-2xl p-5 border-2 transition-all shadow-md",
+                    callState === "idle" && "border-[#1E293B] bg-[#0E1624]",
+                    callState === "dialing" && "border-amber-500/50 bg-amber-950/40 animate-pulse",
+                    callState === "connected" && "border-emerald-500/50 bg-emerald-950/40",
+                    callState === "ended" && "border-[#1E293B] bg-[#0E1624]"
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -580,22 +580,22 @@ export function TelecallerWorkbench({
                       <div
                         className={cx(
                           "size-12 rounded-full flex items-center justify-center font-bold text-white shadow-sm",
-                          callState === "idle" && "bg-ink-700",
+                          callState === "idle" && "bg-slate-700",
                           callState === "dialing" && "bg-amber-600",
                           callState === "connected" && "bg-emerald-600 animate-pulse",
-                          callState === "ended" && "bg-ink-500"
+                          callState === "ended" && "bg-slate-600"
                         )}
                       >
                         {callState === "connected" ? <Mic className="size-6" /> : <PhoneCall className="size-6" />}
                       </div>
                       <div>
-                        <div className="text-xs font-mono uppercase tracking-wider text-ink-500">
+                        <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
                           {callState === "idle" && "Ready to Connect"}
                           {callState === "dialing" && "Initiating Cloud CTI Bridge..."}
                           {callState === "connected" && "Call In Progress"}
                           {callState === "ended" && "Call Ended • Disposition Required"}
                         </div>
-                        <div className="text-2xl font-bold font-mono text-ink-900">
+                        <div className="text-2xl font-bold font-mono text-white">
                           {formatDuration(callDuration)}
                         </div>
                       </div>
@@ -608,7 +608,7 @@ export function TelecallerWorkbench({
                           onClick={() => setIsMuted(!isMuted)}
                           className={cx(
                             "rounded-xl border p-2.5 transition-colors cursor-pointer",
-                            isMuted ? "bg-red-100 border-red-300 text-red-700" : "bg-white border-ink-300 text-ink-700"
+                            isMuted ? "bg-red-500/20 border-red-500/40 text-red-400" : "bg-[#162235] border-[#1E293B] text-slate-300 hover:text-white"
                           )}
                           title={isMuted ? "Unmute" : "Mute"}
                         >
@@ -620,7 +620,7 @@ export function TelecallerWorkbench({
                         <button
                           type="button"
                           onClick={handleStartCall}
-                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/50 transition-colors cursor-pointer"
                         >
                           <PhoneCall className="size-4" />
                           <span>{callState === "ended" ? "Redial Lead" : "Start Call"}</span>
@@ -629,7 +629,7 @@ export function TelecallerWorkbench({
                         <button
                           type="button"
                           onClick={handleEndCall}
-                          className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-700 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-950/50 transition-colors cursor-pointer"
                         >
                           <PhoneOff className="size-4" />
                           <span>Disconnect</span>
@@ -638,58 +638,58 @@ export function TelecallerWorkbench({
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-ink-500 border-t border-ink-200/60 pt-2.5">
-                    <span className="flex items-center gap-1.5 text-emerald-700">
+                  <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-[#1E293B] pt-2.5">
+                    <span className="flex items-center gap-1.5 text-emerald-400">
                       <ShieldCheck className="size-3.5" />
                       <span>Encrypted Cloud Call Recording Active (SEBI RA Audit Proof)</span>
                     </span>
                     <span>Bridge: Tata Tele / Exotel</span>
                   </div>
-                </Card>
+                </div>
 
                 {/* 1-Click WhatsApp Quick Dispatch Bar */}
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2">
+                <div className="rounded-xl border border-emerald-500/30 bg-[#061713] p-3 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-900 flex items-center gap-1.5">
-                      <MessageSquare className="size-3.5 text-emerald-600" />
+                    <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <MessageSquare className="size-3.5 text-emerald-400" />
                       <span>Instant Meta WhatsApp Cloud Dispatch:</span>
                     </span>
-                    <span className="font-mono text-[10px] text-emerald-700">+91 92018 00995 Verified</span>
+                    <span className="font-mono text-[10px] text-emerald-400">+91 92018 00995 Verified</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       disabled={waSending}
                       onClick={() => handleQuickWhatsAppSend("adv_lead_welcome", [lead.name, lead.id])}
-                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                      className="rounded-lg border border-emerald-500/30 bg-[#0D241E] hover:bg-[#12332B] p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
                     >
-                      <p className="font-bold text-[11px] text-emerald-950 truncate">Welcome & Intro</p>
-                      <p className="text-[9px] font-mono text-emerald-700">adv_lead_welcome</p>
+                      <p className="font-bold text-[11px] text-emerald-200 truncate">Welcome & Intro</p>
+                      <p className="text-[9px] font-mono text-emerald-400">adv_lead_welcome</p>
                     </button>
                     <button
                       type="button"
                       disabled={waSending}
                       onClick={() => handleQuickWhatsAppSend("adv_kyc_nudge", [lead.name, lead.id])}
-                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                      className="rounded-lg border border-emerald-500/30 bg-[#0D241E] hover:bg-[#12332B] p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
                     >
-                      <p className="font-bold text-[11px] text-emerald-950 truncate">KYC / RPM Nudge</p>
-                      <p className="text-[9px] font-mono text-emerald-700">adv_kyc_nudge</p>
+                      <p className="font-bold text-[11px] text-emerald-200 truncate">KYC / RPM Nudge</p>
+                      <p className="text-[9px] font-mono text-emerald-400">adv_kyc_nudge</p>
                     </button>
                     <button
                       type="button"
                       disabled={waSending}
                       onClick={() => handleQuickWhatsAppSend("adv_plan_activation", [lead.name, lead.segment || "Index Options", lead.id])}
-                      className="rounded-lg border border-emerald-300 bg-white hover:bg-emerald-100 p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
+                      className="rounded-lg border border-emerald-500/30 bg-[#0D241E] hover:bg-[#12332B] p-2 text-left transition-colors cursor-pointer disabled:opacity-50"
                     >
-                      <p className="font-bold text-[11px] text-emerald-950 truncate">Plan Activation</p>
-                      <p className="text-[9px] font-mono text-emerald-700">adv_plan_activation</p>
+                      <p className="font-bold text-[11px] text-emerald-200 truncate">Plan Activation</p>
+                      <p className="text-[9px] font-mono text-emerald-400">adv_plan_activation</p>
                     </button>
                   </div>
                 </div>
 
                 {/* Dispositioning Buttons */}
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-700">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                     1. Select Call Outcome / Disposition:
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -703,8 +703,8 @@ export function TelecallerWorkbench({
                           className={cx(
                             "rounded-xl border p-2 text-xs font-semibold text-center transition-all cursor-pointer",
                             isSelected
-                              ? "ring-2 ring-brand-600 border-transparent shadow-xs font-bold " + disp.color
-                              : "border-ink-200 bg-white text-ink-700 hover:bg-ink-50"
+                              ? "ring-2 ring-cyan-400 border-transparent shadow-md font-bold " + disp.color
+                              : "border-[#1E293B] bg-[#0E1624] text-slate-300 hover:bg-[#162235] hover:text-white"
                           )}
                         >
                           {disp.label}
@@ -717,10 +717,10 @@ export function TelecallerWorkbench({
                 {/* Call Notes Input */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                       2. Consultation Notes & Next Action:
                     </label>
-                    <span className="text-[11px] text-ink-400 font-mono">Appends to audit trail</span>
+                    <span className="text-[11px] text-slate-400 font-mono">Appends to audit trail</span>
                   </div>
 
                   {/* Quick Note Chips */}
@@ -730,7 +730,7 @@ export function TelecallerWorkbench({
                         key={qn}
                         type="button"
                         onClick={() => setNotes((prev) => (prev ? `${prev}; ${qn}` : qn))}
-                        className="rounded-lg border border-ink-200 bg-ink-50 px-2 py-0.5 text-[11px] text-ink-600 hover:bg-brand-50 hover:border-brand-300 hover:text-brand-800 transition-colors cursor-pointer"
+                        className="rounded-lg border border-[#1E293B] bg-[#0E1624] px-2 py-0.5 text-[11px] text-slate-300 hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:text-cyan-300 transition-colors cursor-pointer"
                       >
                         + {qn}
                       </button>
@@ -742,14 +742,14 @@ export function TelecallerWorkbench({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Enter discussion summary, risk tolerance discussed, or objections raised..."
-                    className="w-full rounded-xl border border-ink-300 p-3 text-xs text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:outline-none"
+                    className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-3 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
 
                 {/* Schedule Next Follow-up */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <div className="flex-1 w-full">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
                       3. Schedule Next Callback (Optional):
                     </label>
                     <input
@@ -757,7 +757,7 @@ export function TelecallerWorkbench({
                       value={nextFollowup}
                       onChange={(e) => setNextFollowup(e.target.value)}
                       placeholder="e.g. Tomorrow 10:30 AM or Post-market 4:00 PM"
-                      className="w-full rounded-xl border border-ink-300 px-3 py-1.5 text-xs text-ink-800 focus:border-brand-500 focus:outline-none"
+                      className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
 
@@ -766,7 +766,7 @@ export function TelecallerWorkbench({
                       type="button"
                       disabled={submitting}
                       onClick={handleSaveInteraction}
-                      className="rounded-xl bg-brand-700 px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-800 transition-colors cursor-pointer disabled:opacity-50"
+                      className="rounded-xl bg-cyan-400 hover:bg-cyan-300 px-6 py-2.5 text-xs font-bold text-[#05070B] shadow-md transition-colors cursor-pointer disabled:opacity-50"
                     >
                       {submitting ? "Saving..." : "Save & Wrap Up"}
                     </button>
@@ -775,29 +775,29 @@ export function TelecallerWorkbench({
               </div>
 
               {/* Right Column: Lead Dossier & Suitability Summary (5 cols) */}
-              <div className="md:col-span-5 space-y-4 border-t md:border-t-0 md:border-l border-ink-200 md:pl-6">
-                <div className="flex items-center justify-between border-b border-ink-200 pb-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink-800">
+              <div className="md:col-span-5 space-y-4 border-t md:border-t-0 md:border-l border-[#1E293B] md:pl-6">
+                <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
                     Lead Dossier & Intent
                   </h3>
-                  <span className="text-[11px] font-mono text-ink-500">Captured: {lead.createdAt}</span>
+                  <span className="text-[11px] font-mono text-slate-400">Captured: {lead.createdAt}</span>
                 </div>
 
                 {/* NPC Recycler Cadence Status */}
-                <div className="rounded-xl border border-orange-200 bg-orange-50/60 p-3">
+                <div className="rounded-xl border border-orange-500/30 bg-[#1C120B] p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-orange-900">NPC Attempt Cadence</span>
-                    <span className="font-mono text-xs font-bold text-orange-800">
+                    <span className="text-xs font-semibold text-orange-300">NPC Attempt Cadence</span>
+                    <span className="font-mono text-xs font-bold text-orange-400">
                       {currentNpc} of 7 Attempts
                     </span>
                   </div>
-                  <div className="mt-2 w-full bg-orange-200 rounded-full h-1.5">
+                  <div className="mt-2 w-full bg-orange-950/80 rounded-full h-1.5">
                     <div
-                      className="bg-orange-600 h-1.5 rounded-full transition-all"
+                      className="bg-orange-500 h-1.5 rounded-full transition-all"
                       style={{ width: `${Math.min(100, (currentNpc / 7) * 100)}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-[11px] text-orange-700">
+                  <p className="mt-1 text-[11px] text-orange-300/80">
                     {currentNpc >= 7
                       ? "Maximum NPC threshold reached. Lead auto-recycled to Cold Nurture."
                       : `${7 - currentNpc} attempts remaining before auto-cold recycling.`}
@@ -806,38 +806,38 @@ export function TelecallerWorkbench({
 
                 {/* Capital & Segment Details */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-lg bg-ink-50 p-2.5">
-                    <span className="text-[10px] uppercase font-mono text-ink-500">Declared Capital</span>
-                    <p className="font-bold font-mono text-ink-900 mt-0.5">{lead.capital}</p>
+                  <div className="rounded-lg bg-[#0E1624] border border-[#1E293B] p-2.5">
+                    <span className="text-[10px] uppercase font-mono text-slate-400">Declared Capital</span>
+                    <p className="font-bold font-mono text-white mt-0.5">{lead.capital}</p>
                   </div>
-                  <div className="rounded-lg bg-ink-50 p-2.5">
-                    <span className="text-[10px] uppercase font-mono text-ink-500">Preferred Segment</span>
-                    <p className="font-semibold text-ink-900 mt-0.5">{lead.segment || "General Advisory"}</p>
+                  <div className="rounded-lg bg-[#0E1624] border border-[#1E293B] p-2.5">
+                    <span className="text-[10px] uppercase font-mono text-slate-400">Preferred Segment</span>
+                    <p className="font-semibold text-white mt-0.5">{lead.segment || "General Advisory"}</p>
                   </div>
                 </div>
 
                 {/* Risk Assessment Score (if taken) */}
                 {lead.assessment ? (
-                  <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-3">
+                  <div className="rounded-xl border border-cyan-500/30 bg-[#0B1A24] p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-brand-900">SEBI Suitability Matrix</span>
+                      <span className="text-xs font-bold text-cyan-300">SEBI Suitability Matrix</span>
                       <Badge tone="positive">Score: {lead.assessment.score}/100</Badge>
                     </div>
-                    <p className="text-xs font-semibold text-brand-800 mt-1">
+                    <p className="text-xs font-semibold text-cyan-200 mt-1">
                       Profile: {lead.assessment.category}
                     </p>
                     {lead.assessment.suitability_summary && (
-                      <p className="text-[11px] text-ink-600 mt-1 line-clamp-2">
+                      <p className="text-[11px] text-slate-300 mt-1 line-clamp-2">
                         {lead.assessment.suitability_summary}
                       </p>
                     )}
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-ink-200 bg-ink-50 p-3 text-center">
-                    <span className="text-xs font-medium text-ink-600">
+                  <div className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3 text-center">
+                    <span className="text-xs font-medium text-slate-300">
                       Risk Assessment Questionnaire Pending
                     </span>
-                    <p className="text-[11px] text-ink-400 mt-0.5">
+                    <p className="text-[11px] text-slate-400 mt-0.5">
                       Prompt client to complete suitability declaration.
                     </p>
                   </div>
@@ -845,9 +845,9 @@ export function TelecallerWorkbench({
 
                 {/* Lead Message Note */}
                 {lead.message && (
-                  <div className="rounded-xl border border-ink-200 bg-ink-50 p-3">
-                    <span className="text-[10px] uppercase font-mono text-ink-500">Inbound Inquiry Message</span>
-                    <p className="text-xs text-ink-800 italic mt-1">&quot;{lead.message}&quot;</p>
+                  <div className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3">
+                    <span className="text-[10px] uppercase font-mono text-slate-400">Inbound Inquiry Message</span>
+                    <p className="text-xs text-slate-200 italic mt-1">&quot;{lead.message}&quot;</p>
                   </div>
                 )}
               </div>
@@ -978,7 +978,7 @@ export function TelecallerWorkbench({
               {/* Objection Index List (4 cols) */}
               <div className="md:col-span-5 space-y-2">
                 <div className="flex items-center justify-between pb-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-ink-700">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
                     Objection Library ({filteredScripts.length})
                   </span>
                 </div>
@@ -987,7 +987,7 @@ export function TelecallerWorkbench({
                   value={scriptSearch}
                   onChange={(e) => setScriptSearch(e.target.value)}
                   placeholder="Filter scripts (e.g. fees, loss, sebi)..."
-                  className="w-full rounded-xl border border-ink-300 px-3 py-1.5 text-xs text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:outline-none mb-2"
+                  className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none mb-2"
                 />
 
                 <div className="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
@@ -1001,14 +1001,14 @@ export function TelecallerWorkbench({
                         className={cx(
                           "w-full text-left rounded-xl p-2.5 border transition-all cursor-pointer",
                           isSelected
-                            ? "bg-brand-50 border-brand-500 shadow-xs"
-                            : "bg-white border-ink-200 hover:bg-ink-50"
+                            ? "bg-cyan-500/20 border-cyan-400 text-white shadow-sm"
+                            : "bg-[#0E1624] border-[#1E293B] hover:bg-[#162235] text-slate-300 hover:text-white"
                         )}
                       >
-                        <span className="text-[9px] font-mono uppercase text-brand-700 font-bold block">
+                        <span className="text-[9px] font-mono uppercase text-cyan-400 font-bold block">
                           {script.tag}
                         </span>
-                        <p className="text-xs font-bold text-ink-900 mt-0.5 leading-snug">{script.title}</p>
+                        <p className="text-xs font-bold text-white mt-0.5 leading-snug">{script.title}</p>
                       </button>
                     );
                   })}
@@ -1020,13 +1020,13 @@ export function TelecallerWorkbench({
                 {(() => {
                   const active = OBJECTION_SCRIPTS.find((s) => s.id === activeScriptId) || OBJECTION_SCRIPTS[0];
                   return (
-                    <Card className="p-5 space-y-4 border-l-4 border-l-brand-600">
+                    <div className="rounded-2xl p-5 space-y-4 border-l-4 border-l-cyan-400 bg-[#0E1624] border-y border-r border-[#1E293B] shadow-md">
                       <div className="flex items-start justify-between">
                         <div>
-                          <span className="rounded bg-brand-100 text-brand-800 text-[10px] font-mono font-bold px-2 py-0.5">
+                          <span className="rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold px-2 py-0.5">
                             {active.tag}
                           </span>
-                          <h4 className="text-sm font-bold text-ink-900 mt-2 font-display">
+                          <h4 className="text-sm font-bold text-white mt-2 font-display">
                             &quot;{active.question}&quot;
                           </h4>
                         </div>
@@ -1036,25 +1036,25 @@ export function TelecallerWorkbench({
                             setNotes((prev) => (prev ? `${prev}; Handled objection: ${active.title}` : `Handled objection: ${active.title}`));
                             showToast(`Appended "${active.title}" to consultation notes`);
                           }}
-                          className="flex items-center gap-1 rounded-lg border border-ink-300 bg-white px-2 py-1 text-[11px] font-mono text-ink-700 hover:bg-ink-50 transition-colors cursor-pointer"
+                          className="flex items-center gap-1 rounded-lg border border-[#1E293B] bg-[#162235] hover:bg-[#1E2D45] px-2.5 py-1 text-[11px] font-mono text-slate-300 hover:text-white transition-colors cursor-pointer"
                         >
                           <Copy className="size-3" />
                           <span>Add to Notes</span>
                         </button>
                       </div>
 
-                      <div className="rounded-xl bg-ink-50 p-4 border border-ink-200">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-brand-700 font-bold block mb-1">
+                      <div className="rounded-xl bg-[#070B14] p-4 border border-[#1E293B]">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold block mb-1">
                           Recommended Verbatim Response:
                         </span>
-                        <p className="text-xs leading-relaxed text-ink-800">{active.script}</p>
+                        <p className="text-xs leading-relaxed text-slate-200">{active.script}</p>
                       </div>
 
-                      <div className="rounded-xl bg-warning-50 p-3 border border-warning-200 flex items-start gap-2 text-warning-900 text-xs">
-                        <ShieldCheck className="size-4 text-warning-700 shrink-0 mt-0.5" />
+                      <div className="rounded-xl bg-amber-950/30 p-3 border border-amber-500/40 flex items-start gap-2 text-amber-200 text-xs">
+                        <ShieldCheck className="size-4 text-amber-400 shrink-0 mt-0.5" />
                         <span>{active.sebiNote}</span>
                       </div>
-                    </Card>
+                    </div>
                   );
                 })()}
               </div>
@@ -1064,17 +1064,17 @@ export function TelecallerWorkbench({
           {/* TAB 4: CALL HISTORY TIMELINE */}
           {activeTab === "history" && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-ink-200 pb-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-ink-800">
+              <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
                   Interaction Audit History
                 </h4>
-                <span className="text-xs text-ink-500 font-mono">
+                <span className="text-xs text-slate-400 font-mono">
                   {lead.callLogs?.length || 0} Total Interactions Logged
                 </span>
               </div>
 
               {!lead.callLogs || lead.callLogs.length === 0 ? (
-                <div className="py-8 text-center text-xs text-ink-500">
+                <div className="py-8 text-center text-xs text-slate-400">
                   No previous phone calls logged for this lead yet.
                 </div>
               ) : (
@@ -1082,7 +1082,7 @@ export function TelecallerWorkbench({
                   {lead.callLogs.map((log) => (
                     <div
                       key={log.id}
-                      className="rounded-xl border border-ink-200 bg-ink-50/50 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      className="rounded-xl border border-[#1E293B] bg-[#0E1624] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -1097,13 +1097,13 @@ export function TelecallerWorkbench({
                           >
                             {log.disposition}
                           </Badge>
-                          <span className="text-xs font-mono text-ink-500">{log.timestamp}</span>
-                          <span className="text-xs font-semibold text-ink-800">• Rep: {log.agent}</span>
+                          <span className="text-xs font-mono text-slate-400">{log.timestamp}</span>
+                          <span className="text-xs font-semibold text-slate-200">• Rep: {log.agent}</span>
                         </div>
-                        {log.notes && <p className="text-xs text-ink-700 italic mt-0.5">&quot;{log.notes}&quot;</p>}
+                        {log.notes && <p className="text-xs text-slate-300 italic mt-0.5">&quot;{log.notes}&quot;</p>}
                       </div>
 
-                      <div className="font-mono text-xs text-ink-600 sm:text-right">
+                      <div className="font-mono text-xs text-slate-400 sm:text-right">
                         Duration: {formatDuration(log.durationSec)}
                       </div>
                     </div>

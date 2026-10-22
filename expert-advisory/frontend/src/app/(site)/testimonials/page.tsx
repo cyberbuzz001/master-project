@@ -136,10 +136,10 @@ export default function TestimonialsPage() {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {TESTIMONIALS.map((t) => (
-            <Card key={t.name} className="flex flex-col justify-between p-6 sm:p-8 bg-white border border-ink-200/80 shadow-sm transition-all hover:shadow-md">
+            <Card key={t.name} className="flex flex-col justify-between p-6 sm:p-8 bg-[#0D131C] border border-[#1C2734] shadow-sm transition-all hover:border-[#283749] hover:shadow-md">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex text-amber-500">
+                  <div className="flex text-amber-400">
                     {[...Array(t.rating)].map((_, i) => (
                       <Star key={i} className="size-4 fill-current" />
                     ))}
@@ -151,16 +151,16 @@ export default function TestimonialsPage() {
                   )}
                 </div>
 
-                <h3 className="text-base font-bold text-ink-950">&ldquo;{t.highlight}&rdquo;</h3>
-                <p className="text-sm leading-relaxed text-ink-600 italic">
+                <h3 className="text-base font-bold text-white">&ldquo;{t.highlight}&rdquo;</h3>
+                <p className="text-sm leading-relaxed text-slate-300 italic">
                   &ldquo;{t.quote}&rdquo;
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-ink-100">
-                <p className="text-sm font-bold text-ink-950">{t.name}</p>
-                <p className="text-xs text-ink-500">{t.role}</p>
-                <p className="mt-1 text-[11px] font-mono text-teal-600">Product: {t.productUsed}</p>
+              <div className="mt-6 pt-4 border-t border-[#1C2734]">
+                <p className="text-sm font-bold text-white">{t.name}</p>
+                <p className="text-xs text-slate-400">{t.role}</p>
+                <p className="mt-1 text-[11px] font-mono text-cyan-400">Product: {t.productUsed}</p>
               </div>
             </Card>
           ))}
@@ -179,27 +179,27 @@ export default function TestimonialsPage() {
           {STRATEGIES.map((strat) => {
             const Icon = strat.icon;
             return (
-              <Card key={strat.title} className="p-6 sm:p-8 space-y-5 bg-white border border-ink-200/80">
+              <Card key={strat.title} className="p-6 sm:p-8 space-y-5 bg-[#0D131C] border border-[#1C2734] hover:border-[#283749]">
                 <div className="flex items-start justify-between">
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
                     <Icon className="size-6" />
                   </div>
                   <Badge tone="brand">{strat.tag}</Badge>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-bold text-ink-950">{strat.title}</h3>
-                  <p className="mt-1 font-mono text-xs font-semibold text-teal-700">Capital Scale: {strat.capitalRange}</p>
+                  <h3 className="text-xl font-bold text-white">{strat.title}</h3>
+                  <p className="mt-1 font-mono text-xs font-semibold text-cyan-400">Capital Scale: {strat.capitalRange}</p>
                 </div>
 
-                <p className="text-sm leading-relaxed text-ink-600">{strat.description}</p>
+                <p className="text-sm leading-relaxed text-slate-300">{strat.description}</p>
 
-                <div className="space-y-2 pt-2 border-t border-ink-100">
-                  <p className="text-xs font-bold uppercase tracking-wider text-ink-500">Key Features</p>
+                <div className="space-y-2 pt-2 border-t border-[#1C2734]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">Key Features</p>
                   <ul className="grid gap-2 sm:grid-cols-2">
                     {strat.features.map((feat) => (
-                      <li key={feat} className="flex items-center gap-2 text-xs text-ink-700">
-                        <CheckCircle className="size-3.5 shrink-0 text-teal-600" />
+                      <li key={feat} className="flex items-center gap-2 text-xs text-slate-300">
+                        <CheckCircle className="size-3.5 shrink-0 text-cyan-400" />
                         <span>{feat}</span>
                       </li>
                     ))}
