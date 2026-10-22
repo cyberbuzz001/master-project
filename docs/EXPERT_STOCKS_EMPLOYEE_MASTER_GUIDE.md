@@ -122,11 +122,18 @@ Located at **CRM -> Proposals & Closures**.
 ## 8. Client 360 Onboarding, KYC & Risk Suitability (RPM)
 To comply with SEBI Research Analyst guidelines:
 1. **Convert Lead:** Click **Convert to Client** to generate unique client code (`EXP-XXXX`).
-2. **KYC Verification:** Upload PAN card and address proof under **Documents**.
-3. **Risk Profile Questionnaire (RPM):**
-   - Record age, annual income, net worth, risk tolerance, and investment horizon.
-   - Suitability rule: Never activate an aggressive options advisory for a client with a conservative risk profile.
-4. **Advisory Agreement:** Send digital consent link; verify immutable SHA-256 evidence record.
+2. **KYC Verification & Audit Toggles:**
+   - Under **Customer 360° -> Documents**, inspect the DigiLocker PAN and Aadhaar e-KYC records.
+   - Click **Verify NSDL** or **Verify UIDAI** to update verification state with statutory audit timestamp.
+3. **20-Factor Risk Profile Assessment (RPM) Viewer:**
+   - Click **20-Point RPM Audit** to view the client's evaluated score across the 4 key dimensions: *Financial Surplus, Drawdown Tolerance, Market Knowledge,* and *Leverage Safety Gate*.
+   - Inspect individual responses to all 20 questions (e.g. net worth, stop-loss adherence, borrowing gate).
+   - Enforce statutory boundary: If risk tier is Conservative, F&O derivatives advisory is strictly prohibited.
+   - Click **Send Survey on WA** to dispatch an automated re-assessment link via Meta WhatsApp Cloud API.
+4. **Digital Advisory Agreement & Legal Consent Vault:**
+   - Click **Agreement Vault** to review the binding research mandate and immutable SHA-256 evidence record.
+   - Valid under Section 65B of the Information Technology Act, 2000 & SEBI RA Regulations.
+   - Click **Send Agreement on WA** to dispatch the official consent link directly to the client's verified mobile number.
 
 ---
 
@@ -143,11 +150,30 @@ To comply with SEBI Research Analyst guidelines:
 
 ---
 
-## 10. Daily Productivity & Telecalling KPIs
-- **Daily Call Goal:** 50 - 70 connected calls or callbacks.
-- **Talk Time Benchmark:** Minimum 120 minutes daily.
-- **Active Trials Pipeline:** Maintain 5 - 8 concurrent free trials at all times.
-- **Proposal Conversion Rate:** Target 35%+ conversion from accepted proposals to verified payments.
+## 10. Daily Productivity & Telecalling KPIs (Cockpit Guide)
+Telecallers can monitor their performance live in the **Calling Desk Cockpit**:
+
+### Key Metric Meters:
+- **Daily Call Goal:** 50 - 70 connected calls (visual progress meter with pacing alerts).
+- **Talk Time Benchmark:** Minimum 120 minutes daily (statutory adherence indicator).
+- **Active Trials Pipeline:** Maintain 5 - 8 concurrent live 48-hour free trials.
+- **Proposal Conversion Rate:** Target 35%+ conversion benchmark.
+
+### Priority Queue Quick Filters:
+- `All Queue`: Full active calling queue.
+- `⚡ Speed-to-Lead (< 5m)`: Urgent inbound prospects requiring immediate dial.
+- `📞 Callbacks Due Today`: Scheduled touchpoints alert.
+- `🔥 Active 48h Trials`: Prospects currently evaluating live recommendations.
+- `🔄 NPC Cadence (1–4)`: Unanswered calls in early recycling.
+- `⚠️ Critical NPC (5–6)`: High-urgency drop-off warning before final auto-close.
+
+### In-Call 18 Objection Playbooks:
+- Click **18 Objection Scripts** (top right) or **In-Call Objection Playbook** on any lead card.
+- Live keyword search across all 18 scripts.
+- Click **Copy Script** for phone talking points or **Send on WhatsApp** for instant 1-click cloud dispatch.
+
+### Daily Team Leaderboard:
+- Click **Daily Leaderboard** to view rankings across Connected Calls, Talk Time, Active Trials, and Conversion Rate.
 
 ---
 
