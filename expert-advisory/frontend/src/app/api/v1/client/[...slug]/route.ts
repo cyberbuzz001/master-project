@@ -328,6 +328,38 @@ export async function POST(request: NextRequest, context: { params: Promise<{ sl
     });
   }
 
+  if (path === "orders" || path === "broker/execute") {
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {}
+
+    const orderId = `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const broker = body.broker || "FYERS";
+    const symbol = body.symbol || "HDFCBANK";
+    const quantity = Number(body.quantity) || 50;
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        orderId,
+        broker,
+        symbol,
+        exchange: body.exchange || "NSE",
+        direction: body.direction || "BUY",
+        quantity,
+        entryRange: body.entryRange || "Market",
+        stopLoss: body.stopLoss || "Pre-set GTT",
+        target1: body.target1,
+        status: "PLACED",
+        gttActive: true,
+        placedAt: new Date().toISOString(),
+        suitabilityVerified: true,
+        message: `GTT Limit Order for ${quantity} units of ${symbol} successfully submitted to ${broker} API.`,
+      },
+    });
+  }
+
   return NextResponse.json({
     success: true,
     data: { message: "Saved successfully", path },

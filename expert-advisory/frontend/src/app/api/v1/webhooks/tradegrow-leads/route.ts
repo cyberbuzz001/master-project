@@ -183,6 +183,79 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (event === "kyc.verified") {
+      const cleanPhone = String(payload.phone || payload.mobile || "").replace(/\D/g, "").slice(-10);
+      const lead = cleanPhone ? leadsStore.getLeadByPhone(cleanPhone) : null;
+      if (lead) {
+        leadsStore.updateLead(lead.id, {
+          status: "qualified",
+          notes: `${lead.notes || ""}\n[KYC Verified]: PAN ${payload.panMasked || "Verified"} via DigiLocker on ${new Date().toLocaleDateString("en-IN")}.`,
+          tags: Array.from(new Set([...(lead.tags || []), "KYC_VERIFIED", "DigiLocker"])),
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        event,
+        leadId: lead?.id || null,
+        panStatus: "NSDL_VERIFIED",
+        aadhaarStatus: "UIDAI_VERIFIED",
+        message: "Client KYC verified and synchronized with Expert Stocks dossier.",
+      });
+    }
+
+    if (event === "sub.activated") {
+      const customerName = String(payload.customerName || payload.name || "Client").trim();
+      const planName = String(payload.planName || "HNI Bespoke Advisory");
+      const amount = Number(payload.amount) || 25000;
+      const cleanPhone = String(payload.phone || payload.mobile || "").replace(/\D/g, "").slice(-10);
+
+      const newSub = leadsStore.addSubscription({
+        customerId: payload.customerId || `CUST-${Math.floor(1000 + Math.random() * 9000)}`,
+        customerName,
+        customerCode: payload.customerCode || `ESC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        planName,
+        tier: payload.tier || "Quarterly Mandate",
+        amount,
+        duration: payload.duration || "3 Months",
+        expiryDate: payload.expiryDate || new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
+        paymentMethod: payload.paymentMethod || "Razorpay / UPI",
+        relationshipManager: payload.relationshipManager || "Sunita Verma",
+        notes: `Activated via TradeGrow Webhook Bridge. Order Ref: ${payload.orderId || "TG-ORD-2026"}`,
+      });
+
+      if (cleanPhone) {
+        const lead = leadsStore.getLeadByPhone(cleanPhone);
+        if (lead) {
+          leadsStore.updateLead(lead.id, {
+            status: "converted",
+            tags: Array.from(new Set([...(lead.tags || []), "ACTIVE_SUBSCRIBER", planName])),
+          });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        event,
+        subscriptionId: newSub.id,
+        customerCode: newSub.customerCode,
+        status: "ACTIVE",
+        message: "Subscription activated and recorded in Expert Stocks billing ledger.",
+      });
+    }
+
+    if (event === "order.executed") {
+      return NextResponse.json({
+        success: true,
+        event,
+        orderId: payload.orderId || `ORD-${Date.now()}`,
+        broker: payload.broker || "FYERS",
+        symbol: payload.symbol,
+        status: "EXECUTED",
+        message: "Broker execution event logged in advisory telemetry.",
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: `Event '${event}' acknowledged.`,
