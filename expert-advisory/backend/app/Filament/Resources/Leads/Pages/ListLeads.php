@@ -33,6 +33,14 @@ class ListLeads extends ListRecords
             'new' => Tab::make('New')
                 ->badge(fn () => $scoped()->where('status', 'NEW')->count() ?: null)
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'NEW')),
+            'handoff' => Tab::make('AI Handoff Queue')
+                ->badge(fn () => $scoped()->where(fn (Builder $q) => $q->where('is_ai_paused', true)->orWhere('ai_conversation_state', 'HUMAN_AGENT_REQUESTED'))->count() ?: null)
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where(fn (Builder $q) => $q->where('is_ai_paused', true)->orWhere('ai_conversation_state', 'HUMAN_AGENT_REQUESTED'))),
+            'hot' => Tab::make('Hot Leads (AI)')
+                ->badge(fn () => $scoped()->where(fn (Builder $q) => $q->where('ai_grade', 'HOT')->orWhere('ai_score', '>=', 75))->count() ?: null)
+                ->badgeColor('danger')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where(fn (Builder $q) => $q->where('ai_grade', 'HOT')->orWhere('ai_score', '>=', 75))),
             'pipeline' => Tab::make('Trials & payments')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('status', ['FREE_TRIAL', 'EXPECTED_PAYMENT'])),
             'won' => Tab::make('Paid & converted')
