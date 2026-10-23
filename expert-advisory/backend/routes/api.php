@@ -35,6 +35,11 @@ Route::prefix('v1')->group(function (): void {
         ->where('provider', '[a-z]+')
         ->middleware('throttle:webhooks');
 
+    // ---- WhatsApp Meta Cloud Webhooks -------------------------------------------------------
+    Route::get('webhooks/whatsapp', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'verify']);
+    Route::post('webhooks/whatsapp', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'handle'])
+        ->middleware('throttle:webhooks');
+
     // ---- Authentication -------------------------------------------------------------------
     Route::prefix('auth')->group(function (): void {
         Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -96,6 +101,59 @@ Route::prefix('v1')->group(function (): void {
                 Route::put('settings', [SettingsController::class, 'update'])->middleware('can:settings.manage');
                 Route::post('settings/verify', [SettingsController::class, 'verify'])->middleware('can:settings.manage');
                 Route::get('system/health', [\App\Http\Controllers\Api\V1\Admin\SystemHealthController::class, 'health'])->middleware('can:system.health.view');
+
+                // ---- Universal Lead Import & Automation --------------------------------------------
+                Route::prefix('leads/universal-import')->group(function (): void {
+                    Route::post('preview', [\App\Http\Controllers\Api\UniversalImportController::class, 'preview']);
+                    Route::post('execute', [\App\Http\Controllers\Api\UniversalImportController::class, 'execute']);
+                    Route::get('batches', [\App\Http\Controllers\Api\UniversalImportController::class, 'batches']);
+                    Route::get('batches/{id}', [\App\Http\Controllers\Api\UniversalImportController::class, 'showBatch']);
+                    Route::post('download-report', [\App\Http\Controllers\Api\UniversalImportController::class, 'downloadReport']);
+                });
+
+                // ---- Lead AI Controls & Scoring ----------------------------------------------------
+                Route::post('leads/{lead}/toggle-ai-pause', function (\App\Models\Lead $lead) {
+                    $lead->update(['is_ai_paused' => !$lead->is_ai_paused]);
+                    return response()->json([
+                        'success' => true,
+                        'is_ai_paused' => (bool) $lead->is_ai_paused,
+                        'message' => $lead->is_ai_paused ? 'AI paused. Human agent takeover active.' : 'AI resumed for automated conversation.',
+                    ]);
+                });
+
+                Route::post('leads/{lead}/recalculate-score', function (\App\Models\Lead $lead, \App\Domain\Crm\LeadScoringEngine $scoring) {
+                    $result = $scoring->scoreLead($lead);
+                    return response()->json([
+                        'success' => true,
+                        'score' => $result['score'],
+                        'grade' => $result['grade'],
+                        'conversion_probability' => $result['conversion_probability'],
+                        'explanation' => $result['explanation'],
+                    ]);
+                });
+
+                // ---- Vendor Performance Analytics --------------------------------------------------
+                Route::get('analytics/vendor-performance', function (\Illuminate\Http\Request $request, \App\Domain\Crm\VendorPerformanceService $service) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => $service->getVendorMetrics($request->all()),
+                        'batch_metrics' => $service->getImportBatchMetrics(),
+                    ]);
+                });
+
+                // ---- Automated Workflows Trigger ---------------------------------------------------
+                Route::post('workflows/trigger', function (\Illuminate\Http\Request $request, \App\Domain\Crm\AutomationWorkflowEngine $engine) {
+                    $request->validate([
+                        'lead_id' => 'required|exists:leads,id',
+                        'workflow_code' => 'required|string',
+                    ]);
+                    $lead = \App\Models\Lead::findOrFail($request->input('lead_id'));
+                    $run = $engine->triggerWorkflow($lead, $request->input('workflow_code'));
+                    return response()->json([
+                        'success' => (bool) $run,
+                        'workflow_run' => $run,
+                    ]);
+                });
             });
 
             // ---- Employee workspace -----------------------------------------------------------

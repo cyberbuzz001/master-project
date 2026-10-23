@@ -138,6 +138,18 @@ final class WebhookProcessor
 
         if ($invoice->fresh()->isSettled()) {
             $this->subscriptions->activateForInvoice($invoice->fresh());
+
+            $client = $invoice->client;
+            if ($client && $client->lead_id) {
+                $lead = \App\Models\Lead::find($client->lead_id);
+                if ($lead) {
+                    $lead->update([
+                        'status' => 'PAID',
+                        'ai_conversation_state' => 'PAYMENT_VERIFIED',
+                    ]);
+                    app(\App\Domain\Crm\LeadScoringEngine::class)->scoreLead($lead);
+                }
+            }
         }
 
         return 'Payment verified and applied to '.$invoice->invoice_number.'.';

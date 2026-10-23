@@ -49,6 +49,39 @@ class LeadsTable
                     ->formatStateUsing(fn (string $state) => LeadStatus::tryFrom($state)?->getLabel() ?? $state)
                     ->color(fn (string $state) => LeadStatus::tryFrom($state)?->getColor() ?? 'gray')
                     ->sortable(),
+                TextColumn::make('communication_state')
+                    ->label('Consent & WA')
+                    ->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'CONSENT_VERIFIED', 'ELIGIBLE_WHATSAPP' => 'success',
+                        'ELIGIBLE_PHONE' => 'info',
+                        'CONSENT_PENDING' => 'warning',
+                        'OPTED_OUT', 'DO_NOT_CONTACT' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state) => Lead::COMMUNICATION_STATES[$state] ?? ($state ?: 'Unknown'))
+                    ->toggleable(),
+                TextColumn::make('ai_score')
+                    ->label('AI Score')
+                    ->badge()
+                    ->color(fn (?int $score) => match (true) {
+                        $score >= 75 => 'danger',
+                        $score >= 50 => 'warning',
+                        $score >= 25 => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?int $score, Lead $record) => $score !== null ? "{$score} ({$record->ai_grade})" : '—')
+                    ->sortable()
+                    ->toggleable(),
+                IconColumn::make('is_ai_paused')
+                    ->label('AI Status')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-hand-raised')
+                    ->falseIcon('heroicon-o-cpu-chip')
+                    ->trueColor('warning')
+                    ->falseColor('success')
+                    ->tooltip(fn (Lead $record) => $record->is_ai_paused ? 'Human Takeover Active (AI Paused)' : 'AI Automated Nurturing Active')
+                    ->toggleable(),
                 TextColumn::make('preferred_segments')
                     ->label('Markets')
                     ->badge()
@@ -99,6 +132,8 @@ class LeadsTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
+                    LeadActions::toggleAiPause(),
+                    LeadActions::recalculateScore(),
                     LeadActions::logCall(),
                     LeadActions::scheduleFollowup(),
                     LeadActions::startFreeTrial(),

@@ -16,7 +16,13 @@ use Illuminate\Support\Str;
     'full_name', 'mobile', 'email', 'city', 'state', 'country', 'trading_experience', 'demat_status', 'broker',
     'capital_range', 'preferred_segments', 'equity_interest', 'options_interest', 'commodity_interest',
     'investment_horizon', 'risk_level_declared', 'lead_source_id', 'campaign_id', 'vendor_id', 'referral_code',
-    'team_leader_employee_id', 'duplicate_of_lead_id', 'message', 'import_id', 'is_demo',
+    'team_leader_employee_id', 'duplicate_of_lead_id', 'message', 'import_id', 'lead_import_batch_id', 'is_demo',
+    'status', 'dnd_at', 'next_followup_at', 'last_contacted_at', 'call_outcome',
+    'ai_score', 'ai_grade', 'lead_score_explanation', 'ai_intent', 'ai_sentiment', 'conversion_probability',
+    'assigned_employee_id', 'assigned_at',
+    'communication_state', 'is_ai_paused', 'ai_conversation_state', 'preferred_language',
+    'last_whatsapp_received_at', 'whatsapp_opted_out_at', 'whatsapp_opt_in_evidence',
+    'human_handoff_requested_at', 'human_handoff_reason', 'demo_requested_at', 'appointment_requested_at', 'payment_link_generated_at',
 ])]
 class Lead extends Model
 {
@@ -27,6 +33,36 @@ class Lead extends Model
         'NOT_INTERESTED', 'DND', 'INVALID', 'CONVERTED', 'LOST',
     ];
 
+    public const COMMUNICATION_STATES = [
+        'CONSENT_UNKNOWN' => 'Consent Unknown',
+        'CONSENT_PENDING' => 'Consent Pending',
+        'CONSENT_VERIFIED' => 'Consent Verified',
+        'ELIGIBLE_WHATSAPP' => 'Eligible for WhatsApp',
+        'ELIGIBLE_PHONE' => 'Eligible for Phone Contact',
+        'CHANNEL_RESTRICTED' => 'Channel Restricted',
+        'OPTED_OUT' => 'Opted Out',
+        'DO_NOT_CONTACT' => 'Do Not Contact',
+        'INVALID_NUMBER' => 'Invalid Number',
+    ];
+
+    public const AI_CONVERSATION_STATES = [
+        'INTRO_PENDING' => 'Introduction Pending',
+        'WAITING_FOR_REPLY' => 'Waiting for Reply',
+        'INTERESTED_IN_SERVICE' => 'Interested in Service',
+        'ASKING_QUESTIONS' => 'Asking Questions',
+        'DEMO_REQUESTED' => 'Demo Requested',
+        'DEMO_BOOKED' => 'Demo Booked',
+        'APPOINTMENT_REQUESTED' => 'Appointment Requested',
+        'APPOINTMENT_BOOKED' => 'Appointment Booked',
+        'PAYMENT_INFO_REQUESTED' => 'Payment Info Requested',
+        'PAYMENT_LINK_SENT' => 'Payment Link Sent',
+        'PAYMENT_PENDING' => 'Payment Pending',
+        'PAYMENT_VERIFIED' => 'Payment Verified',
+        'HUMAN_AGENT_REQUESTED' => 'Human Agent Requested',
+        'NOT_INTERESTED' => 'Not Interested',
+        'OPTED_OUT' => 'Opted Out',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -34,11 +70,18 @@ class Lead extends Model
             'equity_interest' => 'boolean',
             'options_interest' => 'boolean',
             'commodity_interest' => 'boolean',
+            'is_ai_paused' => 'boolean',
             'assigned_at' => 'datetime',
             'dnd_at' => 'datetime',
             'escalated_at' => 'datetime',
             'last_contacted_at' => 'datetime',
             'next_followup_at' => 'datetime',
+            'last_whatsapp_received_at' => 'datetime',
+            'whatsapp_opted_out_at' => 'datetime',
+            'human_handoff_requested_at' => 'datetime',
+            'demo_requested_at' => 'datetime',
+            'appointment_requested_at' => 'datetime',
+            'payment_link_generated_at' => 'datetime',
             'conversion_probability' => 'decimal:4',
             'is_demo' => 'boolean',
         ];
@@ -115,6 +158,26 @@ class Lead extends Model
     public function statusHistory(): HasMany
     {
         return $this->hasMany(LeadStatusHistory::class);
+    }
+
+    public function importBatch(): BelongsTo
+    {
+        return $this->belongsTo(LeadImportBatch::class, 'lead_import_batch_id');
+    }
+
+    public function aiConversations(): HasMany
+    {
+        return $this->hasMany(AiConversation::class)->latest('id');
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class)->latest('scheduled_start');
+    }
+
+    public function workflowRuns(): HasMany
+    {
+        return $this->hasMany(WorkflowRun::class)->latest('id');
     }
 
     /**

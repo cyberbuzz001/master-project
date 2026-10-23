@@ -339,4 +339,41 @@ final class LeadActions
             ->mapWithKeys(fn (Employee $e) => [$e->id => $e->displayName()])
             ->all();
     }
+
+    public static function toggleAiPause(): Action
+    {
+        return Action::make('toggleAiPause')
+            ->label(fn (Lead $record) => $record->is_ai_paused ? 'Resume AI Assistant' : 'Take Over Chat (Pause AI)')
+            ->icon(fn (Lead $record) => $record->is_ai_paused ? Heroicon::OutlinedPlay : Heroicon::OutlinedPause)
+            ->color(fn (Lead $record) => $record->is_ai_paused ? 'success' : 'warning')
+            ->requiresConfirmation()
+            ->modalHeading(fn (Lead $record) => $record->is_ai_paused ? 'Resume AI Assistant Automation' : 'Human Agent Takeover')
+            ->modalDescription(fn (Lead $record) => $record->is_ai_paused
+                ? 'Resume AI sales assistant conversation for this lead. Automated AI responses will be enabled.'
+                : 'Pause AI sales assistant to prevent automated responses while a human agent interacts with the customer on WhatsApp.')
+            ->action(function (Lead $record) {
+                $record->update(['is_ai_paused' => !$record->is_ai_paused]);
+                Notification::make()
+                    ->title($record->is_ai_paused ? 'Human Takeover Activated' : 'AI Assistant Resumed')
+                    ->body($record->is_ai_paused ? 'AI responses are paused. You now have full manual control.' : 'AI assistant is now active for this lead.')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    public static function recalculateScore(): Action
+    {
+        return Action::make('recalculateScore')
+            ->label('Calculate AI Score')
+            ->icon(Heroicon::OutlinedSparkles)
+            ->color('info')
+            ->action(function (Lead $record) {
+                $result = app(\App\Domain\Crm\LeadScoringEngine::class)->scoreLead($record);
+                Notification::make()
+                    ->title("AI Score: {$result['score']}/100 ({$result['grade']})")
+                    ->body(implode(' ', $result['explanation']))
+                    ->info()
+                    ->send();
+            });
+    }
 }
