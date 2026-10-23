@@ -57,11 +57,18 @@ class LeadInfolist
                         TextEntry::make('trading_experience')->formatStateUsing(fn (?string $state) => LeadForm::EXPERIENCE[$state] ?? $state)->placeholder('—'),
                         TextEntry::make('message')->label('Enquiry notes')->columnSpanFull()->placeholder('—'),
                     ]),
+                Section::make('WhatsApp conversation')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                    ->collapsible()
+                    ->schema([View::make('filament.leads.whatsapp_chat')]),
                 Section::make('Activity timeline')
                     ->icon(Heroicon::OutlinedClock)
                     ->schema([View::make('filament.leads.timeline')]),
             ]),
             Grid::make(1)->columnSpan(['default' => 3, 'lg' => 1])->schema([
+                Section::make('AI qualification & handoff')
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->schema([View::make('filament.leads.ai_handoff_card')]),
                 Section::make('Playbook')
                     ->icon(Heroicon::OutlinedLightBulb)
                     ->description('What to do at this stage')
