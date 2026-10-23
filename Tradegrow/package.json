@@ -14,6 +14,11 @@
     "dev:python": "cd python_engine && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:python\"",
     "test": "jest --detectOpenHandles --forceExit",
+    "test:phase7:invariance": "jest tests/ledger_invariance.test.ts --forceExit",
+    "test:phase7:governance": "jest tests/sebi_governance_invariance.test.ts --forceExit",
+    "test:phase7:stress": "jest tests/order_stress.test.ts --forceExit",
+    "test:phase7:50k": "ts-node --transpile-only scripts/run_phase7_stress_suite.ts",
+    "test:phase7": "jest tests/ledger_invariance.test.ts tests/sebi_governance_invariance.test.ts tests/order_stress.test.ts --runInBand --forceExit",
     "test:dhan": "ts-node scripts/test_dhan_connectivity.ts",
     "test:dhan:full": "ts-node scripts/test_dhan_full_suite.ts",
     "monitor:dhan": "ts-node scripts/monitor_dhan_mock_session.ts"
