@@ -85,12 +85,48 @@
         var v = getQueryParam(k);
         if (v) sessionStorage.setItem('tg_' + k, v);
       });
-      var ref = getQueryParam('r');
-      if (ref) localStorage.setItem('tg_ref', ref);
-      var creator = getQueryParam('c');
-      if (creator) localStorage.setItem('tg_creator', creator);
+      var ref = getQueryParam('r') || getQueryParam('ref');
+      if (ref) {
+        sessionStorage.setItem('tg_r', ref);
+        localStorage.setItem('tg_ref', ref);
+      }
+      var creator = getQueryParam('c') || getQueryParam('creator');
+      if (creator) {
+        sessionStorage.setItem('tg_c', creator);
+        localStorage.setItem('tg_creator', creator);
+      }
     } catch(e) {}
   })();
+
+  function decorateCtaLinks() {
+    try {
+      var r = sessionStorage.getItem('tg_r') || localStorage.getItem('tg_ref');
+      var c = sessionStorage.getItem('tg_c') || localStorage.getItem('tg_creator');
+      var src = sessionStorage.getItem('tg_utm_source');
+      var camp = sessionStorage.getItem('tg_utm_campaign');
+      var med = sessionStorage.getItem('tg_utm_medium');
+      if (!r && !c && !src && !camp && !med) return;
+
+      document.querySelectorAll('a[href*="/open-account/"], a[href*="open-account"]').forEach(function (a) {
+        try {
+          var href = a.getAttribute('href');
+          if (!href || (href.indexOf('http') === 0 && !href.includes(window.location.hostname))) return;
+          var url = new URL(a.href, window.location.origin);
+          if (r && !url.searchParams.has('r')) url.searchParams.set('r', r);
+          if (c && !url.searchParams.has('c')) url.searchParams.set('c', c);
+          if (src && !url.searchParams.has('utm_source')) url.searchParams.set('utm_source', src);
+          if (camp && !url.searchParams.has('utm_campaign')) url.searchParams.set('utm_campaign', camp);
+          if (med && !url.searchParams.has('utm_medium')) url.searchParams.set('utm_medium', med);
+          a.href = url.pathname + url.search + url.hash;
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', decorateCtaLinks);
+  } else {
+    decorateCtaLinks();
+  }
 
   var queue = [];
 
@@ -591,10 +627,15 @@
   if (formKycBank) {
     formKycBank.addEventListener('submit', function (e) {
       e.preventDefault();
-      var refNum = 'TG-APP-2026-' + Math.floor(1000 + Math.random() * 9000);
-      applicantState.ref = refNum;
+      var assignedRef = applicantState.leadCode || ('TG-APP-2026-' + Math.floor(1000 + Math.random() * 9000));
+      applicantState.ref = assignedRef;
       applicantState.ifsc = document.getElementById('kyc-bank-ifsc').value.toUpperCase();
       applicantState.submittedAt = new Date().toISOString();
+      applicantState.utmSource = sessionStorage.getItem('tg_utm_source') || '';
+      applicantState.utmMedium = sessionStorage.getItem('tg_utm_medium') || '';
+      applicantState.utmCampaign = sessionStorage.getItem('tg_utm_campaign') || '';
+      applicantState.referralCode = sessionStorage.getItem('tg_r') || localStorage.getItem('tg_ref') || '';
+      applicantState.creatorCode = sessionStorage.getItem('tg_c') || localStorage.getItem('tg_creator') || '';
 
       try {
         var existing = JSON.parse(localStorage.getItem('tg_applications') || '[]');
@@ -613,11 +654,11 @@
         });
       } catch (_) {}
 
-      document.getElementById('disp-app-ref').textContent = refNum;
+      document.getElementById('disp-app-ref').textContent = assignedRef;
       kycStep3.classList.remove('is-active');
       kycStep4.classList.add('is-active');
       setStepper(4);
-      track('kyc_application_submitted', { ref: refNum });
+      track('kyc_application_submitted', { ref: assignedRef });
       kycStep4.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }
@@ -650,25 +691,104 @@
     });
   }
 
+  function updatePipelineDisplay(stageIdx) {
+    var pipeline = document.getElementById('track-pipeline');
+    if (!pipeline) return;
+    var items = pipeline.querySelectorAll('.pipeline__item');
+    items.forEach(function (item, idx) {
+      var stepNum = idx + 1;
+      var dot = item.querySelector('.pipeline__dot');
+      if (stepNum < stageIdx) {
+        item.className = 'pipeline__item is-done';
+        if (dot) dot.innerHTML = '&#10003;';
+      } else if (stepNum === stageIdx) {
+        item.className = 'pipeline__item is-active';
+        if (dot) dot.innerHTML = '&bull;';
+      } else {
+        item.className = 'pipeline__item';
+        if (dot) dot.textContent = String(stepNum);
+      }
+    });
+  }
+
   var formTrackStatus = document.getElementById('form-track-status');
   if (formTrackStatus) {
     formTrackStatus.addEventListener('submit', function (e) {
       e.preventDefault();
       var refVal = (document.getElementById('track-ref-input').value || '').trim().toUpperCase();
       var resArea = document.getElementById('track-result-area');
+      var submitBtn = formTrackStatus.querySelector('button[type="submit"]');
       if (!refVal || !resArea) return;
 
       var found = null;
       try {
         var existing = JSON.parse(localStorage.getItem('tg_applications') || '[]');
-        found = existing.find(function (a) { return a.ref.toUpperCase() === refVal; });
+        found = existing.find(function (a) { return a.ref && a.ref.toUpperCase() === refVal; });
       } catch (err) {}
 
-      document.getElementById('track-disp-ref').textContent = refVal;
-      document.getElementById('track-disp-name').textContent = found ? found.name : 'Registered Applicant';
-      resArea.hidden = false;
-      resArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Checking...';
+      }
+
+      fetch(getApiBase() + '/api/v1/public/onboarding/status/' + encodeURIComponent(refVal))
+        .then(function (r) {
+          if (!r.ok) throw new Error('Status HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (res) {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Check Status';
+          }
+          var d = res && res.data;
+          var applicantName = (d && d.fullName) || (found && found.name) || 'Registered Applicant';
+          var stageName = (d && d.statusText) || 'In Verification';
+          var pillClass = (d && d.pillClass) || 'pill--ok';
+          var stageIdx = (d && typeof d.stageIndex === 'number') ? d.stageIndex : 4;
+
+          document.getElementById('track-disp-ref').textContent = (d && d.ref) || refVal;
+          document.getElementById('track-disp-name').textContent = applicantName;
+          var stagePill = document.getElementById('track-disp-stage');
+          if (stagePill) {
+            stagePill.className = 'pill ' + pillClass;
+            stagePill.textContent = stageName;
+          }
+          updatePipelineDisplay(stageIdx);
+          resArea.hidden = false;
+          resArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        })
+        .catch(function (err) {
+          console.warn('[Track Status] Backend offline/fallback:', err);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Check Status';
+          }
+          document.getElementById('track-disp-ref').textContent = refVal;
+          document.getElementById('track-disp-name').textContent = found ? found.name : 'Registered Applicant';
+          var stagePill = document.getElementById('track-disp-stage');
+          if (stagePill) {
+            stagePill.className = 'pill pill--ok';
+            stagePill.textContent = 'In Verification';
+          }
+          updatePipelineDisplay(4);
+          resArea.hidden = false;
+          resArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
     });
+
+    // Check if query param ?track= or ?ref= exists to auto-trigger tracking
+    try {
+      var autoTrackRef = getQueryParam('track') || getQueryParam('status_ref');
+      if (autoTrackRef && tabTrack) {
+        tabTrack.click();
+        var input = document.getElementById('track-ref-input');
+        if (input) {
+          input.value = autoTrackRef;
+          formTrackStatus.dispatchEvent(new Event('submit'));
+        }
+      }
+    } catch (_) {}
   }
 
   /* ------------------------------------- Platform Terminal Showcase */

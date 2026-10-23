@@ -571,15 +571,61 @@ warRoomRouter.post('/public/onboarding/apply', async (req: Request, res: Respons
     const { ref, phone, name, pan, dob, gender, ifsc } = req.body;
     const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
     const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const leadCode = String(ref || `TG-APP-2026-${Date.now().toString().slice(-4)}`).toUpperCase();
+    const phoneE164 = cleanPhone ? `+91${cleanPhone}` : `+910000000000`;
 
-    // Send email alert to operations team
+    // 1. Persist or update in warroom.leads
+    try {
+      const existing = await queryOne<{ id: string }>(
+        `SELECT id FROM warroom.leads WHERE UPPER(lead_code) = $1 OR phone_e164 = $2 LIMIT 1`,
+        [leadCode, phoneE164]
+      );
+
+      let targetLeadId: string;
+      if (existing) {
+        targetLeadId = existing.id;
+        await execute(
+          `UPDATE warroom.leads
+           SET lead_code = $1, full_name = COALESCE($2, full_name), stage = 'KYC_SUBMITTED', score = GREATEST(score, 50), updated_at = clock_timestamp()
+           WHERE id = $3`,
+          [leadCode, name ? String(name).trim() : null, targetLeadId]
+        );
+      } else {
+        targetLeadId = generateUUID();
+        await execute(
+          `INSERT INTO warroom.leads (
+            id, lead_code, phone_e164, full_name, source, stage, score, consent_whatsapp
+          ) VALUES ($1, $2, $3, $4, 'KYC_APPLICATION', 'KYC_SUBMITTED', 50, TRUE)
+          ON CONFLICT (lead_code) DO UPDATE SET
+            full_name = COALESCE(EXCLUDED.full_name, warroom.leads.full_name),
+            stage = 'KYC_SUBMITTED',
+            updated_at = clock_timestamp()`,
+          [targetLeadId, leadCode, phoneE164, name ? String(name).trim() : null]
+        );
+      }
+
+      await execute(
+        `INSERT INTO warroom.lead_events (lead_id, to_stage, actor, notes, metadata)
+         VALUES ($1, 'KYC_SUBMITTED', 'WEBSITE_PORTAL', 'KYC application submitted: PAN ' || $2 || ', Bank IFSC ' || $3, $4)`,
+        [
+          targetLeadId,
+          pan ? String(pan).toUpperCase() : 'N/A',
+          ifsc ? String(ifsc).toUpperCase() : 'N/A',
+          JSON.stringify({ pan: pan ? String(pan).slice(0, 5) + '****' : null, dob, gender, ifsc })
+        ]
+      );
+    } catch (dbErr: any) {
+      console.warn('[WarRoom API] Could not record lead DB entry (non-fatal):', dbErr.message);
+    }
+
+    // 2. Send email alert to operations team
     const alertHtml = buildAlertEmailHtml({
       badgeTitle: 'NEW APPLICATION',
       badgeColor: '#38BDF8',
-      headline: `Digital Onboarding Application Submitted: ${ref || 'TG-APP-2026'}`,
+      headline: `Digital Onboarding Application Submitted: ${leadCode}`,
       summary: `An investor has completed the digital onboarding flow on the website. Immediate KYC and CKYC verification required.`,
       details: [
-        { label: 'Application Reference', value: ref || 'TG-APP-2026' },
+        { label: 'Application Reference', value: leadCode },
         { label: 'Applicant Name', value: name || 'Not provided' },
         { label: 'Mobile Number', value: `+91 ${cleanPhone}` },
         { label: 'PAN Number', value: pan || 'Not provided' },
@@ -596,7 +642,7 @@ warRoomRouter.post('/public/onboarding/apply', async (req: Request, res: Respons
     for (const to of opsEmails) {
       emailService.sendMailAsync({
         to,
-        subject: `[TradeGrow KYC Application] ${ref || 'TG-APP-2026'} - ${name || cleanPhone}`,
+        subject: `[TradeGrow KYC Application] ${leadCode} - ${name || cleanPhone}`,
         html: alertHtml,
         templateType: 'KYC_APPLICATION',
         priority: 'HIGH',
@@ -605,12 +651,119 @@ warRoomRouter.post('/public/onboarding/apply', async (req: Request, res: Respons
 
     return res.json({
       success: true,
-      reference: ref,
+      reference: leadCode,
       message: 'Account opening application recorded successfully.'
     });
   } catch (err: any) {
     console.error('[WarRoom API] Onboarding application error:', err);
     return res.status(500).json({ success: false, error: { message: 'Failed to record application' } });
+  }
+});
+
+/**
+ * GET /api/v1/public/onboarding/status/:ref
+ * GET /api/v1/public/onboarding/status?ref=...
+ * Returns real-time onboarding and KYC verification status
+ */
+warRoomRouter.get(['/public/onboarding/status/:ref', '/public/onboarding/status'], async (req: Request, res: Response) => {
+  try {
+    const rawRef = (req.params.ref || req.query.ref || '').toString().trim().toUpperCase();
+    if (!rawRef) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_REF', message: 'Application reference code is required.' }
+      });
+    }
+
+    // Try finding lead in database
+    let lead: any = null;
+    try {
+      lead = await queryOne<any>(
+        `SELECT lead_code, full_name, phone_e164, stage, score, created_at, updated_at
+         FROM warroom.leads
+         WHERE UPPER(lead_code) = $1 OR phone_e164 = $2 OR phone_e164 = $3
+         LIMIT 1`,
+        [rawRef, rawRef, `+91${rawRef.replace(/\D/g, '').slice(-10)}`]
+      );
+    } catch (err: any) {
+      console.warn('[WarRoom API] Status query DB error:', err.message);
+    }
+
+    const stageMap: Record<string, { stageIndex: number; stageName: string; statusText: string; pillClass: string; notes: string }> = {
+      NEW: {
+        stageIndex: 1,
+        stageName: 'Mobile & Digilocker KYC',
+        statusText: 'Initiated',
+        pillClass: 'pill--warn',
+        notes: 'Mobile verification completed. Awaiting PAN and identity document upload.'
+      },
+      CONTACTED: {
+        stageIndex: 2,
+        stageName: 'PAN & KRA Validation',
+        statusText: 'In Verification',
+        pillClass: 'pill--warn',
+        notes: 'PAN record is being validated against Income Tax Department and KRA.'
+      },
+      QUALIFIED: {
+        stageIndex: 3,
+        stageName: 'Bank Account Penny-Drop',
+        statusText: 'Bank Validating',
+        pillClass: 'pill--warn',
+        notes: 'Penny drop verification in progress with clearing bank.'
+      },
+      KYC_SUBMITTED: {
+        stageIndex: 4,
+        stageName: 'Aadhaar e-Sign & IPV Verification',
+        statusText: 'In Verification',
+        pillClass: 'pill--ok',
+        notes: 'Electronic signing and photo verification in progress (Estimated: 2–4 hours).'
+      },
+      ESIGN_PENDING: {
+        stageIndex: 4,
+        stageName: 'Aadhaar e-Sign Required',
+        statusText: 'Action Required',
+        pillClass: 'pill--warn',
+        notes: 'Please check your registered mobile for the Aadhaar OTP e-Sign link to finalize.'
+      },
+      VERIFIED: {
+        stageIndex: 5,
+        stageName: 'Exchange UCC & Demat Activation',
+        statusText: 'Almost Ready',
+        pillClass: 'pill--ok',
+        notes: 'Exchange UCC generated. Final depository linking with CDSL in progress.'
+      },
+      ACTIVATED: {
+        stageIndex: 5,
+        stageName: 'Exchange UCC & Demat Active',
+        statusText: 'Account Active',
+        pillClass: 'pill--ok',
+        notes: 'Your TradeGrow Demat & Trading account is active and ready for orders.'
+      }
+    };
+
+    const currentStageKey = (lead?.stage || 'KYC_SUBMITTED').toUpperCase();
+    const stageDetails = stageMap[currentStageKey] || stageMap['KYC_SUBMITTED'];
+
+    return res.json({
+      success: true,
+      data: {
+        ref: lead?.lead_code || rawRef,
+        fullName: lead?.full_name || 'Registered Applicant',
+        stage: currentStageKey,
+        stageIndex: stageDetails.stageIndex,
+        stageName: stageDetails.stageName,
+        statusText: stageDetails.statusText,
+        pillClass: stageDetails.pillClass,
+        notes: stageDetails.notes,
+        updatedAt: lead?.updated_at || new Date().toISOString()
+      }
+    });
+  } catch (err: any) {
+    console.error('[WarRoom API] Status inquiry failed:', err);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'Unable to check application status' }
+    });
   }
 });
 

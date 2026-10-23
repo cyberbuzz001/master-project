@@ -99,6 +99,91 @@
   </div>
 </section>
 
+<!-- ============================================================== BROKERAGE SAVINGS CALCULATOR -->
+<section class="section" id="savings-calculator">
+  <div class="wrap">
+    <div class="section__head">
+      <p class="eyebrow">Brokerage Comparison</p>
+      <h2 class="h2">Calculate your estimated annual brokerage savings</h2>
+      <p class="lede">
+        Traditional brokers charge up to &#8377;20 per executed order. See how much of your trading capital stays in your account each year when you pay nil brokerage on equity and derivatives.
+      </p>
+    </div>
+
+    <div class="calc" style="grid-template-columns: 1fr 1fr; gap: 32px;">
+      <form class="calc__form" id="savings-form" autocomplete="off">
+        <div class="field">
+          <label for="savings-trades-slider">Executed Trades per Month: <strong id="disp-trades-val" style="color:var(--cyan);font-family:var(--mono);">40 trades</strong></label>
+          <input type="range" id="savings-trades-slider" name="tradesPerMonth" min="5" max="300" step="5" value="40" style="width:100%;accent-color:var(--brand);margin:10px 0;">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted-2);">
+            <span>5 trades/mo (Occasional)</span>
+            <span>40 trades/mo (Active)</span>
+            <span>300 trades/mo (Pro F&amp;O)</span>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label for="savings-rate-select">Current Broker Rate</label>
+          <select id="savings-rate-select" class="calc__select" style="width:100%;padding:10px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-family:var(--font);">
+            <option value="20" selected>Flat &#8377;20 per executed order (Discount Brokers)</option>
+            <option value="35">Flat &#8377;35 per executed order (Premium / Call &amp; Trade)</option>
+            <option value="50">0.05% / Average &#8377;50 per order (Traditional Bank Brokers)</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label>Trading Segment Primary Focus</label>
+          <div class="segbtns" role="radiogroup" aria-label="Savings segment">
+            <input type="radio" name="savingsSegment" id="sav-opt" value="options" checked>
+            <label for="sav-opt">F&amp;O Options</label>
+            <input type="radio" name="savingsSegment" id="sav-intra" value="intraday">
+            <label for="sav-intra">Equity Intraday</label>
+            <input type="radio" name="savingsSegment" id="sav-del" value="delivery">
+            <label for="sav-del">Delivery</label>
+          </div>
+        </div>
+
+        <p class="field__hint" style="margin-top:14px;">
+          Statutory taxes (STT, GST, Stamp Duty, Exchange Fees) apply equally across all brokers by law. The comparison above evaluates direct brokerage fees paid to the broker.
+        </p>
+      </form>
+
+      <div class="calc__out" style="display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div class="calc__total">
+            <span>Estimated Annual Brokerage Savings</span>
+            <strong id="disp-annual-savings" style="color:var(--ok);font-size:2.4rem;">&#8377;19,200.00</strong>
+            <em id="disp-monthly-savings">You save &#8377;1,600.00 each month</em>
+          </div>
+
+          <div style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px;">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.92rem;">
+              <span style="color:var(--muted);">Traditional Broker Yearly Cost:</span>
+              <strong id="disp-competitor-yearly" style="color:var(--danger);font-family:var(--mono);">&#8377;19,200.00</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.92rem;">
+              <span style="color:var(--muted);">TradeGrow Brokerage:</span>
+              <strong style="color:var(--ok);font-family:var(--mono);">&#8377;0.00</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:6px;border-top:1px dashed var(--line);font-size:0.95rem;">
+              <span style="color:var(--ink-2);font-weight:600;">3-Year Cumulative Capital Kept:</span>
+              <strong id="disp-3yr-savings" style="color:var(--cyan);font-family:var(--mono);">&#8377;57,600.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <a class="btn btn--primary" id="btn-save-cta" href="/open-account/" style="width:100%;text-align:center;display:block;" data-ev="kyc_start">
+            <span id="btn-save-cta-text">Open Account &amp; Save &#8377;19,200/yr</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-left:6px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <p class="small muted text-center" style="margin-top:8px;">Zero Account Opening Fee &middot; Instant Paperless KYC</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section">
   <div class="wrap">
     <div class="section__head">

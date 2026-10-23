@@ -220,4 +220,52 @@
       el.note.innerHTML =
         '<p>The calculator could not load its charge configuration. Please refer to the charge tables above.</p>';
     });
+
+  /* ------------------------------------------------------------ Brokerage Savings Calculator */
+  var savRoot = document.getElementById('savings-calculator');
+  if (savRoot) {
+    var savTradesSlider = savRoot.querySelector('#savings-trades-slider');
+    var dispTradesVal = savRoot.querySelector('#disp-trades-val');
+    var savRateSelect = savRoot.querySelector('#savings-rate-select');
+    var dispAnnual = savRoot.querySelector('#disp-annual-savings');
+    var dispMonthly = savRoot.querySelector('#disp-monthly-savings');
+    var dispCompYearly = savRoot.querySelector('#disp-competitor-yearly');
+    var disp3yr = savRoot.querySelector('#disp-3yr-savings');
+    var btnSaveCta = savRoot.querySelector('#btn-save-cta');
+    var btnSaveCtaText = savRoot.querySelector('#btn-save-cta-text');
+
+    function updateSavings() {
+      if (!savTradesSlider || !savRateSelect) return;
+      var trades = parseInt(savTradesSlider.value, 10) || 40;
+      var ratePerOrder = parseFloat(savRateSelect.value) || 20;
+
+      var monthlyTradCost = trades * ratePerOrder;
+      var yearlyTradCost = monthlyTradCost * 12;
+      var threeYearSavings = yearlyTradCost * 3;
+
+      if (dispTradesVal) dispTradesVal.textContent = trades + ' trades/mo';
+      if (dispMonthly) dispMonthly.textContent = 'You save ' + inr(monthlyTradCost) + ' each month';
+      if (dispAnnual) dispAnnual.textContent = inr(yearlyTradCost);
+      if (dispCompYearly) dispCompYearly.textContent = inr(yearlyTradCost);
+      if (disp3yr) disp3yr.textContent = inr(threeYearSavings);
+
+      var formattedYearly = '₹' + Math.round(yearlyTradCost).toLocaleString('en-IN');
+      if (btnSaveCtaText) {
+        btnSaveCtaText.textContent = 'Open Account & Save ' + formattedYearly + '/yr';
+      }
+      if (btnSaveCta) {
+        var ref = (typeof localStorage !== 'undefined' && localStorage.getItem('tg_ref')) || '';
+        var link = (window.TG_BASE || '') + '/open-account/?savings=' + encodeURIComponent(yearlyTradCost) + (ref ? '&r=' + encodeURIComponent(ref) : '');
+        btnSaveCta.setAttribute('href', link);
+      }
+    }
+
+    if (savTradesSlider) savTradesSlider.addEventListener('input', updateSavings);
+    if (savRateSelect) savRateSelect.addEventListener('change', updateSavings);
+    savRoot.querySelectorAll('input[name="savingsSegment"]').forEach(function(r) {
+      r.addEventListener('change', updateSavings);
+    });
+    updateSavings();
+  }
 })();
+
