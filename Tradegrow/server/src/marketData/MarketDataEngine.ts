@@ -47,11 +47,25 @@ export class MarketDataEngine {
           // Ignore self-published frames to avoid double fan-out loop
           if (payload._origin && payload._origin === this.instanceId) return;
 
+          this.lastDhanTickTime = Date.now();
+          this.failoverActive = false;
           const tick: MarketTick = payload;
           this.setCachedTick(tick);
           this.globalCallbacks.forEach(cb => cb(tick));
         } catch (_) {}
       });
+
+      // Primary node listens to subscription requests forwarded by worker nodes
+      if (process.env.PROCESS_ROLE !== 'worker') {
+        redis.subscribe('market:subscriptions', (msg: string) => {
+          try {
+            const tokens = JSON.parse(msg);
+            if (Array.isArray(tokens) && tokens.length > 0) {
+              this.subscribe(tokens);
+            }
+          } catch (_) {}
+        });
+      }
     }
   }
 
@@ -113,6 +127,17 @@ export class MarketDataEngine {
         }
       }
     } catch (_) {}
+
+    const isWorker = process.env.PROCESS_ROLE === 'worker';
+    if (isWorker) {
+      console.log([MarketDataEngine] 🛡️ Worker Role Active () — Skipping direct Dhan WebSocket feed to enforce single-connection integrity. Consuming ticks via Redis Pub/Sub.);
+      try {
+        await (this.dhanProvider as any).seedCoreIndexQuotes?.();
+      } catch (_) {}
+      this.activeProvider = this.dhanProvider;
+      console.log([MarketDataEngine] ✅ Engine Ready (Worker Replica) | Tokens:  | Cached: );
+      return;
+    }
 
     // Connect ONLY to Dhan HQ API v2 broker feed (NO MOCK, NO FALLBACK)
     try {
@@ -380,6 +405,12 @@ export class MarketDataEngine {
   public subscribe(tokens: string[]): void {
     if (!tokens || tokens.length === 0) return;
     tokens.forEach(t => this.subscribedTokens.add(t));
+
+    const isWorker = process.env.PROCESS_ROLE === 'worker';
+    if (isWorker && process.env.CLUSTER_MODE === 'true') {
+      redis.publish('market:subscriptions', JSON.stringify(tokens)).catch(() => {});
+      return;
+    }
 
     try {
       this.dhanProvider.subscribe(tokens, (tick: MarketTick) => {
