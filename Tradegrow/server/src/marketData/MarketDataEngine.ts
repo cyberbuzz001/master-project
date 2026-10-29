@@ -22,10 +22,10 @@ export class MarketDataEngine {
   private subscribedTokens: Set<string> = new Set();
 
   // ── Auto-Failover Telemetry & State ──────────────────────────────────────
-  private lastDhanTickTime: number = 0;
+  private lastTickTime: number = 0;
   private failoverActive: boolean = false;
   private failoverTimer: NodeJS.Timeout | null = null;
-  private configuredProviderName: string = 'DHAN';
+  private configuredProviderName: string = 'ANGEL_ONE';
 
   private constructor() {
     this.mockProvider = new MockMarketDataProvider();
@@ -33,11 +33,30 @@ export class MarketDataEngine {
     this.dhanProvider = new DhanAdapter();
     this.fyersProvider = new FyersAdapter();
 
+    this.providers.set(this.angelOneProvider.name, this.angelOneProvider);
+    this.providers.set('ANGEL_ONE', this.angelOneProvider);
+    this.providers.set('ANGELONE', this.angelOneProvider);
+
     this.providers.set(this.dhanProvider.name, this.dhanProvider);
     this.providers.set('DHAN', this.dhanProvider);
 
-    this.configuredProviderName = 'DHAN';
-    this.activeProvider = this.dhanProvider;
+    this.providers.set(this.fyersProvider.name, this.fyersProvider);
+    this.providers.set('FYERS', this.fyersProvider);
+
+    this.providers.set(this.mockProvider.name, this.mockProvider);
+    this.providers.set('MOCK', this.mockProvider);
+
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGELONE').toUpperCase();
+    if (configured.includes('ANGEL')) {
+      this.configuredProviderName = 'ANGEL_ONE';
+      this.activeProvider = this.angelOneProvider;
+    } else if (configured === 'FYERS') {
+      this.configuredProviderName = 'FYERS';
+      this.activeProvider = this.fyersProvider;
+    } else {
+      this.configuredProviderName = 'DHAN';
+      this.activeProvider = this.dhanProvider;
+    }
 
     // Subscribe to Redis pub/sub for tick broadcasts only in multi-node cluster deployments
     if (process.env.CLUSTER_MODE === 'true') {
@@ -47,7 +66,7 @@ export class MarketDataEngine {
           // Ignore self-published frames to avoid double fan-out loop
           if (payload._origin && payload._origin === this.instanceId) return;
 
-          this.lastDhanTickTime = Date.now();
+          this.lastTickTime = Date.now();
           this.failoverActive = false;
           const tick: MarketTick = payload;
           this.setCachedTick(tick);
@@ -95,17 +114,26 @@ export class MarketDataEngine {
 
     const seg = (segment || 'EQUITY').toUpperCase();
     if (seg === 'COMMODITY' || seg === 'MCX' || seg === 'MCX_COMM') {
-      // 9:00 AM = 540 mins, 11:30 PM = 1410 mins (extended to 11:55 PM / 1435 during US DST)
       return timeInMins >= 540 && timeInMins <= 1435;
     }
 
-    // 9:15 AM = 555 mins, 3:30 PM = 930 mins
     return timeInMins >= 555 && timeInMins <= 930;
   }
 
   public async initialize(): Promise<void> {
-    this.configuredProviderName = 'DHAN';
-    console.log(`[MarketDataEngine] 🚀 Initializing Market Data Engine (Dhan HQ API v2 Exclusive)...`);
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGELONE').toUpperCase();
+    if (configured.includes('ANGEL')) {
+      this.configuredProviderName = 'ANGEL_ONE';
+      this.activeProvider = this.angelOneProvider;
+    } else if (configured === 'FYERS') {
+      this.configuredProviderName = 'FYERS';
+      this.activeProvider = this.fyersProvider;
+    } else {
+      this.configuredProviderName = 'DHAN';
+      this.activeProvider = this.dhanProvider;
+    }
+
+    console.log(`[MarketDataEngine] 🚀 Initializing Market Data Engine with active provider: ${this.configuredProviderName}...`);
 
     const defaultTokens = [
       'NSE_NIFTY50', 'NSE_BANKNIFTY', 'BSE_SENSEX', 'NSE_FINNIFTY', 'NSE_MIDCPNIFTY',
@@ -130,52 +158,42 @@ export class MarketDataEngine {
 
     const isWorker = process.env.PROCESS_ROLE === 'worker';
     if (isWorker) {
-      console.log([MarketDataEngine] 🛡️ Worker Role Active () — Skipping direct Dhan WebSocket feed to enforce single-connection integrity. Consuming ticks via Redis Pub/Sub.);
+      console.log(`[MarketDataEngine] 🛡️ Worker Role Active (${process.env.PORT || 'replica'}) — Skipping direct upstream WebSocket feed. Consuming ticks via Redis Pub/Sub.`);
       try {
-        await (this.dhanProvider as any).seedCoreIndexQuotes?.();
+        if (typeof (this.activeProvider as any).seedCoreIndexQuotes === 'function') {
+          await (this.activeProvider as any).seedCoreIndexQuotes();
+        }
       } catch (_) {}
-      this.activeProvider = this.dhanProvider;
-      console.log([MarketDataEngine] ✅ Engine Ready (Worker Replica) | Tokens:  | Cached: );
+      console.log(`[MarketDataEngine] ✅ Engine Ready (Worker Replica) | Active: ${this.configuredProviderName} | Tokens: ${this.subscribedTokens.size} | Cached: ${this.tickCache.size}`);
       return;
     }
 
-    // Connect ONLY to Dhan HQ API v2 broker feed (NO MOCK, NO FALLBACK)
+    // Connect to configured primary broker feed
     try {
-      const { setDhanAdapterRef } = require('../utils/dhanTokenRefresh');
-      setDhanAdapterRef(this.dhanProvider);
+      if (this.configuredProviderName === 'DHAN') {
+        const { setDhanAdapterRef } = require('../utils/dhanTokenRefresh');
+        setDhanAdapterRef(this.dhanProvider);
+      }
 
-      // Register tick callback BEFORE initialize() so pre-seeded quotes immediately populate cache
-      this.dhanProvider.subscribe(Array.from(this.subscribedTokens), (tick) => {
-        this.lastDhanTickTime = Date.now();
+      this.activeProvider.subscribe(Array.from(this.subscribedTokens), (tick) => {
+        this.lastTickTime = Date.now();
         this.failoverActive = false;
         this.broadcastTick(tick);
       });
 
-      await this.dhanProvider.initialize();
+      await this.activeProvider.initialize();
 
-      // Seed any quotes received during Dhan initialization into cache & Redis
-      for (const tick of this.dhanProvider.getAllCachedTicks()) {
-        this.broadcastTick(tick);
+      // Seed any quotes received during initialization into cache & Redis
+      if (typeof (this.activeProvider as any).getAllCachedTicks === 'function') {
+        for (const tick of (this.activeProvider as any).getAllCachedTicks()) {
+          this.broadcastTick(tick);
+        }
       }
     } catch (err: any) {
-      console.warn('[MarketDataEngine] Dhan initialization warning:', err.message);
+      console.warn(`[MarketDataEngine] ${this.configuredProviderName} initialization warning:`, err.message);
     }
-    this.activeProvider = this.dhanProvider;
 
-    console.log(`[MarketDataEngine] ✅ Engine Ready | Active: DHAN (Exclusive Live Feed) | Tokens: ${this.subscribedTokens.size} | Cached: ${this.tickCache.size}`);
-  }
-
-  private handleFallbackTick(_tick: MarketTick): void {
-    // Disabled: Strictly Dhan live market prices only (zero fallback pricing).
-    return;
-  }
-
-  private startFailoverMonitor(): void {
-    // Disabled: Strictly Dhan live market prices only.
-    if (this.failoverTimer) {
-      clearInterval(this.failoverTimer);
-      this.failoverTimer = null;
-    }
+    console.log(`[MarketDataEngine] ✅ Engine Ready | Active: ${this.configuredProviderName} (Live Feed) | Tokens: ${this.subscribedTokens.size} | Cached: ${this.tickCache.size}`);
   }
 
   private lastRedisWriteByToken: Map<string, number> = new Map();
@@ -237,19 +255,24 @@ export class MarketDataEngine {
     return this.dhanProvider;
   }
 
+  public getAngelOneAdapter(): AngelOneAdapter {
+    return this.angelOneProvider;
+  }
+
   public getActiveProviderName(): string {
-    return this.activeProvider ? this.activeProvider.name : 'DHAN';
+    return this.activeProvider ? this.activeProvider.name : this.configuredProviderName;
   }
 
   public getHybridStatus(): Record<string, any> {
     const now = Date.now();
+    const activeName = this.getActiveProviderName();
     return {
-      mode: 'DHAN_ONLY',
-      primaryLiveStream: 'DHAN',
-      historicalCandlesProvider: 'DHAN',
-      optionGreeksProvider: 'DHAN / OptionChainEngine',
+      mode: `${activeName}_PRIMARY`,
+      primaryLiveStream: activeName,
+      historicalCandlesProvider: activeName,
+      optionGreeksProvider: `${activeName} / OptionChainEngine`,
       failoverActive: false,
-      lastDhanTickMsAgo: this.lastDhanTickTime > 0 ? now - this.lastDhanTickTime : -1,
+      lastTickMsAgo: this.lastTickTime > 0 ? now - this.lastTickTime : -1,
       subscribedTokenCount: this.subscribedTokens.size
     };
   }
@@ -257,7 +280,7 @@ export class MarketDataEngine {
   public getFeedHealth(): Record<string, any> {
     const now = Date.now();
     const marketOpen = MarketDataEngine.isMarketHours();
-    const quietMs = this.lastDhanTickTime > 0 ? (now - this.lastDhanTickTime) : Infinity;
+    const quietMs = this.lastTickTime > 0 ? (now - this.lastTickTime) : Infinity;
 
     let status: 'LIVE' | 'STALE' | 'CLOSED' | 'DISCONNECTED' = 'DISCONNECTED';
     if (!marketOpen) {
@@ -274,7 +297,7 @@ export class MarketDataEngine {
       ...this.getHybridStatus(),
       status,
       marketOpen,
-      provider: 'DHAN'
+      provider: this.getActiveProviderName()
     };
   }
 
@@ -307,7 +330,7 @@ export class MarketDataEngine {
         await provider.initialize();
       }
       provider.subscribe(Array.from(this.subscribedTokens), (tick: MarketTick) => {
-        if (targetName === 'DHAN') this.lastDhanTickTime = Date.now();
+        this.lastTickTime = Date.now();
         this.broadcastTick(tick);
       });
     } catch (err: any) {
@@ -388,7 +411,7 @@ export class MarketDataEngine {
     if (cached) return cached;
 
     try {
-      const tick = await this.dhanProvider.getQuote(instrumentToken);
+      const tick = await this.activeProvider.getQuote(instrumentToken);
       if (tick) {
         this.setCachedTick(tick);
         return tick;
@@ -413,8 +436,8 @@ export class MarketDataEngine {
     }
 
     try {
-      this.dhanProvider.subscribe(tokens, (tick: MarketTick) => {
-        this.lastDhanTickTime = Date.now();
+      this.activeProvider.subscribe(tokens, (tick: MarketTick) => {
+        this.lastTickTime = Date.now();
         this.broadcastTick(tick);
       });
     } catch (_) {}
@@ -424,7 +447,7 @@ export class MarketDataEngine {
     if (!tokens || tokens.length === 0) return;
     tokens.forEach(t => this.subscribedTokens.delete(t));
     try {
-      this.dhanProvider.unsubscribe(tokens);
+      this.activeProvider.unsubscribe(tokens);
     } catch (_) {}
   }
 
@@ -433,31 +456,31 @@ export class MarketDataEngine {
   }
 
   /**
-   * Historical Candles — Dhan HQ API exclusive (no synthetic/mock fallback)
+   * Historical Candles — dispatched via active provider
    */
   public async getHistoricalCandles(instrumentToken: string, timeframe: string, count: number): Promise<Candle[]> {
     try {
-      const candles = await this.dhanProvider.getHistoricalCandles(instrumentToken, timeframe, count);
+      const candles = await this.activeProvider.getHistoricalCandles(instrumentToken, timeframe, count);
       if (candles && candles.length > 0) return candles;
     } catch (_) {}
     return [];
   }
 
   /**
-   * Option Chain — Dhan HQ API exclusive (no synthetic/mock fallback)
+   * Option Chain — dispatched via active provider
    */
   public async getOptionChain(symbol: string, expiry: string): Promise<OptionChainItem[]> {
     try {
-      const chain = await this.dhanProvider.getOptionChain(symbol, expiry);
+      const chain = await this.activeProvider.getOptionChain(symbol, expiry);
       if (chain && chain.length > 0) return chain;
     } catch (_) {}
     return [];
   }
 
   public getOptionExpiries(symbol: string): string[] {
-    const dhanProvider = this.dhanProvider as any;
-    if (typeof dhanProvider.getOptionExpiries === 'function') {
-      return dhanProvider.getOptionExpiries(symbol);
+    const prov = this.activeProvider as any;
+    if (typeof prov.getOptionExpiries === 'function') {
+      return prov.getOptionExpiries(symbol);
     }
     return [];
   }

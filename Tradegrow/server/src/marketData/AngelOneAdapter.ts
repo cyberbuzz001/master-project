@@ -23,7 +23,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
   private lastTickTime: number = 0;
 
   public isHealthy(): boolean {
-    return this.healthy && this.lastTickTime > 0 && (Date.now() - this.lastTickTime < 15000);
+    return this.healthy && this.lastTickTime > 0 && (Date.now() - this.lastTickTime < 25000);
   }
 
   public async initialize(): Promise<void> {
@@ -37,15 +37,27 @@ export class AngelOneAdapter implements IMarketDataProvider {
 
   private startServices(): void {
 
-    // ── Locate scripts & data files ──────────────────────────────────────
-    let tickerScript = path.resolve(__dirname, 'angel_ticker.py');
-    if (!fs.existsSync(tickerScript)) {
-      tickerScript = path.resolve(__dirname, '../../src/marketData/angel_ticker.py');
-    }
-    let chainScript = path.resolve(__dirname, 'angel_option_chain.py');
-    if (!fs.existsSync(chainScript)) {
-      chainScript = path.resolve(__dirname, '../../src/marketData/angel_option_chain.py');
-    }
+    // ── Locate scripts & data files dynamically across locations ─────────
+    const tickerCandidates = [
+      path.resolve(__dirname, 'angel_ticker.py'),
+      path.resolve(__dirname, '../../src/marketData/angel_ticker.py'),
+      path.resolve(process.cwd(), 'server/src/marketData/angel_ticker.py'),
+      path.resolve(process.cwd(), 'src/marketData/angel_ticker.py'),
+      '/app/server/src/marketData/angel_ticker.py',
+      '/opt/tradegrow/server/src/marketData/angel_ticker.py',
+      '/opt/tradegrow/python_engine/angel_ticker.py'
+    ];
+    let tickerScript = tickerCandidates.find(p => fs.existsSync(p)) || tickerCandidates[0];
+
+    const chainCandidates = [
+      path.resolve(__dirname, 'angel_option_chain.py'),
+      path.resolve(__dirname, '../../src/marketData/angel_option_chain.py'),
+      path.resolve(process.cwd(), 'server/src/marketData/angel_option_chain.py'),
+      path.resolve(process.cwd(), 'src/marketData/angel_option_chain.py'),
+      '/app/server/src/marketData/angel_option_chain.py',
+      '/opt/tradegrow/server/src/marketData/angel_option_chain.py'
+    ];
+    let chainScript = chainCandidates.find(p => fs.existsSync(p)) || chainCandidates[0];
 
     // Resolve angel_ticks.json path dynamically across multiple locations
     const possibleTicksPaths = [
@@ -53,6 +65,8 @@ export class AngelOneAdapter implements IMarketDataProvider {
       path.resolve(__dirname, '../../server/data/angel_ticks.json'),
       path.resolve(__dirname, '../../data/angel_ticks.json'),
       path.resolve(__dirname, '../data/angel_ticks.json'),
+      '/app/server/data/angel_ticks.json',
+      '/opt/tradegrow/server/data/angel_ticks.json'
     ];
 
     // Resolve angel_option_chain.json path dynamically across multiple locations
@@ -61,6 +75,8 @@ export class AngelOneAdapter implements IMarketDataProvider {
       path.resolve(__dirname, '../../server/data/angel_option_chain.json'),
       path.resolve(__dirname, '../../data/angel_option_chain.json'),
       path.resolve(__dirname, '../data/angel_option_chain.json'),
+      '/app/server/data/angel_option_chain.json',
+      '/opt/tradegrow/server/data/angel_option_chain.json'
     ];
     this.chainFilePath = possibleChainPaths.find(p => fs.existsSync(p)) || possibleChainPaths[0];
     try {
@@ -74,8 +90,9 @@ export class AngelOneAdapter implements IMarketDataProvider {
 
     try {
       // ── Spawn live price ticker ──────────────────────────────────────
-      const hasAngelCreds = process.env.ANGEL_ONE_API_KEY || process.env.SMARTAPI_API_KEY;
+      const hasAngelCreds = process.env.ANGEL_ONE_API_KEY || process.env.SMARTAPI_API_KEY || process.env.ANGELONE_API_KEY;
       if (hasAngelCreds && fs.existsSync(tickerScript)) {
+        console.log(`[AngelOneAdapter] Spawning Angel ticker process from ${tickerScript}...`);
         this.childProc = spawn(pythonCmd, [tickerScript], { env: { ...process.env }, stdio: 'inherit' });
         this.childProc.on('error', (err) => {
           console.warn('[AngelOneAdapter] Ticker process error:', err.message);
@@ -109,23 +126,27 @@ export class AngelOneAdapter implements IMarketDataProvider {
       }, 500);
 
       // ── Spawn option chain WebSocket fetcher (angel_option_ws.py) ─────────
-      const wsChainScript = fs.existsSync(path.resolve(__dirname, 'angel_option_ws.py'))
-        ? path.resolve(__dirname, 'angel_option_ws.py')
-        : path.resolve(__dirname, '../../src/marketData/angel_option_ws.py');
+      const wsChainCandidates = [
+        path.resolve(__dirname, 'angel_option_ws.py'),
+        path.resolve(__dirname, '../../src/marketData/angel_option_ws.py'),
+        '/app/server/src/marketData/angel_option_ws.py',
+        '/opt/tradegrow/server/src/marketData/angel_option_ws.py'
+      ];
+      const wsChainScript = wsChainCandidates.find(p => fs.existsSync(p));
 
       const spawnChainScript = () => {
         if (!hasAngelCreds) {
           console.log('[AngelOneAdapter] Angel One credentials not present — Option Chain WS running in standby mode.');
           return;
         }
-        if (fs.existsSync(wsChainScript)) {
+        if (wsChainScript && fs.existsSync(wsChainScript)) {
           console.log('[AngelOneAdapter] Spawning Option Chain WebSocket process (SmartWebSocketV2)...');
           this.chainProc = spawn(pythonCmd, [wsChainScript], { env: { ...process.env }, stdio: 'inherit' });
           this.chainProc.on('error', (err) => {
             console.warn('[AngelOneAdapter] Option chain WS process error:', err.message);
           });
         } else {
-          console.warn('[AngelOneAdapter] angel_option_ws.py not found — no live option chain');
+          console.warn('[AngelOneAdapter] angel_option_ws.py not found — using OptionChainEngine math');
         }
       };
 
@@ -158,6 +179,12 @@ export class AngelOneAdapter implements IMarketDataProvider {
   public subscribe(instrumentTokens: string[], callback: TickCallback): void {
     SafetyLock.assertSimulationOnly('AngelOneAdapter.subscribe');
     this.callbacks.add(callback);
+    try {
+      const { redis } = require('../db/redis');
+      if (redis && instrumentTokens && instrumentTokens.length > 0) {
+        redis.publish('angel:subscriptions', JSON.stringify(instrumentTokens)).catch(() => {});
+      }
+    } catch (_) {}
   }
 
   public unsubscribe(instrumentTokens: string[]): void {
@@ -165,7 +192,24 @@ export class AngelOneAdapter implements IMarketDataProvider {
   }
 
   public async getQuote(instrumentToken: string): Promise<MarketTick | null> {
-    return this.tickCache.get(instrumentToken) || null;
+    const direct = this.tickCache.get(instrumentToken);
+    if (direct) return direct;
+    try {
+      const { redis } = require('../db/redis');
+      if (redis) {
+        const raw = await redis.get(`tick:${instrumentToken}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          this.tickCache.set(instrumentToken, parsed);
+          return parsed;
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  public getAllCachedTicks(): MarketTick[] {
+    return Array.from(this.tickCache.values());
   }
 
   public async getHistoricalCandles(instrumentToken: string, timeframe: string, count: number): Promise<Candle[]> {
@@ -251,10 +295,6 @@ export class AngelOneAdapter implements IMarketDataProvider {
         const ceLtp = (row.ce?.ltp && row.ce.ltp > 0) ? row.ce.ltp : Math.max(0.05, Number(ceBsPrice.toFixed(2)));
         const peLtp = (row.pe?.ltp && row.pe.ltp > 0) ? row.pe.ltp : Math.max(0.05, Number(peBsPrice.toFixed(2)));
 
-        // OI / volume come from NSE, else the live WS field, else 0.
-        // Randomised OI and volume were previously invented here — traders read OI and
-        // volume as conviction signals, so fabricating them is actively misleading.
-        // 0 renders as "--" in the UI, which is truthful about the data being unavailable.
         const ceOi = nseData?.ceOi || row.ce?.oi || 0;
         const peOi = nseData?.peOi || row.pe?.oi || 0;
         const ceVol = row.ce?.volume || 0;
@@ -297,9 +337,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
     return res.chain;
   }
 
-
   /** Returns real expiry dates from Instrument Master for a given symbol */
-
   public getOptionExpiries(symbol: string): string[] {
     const sym = (symbol || 'NIFTY').toUpperCase();
     const expiries: string[] = this.optionChainData?.expiries?.[sym] || [];
