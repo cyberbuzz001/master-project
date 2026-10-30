@@ -149,7 +149,9 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     for (const c of candidates) {
       if (!c) continue;
       const tick = ticks.get(c);
-      if (tick && tick.ltp > 0) return tick.ltp;
+      if (tick && tick.ltp > 0 && !(tick.change === 0 && tick.changePercent === 0 && tick.volume === 0)) {
+        return tick.ltp;
+      }
     }
 
     // Dynamic spot-anchored estimate: if direct option tick is absent or quiet,
@@ -256,6 +258,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       });
       if (data.success) {
         navigator.vibrate?.([30, 50, 30]);
+        toast.success('Square-Off Executed', `Market order executed for ${pos.symbol} (${quantity} qty) @ ₹${livePrice.toFixed(2)}`);
         setActionMessage({
           type: 'success',
           text: `Square-off MARKET order executed for ${pos.symbol} (${quantity} qty) @ ₹${livePrice.toFixed(2)}`,
@@ -263,7 +266,9 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         fetchData();
         onRefreshWallet?.();
       } else {
-        setActionMessage({ type: 'error', text: `Square-off rejected: ${data.error?.message || 'Unknown error'}` });
+        const errMsg = data.error?.message || data.error || 'Unknown error';
+        toast.error('Square-Off Rejected', errMsg);
+        setActionMessage({ type: 'error', text: `Square-off rejected: ${errMsg}` });
       }
     } catch (err: any) {
       setActionMessage({ type: 'error', text: `Square-off network error: ${err.message}` });

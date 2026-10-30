@@ -68,16 +68,20 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
   isMobile = false,
 }) => {
   // Resolve live LTP and change% from WebSocket tick or static row fallback
-  const ceLtp = ceTick?.ltp && ceTick.ltp > 0 ? ceTick.ltp : row.ce.ltp;
-  const peLtp = peTick?.ltp && peTick.ltp > 0 ? peTick.ltp : row.pe.ltp;
+  // Ignore stale placeholder ticks that have zero change and zero volume
+  const isZeroSyntheticTick = (tick?: MarketTick) =>
+    tick && tick.change === 0 && tick.changePercent === 0 && (tick.volume === 0 || !tick.volume);
 
-  const ceChangePct = (ceTick?.changePercent !== undefined && !isNaN(ceTick.changePercent)) 
+  const ceLtp = (ceTick?.ltp && ceTick.ltp > 0 && !isZeroSyntheticTick(ceTick)) ? ceTick.ltp : row.ce.ltp;
+  const peLtp = (peTick?.ltp && peTick.ltp > 0 && !isZeroSyntheticTick(peTick)) ? peTick.ltp : row.pe.ltp;
+
+  const ceChangePct = (ceTick?.changePercent !== undefined && !isNaN(ceTick.changePercent) && !isZeroSyntheticTick(ceTick)) 
     ? ceTick.changePercent 
     : (row.ce.changePercent !== undefined && !isNaN(row.ce.changePercent))
       ? row.ce.changePercent
       : (row.ce.change ? (row.ce.change / (ceLtp - row.ce.change || 1)) * 100 : 0);
 
-  const peChangePct = (peTick?.changePercent !== undefined && !isNaN(peTick.changePercent)) 
+  const peChangePct = (peTick?.changePercent !== undefined && !isNaN(peTick.changePercent) && !isZeroSyntheticTick(peTick)) 
     ? peTick.changePercent 
     : (row.pe.changePercent !== undefined && !isNaN(row.pe.changePercent))
       ? row.pe.changePercent

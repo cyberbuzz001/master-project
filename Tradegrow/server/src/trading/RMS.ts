@@ -1,4 +1,5 @@
-import { queryOne } from '../db/schema';
+import { query, queryOne } from '../db/schema';
+import { SymbologyNormalizer } from '../marketData/SymbologyNormalizer';
 import { VirtualWalletLedger } from './VirtualWalletLedger';
 import { marginEngineService } from '../services/MarginEngineService';
 import { resolveOrderReferencePrice, resolveOptionDetails, TickSource } from './MarginMath';
@@ -115,10 +116,44 @@ export class RMS {
     // fundamentally different from one opening/growing exposure: it must
     // always be allowed through regardless of contract state or size limits,
     // the same way step 8's buying-power check already exempts it.
-    const existingPos = await queryOne<any>(
-      'SELECT net_qty FROM positions WHERE user_id = $1 AND symbol = $2 AND product_type = $3',
+    // 2. Check position reduction / square-off status FIRST
+    let existingPos = await queryOne<any>(
+      'SELECT id, symbol, exchange, product_type, net_qty FROM positions WHERE user_id = $1 AND symbol = $2 AND product_type = $3',
       [order.userId, order.symbol, order.productType]
     );
+
+    // Defense-in-depth: If no exact match on productType or symbol, check for existing position by symbol / normalized alias
+    if (!existingPos) {
+      const aliases = Array.from(new Set([
+        order.symbol,
+        ...(SymbologyNormalizer.normalizeToken(order.symbol)),
+        ...(order.instrumentToken ? SymbologyNormalizer.normalizeToken(order.instrumentToken) : [])
+      ].filter(Boolean)));
+
+      const cleanSym = order.symbol.replace(/^(NSE_|BSE_|NFO_|BFO_)/, '').trim();
+
+      const candidatePositions = await query<any>(
+        `SELECT id, symbol, exchange, product_type, net_qty FROM positions 
+         WHERE user_id = $1 AND (symbol = ANY($2::text[]) OR symbol ILIKE $3) AND net_qty != 0`,
+        [order.userId, aliases, `%${cleanSym}%`]
+      );
+
+      // Find if there is a position opposite to the incoming order (e.g. user holds > 0 and order is SELL)
+      const oppositeMatch = candidatePositions.find(p => {
+        const pNet = parseInt(p.net_qty, 10);
+        return (pNet > 0 && order.side === 'SELL') || (pNet < 0 && order.side === 'BUY');
+      });
+
+      if (oppositeMatch) {
+        existingPos = oppositeMatch;
+        // Harmonize order so downstream OMS and ExecutionEngine match the exact position row
+        order.productType = existingPos.product_type;
+        order.symbol = existingPos.symbol;
+        if (existingPos.exchange) order.exchange = existingPos.exchange;
+      } else if (candidatePositions.length > 0) {
+        existingPos = candidatePositions[0];
+      }
+    }
 
     const currentNetQty = existingPos ? parseInt(existingPos.net_qty, 10) : 0;
     const isOppositeSide = (currentNetQty > 0 && order.side === 'SELL') || (currentNetQty < 0 && order.side === 'BUY');

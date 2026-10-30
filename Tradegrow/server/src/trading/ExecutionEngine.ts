@@ -247,7 +247,79 @@ export class ExecutionEngine {
         }
 
         const STALENESS_THRESHOLD_MS = 30000;
-        const isStale = tick ? (Date.now() - tick.timestamp > STALENESS_THRESHOLD_MS) : true;
+        let isStale = tick ? (Date.now() - tick.timestamp > STALENESS_THRESHOLD_MS) : true;
+
+        // Fallback for options / market orders if direct tick is missing or stale
+        if (!tick || isStale) {
+          let fallbackLtp = 0;
+          try {
+            const { DhanAdapter } = require('../marketData/DhanAdapter');
+            const mOpt = (order.symbol || '').match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
+            if (mOpt && DhanAdapter.optionChainCache) {
+              const underlying = mOpt[1].toUpperCase();
+              const strike = parseFloat(mOpt[2]);
+              const isCe = mOpt[3].toUpperCase() === 'CE';
+              for (const [key, cached] of DhanAdapter.optionChainCache.entries()) {
+                if (key.startsWith(underlying) && cached.rows) {
+                  const row = cached.rows.find((r: any) => r.strikePrice === strike);
+                  if (row) {
+                    const leg = isCe ? row.ce : row.pe;
+                    if (leg && leg.ltp > 0) {
+                      fallbackLtp = leg.ltp;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+
+          // Black-Scholes fallback anchored to spot index
+          if (fallbackLtp <= 0) {
+            const mOpt = (order.symbol || '').match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
+            if (mOpt) {
+              const symName = mOpt[1].toUpperCase();
+              const strike = parseFloat(mOpt[2]);
+              const isCall = mOpt[3].toUpperCase() === 'CE';
+              const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : 'NSE_NIFTY50';
+              const spotTick = engine.getCachedTick(spotToken);
+              if (spotTick && spotTick.ltp > 0) {
+                const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, 5.0 / 365.0, isCall, symName === 'SENSEX' ? 0.14 : 0.13);
+                if (bsPrice > 0) fallbackLtp = Number(bsPrice.toFixed(2));
+              }
+            }
+          }
+
+          // If still no price and it's a MARKET order with order.price > 0, use order.price
+          if (fallbackLtp <= 0 && order.order_type === 'MARKET' && parseFloat(order.price || '0') > 0) {
+            fallbackLtp = parseFloat(order.price);
+          }
+
+          if (fallbackLtp > 0) {
+            tick = {
+              instrumentToken: order.instrument_token || order.symbol,
+              exchange: order.exchange || 'NSE',
+              symbol: order.symbol,
+              tradingSymbol: order.symbol,
+              ltp: fallbackLtp,
+              open: fallbackLtp,
+              high: fallbackLtp,
+              low: fallbackLtp,
+              close: fallbackLtp,
+              bid: Number((fallbackLtp * 0.998).toFixed(2)),
+              ask: Number((fallbackLtp * 1.002).toFixed(2)),
+              bidQty: 100,
+              askQty: 100,
+              volume: 1000,
+              change: 0,
+              changePercent: 0,
+              timestamp: Date.now(),
+              source: 'live'
+            };
+            isStale = false;
+          }
+        }
+
         if (!tick || isStale) continue;
 
         const price     = parseFloat(order.price || '0');

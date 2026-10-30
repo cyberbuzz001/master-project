@@ -204,6 +204,7 @@ export class OptionChainEngine {
             vega: item.ce?.vega ?? Number(ceGreeks.vega.toFixed(2)),
             classification: item.strikePrice < targetSpot ? 'ITM' : isATM ? 'ATM' : 'OTM',
             openInterest: item.ce?.openInterest || Math.floor(Math.random() * 500000) + 100000,
+            openInterestChange: item.ce?.openInterestChange !== undefined ? item.ce.openInterestChange : (item.ce?.openInterest ? Math.round(item.ce.openInterest * (ceChangePercent / 100) * 0.25) : Math.floor((Math.random() - 0.4) * 50000)),
             volume: item.ce?.volume || Math.floor(Math.random() * 100000) + 20000,
             source: item.ce?.source || 'dhan',
             isSynthetic: false,
@@ -222,6 +223,7 @@ export class OptionChainEngine {
             vega: item.pe?.vega ?? Number(peGreeks.vega.toFixed(2)),
             classification: item.strikePrice > targetSpot ? 'ITM' : isATM ? 'ATM' : 'OTM',
             openInterest: item.pe?.openInterest || Math.floor(Math.random() * 500000) + 100000,
+            openInterestChange: item.pe?.openInterestChange !== undefined ? item.pe.openInterestChange : (item.pe?.openInterest ? Math.round(item.pe.openInterest * (peChangePercent / 100) * 0.25) : Math.floor((Math.random() - 0.4) * 50000)),
             volume: item.pe?.volume || Math.floor(Math.random() * 100000) + 20000,
             source: item.pe?.source || 'dhan',
             isSynthetic: false,
@@ -267,15 +269,61 @@ export class OptionChainEngine {
 
         const filteredDhanChain = filterAndSanitizeChain(dhanChain, liveSpot, liveAtmStrike);
 
-        // Proactively subscribe all active strike tokens to Dhan WebSocket tick stream
+        // Proactively subscribe and broadcast all active strike tokens
         try {
+          const mde = MarketDataEngine.getInstance();
           const visibleTokens: string[] = [];
           filteredDhanChain.forEach(item => {
             if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
             if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
+
+            if (item.ce?.instrumentToken && item.ce.ltp > 0) {
+              mde.broadcastTick({
+                instrumentToken: item.ce.instrumentToken,
+                exchange,
+                symbol: `${underlying} ${item.strikePrice} CE`,
+                tradingSymbol: item.ce.instrumentToken,
+                ltp: item.ce.ltp,
+                open: item.ce.ltp,
+                high: item.ce.ltp,
+                low: item.ce.ltp,
+                close: item.ce.ltp,
+                bid: item.ce.bid || item.ce.ltp,
+                ask: item.ce.ask || item.ce.ltp,
+                bidQty: 0,
+                askQty: 0,
+                volume: item.ce.volume || 0,
+                change: item.ce.change || 0,
+                changePercent: item.ce.changePercent || 0,
+                timestamp: Date.now(),
+                source: 'dhan'
+              });
+            }
+            if (item.pe?.instrumentToken && item.pe.ltp > 0) {
+              mde.broadcastTick({
+                instrumentToken: item.pe.instrumentToken,
+                exchange,
+                symbol: `${underlying} ${item.strikePrice} PE`,
+                tradingSymbol: item.pe.instrumentToken,
+                ltp: item.pe.ltp,
+                open: item.pe.ltp,
+                high: item.pe.ltp,
+                low: item.pe.ltp,
+                close: item.pe.ltp,
+                bid: item.pe.bid || item.pe.ltp,
+                ask: item.pe.ask || item.pe.ltp,
+                bidQty: 0,
+                askQty: 0,
+                volume: item.pe.volume || 0,
+                change: item.pe.change || 0,
+                changePercent: item.pe.changePercent || 0,
+                timestamp: Date.now(),
+                source: 'dhan'
+              });
+            }
           });
           if (visibleTokens.length > 0) {
-            MarketDataEngine.getInstance().subscribe(visibleTokens);
+            mde.subscribe(visibleTokens);
           }
         } catch (_) {}
 

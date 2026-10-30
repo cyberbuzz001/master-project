@@ -275,22 +275,34 @@ def redis_subscription_listener(sws):
                 if clean_tok in subscribed_tokens_set:
                     continue
 
+                if clean_tok.isdigit():
+                    nse_tokens.append(clean_tok)
+                    subscribed_tokens_set.add(clean_tok)
+                    continue
+
                 if clean_tok.startswith('BSE_') or clean_tok.startswith('BFO_'):
                     parts = clean_tok.split('_')
                     t = parts[-1]
-                    if clean_tok.startswith('BFO_'):
-                        nfo_tokens.append(t)
-                    else:
-                        bse_tokens.append(t)
+                    if t.isdigit():
+                        if clean_tok.startswith('BFO_'):
+                            nfo_tokens.append(t)
+                        else:
+                            bse_tokens.append(t)
                 elif clean_tok.startswith('NFO_'):
                     parts = clean_tok.split('_')
-                    nfo_tokens.append(parts[-1])
+                    t = parts[-1]
+                    if t.isdigit():
+                        nfo_tokens.append(t)
                 elif clean_tok.startswith('MCX_'):
                     parts = clean_tok.split('_')
-                    mcx_tokens.append(parts[-1])
+                    t = parts[-1]
+                    if t.isdigit():
+                        mcx_tokens.append(t)
                 else:
                     parts = clean_tok.split('_')
-                    nse_tokens.append(parts[-1])
+                    t = parts[-1]
+                    if t.isdigit():
+                        nse_tokens.append(t)
 
                 subscribed_tokens_set.add(clean_tok)
 

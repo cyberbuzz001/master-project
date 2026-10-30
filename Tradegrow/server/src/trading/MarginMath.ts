@@ -243,43 +243,77 @@ export interface UnrealizedPnlResult {
 export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): UnrealizedPnlResult {
   const engine = MarketDataEngine.getInstance();
   const symbol = pos.symbol || '';
-  let tick = engine.getCachedTick(`NSE_${symbol}`) ||
-             engine.getCachedTick(`NFO_${symbol}`) ||
-             engine.getCachedTick(`BFO_${symbol}`) ||
-             engine.getCachedTick(symbol);
+  let tick: MarketTick | undefined = undefined;
 
+  // 1. Prioritize authoritative Dhan option ticks (with underscores, e.g. NFO_NIFTY_23050_CE)
+  const mNifty = symbol.match(/NIFTY\s*(\d+)\s*(CE|PE)/i);
+  if (mNifty) {
+    tick = engine.getCachedTick(`NFO_NIFTY_${mNifty[1]}_${mNifty[2].toUpperCase()}`) ||
+           engine.getCachedTick(`NFO_NIFTY${mNifty[1]}${mNifty[2].toUpperCase()}`);
+  }
+  const mSensex = symbol.match(/SENSEX\s*(\d+)\s*(CE|PE)/i);
+  if (!tick && mSensex) {
+    tick = engine.getCachedTick(`BFO_SENSEX_${mSensex[1]}_${mSensex[2].toUpperCase()}`) ||
+           engine.getCachedTick(`BFO_SENSEX${mSensex[1]}${mSensex[2].toUpperCase()}`);
+  }
+  const mBank = symbol.match(/BANKNIFTY\s*(\d+)\s*(CE|PE)/i);
+  if (!tick && mBank) {
+    tick = engine.getCachedTick(`NFO_BANKNIFTY_${mBank[1]}_${mBank[2].toUpperCase()}`) ||
+           engine.getCachedTick(`NFO_BANKNIFTY${mBank[1]}${mBank[2].toUpperCase()}`);
+  }
+  const mFin = symbol.match(/FINNIFTY\s*(\d+)\s*(CE|PE)/i);
+  if (!tick && mFin) {
+    tick = engine.getCachedTick(`NFO_FINNIFTY_${mFin[1]}_${mFin[2].toUpperCase()}`) ||
+           engine.getCachedTick(`NFO_FINNIFTY${mFin[1]}${mFin[2].toUpperCase()}`);
+  }
+  const mMid = symbol.match(/MIDCPNIFTY\s*(\d+)\s*(CE|PE)/i);
+  if (!tick && mMid) {
+    tick = engine.getCachedTick(`NFO_MIDCPNIFTY_${mMid[1]}_${mMid[2].toUpperCase()}`);
+  }
+
+  // 2. Direct symbol fallback, discarding synthetic 0-change ticks
   if (!tick) {
-    const mNifty = symbol.match(/NIFTY\s*(\d+)\s*(CE|PE)/i);
-    if (mNifty) {
-      tick = engine.getCachedTick(`NFO_NIFTY_${mNifty[1]}_${mNifty[2].toUpperCase()}`) ||
-             engine.getCachedTick(`NFO_NIFTY${mNifty[1]}${mNifty[2].toUpperCase()}`);
-    }
-    const mBank = symbol.match(/BANKNIFTY\s*(\d+)\s*(CE|PE)/i);
-    if (mBank) {
-      tick = engine.getCachedTick(`NFO_BANKNIFTY_${mBank[1]}_${mBank[2].toUpperCase()}`) ||
-             engine.getCachedTick(`NFO_BANKNIFTY${mBank[1]}${mBank[2].toUpperCase()}`);
-    }
-    const mFin = symbol.match(/FINNIFTY\s*(\d+)\s*(CE|PE)/i);
-    if (mFin) {
-      tick = engine.getCachedTick(`NFO_FINNIFTY_${mFin[1]}_${mFin[2].toUpperCase()}`) ||
-             engine.getCachedTick(`NFO_FINNIFTY${mFin[1]}${mFin[2].toUpperCase()}`);
-    }
-    const mMid = symbol.match(/MIDCPNIFTY\s*(\d+)\s*(CE|PE)/i);
-    if (mMid) {
-      tick = engine.getCachedTick(`NFO_MIDCPNIFTY_${mMid[1]}_${mMid[2].toUpperCase()}`);
-    }
-    const mSensex = symbol.match(/SENSEX\s*(\d+)\s*(CE|PE)/i);
-    if (mSensex) {
-      tick = engine.getCachedTick(`BFO_SENSEX_${mSensex[1]}_${mSensex[2].toUpperCase()}`) ||
-             engine.getCachedTick(`BFO_SENSEX${mSensex[1]}${mSensex[2].toUpperCase()}`);
+    const candidates = [`NSE_${symbol}`, `NFO_${symbol}`, `BFO_${symbol}`, symbol];
+    for (const cand of candidates) {
+      const c = engine.getCachedTick(cand);
+      if (c && c.ltp > 0 && !(c.change === 0 && c.changePercent === 0 && (!c.volume || c.volume === 0))) {
+        tick = c;
+        break;
+      }
     }
   }
 
-  let ltp = tick && tick.ltp > 0 ? tick.ltp : (pos.dbLtp || pos.averagePrice || 0);
+  let ltp = tick && tick.ltp > 0 ? tick.ltp : 0;
   let priceSource: UnrealizedPnlResult['priceSource'] = tick && tick.ltp > 0 ? 'live' : 'stale_db';
 
-  // Fallback: if option position and no direct tick, compute a live BS price anchored to a live spot tick
-  if ((!tick || tick.ltp <= 0) && ltp <= 0) {
+  // 3. Fallback: Query Dhan option chain cache synchronously
+  if (ltp <= 0) {
+    try {
+      const { DhanAdapter } = require('../marketData/DhanAdapter');
+      const mOpt = symbol.match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
+      if (mOpt && DhanAdapter.optionChainCache) {
+        const underlying = mOpt[1].toUpperCase();
+        const strike = parseFloat(mOpt[2]);
+        const isCe = mOpt[3].toUpperCase() === 'CE';
+        for (const [key, cached] of DhanAdapter.optionChainCache.entries()) {
+          if (key.startsWith(underlying) && cached.rows) {
+            const row = cached.rows.find((r: any) => r.strikePrice === strike);
+            if (row) {
+              const leg = isCe ? row.ce : row.pe;
+              if (leg && leg.ltp > 0) {
+                ltp = leg.ltp;
+                priceSource = 'live';
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 4. Fallback: Black-Scholes estimate anchored to live spot tick
+  if (ltp <= 0) {
     const mOpt = symbol.match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
     if (mOpt) {
       const symName = mOpt[1].toUpperCase();
@@ -288,13 +322,19 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
       const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : 'NSE_NIFTY50';
       const spotTick = engine.getCachedTick(spotToken);
       if (spotTick && spotTick.ltp > 0) {
-        const timeToExpiryYears = 1.0 / 365.0;
-        const iv = symName === 'SENSEX' ? 0.16 : symName === 'BANKNIFTY' ? 0.15 : 0.13;
+        const timeToExpiryYears = 5.0 / 365.0;
+        const iv = symName === 'SENSEX' ? 0.14 : symName === 'BANKNIFTY' ? 0.15 : 0.13;
         const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, timeToExpiryYears, isCall, iv);
-        ltp = Number(bsPrice.toFixed(2));
-        priceSource = 'bs_estimate';
+        if (bsPrice > 0) {
+          ltp = Number(bsPrice.toFixed(2));
+          priceSource = 'bs_estimate';
+        }
       }
     }
+  }
+
+  if (ltp <= 0) {
+    ltp = pos.dbLtp || pos.averagePrice || 0;
   }
 
   const netQty = pos.netQty;

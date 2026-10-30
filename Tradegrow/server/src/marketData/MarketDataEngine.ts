@@ -203,7 +203,7 @@ export class MarketDataEngine {
    * Dispatches immediately to local in-memory subscribers (0ms latency), and throttles
    * Redis pipeline writes to 250ms per token to prevent TCP socket buffer saturation and memory leaks.
    */
-  private broadcastTick(tick: MarketTick): void {
+  public broadcastTick(tick: MarketTick): void {
     this.setCachedTick(tick);
     this.globalCallbacks.forEach(cb => cb(tick));
 

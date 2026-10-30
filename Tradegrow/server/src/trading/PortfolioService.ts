@@ -489,14 +489,16 @@ export class PortfolioService {
           ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
           : `NSE_${r.symbol}`;
 
-        const { ltp, unrealizedPnl } = resolveUnrealizedPnlForPosition({
+        const { ltp, unrealizedPnl, priceSource } = resolveUnrealizedPnlForPosition({
           symbol: r.symbol,
           netQty,
           averagePrice: avgPrice,
           dbLtp: oldLtp
         });
 
-        if (ltp > 0) {
+        // ONLY broadcast tick if priceSource is active ('live' or 'bs_estimate').
+        // NEVER broadcast stale_db with 0 change so we don't poison the market feed!
+        if (ltp > 0 && priceSource !== 'stale_db') {
           const tickObj: MarketTick = {
             instrumentToken: instToken,
             exchange: r.exchange,
@@ -507,27 +509,27 @@ export class PortfolioService {
             high: ltp,
             low: ltp,
             close: ltp,
-            bid: ltp,
-            ask: ltp,
-            bidQty: 0,
-            askQty: 0,
-            volume: 0,
+            bid: Number((ltp * 0.998).toFixed(2)),
+            ask: Number((ltp * 1.002).toFixed(2)),
+            bidQty: 100,
+            askQty: 100,
+            volume: 1000,
             change: Number((ltp - avgPrice).toFixed(2)),
             changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
             timestamp: Date.now(),
-            source: 'live'
+            source: priceSource === 'live' ? 'live' : 'synthetic_skew'
           };
 
           // Cache in memory and fan out to all Redis cluster nodes
           engine.setCachedTick(tickObj);
           engine.broadcastTick(tickObj);
+        }
 
-          if (Math.abs(ltp - oldLtp) >= 0.05) {
-            await execute(
-              'UPDATE positions SET ltp = $1, unrealized_pnl = $2, updated_at = NOW() WHERE id = $3',
-              [ltp, unrealizedPnl, r.id]
-            );
-          }
+        if (ltp > 0 && Math.abs(ltp - oldLtp) >= 0.05) {
+          await execute(
+            'UPDATE positions SET ltp = $1, unrealized_pnl = $2, updated_at = NOW() WHERE id = $3',
+            [ltp, unrealizedPnl, r.id]
+          );
         }
       }
     } catch (_) {}

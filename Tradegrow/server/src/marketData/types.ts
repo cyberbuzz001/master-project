@@ -4,6 +4,7 @@ export interface MarketTick {
   instrumentToken: string;
   exchange: string;
   symbol: string;
+  tradingSymbol?: string;
   ltp: number;
   open: number;
   high: number;
