@@ -422,11 +422,12 @@ export class PortfolioService {
         dbLtp: parseFloat(r.ltp || 0),
       });
 
-      const instrumentToken = r.instrument_token || (
-        r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
-          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
-          : `NSE_${r.symbol}`
-      );
+      const isOption = /[\s_-](CE|PE)$/i.test(r.symbol || '');
+      const isBse = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'));
+      const defaultToken = isOption
+        ? `${isBse ? 'BFO' : 'NFO'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`
+        : `${isBse ? 'BSE' : 'NSE'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`;
+      const instrumentToken = r.instrument_token || defaultToken;
 
       return {
         id: r.id,
@@ -470,9 +471,11 @@ export class PortfolioService {
       // Proactively ensure open position instruments are subscribed to feed
       const tokensToSubscribe: string[] = [];
       for (const r of openRows) {
-        const instToken = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
-          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
-          : `NSE_${r.symbol}`;
+        const isOption = /[\s_-](CE|PE)$/i.test(r.symbol || '');
+        const isBse = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'));
+        const instToken = isOption
+          ? `${isBse ? 'BFO' : 'NFO'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`
+          : `${isBse ? 'BSE' : 'NSE'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`;
         tokensToSubscribe.push(instToken);
         if (r.symbol) tokensToSubscribe.push(r.symbol);
       }
@@ -485,9 +488,11 @@ export class PortfolioService {
         const avgPrice = parseFloat(r.average_price || 0);
         const oldLtp = parseFloat(r.ltp || 0);
 
-        const instToken = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
-          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
-          : `NSE_${r.symbol}`;
+        const isOption = /[\s_-](CE|PE)$/i.test(r.symbol || '');
+        const isBse = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'));
+        const instToken = isOption
+          ? `${isBse ? 'BFO' : 'NFO'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`
+          : `${isBse ? 'BSE' : 'NSE'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`;
 
         const { ltp, unrealizedPnl, priceSource } = resolveUnrealizedPnlForPosition({
           symbol: r.symbol,

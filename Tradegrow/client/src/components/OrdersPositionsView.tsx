@@ -125,6 +125,13 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       }
       if (sym) {
         normalizeToken(sym).forEach(t => set.add(t));
+        const m = sym.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+        if (m) {
+          const u = m[1].toUpperCase();
+          const pfx = (u === 'SENSEX' || u.includes('BSE')) ? 'BFO' : 'NFO';
+          set.add(`${pfx}_${u}_${m[2]}_${m[3].toUpperCase()}`);
+          set.add(`${pfx}_${u}${m[2]}${m[3].toUpperCase()}`);
+        }
       }
     });
     return Array.from(set);
@@ -137,8 +144,23 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     const sym = item.symbol || '';
     const instToken = item.instrumentToken || item.instrument_token || '';
     const avgPrice = parseFloat(item.averagePrice || item.average_price || item.currentPrice || 0);
-    const itemLtp = item.ltp && parseFloat(item.ltp) > 0 ? parseFloat(item.ltp) : avgPrice;
+    const itemLtp = item.ltp && parseFloat(item.ltp) > 0 ? parseFloat(item.ltp) : 0;
 
+    // 1. Authoritative exchange tokens (e.g. NFO_NIFTY_23050_CE, BFO_SENSEX_74400_CE)
+    const mOpt = sym.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+    if (mOpt) {
+      const u = mOpt[1].toUpperCase();
+      const st = mOpt[2];
+      const ty = mOpt[3].toUpperCase();
+      const pfx = (u === 'SENSEX' || u.includes('BSE')) ? 'BFO' : 'NFO';
+      const exactToken = `${pfx}_${u}_${st}_${ty}`;
+      const exactTick = ticks.get(exactToken) || ticks.get(`${pfx}_${u}${st}${ty}`);
+      if (exactTick && exactTick.ltp > 0) {
+        return exactTick.ltp;
+      }
+    }
+
+    // 2. Check all candidate aliases in ticks map
     const candidates = [
       instToken,
       sym,
@@ -149,17 +171,22 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     for (const c of candidates) {
       if (!c) continue;
       const tick = ticks.get(c);
-      if (tick && tick.ltp > 0 && !(tick.change === 0 && tick.changePercent === 0 && tick.volume === 0)) {
-        return tick.ltp;
+      if (tick && tick.ltp > 0) {
+        if (!(tick.change === 0 && tick.changePercent === 0 && (!tick.volume || tick.volume === 0))) {
+          return tick.ltp;
+        }
       }
     }
 
-    // Dynamic spot-anchored estimate: if direct option tick is absent or quiet,
+    // 3. Dynamic spot-anchored estimate: if direct option tick is absent or quiet,
     // recalculate option price from the live index spot tick (NSE_NIFTY50, BSE_SENSEX, etc.)
     const dynamicPrice = estimateLiveOptionPrice(sym || instToken, itemLtp, ticks);
     if (dynamicPrice > 0) return dynamicPrice;
 
-    return itemLtp > 0 ? itemLtp : avgPrice;
+    // 4. Server-provided LTP from positions query (already updated by Dhan/BS)
+    if (itemLtp > 0) return itemLtp;
+
+    return avgPrice;
   };
 
   const fetchData = async () => {
@@ -241,10 +268,11 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       const quantity = Math.abs(netQty);
       const livePrice = getLiveLtp(pos);
       const exitExchange = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+      const isOption = /[\s_-](CE|PE)$/i.test(pos.symbol || '');
       const exitInstToken = pos.instrumentToken || pos.instrument_token || (
         exitExchange === 'BSE' || pos.symbol.includes('SENSEX')
           ? `BFO_${pos.symbol.replace(/\s+/g, '_')}`
-          : `NSE_${pos.symbol}`
+          : (isOption ? `NFO_${pos.symbol.replace(/\s+/g, '_')}` : `NSE_${pos.symbol}`)
       );
       const data = await submitOrder({
         instrumentToken: exitInstToken,
@@ -327,9 +355,16 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         });
       }
 
+      const isOption = /[\s_-](CE|PE)$/i.test(pos.symbol || '');
+      const exch = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+      const defaultToken = isOption
+        ? `${exch === 'BSE' ? 'BFO' : 'NFO'}_${pos.symbol.replace(/\s+/g, '_')}`
+        : `${exch}_${pos.symbol}`;
+      const instToken = pos.instrumentToken || pos.instrument_token || defaultToken;
+
       const data = await submitOrder({
-        instrumentToken: pos.instrumentToken || pos.instrument_token || `NSE_${pos.symbol}`,
-        exchange: pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE'),
+        instrumentToken: instToken,
+        exchange: exch,
         symbol: pos.symbol,
         side,
         quantity,
@@ -419,9 +454,16 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       const livePrice = getLiveLtp(pos);
       const priceNum = averageOrderType === 'LIMIT' ? (parseFloat(averageLimitPrice) || livePrice) : livePrice;
 
+      const isOption = /[\s_-](CE|PE)$/i.test(pos.symbol || '');
+      const exch = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+      const defaultToken = isOption
+        ? `${exch === 'BSE' ? 'BFO' : 'NFO'}_${pos.symbol.replace(/\s+/g, '_')}`
+        : `${exch}_${pos.symbol}`;
+      const instToken = pos.instrumentToken || pos.instrument_token || defaultToken;
+
       const data = await submitOrder({
-        instrumentToken: pos.instrumentToken || pos.instrument_token || `NSE_${pos.symbol}`,
-        exchange: pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE'),
+        instrumentToken: instToken,
+        exchange: exch,
         symbol: pos.symbol,
         side,
         quantity: totalAddQty,
@@ -568,10 +610,11 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         const quantity = Math.abs(netQty);
         const livePrice = getLiveLtp(pos);
         const exitExchange = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+        const isOption = /[\s_-](CE|PE)$/i.test(pos.symbol || '');
         const exitInstToken = pos.instrumentToken || pos.instrument_token || (
           exitExchange === 'BSE' || pos.symbol.includes('SENSEX')
             ? `BFO_${pos.symbol.replace(/\s+/g, '_')}`
-            : `NSE_${pos.symbol}`
+            : (isOption ? `NFO_${pos.symbol.replace(/\s+/g, '_')}` : `NSE_${pos.symbol}`)
         );
         await submitOrder({
           instrumentToken: exitInstToken,

@@ -120,21 +120,10 @@ export function estimateLiveOptionPrice(
   const iv = parsed.underlying === 'SENSEX' ? 0.145 : parsed.underlying === 'BANKNIFTY' ? 0.155 : 0.125;
   const bsPrice = calculateOptionPrice(currentSpot, parsed.strike, 5.0 / 365.0, parsed.isCall, iv);
 
-  // If baseLtp is already valid, apply dynamic delta adjustments so we maintain base market levels
-  if (baseLtp > 0) {
-    const sqrtT = Math.sqrt(5.0 / 365.0);
-    const d1 = (Math.log(currentSpot / parsed.strike) + (RISK_FREE_RATE + 0.5 * iv * iv) * (5.0 / 365.0)) / (iv * sqrtT);
-    const delta = parsed.isCall ? CND(d1) : CND(d1) - 1.0;
-
-    // Use spotTick.change if available, or theoretical Black-Scholes estimate
-    if (typeof spotTick.change === 'number') {
-      const dynamicDeltaPrice = Math.max(0.05, baseLtp + (delta * spotTick.change * 0.4));
-      return Number(dynamicDeltaPrice.toFixed(2));
-    }
-
-    return bsPrice > 0 ? bsPrice : baseLtp;
+  if (bsPrice > 0) {
+    return bsPrice;
   }
 
-  return bsPrice > 0 ? bsPrice : 0;
+  return baseLtp > 0 ? baseLtp : 0;
 }
 
