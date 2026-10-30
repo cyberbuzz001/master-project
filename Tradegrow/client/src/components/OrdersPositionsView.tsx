@@ -11,6 +11,7 @@ import { PortfolioNav } from './PortfolioNav';
 import { pnlColorClass, formatPnl, formatPnlPct } from '../utils/pnl';
 import { getLotSizeForSymbol } from '../utils/lotSize';
 import { normalizeToken } from '../utils/symbology';
+import { estimateLiveOptionPrice } from '../utils/blackScholes';
 import { ContractNoteModal } from './ContractNoteModal';
 import { useToast } from '../context/ToastContext';
 
@@ -112,7 +113,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
   }, []);
 
   // Subscribe to indices tokens + open position tokens for live price feeds
-  const INDEX_TOKENS = ['NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY'];
+  const INDEX_TOKENS = ['NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY', 'NSE_MIDCPNIFTY'];
 
   const subscribedTokens = useMemo(() => {
     const set = new Set<string>(INDEX_TOKENS);
@@ -136,6 +137,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     const sym = item.symbol || '';
     const instToken = item.instrumentToken || item.instrument_token || '';
     const avgPrice = parseFloat(item.averagePrice || item.average_price || item.currentPrice || 0);
+    const itemLtp = item.ltp && parseFloat(item.ltp) > 0 ? parseFloat(item.ltp) : avgPrice;
 
     const candidates = [
       instToken,
@@ -150,8 +152,12 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       if (tick && tick.ltp > 0) return tick.ltp;
     }
 
-    if (item.ltp && parseFloat(item.ltp) > 0) return parseFloat(item.ltp);
-    return avgPrice;
+    // Dynamic spot-anchored estimate: if direct option tick is absent or quiet,
+    // recalculate option price from the live index spot tick (NSE_NIFTY50, BSE_SENSEX, etc.)
+    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, itemLtp, ticks);
+    if (dynamicPrice > 0) return dynamicPrice;
+
+    return itemLtp > 0 ? itemLtp : avgPrice;
   };
 
   const fetchData = async () => {
@@ -179,8 +185,19 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 7500);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchData, 2000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [token]);
 
   const getActiveTargetOrder = (pos: any) => {
@@ -221,15 +238,21 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       const side = netQty > 0 ? 'SELL' : 'BUY';
       const quantity = Math.abs(netQty);
       const livePrice = getLiveLtp(pos);
+      const exitExchange = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+      const exitInstToken = pos.instrumentToken || pos.instrument_token || (
+        exitExchange === 'BSE' || pos.symbol.includes('SENSEX')
+          ? `BFO_${pos.symbol.replace(/\s+/g, '_')}`
+          : `NSE_${pos.symbol}`
+      );
       const data = await submitOrder({
-        instrumentToken: pos.instrumentToken || pos.instrument_token || `NSE_${pos.symbol}`,
-        exchange: pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE'),
+        instrumentToken: exitInstToken,
+        exchange: exitExchange,
         symbol: pos.symbol,
         side,
         quantity,
         price: livePrice,
         orderType: 'MARKET',
-        productType: pos.productType || pos.product_type || 'MIS',
+        productType: pos.productType || pos.product_type || 'NRML',
       });
       if (data.success) {
         navigator.vibrate?.([30, 50, 30]);
@@ -539,15 +562,21 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         const side = netQty > 0 ? 'SELL' : 'BUY';
         const quantity = Math.abs(netQty);
         const livePrice = getLiveLtp(pos);
+        const exitExchange = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+        const exitInstToken = pos.instrumentToken || pos.instrument_token || (
+          exitExchange === 'BSE' || pos.symbol.includes('SENSEX')
+            ? `BFO_${pos.symbol.replace(/\s+/g, '_')}`
+            : `NSE_${pos.symbol}`
+        );
         await submitOrder({
-          instrumentToken: pos.instrumentToken || pos.instrument_token || `NSE_${pos.symbol}`,
-          exchange: pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE'),
+          instrumentToken: exitInstToken,
+          exchange: exitExchange,
           symbol: pos.symbol,
           side,
           quantity,
           price: livePrice,
           orderType: 'MARKET',
-          productType: pos.productType || pos.product_type || 'MIS',
+          productType: pos.productType || pos.product_type || 'NRML',
         });
       }
       navigator.vibrate?.([40, 60, 40]);
@@ -783,7 +812,28 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       ),
     },
     { key: 'qty', header: 'Qty', align: 'right', render: (o) => <span className="font-mono font-bold">{o.quantity}</span> },
-    { key: 'price', header: 'Price', align: 'right', render: (o) => <span className="font-mono font-bold">₹{parseFloat(o.price || 0).toFixed(2)}</span> },
+    {
+      key: 'price',
+      header: 'Price',
+      align: 'right',
+      render: (o) => {
+        const isFilled = o.status === 'FILLED' || o.status === 'COMPLETED';
+        const fillPrice = parseFloat(o.average_price || o.averagePrice || 0);
+        const reqPrice = parseFloat(o.price || 0);
+        const displayPrice = isFilled && fillPrice > 0 ? fillPrice : reqPrice;
+        return (
+          <div className="flex flex-col items-end">
+            <span className="font-mono font-bold">₹{displayPrice.toFixed(2)}</span>
+            {isFilled && (o.orderType === 'MARKET' || o.order_type === 'MARKET') && reqPrice > 0 && Math.abs(reqPrice - fillPrice) > 0.01 && (
+              <span className="text-[9px] text-[var(--text-muted)] font-mono">est. ₹{reqPrice.toFixed(2)}</span>
+            )}
+            {isFilled && (o.orderType === 'LIMIT' || o.order_type === 'LIMIT') && reqPrice > 0 && Math.abs(reqPrice - fillPrice) > 0.01 && (
+              <span className="text-[9px] text-[var(--text-muted)] font-mono">lmt. ₹{reqPrice.toFixed(2)}</span>
+            )}
+          </div>
+        );
+      },
+    },
     {
       key: 'type',
       header: 'Type',
@@ -1273,7 +1323,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                       <div>
                         <span>Price: </span>
                         <span className="font-black text-[var(--text-main)]">
-                          ₹{parseFloat(order.price || order.averagePrice || 0).toFixed(2)}
+                          ₹{parseFloat(order.average_price || order.averagePrice || order.price || 0).toFixed(2)}
                         </span>
                       </div>
                     </div>

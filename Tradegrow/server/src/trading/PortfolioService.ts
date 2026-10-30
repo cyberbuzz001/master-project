@@ -1,5 +1,6 @@
 import { query, queryOne, execute, withTransaction } from '../db/schema';
 import { MarketDataEngine } from '../marketData/MarketDataEngine';
+import { MarketTick } from '../marketData/types';
 import { generateUUID } from '../utils/crypto';
 import { resolveUnrealizedPnlForPosition } from './MarginMath';
 
@@ -9,6 +10,9 @@ export interface PositionRecord {
   symbol: string;
   exchange: string;
   productType: string;
+  product_type?: string;
+  instrumentToken?: string;
+  instrument_token?: string;
   buyQty: number;
   sellQty: number;
   netQty: number;
@@ -71,10 +75,28 @@ export class PortfolioService {
                  { ltp: price };
     const ltp = tick.ltp > 0 ? tick.ltp : price;
 
-    const existing = await client.query(
+    let existing = await client.query(
       'SELECT * FROM positions WHERE user_id = $1 AND symbol = $2 AND product_type = $3 FOR UPDATE',
       [userId, symbol, productType]
     );
+
+    if (existing.rows.length === 0) {
+      const cand = await client.query(
+        `SELECT * FROM positions 
+         WHERE user_id = $1 AND (symbol = $2 OR symbol ILIKE $3) AND net_qty != 0
+         ORDER BY (product_type = $4) DESC, ABS(net_qty) DESC LIMIT 1 FOR UPDATE`,
+        [userId, symbol, `%${symbol.replace(/^(NSE_|BSE_|NFO_|BFO_)/, '')}%`, productType]
+      );
+      if (cand.rows.length > 0) {
+        const cRow = cand.rows[0];
+        const cNet = parseInt(cRow.net_qty, 10);
+        if ((cNet > 0 && side === 'SELL') || (cNet < 0 && side === 'BUY')) {
+          existing = cand;
+          symbol = cRow.symbol;
+          productType = cRow.product_type;
+        }
+      }
+    }
 
     let realizedPnlDelta = 0;
     let closedQty = 0;
@@ -400,12 +422,21 @@ export class PortfolioService {
         dbLtp: parseFloat(r.ltp || 0),
       });
 
+      const instrumentToken = r.instrument_token || (
+        r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
+          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
+          : `NSE_${r.symbol}`
+      );
+
       return {
         id: r.id,
         userId: r.user_id,
         symbol: r.symbol,
         exchange: r.exchange,
+        instrumentToken,
+        instrument_token: instrumentToken,
         productType: r.product_type,
+        product_type: r.product_type,
         buyQty: parseInt(r.buy_qty, 10),
         sellQty: parseInt(r.sell_qty, 10),
         netQty,
@@ -420,6 +451,86 @@ export class PortfolioService {
         trailingSlJump: r.trailing_sl_jump ? parseFloat(r.trailing_sl_jump) : null,
       };
     });
+  }
+
+
+  /**
+   * Periodically called to evaluate and update open positions' LTP and unrealized P&L,
+   * broadcasting ticks so live frontends update in real time.
+   */
+  public static async refreshOpenPositionsLtp(): Promise<void> {
+    try {
+      const openRows = await query<any>(
+        'SELECT id, user_id, symbol, exchange, product_type, net_qty, average_price, ltp FROM positions WHERE net_qty != 0'
+      );
+      if (!openRows || openRows.length === 0) return;
+
+      const engine = MarketDataEngine.getInstance();
+
+      // Proactively ensure open position instruments are subscribed to feed
+      const tokensToSubscribe: string[] = [];
+      for (const r of openRows) {
+        const instToken = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
+          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
+          : `NSE_${r.symbol}`;
+        tokensToSubscribe.push(instToken);
+        if (r.symbol) tokensToSubscribe.push(r.symbol);
+      }
+      if (tokensToSubscribe.length > 0) {
+        engine.subscribe(tokensToSubscribe);
+      }
+
+      for (const r of openRows) {
+        const netQty = parseInt(r.net_qty, 10);
+        const avgPrice = parseFloat(r.average_price || 0);
+        const oldLtp = parseFloat(r.ltp || 0);
+
+        const instToken = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'))
+          ? `BFO_${r.symbol.replace(/\s+/g, '_')}`
+          : `NSE_${r.symbol}`;
+
+        const { ltp, unrealizedPnl } = resolveUnrealizedPnlForPosition({
+          symbol: r.symbol,
+          netQty,
+          averagePrice: avgPrice,
+          dbLtp: oldLtp
+        });
+
+        if (ltp > 0) {
+          const tickObj: MarketTick = {
+            instrumentToken: instToken,
+            exchange: r.exchange,
+            symbol: r.symbol,
+            tradingSymbol: r.symbol,
+            ltp,
+            open: ltp,
+            high: ltp,
+            low: ltp,
+            close: ltp,
+            bid: ltp,
+            ask: ltp,
+            bidQty: 0,
+            askQty: 0,
+            volume: 0,
+            change: Number((ltp - avgPrice).toFixed(2)),
+            changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
+            timestamp: Date.now(),
+            source: 'live'
+          };
+
+          // Cache in memory and fan out to all Redis cluster nodes
+          engine.setCachedTick(tickObj);
+          engine.broadcastTick(tickObj);
+
+          if (Math.abs(ltp - oldLtp) >= 0.05) {
+            await execute(
+              'UPDATE positions SET ltp = $1, unrealized_pnl = $2, updated_at = NOW() WHERE id = $3',
+              [ltp, unrealizedPnl, r.id]
+            );
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   public static async clearOldPositions(userId: string): Promise<void> {

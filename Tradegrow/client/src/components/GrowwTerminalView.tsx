@@ -412,8 +412,19 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
   useEffect(() => {
     fetchPositionsAndOrders();
-    const interval = setInterval(fetchPositionsAndOrders, 4000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchPositionsAndOrders, 2000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPositionsAndOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [authToken]);
 
   // 1-Click Square-Off Position
@@ -425,6 +436,12 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
       const exitSide = pos.netQty > 0 ? 'SELL' : 'BUY';
       const exitQty = Math.abs(pos.netQty);
 
+      const exitExchange = pos.exchange || (pos.symbol.includes('SENSEX') ? 'BSE' : 'NSE');
+      const exitInstToken = (pos as any).instrumentToken || (pos as any).instrument_token || (
+        exitExchange === 'BSE' || pos.symbol.includes('SENSEX')
+          ? `BFO_${pos.symbol.replace(/\s+/g, '_')}`
+          : `NSE_${pos.symbol}`
+      );
       const res = await fetch('/api/v1/orders', {
         method: 'POST',
         headers: {
@@ -432,14 +449,14 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
           'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
-          instrumentToken: `NSE_${pos.symbol}`,
-          exchange: pos.exchange || 'NSE',
+          instrumentToken: exitInstToken,
+          exchange: exitExchange,
           symbol: pos.symbol,
           side: exitSide,
           quantity: exitQty,
           price: 0,
           orderType: 'MARKET',
-          productType: pos.productType || 'MIS'
+          productType: pos.productType || (pos as any).product_type || 'NRML'
         })
       });
 

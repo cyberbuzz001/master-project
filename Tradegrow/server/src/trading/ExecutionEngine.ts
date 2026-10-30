@@ -23,6 +23,7 @@ export function isIndianMarketOpen(): boolean {
 export class ExecutionEngine {
   private static timer: NodeJS.Timeout | null = null;
   private static repairTimer: NodeJS.Timeout | null = null;
+  private static positionLtpTimer: NodeJS.Timeout | null = null;
   private static isSubscribedToTicks = false;
 
   // ── High-Speed In-Memory Pending Order Index ──────────────────────────────
@@ -33,6 +34,8 @@ export class ExecutionEngine {
     console.log('[ExecutionEngine] Starting Event-Driven & In-Memory Matching Engine...');
     if (this.timer) clearInterval(this.timer);
     if (this.repairTimer) clearInterval(this.repairTimer);
+    if (this.positionLtpTimer) clearInterval(this.positionLtpTimer);
+    if (this.positionLtpTimer) clearInterval(this.positionLtpTimer);
 
     // Initialize GTT trigger engine and Price Alert engine
     void gttEngine.initialize();
@@ -71,11 +74,17 @@ export class ExecutionEngine {
     this.repairTimer = setInterval(() => {
       PortfolioService.auditAndRepairAllPositions().catch(() => {});
     }, 60000);
+
+    // Run active position LTP and P&L refresher every 1500ms
+    this.positionLtpTimer = setInterval(() => {
+      PortfolioService.refreshOpenPositionsLtp().catch(() => {});
+    }, 1500);
   }
 
   public static stop(): void {
     if (this.timer) clearInterval(this.timer);
     if (this.repairTimer) clearInterval(this.repairTimer);
+    if (this.positionLtpTimer) clearInterval(this.positionLtpTimer);
   }
 
   /**

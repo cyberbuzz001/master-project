@@ -178,6 +178,31 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
     fetchExpiries();
   }, [symbol, expiryType]);
 
+  // Apply option chain data payload
+  const applyOptionChainData = useCallback((data: any) => {
+    if (data.success) {
+      setChain(data.chain || []);
+      if (data.spotPrice && data.spotPrice > 0) {
+        setSpotPrice(data.spotPrice);
+      }
+      if (typeof data.spotChange === 'number') {
+        setSpotChange(data.spotChange);
+      }
+      if (typeof data.spotChangePercent === 'number') {
+        setSpotChangePct(data.spotChangePercent);
+      }
+      if (data.atmStrike && data.atmStrike > 0) {
+        setAtmStrike(data.atmStrike);
+      }
+      setLotSize(data.lotSize || getLotSizeForSymbol(symbol));
+      if (typeof data.pcrRatio === 'number') setPcrRatio(data.pcrRatio);
+      if (typeof data.maxPainStrike === 'number') setMaxPainStrike(data.maxPainStrike);
+      if (typeof data.totalCallOI === 'number') setTotalCallOI(data.totalCallOI);
+      if (typeof data.totalPutOI === 'number') setTotalPutOI(data.totalPutOI);
+    }
+    setLoading(false);
+  }, [symbol]);
+
   // Fetch Option Chain Data
   const fetchOptionChain = useCallback(() => {
     const queryParams = new URLSearchParams({ symbol, strikeRange });
@@ -185,31 +210,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
     fetch(`/api/v1/market/option-chain?${queryParams.toString()}`)
       .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          setChain(data.chain || []);
-          if (data.spotPrice && data.spotPrice > 0) {
-            setSpotPrice(data.spotPrice);
-          }
-          if (typeof data.spotChange === 'number') {
-            setSpotChange(data.spotChange);
-          }
-          if (typeof data.spotChangePercent === 'number') {
-            setSpotChangePct(data.spotChangePercent);
-          }
-          if (data.atmStrike && data.atmStrike > 0) {
-            setAtmStrike(data.atmStrike);
-          }
-          setLotSize(data.lotSize || getLotSizeForSymbol(symbol));
-          if (typeof data.pcrRatio === 'number') setPcrRatio(data.pcrRatio);
-          if (typeof data.maxPainStrike === 'number') setMaxPainStrike(data.maxPainStrike);
-          if (typeof data.totalCallOI === 'number') setTotalCallOI(data.totalCallOI);
-          if (typeof data.totalPutOI === 'number') setTotalPutOI(data.totalPutOI);
-        }
-        setLoading(false);
-      })
+      .then(data => applyOptionChainData(data))
       .catch(() => setLoading(false));
-  }, [symbol, expiry, strikeRange]);
+  }, [symbol, expiry, strikeRange, applyOptionChainData]);
 
   const computedOI = useMemo(() => {
     let callOI = totalCallOI;
@@ -233,13 +236,63 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
     return { callOI, putOI, total, pcr, callPct, putPct, sentiment, sentimentColor };
   }, [chain, totalCallOI, totalPutOI, pcrRatio]);
 
-  // Load option chain on symbol/expiry/strikeRange change and refresh structure periodically (12s)
-  // Live LTP, Greeks, and ATM calculations stream continuously at zero latency via WebSocket ticks above.
+  // Load option chain and stream real-time updates via SSE (1.5s push) with 2s polling fallback
   useEffect(() => {
     fetchOptionChain();
-    const interval = setInterval(fetchOptionChain, 12000);
-    return () => clearInterval(interval);
-  }, [fetchOptionChain]);
+
+    // 1. Server-Sent Events (SSE) Stream for real-time live streaming (~1500ms server push)
+    let eventSource: EventSource | null = null;
+    let sseActive = false;
+
+    try {
+      const queryParams = new URLSearchParams({ symbol, strikeRange });
+      if (expiry) queryParams.append('expiry', expiry);
+      const streamUrl = `/api/v1/market/option-chain/stream?${queryParams.toString()}`;
+
+      eventSource = new EventSource(streamUrl);
+      eventSource.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          if (parsed && parsed.success) {
+            sseActive = true;
+            applyOptionChainData(parsed);
+          }
+        } catch (_) {}
+      };
+
+      eventSource.onerror = () => {
+        sseActive = false;
+        try { eventSource?.close(); } catch (_) {}
+      };
+    } catch (_) {
+      sseActive = false;
+    }
+
+    // 2. High-speed fallback polling (2000ms) ensuring continuous updates even if SSE is interrupted
+    const interval = setInterval(() => {
+      if (!sseActive) {
+        fetchOptionChain();
+      }
+    }, 2000);
+
+    // 3. Instant refresh on tab focus / document visibility
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOptionChain();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (eventSource) {
+        eventSource.onmessage = null;
+        eventSource.onerror = null;
+        eventSource.close();
+      }
+    };
+  }, [symbol, expiry, strikeRange, fetchOptionChain, applyOptionChainData]);
 
   // Handle Order Placement Trigger
   const handleOpenOrder = (
