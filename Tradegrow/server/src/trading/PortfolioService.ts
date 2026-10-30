@@ -470,6 +470,8 @@ export class PortfolioService {
 
       // Proactively ensure open position instruments are subscribed to feed
       const tokensToSubscribe: string[] = [];
+      const distinctUnderlyings = new Set<string>();
+
       for (const r of openRows) {
         const isOption = /[\s_-](CE|PE)$/i.test(r.symbol || '');
         const isBse = r.exchange === 'BSE' || (r.symbol && r.symbol.includes('SENSEX'));
@@ -478,9 +480,24 @@ export class PortfolioService {
           : `${isBse ? 'BSE' : 'NSE'}_${(r.symbol || '').replace(/[\s-]+/g, '_')}`;
         tokensToSubscribe.push(instToken);
         if (r.symbol) tokensToSubscribe.push(r.symbol);
+
+        const mOpt = (r.symbol || '').match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+        if (mOpt) {
+          distinctUnderlyings.add(mOpt[1].toUpperCase());
+        }
       }
       if (tokensToSubscribe.length > 0) {
         engine.subscribe(tokensToSubscribe);
+      }
+
+      // Proactively trigger option chain fetch for open position underlyings to keep Dhan cache warm & live
+      if (distinctUnderlyings.size > 0) {
+        try {
+          const { OptionChainEngine } = await import('../marketData/OptionChainEngine');
+          for (const u of distinctUnderlyings) {
+            await OptionChainEngine.generateOptionChain({ symbol: u, strikeRange: 'ALL' });
+          }
+        } catch (_) {}
       }
 
       for (const r of openRows) {
@@ -522,7 +539,7 @@ export class PortfolioService {
             change: Number((ltp - avgPrice).toFixed(2)),
             changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
             timestamp: Date.now(),
-            source: priceSource === 'live' ? 'live' : 'synthetic_skew'
+            source: priceSource === 'live' ? 'dhan' : 'synthetic_skew'
           };
 
           // Cache in memory and fan out to all Redis cluster nodes

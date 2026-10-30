@@ -245,38 +245,47 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
   const symbol = pos.symbol || '';
   let tick: MarketTick | undefined = undefined;
 
+  const isAuthoritativeTick = (t: MarketTick | undefined): boolean => {
+    return !!(t && t.ltp > 0 && (t.source === 'dhan' || (t.volume && t.volume > 1000)));
+  };
+
   // 1. Prioritize authoritative Dhan option ticks (with underscores, e.g. NFO_NIFTY_23050_CE)
   const mNifty = symbol.match(/NIFTY\s*(\d+)\s*(CE|PE)/i);
   if (mNifty) {
-    tick = engine.getCachedTick(`NFO_NIFTY_${mNifty[1]}_${mNifty[2].toUpperCase()}`) ||
-           engine.getCachedTick(`NFO_NIFTY${mNifty[1]}${mNifty[2].toUpperCase()}`);
+    const t = engine.getCachedTick(`NFO_NIFTY_${mNifty[1]}_${mNifty[2].toUpperCase()}`) ||
+              engine.getCachedTick(`NFO_NIFTY${mNifty[1]}${mNifty[2].toUpperCase()}`);
+    if (isAuthoritativeTick(t)) tick = t;
   }
   const mSensex = symbol.match(/SENSEX\s*(\d+)\s*(CE|PE)/i);
   if (!tick && mSensex) {
-    tick = engine.getCachedTick(`BFO_SENSEX_${mSensex[1]}_${mSensex[2].toUpperCase()}`) ||
-           engine.getCachedTick(`BFO_SENSEX${mSensex[1]}${mSensex[2].toUpperCase()}`);
+    const t = engine.getCachedTick(`BFO_SENSEX_${mSensex[1]}_${mSensex[2].toUpperCase()}`) ||
+              engine.getCachedTick(`BFO_SENSEX${mSensex[1]}${mSensex[2].toUpperCase()}`);
+    if (isAuthoritativeTick(t)) tick = t;
   }
   const mBank = symbol.match(/BANKNIFTY\s*(\d+)\s*(CE|PE)/i);
   if (!tick && mBank) {
-    tick = engine.getCachedTick(`NFO_BANKNIFTY_${mBank[1]}_${mBank[2].toUpperCase()}`) ||
-           engine.getCachedTick(`NFO_BANKNIFTY${mBank[1]}${mBank[2].toUpperCase()}`);
+    const t = engine.getCachedTick(`NFO_BANKNIFTY_${mBank[1]}_${mBank[2].toUpperCase()}`) ||
+              engine.getCachedTick(`NFO_BANKNIFTY${mBank[1]}${mBank[2].toUpperCase()}`);
+    if (isAuthoritativeTick(t)) tick = t;
   }
   const mFin = symbol.match(/FINNIFTY\s*(\d+)\s*(CE|PE)/i);
   if (!tick && mFin) {
-    tick = engine.getCachedTick(`NFO_FINNIFTY_${mFin[1]}_${mFin[2].toUpperCase()}`) ||
-           engine.getCachedTick(`NFO_FINNIFTY${mFin[1]}${mFin[2].toUpperCase()}`);
+    const t = engine.getCachedTick(`NFO_FINNIFTY_${mFin[1]}_${mFin[2].toUpperCase()}`) ||
+              engine.getCachedTick(`NFO_FINNIFTY${mFin[1]}${mFin[2].toUpperCase()}`);
+    if (isAuthoritativeTick(t)) tick = t;
   }
   const mMid = symbol.match(/MIDCPNIFTY\s*(\d+)\s*(CE|PE)/i);
   if (!tick && mMid) {
-    tick = engine.getCachedTick(`NFO_MIDCPNIFTY_${mMid[1]}_${mMid[2].toUpperCase()}`);
+    const t = engine.getCachedTick(`NFO_MIDCPNIFTY_${mMid[1]}_${mMid[2].toUpperCase()}`);
+    if (isAuthoritativeTick(t)) tick = t;
   }
 
-  // 2. Direct symbol fallback, discarding synthetic 0-change ticks
+  // 2. Direct symbol fallback, only accepting authoritative ticks
   if (!tick) {
     const candidates = [`NSE_${symbol}`, `NFO_${symbol}`, `BFO_${symbol}`, symbol];
     for (const cand of candidates) {
       const c = engine.getCachedTick(cand);
-      if (c && c.ltp > 0 && !(c.change === 0 && c.changePercent === 0 && (!c.volume || c.volume === 0))) {
+      if (isAuthoritativeTick(c)) {
         tick = c;
         break;
       }

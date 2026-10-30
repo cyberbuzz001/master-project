@@ -146,21 +146,21 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     const avgPrice = parseFloat(item.averagePrice || item.average_price || item.currentPrice || 0);
     const itemLtp = item.ltp && parseFloat(item.ltp) > 0 ? parseFloat(item.ltp) : 0;
 
-    // 1. Authoritative exchange tokens (e.g. NFO_NIFTY_23050_CE, BFO_SENSEX_74400_CE)
+    // 1. Authoritative real market exchange ticks (e.g. NFO_NIFTY_23100_PE, BFO_SENSEX_74400_CE)
     const mOpt = sym.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+    let exactTick: any = null;
     if (mOpt) {
       const u = mOpt[1].toUpperCase();
       const st = mOpt[2];
       const ty = mOpt[3].toUpperCase();
       const pfx = (u === 'SENSEX' || u.includes('BSE')) ? 'BFO' : 'NFO';
-      const exactToken = `${pfx}_${u}_${st}_${ty}`;
-      const exactTick = ticks.get(exactToken) || ticks.get(`${pfx}_${u}${st}${ty}`);
-      if (exactTick && exactTick.ltp > 0) {
+      exactTick = ticks.get(`${pfx}_${u}_${st}_${ty}`) || ticks.get(`${pfx}_${u}${st}${ty}`);
+      if (exactTick && exactTick.ltp > 0 && (exactTick.source === 'dhan' || (exactTick.volume && exactTick.volume > 1000))) {
         return exactTick.ltp;
       }
     }
 
-    // 2. Check all candidate aliases in ticks map
+    // 2. Check candidate aliases for authoritative ticks
     const candidates = [
       instToken,
       sym,
@@ -171,19 +171,19 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     for (const c of candidates) {
       if (!c) continue;
       const tick = ticks.get(c);
-      if (tick && tick.ltp > 0) {
-        if (!(tick.change === 0 && tick.changePercent === 0 && (!tick.volume || tick.volume === 0))) {
-          return tick.ltp;
-        }
+      if (tick && tick.ltp > 0 && (tick.source === 'dhan' || (tick.volume && tick.volume > 1000))) {
+        return tick.ltp;
       }
     }
 
-    // 3. Dynamic spot-anchored estimate: if direct option tick is absent or quiet,
-    // recalculate option price from the live index spot tick (NSE_NIFTY50, BSE_SENSEX, etc.)
+    // 3. Dynamic spot-anchored estimate: recalculates option price live from the index spot tick (NSE_NIFTY50, etc.)
     const dynamicPrice = estimateLiveOptionPrice(sym || instToken, itemLtp, ticks);
     if (dynamicPrice > 0) return dynamicPrice;
 
-    // 4. Server-provided LTP from positions query (already updated by Dhan/BS)
+    // 4. Exact tick fallback if present
+    if (exactTick && exactTick.ltp > 0) return exactTick.ltp;
+
+    // 5. Server-provided LTP from positions query (already updated by Dhan/BS)
     if (itemLtp > 0) return itemLtp;
 
     return avgPrice;
@@ -214,7 +214,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 2000);
+    const interval = setInterval(fetchData, 1000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -228,6 +228,31 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [token]);
+
+  // Keep live option chain feed active for any underlying indices with open positions
+  useEffect(() => {
+    const underlyings = new Set<string>();
+    positions.forEach(p => {
+      if (getNetQty(p) !== 0) {
+        const m = (p.symbol || '').match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+        if (m) underlyings.add(m[1].toUpperCase());
+      }
+    });
+
+    if (underlyings.size === 0) return;
+
+    const sources: EventSource[] = [];
+    underlyings.forEach(sym => {
+      try {
+        const es = new EventSource(`/api/v1/market/option-chain/stream?symbol=${sym}&strikeRange=20`);
+        sources.push(es);
+      } catch (_) {}
+    });
+
+    return () => {
+      sources.forEach(es => es.close());
+    };
+  }, [positions]);
 
   const getActiveTargetOrder = (pos: any) => {
     const netQty = getNetQty(pos);
