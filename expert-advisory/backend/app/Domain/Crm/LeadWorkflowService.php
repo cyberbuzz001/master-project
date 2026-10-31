@@ -278,7 +278,13 @@ final class LeadWorkflowService
         Followup::query()->where('lead_id', $lead->id)->where('status', Followup::PENDING)
             ->update(['status' => Followup::CANCELLED, 'outcome' => 'Lead marked Do Not Disturb', 'completed_by' => $actor->id, 'completed_at' => now()]);
 
-        $lead->forceFill(['next_followup_at' => null])->save();
+        $lead->forceFill(['next_followup_at' => null, 'communication_state' => 'DO_NOT_CONTACT'])->save();
+
+        try {
+            app(AutomationWorkflowEngine::class)->handleWorkflowOptOut($lead);
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 
     private function createFollowup(User $actor, Lead $lead, CarbonInterface $dueAt, string $channel, ?string $notes): Followup

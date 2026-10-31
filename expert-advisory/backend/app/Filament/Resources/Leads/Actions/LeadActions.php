@@ -270,8 +270,15 @@ final class LeadActions
                     'approved_at' => now(),
                 ]);
 
-                $record->update(['status' => 'FOLLOWUP_SCHEDULED']);
-                Notification::make()->success()->title('48-hour free trial activated! Follow-up check-in scheduled.')->send();
+                $record->update(['status' => 'FREE_TRIAL']);
+
+                try {
+                    app(\App\Domain\Crm\AutomationWorkflowEngine::class)->triggerWorkflow($record, 'WORKFLOW_C_DEMO_NURTURING');
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('[FreeTrial] Automation trigger failed:', ['lead_id' => $record->id, 'error' => $e->getMessage()]);
+                }
+
+                Notification::make()->success()->title('48-hour free trial activated! Demo nurturing automation enrolled.')->send();
             });
     }
 

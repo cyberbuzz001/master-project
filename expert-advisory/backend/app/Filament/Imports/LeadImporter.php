@@ -180,12 +180,18 @@ class LeadImporter extends Importer
             $employee = Employee::query()->find($assignTo);
             if ($employee !== null) {
                 app(LeadAssignmentService::class)->assign($user, $lead, $employee, 'Assigned during import '.$this->import->file_name, 'import');
-
-                return;
+            } else {
+                app(LeadAssignmentService::class)->autoAssign($lead);
             }
+        } else {
+            app(LeadAssignmentService::class)->autoAssign($lead);
         }
 
-        app(LeadAssignmentService::class)->autoAssign($lead);
+        try {
+            app(\App\Domain\Crm\AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[LeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
+        }
     }
 
     public static function getCompletedNotificationBody(Import $import): string

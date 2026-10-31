@@ -1,11 +1,20 @@
 <?php
 
 use App\Domain\Billing\BillingSweeper;
+use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Domain\Crm\FollowupMonitor;
 use App\Domain\Crm\LeadEscalationService;
 use App\Domain\Onboarding\DocumentRetentionService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('crm:process-automation-workflows {--limit=50}', function (AutomationWorkflowEngine $engine) {
+    $limit = (int) $this->option('limit');
+    $processed = $engine->processPendingActions($limit);
+    $this->info("Successfully processed {$processed} automated workflow actions.");
+})->purpose('Process and dispatch due automated nurturing actions while respecting quiet hours and suppression rules');
+
+Schedule::command('crm:process-automation-workflows')->everyMinute()->withoutOverlapping()->onOneServer();
 
 Artisan::command('crm:followups-sweep', function (FollowupMonitor $monitor) {
     $result = $monitor->sweep();

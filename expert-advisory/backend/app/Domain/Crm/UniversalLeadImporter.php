@@ -4,6 +4,7 @@ namespace App\Domain\Crm;
 
 use App\Domain\Audit\AuditLogger;
 use App\Domain\Compliance\ConsentRecorder;
+use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Models\Campaign;
 use App\Models\Employee;
 use App\Models\Lead;
@@ -525,9 +526,16 @@ Output ONLY the raw JSON array without markdown formatting.';
                 if (!$assignEmployeeId) {
                     try {
                         app(LeadAssignmentService::class)->autoAssign($lead);
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
                         Log::warning('[UniversalLeadImporter] Auto-assign fallback:', ['error' => $e->getMessage()]);
                     }
+                }
+
+                // Trigger CRM Automation Workflow (Scoring & Initial Automated Nurturing)
+                try {
+                    app(AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
+                } catch (\Throwable $e) {
+                    Log::warning('[UniversalLeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
                 }
 
                 $acceptedCount++;
@@ -549,24 +557,43 @@ Output ONLY the raw JSON array without markdown formatting.';
     /**
      * Generate downloadable CSV validation report.
      *
-     * @param array<int, array<string, mixed>> $analyzedRows
+     * @param array<int, array<string, mixed>>|LeadImportBatch $source
      * @return string CSV text
      */
-    public function generateValidationReportCsv(array $analyzedRows): string
+    public function generateValidationReportCsv(array|LeadImportBatch $source): string
     {
         $fp = fopen('php://temp', 'r+');
-        fputcsv($fp, ['Row Number', 'Full Name', 'Raw Phone', 'Normalized E164', 'Validation Status', 'Action Recommended', 'Reason / Error']);
 
-        foreach ($analyzedRows as $r) {
-            fputcsv($fp, [
-                $r['row_number'] ?? '',
-                $r['full_name'] ?? 'Unnamed Lead',
-                $r['raw_mobile'] ?? '',
-                $r['mobile_e164'] ?? '',
-                $r['validation_status'] ?? '',
-                $r['action_recommended'] ?? '',
-                $r['error_reason'] ?? 'Accepted',
-            ]);
+        if ($source instanceof LeadImportBatch) {
+            fputcsv($fp, ['Lead ID', 'Full Name', 'Mobile', 'Email', 'City', 'Status', 'Communication State', 'AI Score', 'AI Grade', 'Created At']);
+            $leads = $source->leads()->get();
+            foreach ($leads as $l) {
+                fputcsv($fp, [
+                    $l->id,
+                    $l->full_name,
+                    $l->mobile,
+                    $l->email ?? '',
+                    $l->city ?? '',
+                    $l->status,
+                    $l->communication_state,
+                    $l->ai_score,
+                    $l->ai_grade,
+                    $l->created_at?->toIso8601String(),
+                ]);
+            }
+        } else {
+            fputcsv($fp, ['Row Number', 'Full Name', 'Raw Phone', 'Normalized E164', 'Validation Status', 'Action Recommended', 'Reason / Error']);
+            foreach ($source as $r) {
+                fputcsv($fp, [
+                    $r['row_number'] ?? '',
+                    $r['full_name'] ?? 'Unnamed Lead',
+                    $r['raw_mobile'] ?? '',
+                    $r['mobile_e164'] ?? '',
+                    $r['validation_status'] ?? '',
+                    $r['action_recommended'] ?? '',
+                    $r['error_reason'] ?? 'Accepted',
+                ]);
+            }
         }
 
         rewind($fp);

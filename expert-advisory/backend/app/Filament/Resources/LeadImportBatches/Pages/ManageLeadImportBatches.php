@@ -11,6 +11,8 @@ class ManageLeadImportBatches extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            LeadImportBatchResource::getUniversalImportAction(),
+        ];
     }
 }

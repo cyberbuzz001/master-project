@@ -2,11 +2,17 @@
 
 namespace App\Filament\Resources\Leads\Pages;
 
+use App\Filament\Exports\LeadExporter;
+use App\Filament\Imports\LeadImporter;
+use App\Filament\Resources\LeadImportBatches\LeadImportBatchResource;
 use App\Filament\Resources\Leads\LeadResource;
 use App\Models\Lead;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ExportAction;
+use Filament\Actions\ImportAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListLeads extends ListRecords
@@ -15,7 +21,22 @@ class ListLeads extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('New lead')];
+        return [
+            CreateAction::make()->label('New lead')->icon(Heroicon::OutlinedUserPlus),
+            LeadImportBatchResource::getUniversalImportAction(),
+            ImportAction::make()
+                ->importer(LeadImporter::class)
+                ->label('Import CSV')
+                ->icon(Heroicon::OutlinedArrowUpTray)
+                ->color('gray')
+                ->visible(fn () => auth()->user()?->can('leads.import') ?? true),
+            ExportAction::make()
+                ->exporter(LeadExporter::class)
+                ->label('Export Leads')
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('gray')
+                ->visible(fn () => auth()->user()?->can('leads.export') ?? true),
+        ];
     }
 
     public function getTabs(): array
