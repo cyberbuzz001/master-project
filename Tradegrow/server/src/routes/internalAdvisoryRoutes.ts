@@ -31,13 +31,9 @@ import { AdvisoryWhatsAppService } from '../services/AdvisoryWhatsAppService';
 export const internalAdvisoryRouter = Router();
 
 const ACCEPTED_INTERNAL_KEYS = new Set(
-  [
-    process.env.INTERNAL_API_KEY,
-    'advisory_internal_2026_key',
-    'advisory_internal_key',
-  ].filter(Boolean) as string[]
+  [process.env.INTERNAL_API_KEY].filter(Boolean) as string[]
 );
-const META_WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET || 'expert_stocks_meta_webhook';
+const META_WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET;
 
 // ─── PUBLIC: Meta Webhook Endpoints (NO internal key guard) ──────────────────
 
@@ -51,7 +47,7 @@ internalAdvisoryRouter.get('/meta-webhook', (req: Request, res: Response) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode === 'subscribe' && token === META_WEBHOOK_SECRET) {
+  if (META_WEBHOOK_SECRET && mode === 'subscribe' && token === META_WEBHOOK_SECRET) {
     console.log('[Advisory Meta Webhook] ✅ Webhook verified by Meta.');
     return res.status(200).send(challenge);
   }

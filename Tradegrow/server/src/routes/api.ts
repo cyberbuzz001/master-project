@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
 import rateLimit from 'express-rate-limit';
@@ -1606,26 +1607,24 @@ router.post('/algo/webhook', async (req: Request, res: Response) => {
       return;
     }
 
-    // 1. Resolve user by secret
-    let user = await queryOne<any>(
-      `SELECT id, status, role FROM users 
-       WHERE id = $1 OR UPPER(client_id) = UPPER($1) OR username = $1 OR email = $1 LIMIT 1`,
-      [String(secret).trim()]
+    const webhookSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET;
+    const webhookUserId = process.env.TRADINGVIEW_WEBHOOK_USER_ID;
+    if (!webhookSecret || !webhookUserId) {
+      res.status(503).json({ success: false, error: 'TradingView webhook is not configured.' });
+      return;
+    }
+
+    const providedSecret = Buffer.from(String(secret).trim());
+    const expectedSecret = Buffer.from(webhookSecret);
+    if (providedSecret.length !== expectedSecret.length || !crypto.timingSafeEqual(providedSecret, expectedSecret)) {
+      res.status(403).json({ success: false, error: 'Invalid webhook secret.' });
+      return;
+    }
+
+    const user = await queryOne<any>(
+      `SELECT id, status, role FROM users WHERE id = $1 LIMIT 1`,
+      [webhookUserId]
     );
-
-    // If not found directly, check if secret is a valid JWT token
-    if (!user) {
-      try {
-        const decoded: any = jwt.verify(String(secret).trim(), getJwtSecret());
-        if (decoded && (decoded.userId || decoded.id)) {
-          user = await queryOne<any>(`SELECT id, status, role FROM users WHERE id = $1`, [decoded.userId || decoded.id]);
-        }
-      } catch (_) {}
-    }
-
-    if (!user) {
-      user = await queryOne<any>(`SELECT id, status, role FROM users WHERE status = 'ACTIVE' ORDER BY created_at ASC LIMIT 1`);
-    }
 
     if (!user || user.status !== 'ACTIVE') {
       res.status(403).json({ success: false, error: 'Authorized active user account not found for provided secret.' });

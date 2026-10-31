@@ -1,22 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import type { Me } from "@/lib/api-types";
-
 const BACKEND_URL = process.env.BACKEND_URL;
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("esc_session")?.value;
-
-    if (sessionCookie) {
-      try {
-        const decoded = JSON.parse(Buffer.from(sessionCookie, "base64").toString("utf-8")) as Me;
-        return NextResponse.json({
-          success: true,
-          data: decoded,
-        });
-      } catch (_) {}
-    }
-
     // Proxy to Laravel backend if configured
     if (BACKEND_URL) {
       try {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { leadsStore } from "@/lib/leads-store";
+import { requireStaffSession } from "@/lib/office-auth";
 import {
   sendWhatsAppTemplate,
   sendWhatsAppText,
@@ -12,6 +13,8 @@ import {
 } from "@/lib/whatsapp-service";
 
 export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const searchParams = request.nextUrl.searchParams;
     const leadId = searchParams.get("leadId") || "";
@@ -37,6 +40,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const { leadId, phone, text, templateName, templateParams, clientName } = body;

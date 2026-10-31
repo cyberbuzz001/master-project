@@ -1,8 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { campaignsStore } from "@/lib/campaigns-store";
 import type { CrmCampaign } from "@/lib/crm-data";
+import { requireStaffSession } from "@/lib/office-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const campaigns = campaignsStore.getCampaigns();
     const totalSpent = campaigns.reduce((acc, c) => acc + c.spend, 0);
@@ -29,7 +32,9 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const denied = await requireStaffSession(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     if (!body || !body.name) {

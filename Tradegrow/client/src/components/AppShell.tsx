@@ -253,7 +253,8 @@ export function AppShell({
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-[var(--duration-fast)] ${
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ${
                     active
                       ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/30'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)] border border-transparent'
@@ -418,8 +419,9 @@ export function AppShell({
             <Link
               key={item.path}
               to={item.path}
+              aria-current={active ? 'page' : undefined}
               onClick={() => navigator.vibrate?.(15)}
-              className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ${
                 active ? 'text-[var(--primary)] font-extrabold' : 'text-[var(--text-muted)] font-semibold'
               }`}
             >
@@ -431,7 +433,8 @@ export function AppShell({
         {isStaff && (
           <Link
             to="/admin"
-            className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors ${
+            aria-current={location.pathname.startsWith('/admin') ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--loss)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ${
               location.pathname.startsWith('/admin') ? 'text-[var(--loss)] font-extrabold' : 'text-[var(--text-muted)] font-semibold'
             }`}
           >

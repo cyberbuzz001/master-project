@@ -20,13 +20,13 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-xs gap-1.5",
+  sm: "min-h-9 px-3 text-xs gap-1.5",
   md: "h-10 px-4 text-sm gap-2",
   lg: "h-12 px-6 text-sm font-semibold gap-2.5",
 };
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer";
+  "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#43D9FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#05070B]";
 
 export function Button({
   variant = "primary",

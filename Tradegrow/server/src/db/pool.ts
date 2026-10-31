@@ -28,7 +28,7 @@ function createPool(): Pool {
     return new Pool({
       connectionString: databaseUrl,
       ...poolConfig,
-      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false
+      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED !== 'false' } : false
     });
   }
 

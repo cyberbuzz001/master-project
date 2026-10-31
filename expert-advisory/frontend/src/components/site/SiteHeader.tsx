@@ -12,12 +12,26 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [lastPath, setLastPath] = useState(pathname);
 
-  if (lastPath !== pathname) {
-    setLastPath(pathname);
+  useEffect(() => {
     setOpen(false);
-  }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -28,6 +42,7 @@ export function SiteHeader() {
 
   return (
     <header
+      aria-label="Expert Stocks site header"
       className={cx(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled || open
@@ -98,33 +113,52 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav
-          id="mobile-nav"
-          aria-label="Mobile Navigation"
-          className="border-b border-[#1C2734] bg-[#05070B] px-5 pb-6 pt-3 lg:hidden"
-        >
-          <ul className="flex flex-col space-y-1">
-            {PRIMARY_NAV.map((item) => (
-              <li key={item.label}>
-                <Link
-                  href={item.href}
-                  className="block rounded-lg px-3 py-2.5 text-base font-medium text-[#F5F7FA] hover:bg-[#111923] hover:text-[#43D9FF] transition-colors"
-                  onClick={() => setOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-5 grid grid-cols-2 gap-3 pt-4 border-t border-[#1C2734]">
-            <LinkButton href="/login" variant="secondary" size="md" className="w-full">
-              Client Login
-            </LinkButton>
-            <LinkButton href="/contact" variant="primary" size="md" className="w-full">
-              Talk to Expert
-            </LinkButton>
-          </div>
-        </nav>
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 top-[68px] z-40 bg-black/60 backdrop-blur-[2px] lg:hidden"
+            aria-label="Close navigation menu"
+            onClick={() => setOpen(false)}
+          />
+          <nav
+            id="mobile-nav"
+            aria-label="Mobile Navigation"
+            className="relative z-50 border-b border-[#1C2734] bg-[#05070B] px-5 pb-6 pt-3 shadow-[0_18px_30px_rgba(0,0,0,0.35)] lg:hidden"
+          >
+            <ul className="flex flex-col space-y-1">
+              {PRIMARY_NAV.map((item) => {
+                const isAnchor = item.href.includes("#");
+                const active = !isAnchor && (pathname === item.href || pathname.startsWith(`${item.href}/`));
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={cx(
+                        "flex min-h-11 items-center justify-between rounded-lg px-3 text-base font-medium transition-colors",
+                        active
+                          ? "bg-[#43D9FF]/10 text-[#43D9FF]"
+                          : "text-[#F5F7FA] hover:bg-[#111923] hover:text-[#43D9FF]",
+                      )}
+                      onClick={() => setOpen(false)}
+                    >
+                      <span>{item.label}</span>
+                      {active && <span className="size-1.5 rounded-full bg-[#43D9FF]" aria-hidden="true" />}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1C2734] pt-4">
+              <LinkButton href="/login" variant="secondary" size="md" className="w-full" onClick={() => setOpen(false)}>
+                Client Login
+              </LinkButton>
+              <LinkButton href="/contact" variant="primary" size="md" className="w-full" onClick={() => setOpen(false)}>
+                Talk to Expert
+              </LinkButton>
+            </div>
+          </nav>
+        </>
       )}
     </header>
   );

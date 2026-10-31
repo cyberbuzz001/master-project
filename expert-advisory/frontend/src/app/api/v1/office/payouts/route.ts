@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { campaignsStore } from "@/lib/campaigns-store";
+import { requireStaffSession } from "@/lib/office-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const referrals = campaignsStore.getReferrals();
     const history = campaignsStore.getPayoutHistory();
@@ -29,7 +32,9 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const denied = await requireStaffSession(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { referralId, utrNumber, processedBy } = body;

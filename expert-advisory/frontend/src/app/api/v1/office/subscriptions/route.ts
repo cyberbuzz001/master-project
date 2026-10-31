@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { leadsStore, StoredSubscription } from "@/lib/leads-store";
+import { requireStaffSession } from "@/lib/office-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const subscriptions = leadsStore.getSubscriptions();
     return NextResponse.json({
@@ -15,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const { customerName, planName, amount, expiryDate, customerId } = body;
@@ -55,6 +60,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const { id, updates } = body;
@@ -82,6 +89,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const searchParams = request.nextUrl.searchParams;
     let id = searchParams.get("id");

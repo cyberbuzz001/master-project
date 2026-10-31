@@ -13,15 +13,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
-const WEBHOOK_SECRET =
-  process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET || 'expert_stocks_webhook_2026';
+const WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET;
+const META_APP_SECRET = process.env.META_APP_SECRET;
 
 const TRADEGROW_SERVER_URL =
   process.env.TRADEGROW_SERVER_URL || process.env.TRADEGROW_API_URL || 'https://tradegrowx.in';
 
-const INTERNAL_KEY =
-  process.env.INTERNAL_API_KEY || 'advisory_internal_2026_key';
+const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET — Meta Webhook Verification Challenge
@@ -58,11 +58,28 @@ export async function GET(req: NextRequest) {
 // the payload to the TradeGrow server for processing.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  if (!META_APP_SECRET || !INTERNAL_KEY) {
+    return NextResponse.json({ success: false, error: 'WEBHOOK_CONFIGURATION_MISSING' }, { status: 503 });
+  }
+
   // Always acknowledge instantly — Meta retries if we don't respond within 20s
-  const body = await req.json().catch(() => null);
+  const rawBody = await req.text();
+  const signature = req.headers.get('x-hub-signature-256') || '';
+  const expected = `sha256=${crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex')}`;
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expected);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+    return NextResponse.json({ success: false, error: 'INVALID_WEBHOOK_SIGNATURE' }, { status: 403 });
+  }
+  let body: unknown;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ success: false, error: 'INVALID_JSON' }, { status: 400 });
+  }
 
   // Fire and forget — forward to TradeGrow internal handler
-  forwardToTradeGrow(body).catch((err) =>
+  forwardToTradeGrow(body, INTERNAL_KEY).catch((err) =>
     console.error('[Meta Webhook] Forward error:', err?.message)
   );
 
@@ -71,7 +88,7 @@ export async function POST(req: NextRequest) {
 
 import { leadsStore } from '@/lib/leads-store';
 
-async function forwardToTradeGrow(payload: any) {
+async function forwardToTradeGrow(payload: any, internalKey: string) {
   if (!payload) return;
 
   const object = payload?.object;
@@ -111,7 +128,7 @@ async function forwardToTradeGrow(payload: any) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-key': INTERNAL_KEY,
+        'x-internal-key': internalKey,
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),

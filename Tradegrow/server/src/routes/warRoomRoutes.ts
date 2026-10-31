@@ -343,12 +343,13 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
     if (source !== 'EXPERT_STOCKS_SITE') {
       try {
         const webhookUrl = process.env.EXPERT_STOCKS_WEBHOOK_URL || 'https://expertstocks.in/api/v1/webhooks/tradegrow-leads';
-        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET || 'tg_webhook_shared_secret_2026';
-        WebhookBridge.getInstance().deliverEvent({
-          url: webhookUrl,
-          secret: webhookSecret,
-          event: 'lead.captured',
-          payload: {
+        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET;
+        if (webhookSecret) {
+          WebhookBridge.getInstance().deliverEvent({
+            url: webhookUrl,
+            secret: webhookSecret,
+            event: 'lead.captured',
+            payload: {
             leadCode: result?.leadCode,
             fullName: fullName ? String(fullName).trim() : undefined,
             phone: cleanPhone,
@@ -368,10 +369,13 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
             referralCode,
             creatorCode,
             timestamp: new Date().toISOString()
-          }
-        }).catch((whErr: any) => {
-          console.warn('[WebhookBridge] Expert Stocks CRM delivery deferred:', whErr.message);
-        });
+            }
+          }).catch((whErr: any) => {
+            console.warn('[WebhookBridge] Expert Stocks CRM delivery deferred:', whErr.message);
+          });
+        } else {
+          console.warn('[WebhookBridge] WEBHOOK_BRIDGE_SECRET is not configured; CRM delivery skipped.');
+        }
       } catch (whErr: any) {
         console.warn('[WebhookBridge] Failed to enqueue event:', whErr.message);
       }
@@ -1017,9 +1021,9 @@ warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'tradegrow_growth_secret_2026';
+  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
-  if (mode === 'subscribe' && token === expectedToken) {
+  if (expectedToken && mode === 'subscribe' && token === expectedToken) {
     console.log('[WhatsApp Webhook] ✅ Verification challenge successful.');
     return res.status(200).send(challenge);
   }

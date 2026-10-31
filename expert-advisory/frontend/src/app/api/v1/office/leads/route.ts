@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { leadsStore, LeadStatus } from "@/lib/leads-store";
+import { requireStaffSession } from "@/lib/office-auth";
 
 export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("query") || searchParams.get("search") || "";
@@ -41,6 +44,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const { id, action, durationSec, disposition, notes, agent } = body;
@@ -110,6 +115,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const { id, status, updates, assignedAgent, assignedTo } = body;
@@ -153,6 +160,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const searchParams = request.nextUrl.searchParams;
     let id = searchParams.get("id");

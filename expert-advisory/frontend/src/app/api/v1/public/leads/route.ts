@@ -22,10 +22,12 @@ async function triggerAdvisoryWelcome(params: {
   leadId: string;
   fullName: string;
 }) {
+  const internalKey = process.env.INTERNAL_API_KEY;
+  if (!internalKey) return;
   try {
     await fetch(`${TRADEGROW_SERVER_URL}/internal/advisory/welcome`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-internal-key": process.env.INTERNAL_API_KEY || "advisory_internal_key" },
+      headers: { "Content-Type": "application/json", "x-internal-key": internalKey },
       body: JSON.stringify(params),
       signal: AbortSignal.timeout(4000),
     });

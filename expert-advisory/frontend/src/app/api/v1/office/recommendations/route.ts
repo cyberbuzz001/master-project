@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { recommendationsStore, ExtendedRecommendation } from "@/lib/recommendations-store";
+import { requireStaffSession } from "@/lib/office-auth";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+  const denied = await requireStaffSession(req);
+  if (denied) return denied;
   try {
     const url = new URL(req.url);
     const view = url.searchParams.get("view");
@@ -25,7 +28,9 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const denied = await requireStaffSession(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { action, payload } = body;

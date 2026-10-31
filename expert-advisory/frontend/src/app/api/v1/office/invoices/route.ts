@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { invoicesStore } from "@/lib/invoices-store";
+import { requireStaffSession } from "@/lib/office-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireStaffSession(request);
+  if (denied) return denied;
   try {
     const payments = invoicesStore.getPayments();
     const installments = invoicesStore.getInstallments();
@@ -35,7 +38,9 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const denied = await requireStaffSession(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { action, payload } = body;

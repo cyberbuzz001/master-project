@@ -30,12 +30,8 @@ async function sendViaHostingerMailApi(
   html: string,
   text?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const token =
-    process.env.HOSTINGER_MAIL_API_TOKEN ||
-    process.env.MAIL_API_TOKEN ||
-    "f02e3f4e58ef69e2cd4793cd20a73e55d6cab6104be28f208e602ff898ea5c3c";
-  const mailboxId =
-    process.env.HOSTINGER_MAILBOX_RESOURCE_ID || "AC41649a843a1e895456aa9bc68df9"; // info@expertstocks.in
+  const token = process.env.HOSTINGER_MAIL_API_TOKEN || process.env.MAIL_API_TOKEN;
+  const mailboxId = process.env.HOSTINGER_MAILBOX_RESOURCE_ID;
 
   if (!token || !mailboxId) {
     return { success: false, error: "Hostinger Mail API token or mailbox ID not configured." };
@@ -94,7 +90,7 @@ function getTransporter() {
     port,
     secure,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false },
+    tls: { rejectUnauthorized: true },
   });
 }
 
