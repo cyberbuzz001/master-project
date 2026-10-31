@@ -246,7 +246,7 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
   let tick: MarketTick | undefined = undefined;
 
   const isAuthoritativeTick = (t: MarketTick | undefined): boolean => {
-    return !!(t && t.ltp > 0 && (t.source === 'dhan' || (t.volume && t.volume > 1000)));
+    return !!(t && t.ltp > 0);
   };
 
   // 1. Prioritize authoritative Dhan option ticks (with underscores, e.g. NFO_NIFTY_23050_CE)

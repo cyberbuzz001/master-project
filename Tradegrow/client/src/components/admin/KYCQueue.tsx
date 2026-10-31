@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   FileText, CheckCircle2, XCircle, Download, AlertTriangle, Search,
   FileCheck, ExternalLink, Columns, Table as TableIcon, Clock, CheckSquare,
-  Square, ShieldCheck, RefreshCw, User
+  Square, ShieldCheck, RefreshCw, User, Upload, Edit3, Plus
 } from 'lucide-react';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
 import { Badge } from '../ui/Badge';
 import { CustomerHoverCard } from './CustomerHoverCard';
+import { AdminKYCModal } from './AdminKYCModal';
 
 interface KYCQueueProps {
   token: string;
@@ -24,6 +25,9 @@ export const KYCQueue: React.FC<KYCQueueProps> = ({ token, onOpenCustomer360 }) 
   const [loading, setLoading] = useState<boolean>(false);
   const [bulkSubmitting, setBulkSubmitting] = useState<boolean>(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [modalMode, setModalMode] = useState<'UPLOAD' | 'EDIT'>('UPLOAD');
+  const [modalApp, setModalApp] = useState<any | null>(null);
 
   const fetchApplications = () => {
     setLoading(true);
@@ -240,6 +244,19 @@ export const KYCQueue: React.FC<KYCQueueProps> = ({ token, onOpenCustomer360 }) 
           )}
 
           <button
+            type="button"
+            onClick={() => {
+              setModalApp(null);
+              setModalMode('UPLOAD');
+              setModalOpen(true);
+            }}
+            className="px-3 py-1.5 rounded-lg bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--text-on-accent)] font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Upload Client KYC</span>
+          </button>
+
+          <button
             onClick={fetchApplications}
             className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-muted)] font-bold hover:bg-[var(--bg-surface-elevated)] transition-colors flex items-center gap-1.5 cursor-pointer"
           >
@@ -315,6 +332,33 @@ export const KYCQueue: React.FC<KYCQueueProps> = ({ token, onOpenCustomer360 }) 
                         )}
 
                         <div className="flex items-center gap-1.5 pt-1.5 border-t border-[var(--border-color)]">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setModalApp(app);
+                              setModalMode('UPLOAD');
+                              setModalOpen(true);
+                            }}
+                            className="flex-1 py-1 rounded-lg bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-color)] hover:border-[var(--primary)] text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                            title="Upload KYC Document for Client"
+                          >
+                            <Upload className="w-2.5 h-2.5 text-[var(--primary)]" /> Upload
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setModalApp(app);
+                              setModalMode('EDIT');
+                              setModalOpen(true);
+                            }}
+                            className="flex-1 py-1 rounded-lg bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-color)] hover:border-[var(--info)] text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                            title="Edit Client KYC Application"
+                          >
+                            <Edit3 className="w-2.5 h-2.5 text-[var(--info)]" /> Edit
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 pt-1 border-t border-[var(--border-color)]/40">
                           {app.status !== 'APPROVED' && (
                             <button
                               type="button"
@@ -443,9 +487,34 @@ export const KYCQueue: React.FC<KYCQueueProps> = ({ token, onOpenCustomer360 }) 
               },
               {
                 key: 'actions', header: 'Review Actions', align: 'center', mobileHidden: true,
-                className: 'min-w-[210px] whitespace-nowrap',
+                className: 'min-w-[280px] whitespace-nowrap',
                 render: (app: any) => (
                   <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalApp(app);
+                        setModalMode('UPLOAD');
+                        setModalOpen(true);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-[var(--bg-body)] border border-[var(--border-color)] hover:border-[var(--primary)] text-[var(--text-main)] text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Upload KYC Document for Client"
+                    >
+                      <Upload className="w-3 h-3 text-[var(--primary)]" /> Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalApp(app);
+                        setModalMode('EDIT');
+                        setModalOpen(true);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-[var(--bg-body)] border border-[var(--border-color)] hover:border-[var(--info)] text-[var(--text-main)] text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Edit Client KYC Application"
+                    >
+                      <Edit3 className="w-3 h-3 text-[var(--info)]" /> Edit
+                    </button>
+
                     {app.status === 'APPROVED' ? (
                       <div className="flex items-center gap-1.5">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--gain)] bg-[var(--gain-light)] border border-[var(--gain)]/20">
@@ -501,6 +570,18 @@ export const KYCQueue: React.FC<KYCQueueProps> = ({ token, onOpenCustomer360 }) 
           />
         </div>
       )}
+
+      {/* Admin KYC Upload & Edit Modal */}
+      <AdminKYCModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        token={token}
+        mode={modalMode}
+        initialApplication={modalApp}
+        onSuccess={() => {
+          fetchApplications();
+        }}
+      />
     </div>
   );
 };

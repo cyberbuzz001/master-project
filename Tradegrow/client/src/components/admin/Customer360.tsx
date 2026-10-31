@@ -4,11 +4,12 @@ import {
   CheckCircle2, AlertTriangle, Wifi, WifiOff, Shield, CheckCircle, User, Phone, Mail,
   MapPin, Activity, Clock, ThumbsUp, ThumbsDown, RotateCcw, Briefcase, ListOrdered,
   Landmark, BookOpen, FileText, KeySquare, Zap, Sparkles, ExternalLink, Download,
-  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock, ShoppingCart
+  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock, ShoppingCart, Upload
 } from 'lucide-react';
 import { useMarketSocket, useAdminSubscribeUser, useSubscribeTokens } from '../../hooks/useMarketSocket';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
 import { normalizeToken } from '../../utils/symbology';
+import { AdminKYCModal } from './AdminKYCModal';
 
 interface Customer360Props {
   token: string;
@@ -166,6 +167,8 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
   // KYC Action State
   const [kycActionLoading, setKycActionLoading] = useState<string | null>(null);
   const [kycActionMsg, setKycActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [kycModalOpen, setKycModalOpen] = useState<boolean>(false);
+  const [kycModalMode, setKycModalMode] = useState<'UPLOAD' | 'EDIT'>('UPLOAD');
 
   // Login Activity State
   const [loginActivity, setLoginActivity] = useState<any>(null);
@@ -1125,6 +1128,32 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKycModalMode('UPLOAD');
+                    setKycModalOpen(true);
+                  }}
+                  className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--text-on-accent)] font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  title="Upload KYC Document for this client"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Document</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKycModalMode('EDIT');
+                    setKycModalOpen(true);
+                  }}
+                  className="bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-color)] hover:border-[var(--info)] font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  title="Edit KYC Information"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-[var(--info)]" />
+                  <span>Edit KYC</span>
+                </button>
+
                 <button
                   onClick={async () => {
                     setKycActionLoading('approve');
@@ -2209,6 +2238,25 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
           </div>
         </div>
       )}
+      <AdminKYCModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        token={token}
+        mode={kycModalMode}
+        initialUserId={customerId}
+        initialApplication={data?.kycRecords && data.kycRecords.length > 0 ? {
+          ...data.kycRecords[0],
+          user_id: customerId,
+          username: data.profile?.username,
+          email: data.profile?.email,
+          full_name: data.profile?.full_name,
+          client_id: data.profile?.client_id,
+          documents: data.kycDocuments || []
+        } : null}
+        onSuccess={() => {
+          fetchCustomerData();
+        }}
+      />
     </div>
   );
 };

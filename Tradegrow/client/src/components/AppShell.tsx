@@ -5,7 +5,7 @@ import {
   Search, Wallet, Plus, Sun, Moon, Bell, SlidersHorizontal, Download
 } from 'lucide-react';
 import { User, MarketTick, isStaffUser } from '../types';
-import { useMarketSocket, useSubscribeTokens } from '../hooks/useMarketSocket';
+import { useMarketSocket, useSubscribeTokens, globalTickStore } from '../hooks/useMarketSocket';
 import { IndexActionModal } from './IndexActionModal';
 import { Badge } from './ui/Badge';
 import { LivePriceCell } from './ui/LivePriceCell';
@@ -87,6 +87,7 @@ export function AppShell({
         const data = await res.json();
         if (data.success && data.tick) {
           setInitialQuotes(prev => ({ ...prev, [tok]: data.tick }));
+          globalTickStore.updateTicks(new Map([[tok, data.tick]]));
         }
       } catch (_) {}
     });

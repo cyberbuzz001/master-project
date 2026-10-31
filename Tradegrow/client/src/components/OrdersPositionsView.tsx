@@ -141,6 +141,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
   useSubscribeTokens(subscribedTokens);
 
   const getLiveLtp = (item: any): number => {
+    if (!item) return 0;
     const sym = item.symbol || '';
     const instToken = item.instrumentToken || item.instrument_token || '';
     const avgPrice = parseFloat(item.averagePrice || item.average_price || item.currentPrice || 0);
@@ -154,13 +155,20 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       const st = mOpt[2];
       const ty = mOpt[3].toUpperCase();
       const pfx = (u === 'SENSEX' || u.includes('BSE')) ? 'BFO' : 'NFO';
-      exactTick = ticks.get(`${pfx}_${u}_${st}_${ty}`) || ticks.get(`${pfx}_${u}${st}${ty}`);
-      if (exactTick && exactTick.ltp > 0 && (exactTick.source === 'dhan' || (exactTick.volume && exactTick.volume > 1000))) {
-        return exactTick.ltp;
+      const exactKeys = [
+        `${pfx}_${u}_${st}_${ty}`,
+        `${pfx}_${u}${st}${ty}`,
+        `${u}_${st}_${ty}`,
+        `${u} ${st} ${ty}`,
+        `${u}${st}${ty}`,
+      ];
+      for (const k of exactKeys) {
+        const t = ticks.get(k);
+        if (t && t.ltp > 0) return t.ltp;
       }
     }
 
-    // 2. Check candidate aliases for authoritative ticks
+    // 2. Check candidate aliases
     const candidates = [
       instToken,
       sym,
@@ -171,7 +179,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     for (const c of candidates) {
       if (!c) continue;
       const tick = ticks.get(c);
-      if (tick && tick.ltp > 0 && (tick.source === 'dhan' || (tick.volume && tick.volume > 1000))) {
+      if (tick && tick.ltp > 0) {
         return tick.ltp;
       }
     }
@@ -230,7 +238,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
   }, [token]);
 
   // Keep live option chain feed active for any underlying indices with open positions
-  useEffect(() => {
+  const openUnderlyingsKey = useMemo(() => {
     const underlyings = new Set<string>();
     positions.forEach(p => {
       if (getNetQty(p) !== 0) {
@@ -238,10 +246,14 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         if (m) underlyings.add(m[1].toUpperCase());
       }
     });
+    return Array.from(underlyings).sort().join(',');
+  }, [positions]);
 
-    if (underlyings.size === 0) return;
-
+  useEffect(() => {
+    if (!openUnderlyingsKey) return;
+    const underlyings = openUnderlyingsKey.split(',').filter(Boolean);
     const sources: EventSource[] = [];
+
     underlyings.forEach(sym => {
       try {
         const es = new EventSource(`/api/v1/market/option-chain/stream?symbol=${sym}&strikeRange=20`);
@@ -252,7 +264,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     return () => {
       sources.forEach(es => es.close());
     };
-  }, [positions]);
+  }, [openUnderlyingsKey]);
 
   const getActiveTargetOrder = (pos: any) => {
     const netQty = getNetQty(pos);

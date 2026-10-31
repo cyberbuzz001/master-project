@@ -2,6 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
 import jwt from 'jsonwebtoken';
 import { MarketDataEngine } from '../marketData/MarketDataEngine';
+import { MarketTick } from '../marketData/types';
 import { SymbologyNormalizer } from '../marketData/SymbologyNormalizer';
 import { getJwtSecret } from '../middleware/auth';
 import { adminEventBus, AdminEvent } from '../utils/adminEventBus';
@@ -164,7 +165,28 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
 
           // Forward token subscriptions to MarketDataEngine so market provider emits live ticks
           if (tokensToAdd.length > 0) {
-            MarketDataEngine.getInstance().subscribe(tokensToAdd);
+            const engine = MarketDataEngine.getInstance();
+            engine.subscribe(tokensToAdd);
+
+            // Immediately send cached snapshot for subscribed tokens so client view updates in 0ms
+            const snapshotTicks: MarketTick[] = [];
+            const seenTokens = new Set<string>();
+            tokensToAdd.forEach((t: string) => {
+              const aliases = [t, ...SymbologyNormalizer.normalizeToken(t)];
+              for (const alias of aliases) {
+                const cached = engine.getCachedTick(alias);
+                if (cached && cached.ltp > 0 && !seenTokens.has(cached.instrumentToken)) {
+                  seenTokens.add(cached.instrumentToken);
+                  snapshotTicks.push(cached);
+                  break;
+                }
+              }
+            });
+            if (snapshotTicks.length > 0 && ws.readyState === WebSocket.OPEN) {
+              try {
+                ws.send(JSON.stringify({ type: 'TICK_SNAPSHOT', data: snapshotTicks }));
+              } catch (_) {}
+            }
           }
         } else if (data.action === 'UNSUBSCRIBE' && Array.isArray(data.tokens)) {
           data.tokens.forEach((t: string) => {

@@ -518,9 +518,8 @@ export class PortfolioService {
           dbLtp: oldLtp
         });
 
-        // ONLY broadcast tick if priceSource is active ('live' or 'bs_estimate').
-        // NEVER broadcast stale_db with 0 change so we don't poison the market feed!
-        if (ltp > 0 && priceSource !== 'stale_db') {
+        // Broadcast live tick for open position so subscribers receive real-time updates
+        if (ltp > 0) {
           const tickObj: MarketTick = {
             instrumentToken: instToken,
             exchange: r.exchange,
@@ -535,7 +534,7 @@ export class PortfolioService {
             ask: Number((ltp * 1.002).toFixed(2)),
             bidQty: 100,
             askQty: 100,
-            volume: 1000,
+            volume: 10000,
             change: Number((ltp - avgPrice).toFixed(2)),
             changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
             timestamp: Date.now(),
@@ -545,9 +544,14 @@ export class PortfolioService {
           // Cache in memory and fan out to all Redis cluster nodes
           engine.setCachedTick(tickObj);
           engine.broadcastTick(tickObj);
+
+          // Also set cache for plain symbol and spaced aliases so frontend matches immediately
+          if (r.symbol && r.symbol !== instToken) {
+            engine.setCachedTick({ ...tickObj, instrumentToken: r.symbol });
+          }
         }
 
-        if (ltp > 0 && Math.abs(ltp - oldLtp) >= 0.05) {
+        if (ltp > 0 && (Math.abs(ltp - oldLtp) >= 0.01 || Math.abs(unrealizedPnl - parseFloat(r.unrealized_pnl || 0)) >= 0.01)) {
           await execute(
             'UPDATE positions SET ltp = $1, unrealized_pnl = $2, updated_at = NOW() WHERE id = $3',
             [ltp, unrealizedPnl, r.id]

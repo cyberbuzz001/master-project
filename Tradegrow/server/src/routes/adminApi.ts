@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import fs from 'fs';
 import argon2 from 'argon2';
+import { kycUpload } from '../middleware/upload';
 import { authenticateToken, checkPermission, checkRole, AuthenticatedRequest } from '../middleware/auth';
 import { SYSTEM_PERMISSION_CATEGORIES } from '../config/permissionCatalog';
 import { query, queryOne, execute, withTransaction } from '../db/schema';
@@ -1972,7 +1974,315 @@ router.post('/kyc/review', authenticateToken, checkPermission('KYC_REJECT'), asy
 
     await logAuditAction(req.user!.userId, req.user!.role, `KYC_${action}`, 'KYC_APPLICATION', applicationId, null, { action, rejectionReason, rejectionCategory }, getClientIp(req));
 
-    res.json({ success: true, message: `KYC Application ${applicationId} has been ${newStatus}.` });
+        // Sync user KYC status & bank info
+    const appRecord = await queryOne<any>('SELECT user_id, bank_account_name, bank_account_number, bank_ifsc, bank_name FROM kyc_applications WHERE id = $1', [applicationId]);
+    if (appRecord) {
+      if (action === 'APPROVE') {
+        await execute(
+          'UPDATE users SET is_kyc_completed = true, bank_account_name = COALESCE($1, bank_account_name), bank_account_number = COALESCE($2, bank_account_number), bank_ifsc = COALESCE($3, bank_ifsc), bank_name = COALESCE($4, bank_name) WHERE id = $5',
+          [appRecord.bank_account_name, appRecord.bank_account_number, appRecord.bank_ifsc, appRecord.bank_name, appRecord.user_id]
+        );
+      } else if (action === 'REJECT') {
+        await execute('UPDATE users SET is_kyc_completed = false WHERE id = $1', [appRecord.user_id]);
+      }
+    }
+res.json({ success: true, message: `KYC Application ${applicationId} has been ${newStatus}.` });
+
+// Admin Client Search for KYC modal
+router.get('/kyc/clients-search', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const q = (req.query.q as string || '').trim().toLowerCase();
+    if (!q) {
+      res.json({ success: true, clients: [] });
+      return;
+    }
+    const clients = await query<any>(
+      `SELECT u.id, u.client_id, u.username, u.email, u.full_name, u.phone_number, u.is_kyc_completed,
+              k.id AS kyc_application_id, k.status AS kyc_status, k.pan_number, k.aadhaar_number,
+              k.bank_account_name, k.bank_account_number, k.bank_ifsc, k.bank_name
+       FROM users u
+       LEFT JOIN kyc_applications k ON k.user_id = u.id
+       WHERE u.role = 'USER' AND (
+         LOWER(u.username) LIKE $1 OR
+         LOWER(u.email) LIKE $1 OR
+         LOWER(COALESCE(u.full_name, '')) LIKE $1 OR
+         LOWER(COALESCE(u.client_id, '')) LIKE $1 OR
+         COALESCE(u.phone_number, '') LIKE $1
+       )
+       ORDER BY u.created_at DESC
+       LIMIT 20`,
+      [`%${q}%`]
+    );
+    res.json({ success: true, clients });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Upload KYC Document & Create/Update Application
+router.post('/kyc/admin-upload', authenticateToken, checkPermission('KYC_REJECT'), kycUpload.single('file'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const {
+      userId,
+      applicationId,
+      documentType,
+      panNumber,
+      aadhaarNumber,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfsc,
+      bankName,
+      status
+    } = req.body;
+
+    let targetUserId = userId;
+    let targetAppId = applicationId;
+
+    if (!targetUserId && !targetAppId) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'Client userId or applicationId is required' } });
+      return;
+    }
+
+    if (!targetUserId && targetAppId) {
+      const existingApp = await queryOne<{ user_id: string }>('SELECT user_id FROM kyc_applications WHERE id = $1', [targetAppId]);
+      if (existingApp) targetUserId = existingApp.user_id;
+    }
+
+    if (!targetUserId) {
+      res.status(404).json({ success: false, error: { code: 'USER_NOT_FOUND', message: 'Target client user not found' } });
+      return;
+    }
+
+    let app = await queryOne<any>('SELECT * FROM kyc_applications WHERE user_id = $1', [targetUserId]);
+    if (!app) {
+      const newAppId = 'kyc_' + generateUUID();
+      await execute(
+        `INSERT INTO kyc_applications (
+          id, user_id, pan_number, aadhaar_number, bank_account_name,
+          bank_account_number, bank_ifsc, bank_name, status, submitted_at,
+          reviewed_at, reviewed_by, verification_method, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), $10, 'ADMIN_MANUAL', NOW(), NOW())`,
+        [
+          newAppId, targetUserId, panNumber || null, aadhaarNumber || null,
+          bankAccountName || null, bankAccountNumber || null, bankIfsc || null,
+          bankName || null, status || 'UNDER_REVIEW', req.user!.userId
+        ]
+      );
+      app = await queryOne<any>('SELECT * FROM kyc_applications WHERE id = $1', [newAppId]);
+      targetAppId = newAppId;
+    } else {
+      targetAppId = app.id;
+      const updates = [];
+      const values = [];
+      let idx = 1;
+
+      if (panNumber !== undefined && panNumber !== '') { updates.push(`pan_number = $${idx++}`); values.push(panNumber); }
+      if (aadhaarNumber !== undefined && aadhaarNumber !== '') { updates.push(`aadhaar_number = $${idx++}`); values.push(aadhaarNumber); }
+      if (bankAccountName !== undefined && bankAccountName !== '') { updates.push(`bank_account_name = $${idx++}`); values.push(bankAccountName); }
+      if (bankAccountNumber !== undefined && bankAccountNumber !== '') { updates.push(`bank_account_number = $${idx++}`); values.push(bankAccountNumber); }
+      if (bankIfsc !== undefined && bankIfsc !== '') { updates.push(`bank_ifsc = $${idx++}`); values.push(bankIfsc); }
+      if (bankName !== undefined && bankName !== '') { updates.push(`bank_name = $${idx++}`); values.push(bankName); }
+      if (status) { updates.push(`status = $${idx++}`); values.push(status); }
+
+      if (updates.length > 0) {
+        updates.push(`updated_at = NOW()`);
+        updates.push(`reviewed_at = NOW()`);
+        updates.push(`reviewed_by = $${idx++}`);
+        values.push(req.user!.userId);
+        values.push(targetAppId);
+        await execute(`UPDATE kyc_applications SET ${updates.join(', ')} WHERE id = $${idx}`, values);
+      }
+    }
+
+    let docRecord = null;
+    if (req.file) {
+      const docId = 'kdoc_' + generateUUID();
+      const docType = documentType || 'OTHER';
+      await execute(
+        `INSERT INTO kyc_documents (
+          id, kyc_application_id, document_type, file_path, original_filename, mime_type, file_size, uploaded_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [
+          docId,
+          targetAppId,
+          docType,
+          req.file.path,
+          req.file.originalname,
+          req.file.mimetype,
+          req.file.size
+        ]
+      );
+      docRecord = {
+        id: docId,
+        kycApplicationId: targetAppId,
+        documentType: docType,
+        originalFilename: req.file.originalname,
+        fileSize: req.file.size
+      };
+    }
+
+    const effectiveStatus = status || app?.status;
+    if (effectiveStatus === 'APPROVED') {
+      await execute(
+        `UPDATE users
+         SET is_kyc_completed = true,
+             bank_account_name = COALESCE($1, bank_account_name),
+             bank_account_number = COALESCE($2, bank_account_number),
+             bank_ifsc = COALESCE($3, bank_ifsc),
+             bank_name = COALESCE($4, bank_name)
+         WHERE id = $5`,
+        [bankAccountName || null, bankAccountNumber || null, bankIfsc || null, bankName || null, targetUserId]
+      );
+    } else if (effectiveStatus === 'REJECTED') {
+      await execute('UPDATE users SET is_kyc_completed = false WHERE id = $1', [targetUserId]);
+    }
+
+    await logAuditAction(
+      req.user!.userId,
+      req.user!.role,
+      'ADMIN_UPLOAD_KYC_DOCUMENT',
+      'KYC_APPLICATION',
+      targetAppId,
+      null,
+      { targetUserId, documentType, filename: req.file?.originalname, status: effectiveStatus },
+      getClientIp(req)
+    );
+
+    res.json({
+      success: true,
+      message: 'Client KYC document & details uploaded successfully.',
+      applicationId: targetAppId,
+      document: docRecord
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Edit KYC Application Details
+router.put('/kyc/applications/:id', authenticateToken, checkPermission('KYC_REJECT'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const applicationId = String(req.params.id);
+    const {
+      panNumber,
+      aadhaarNumber,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfsc,
+      bankName,
+      status,
+      rejectionReason
+    } = req.body;
+
+    const existing = await queryOne<any>('SELECT * FROM kyc_applications WHERE id = $1', [applicationId]);
+    if (!existing) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'KYC application not found' } });
+      return;
+    }
+
+    const newStatus = status || existing.status;
+
+    await execute(
+      `UPDATE kyc_applications
+       SET pan_number = COALESCE($1, pan_number),
+           aadhaar_number = COALESCE($2, aadhaar_number),
+           bank_account_name = COALESCE($3, bank_account_name),
+           bank_account_number = COALESCE($4, bank_account_number),
+           bank_ifsc = COALESCE($5, bank_ifsc),
+           bank_name = COALESCE($6, bank_name),
+           status = $7,
+           rejection_reason = $8,
+           reviewed_at = NOW(),
+           reviewed_by = $9,
+           updated_at = NOW()
+       WHERE id = $10`,
+      [
+        panNumber !== undefined ? panNumber : null,
+        aadhaarNumber !== undefined ? aadhaarNumber : null,
+        bankAccountName !== undefined ? bankAccountName : null,
+        bankAccountNumber !== undefined ? bankAccountNumber : null,
+        bankIfsc !== undefined ? bankIfsc : null,
+        bankName !== undefined ? bankName : null,
+        newStatus,
+        rejectionReason || null,
+        req.user!.userId,
+        applicationId
+      ]
+    );
+
+    if (newStatus === 'APPROVED') {
+      await execute(
+        `UPDATE users
+         SET is_kyc_completed = true,
+             bank_account_name = COALESCE($1, bank_account_name),
+             bank_account_number = COALESCE($2, bank_account_number),
+             bank_ifsc = COALESCE($3, bank_ifsc),
+             bank_name = COALESCE($4, bank_name)
+         WHERE id = $5`,
+        [
+          bankAccountName || existing.bank_account_name,
+          bankAccountNumber || existing.bank_account_number,
+          bankIfsc || existing.bank_ifsc,
+          bankName || existing.bank_name,
+          existing.user_id
+        ]
+      );
+    } else if (newStatus === 'REJECTED') {
+      await execute('UPDATE users SET is_kyc_completed = false WHERE id = $1', [existing.user_id]);
+    }
+
+    await logAuditAction(
+      req.user!.userId,
+      req.user!.role,
+      'ADMIN_EDIT_KYC_APPLICATION',
+      'KYC_APPLICATION',
+      applicationId,
+      existing,
+      { panNumber, aadhaarNumber, bankAccountName, bankAccountNumber, bankIfsc, bankName, status: newStatus },
+      getClientIp(req)
+    );
+
+    res.json({ success: true, message: `KYC Application ${applicationId} updated successfully.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Delete KYC Document
+router.delete('/kyc/documents/:id', authenticateToken, checkPermission('KYC_REJECT'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const docId = String(req.params.id);
+    const doc = await queryOne<any>('SELECT * FROM kyc_documents WHERE id = $1', [docId]);
+    if (!doc) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } });
+      return;
+    }
+
+    try {
+      if (doc.file_path && fs.existsSync(doc.file_path)) {
+        fs.unlinkSync(doc.file_path);
+      }
+    } catch (_) {}
+
+    await execute('DELETE FROM kyc_documents WHERE id = $1', [docId]);
+
+    await logAuditAction(
+      req.user!.userId,
+      req.user!.role,
+      'ADMIN_DELETE_KYC_DOCUMENT',
+      'KYC_DOCUMENT',
+      docId,
+      doc,
+      null,
+      getClientIp(req)
+    );
+
+    res.json({ success: true, message: 'KYC Document deleted successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
