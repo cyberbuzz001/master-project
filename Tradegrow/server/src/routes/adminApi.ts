@@ -3776,8 +3776,14 @@ router.post('/customers/:id/kyc/approve', authenticateToken, checkPermission('KY
           res.json({ success: true, message: 'KYC approved successfully.' });
           return;
         }
-        res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'No KYC record or application found for this customer' } });
-        return;
+        // Auto-create approved KYC application if none existed so manual admin approval always succeeds
+        const newApp = await queryOne<any>(
+          `INSERT INTO kyc_applications (id, user_id, status, verification_method, submitted_at, reviewed_at, reviewed_by, created_at, updated_at)
+           VALUES (gen_random_uuid()::text, $1, 'APPROVED', 'MANUAL', NOW(), NOW(), $2, NOW(), NOW())
+           RETURNING id`,
+          [customerId, req.user!.userId]
+        );
+        targetId = newApp?.id;
       }
     }
 
