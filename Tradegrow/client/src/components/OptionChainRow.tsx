@@ -184,85 +184,53 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
     });
   };
 
-  // Render Mobile Row View
+  // Render Mobile Row View (Matching Image 1: media_1793704866714_dcd9f00d.jpg)
   if (isMobile) {
+    const itmCallClass = isCeItm ? 'bg-[#FFFBEB] dark:bg-amber-500/10' : '';
+    const itmPutClass = isPeItm ? 'bg-[#FFFBEB] dark:bg-amber-500/10' : '';
+
     return (
       <tr
         className={`transition-colors border-b border-[var(--border-color)] text-xs font-mono tabular-nums ${
           isAtm
-            ? 'bg-amber-500/10 font-bold border-amber-500/40'
+            ? 'border-amber-500/50'
             : 'hover:bg-[var(--bg-surface-elevated)]'
         }`}
       >
         {/* Call Volume */}
-        <td className={`py-2 px-1.5 text-left text-[11px] text-[var(--text-muted)] ${isCeItm ? 'bg-[var(--call-bg-itm)]' : ''}`}>
+        <td className={`py-2.5 px-2 text-left text-[11px] text-[var(--text-muted)] font-medium ${itmCallClass}`}>
           {formatQty(row.ce.volume)}
         </td>
 
-        {/* CALL LTP Cell (Tap to reveal BUY/SELL/CHART) */}
+        {/* CALL LTP Cell - One tap opens order modal directly */}
         <td
-          onClick={() => onSelectLtp(isCeActive ? null : ceKey)}
-          className={`py-2 px-1 text-center cursor-pointer transition-all duration-150 relative min-h-[44px] min-w-[70px] ${
-            isCeItm ? 'bg-[var(--call-bg-itm)] text-[var(--call-accent)]' : 'text-[var(--text-main)]'
-          } ${isCeActive ? 'ring-2 ring-[var(--call-accent)] bg-[var(--call-bg-hover)] z-10' : 'hover:bg-[var(--call-bg-itm)]'} ${ceFlashClass}`}
+          onClick={() => {
+            navigator.vibrate?.(25);
+            onOpenOrder(row.ce.instrumentToken, row.strikePrice, 'CE', ceLtp, 'BUY');
+          }}
+          className={`py-2.5 px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmCallClass} ${ceFlashClass}`}
+          title="Tap to trade CE"
         >
-          {isCeActive ? (
-            <div className="flex items-center justify-center gap-1 animate-in fade-in zoom-in-95 duration-150">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.vibrate?.(30);
-                  onOpenOrder(row.ce.instrumentToken, row.strikePrice, 'CE', ceLtp, 'BUY');
-                }}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px]"
-              >
-                BUY
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.vibrate?.(30);
-                  onOpenOrder(row.ce.instrumentToken, row.strikePrice, 'CE', ceLtp, 'SELL');
-                }}
-                className="bg-rose-500 hover:bg-rose-400 text-white font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px]"
-              >
-                SELL
-              </button>
-              {onOpenChart && (
-                <button
-                  type="button"
-                  onClick={handleOpenCeChart}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px] flex items-center gap-1"
-                  title="Open Strike Chart"
-                >
-                  <TrendingUp size={12} />
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <span className={`font-bold text-xs ${formattedCePct.isPos ? 'text-emerald-400' : 'text-rose-400'}`}>
-                ₹{ceLtp.toFixed(2)}
-              </span>
-              <span className={`text-[10px] ${formattedCePct.isPos ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {formattedCePct.text}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center">
+            <span className={`font-black text-xs ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              ₹{ceLtp.toFixed(2)}
+            </span>
+            <span className={`text-[10px] font-semibold ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+              {formattedCePct.text}
+            </span>
+          </div>
         </td>
 
         {/* STRIKE PRICE (Center Column with PCR) */}
         <td
           onClick={handleOpenCeChart}
-          className={`py-2 px-1.5 text-center font-extrabold border-x border-[var(--border-color)] cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition-colors ${
-            isAtm ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 font-black' : 'text-[var(--text-main)] bg-[var(--bg-surface-inset)]'
+          className={`py-2.5 px-2 text-center font-extrabold border-x border-[var(--border-color)] cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition-colors ${
+            isAtm ? 'text-amber-600 dark:text-amber-400 bg-amber-500/15 font-black' : 'text-[var(--text-main)] bg-[var(--bg-surface-inset)]'
           }`}
           title="Click to view Strike Chart"
         >
-          <div className="flex flex-col items-center">
-            <span className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1">
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-xs font-black text-[var(--text-main)] flex items-center gap-1">
               {row.strikePrice}
               {isAtm && <span className="text-[9px] bg-amber-400 text-slate-950 px-1 rounded font-black">ATM</span>}
             </span>
@@ -270,62 +238,27 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
           </div>
         </td>
 
-        {/* PUT LTP Cell (Tap to reveal BUY/SELL/CHART) */}
+        {/* PUT LTP Cell - One tap opens order modal directly */}
         <td
-          onClick={() => onSelectLtp(isPeActive ? null : peKey)}
-          className={`py-2 px-1 text-center cursor-pointer transition-all duration-150 relative min-h-[44px] min-w-[70px] ${
-            isPeItm ? 'bg-[var(--put-bg-itm)] text-[var(--put-accent)]' : 'text-[var(--text-main)]'
-          } ${isPeActive ? 'ring-2 ring-[var(--put-accent)] bg-[var(--put-bg-hover)] z-10' : 'hover:bg-[var(--put-bg-itm)]'} ${peFlashClass}`}
+          onClick={() => {
+            navigator.vibrate?.(25);
+            onOpenOrder(row.pe.instrumentToken, row.strikePrice, 'PE', peLtp, 'BUY');
+          }}
+          className={`py-2.5 px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmPutClass} ${peFlashClass}`}
+          title="Tap to trade PE"
         >
-          {isPeActive ? (
-            <div className="flex items-center justify-center gap-1 animate-in fade-in zoom-in-95 duration-150">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.vibrate?.(30);
-                  onOpenOrder(row.pe.instrumentToken, row.strikePrice, 'PE', peLtp, 'BUY');
-                }}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px]"
-              >
-                BUY
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.vibrate?.(30);
-                  onOpenOrder(row.pe.instrumentToken, row.strikePrice, 'PE', peLtp, 'SELL');
-                }}
-                className="bg-rose-500 hover:bg-rose-400 text-white font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px]"
-              >
-                SELL
-              </button>
-              {onOpenChart && (
-                <button
-                  type="button"
-                  onClick={handleOpenPeChart}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] px-2 py-1.5 rounded shadow cursor-pointer active:scale-95 min-h-[40px] flex items-center gap-1"
-                  title="Open Strike Chart"
-                >
-                  <TrendingUp size={12} />
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <span className={`font-bold text-xs ${formattedPePct.isPos ? 'text-emerald-400' : 'text-rose-400'}`}>
-                ₹{peLtp.toFixed(2)}
-              </span>
-              <span className={`text-[10px] ${formattedPePct.isPos ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {formattedPePct.text}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center">
+            <span className={`font-black text-xs ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              ₹{peLtp.toFixed(2)}
+            </span>
+            <span className={`text-[10px] font-semibold ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+              {formattedPePct.text}
+            </span>
+          </div>
         </td>
 
         {/* Put Volume */}
-        <td className={`py-2 px-1.5 text-right text-[11px] text-[var(--text-muted)] ${isPeItm ? 'bg-[var(--put-bg-itm)]' : ''}`}>
+        <td className={`py-2.5 px-2 text-right text-[11px] text-[var(--text-muted)] font-medium ${itmPutClass}`}>
           {formatQty(row.pe.volume)}
         </td>
       </tr>

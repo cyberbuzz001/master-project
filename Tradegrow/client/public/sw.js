@@ -1,5 +1,5 @@
 // TradeGrow High-Performance Service Worker
-const CACHE_NAME = 'tradegrow-shell-v2';
+const CACHE_NAME = 'tradegrow-shell-v4-simplified-options-funds';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

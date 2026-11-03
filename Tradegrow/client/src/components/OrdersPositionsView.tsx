@@ -93,10 +93,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       // Calculate IST time (UTC + 5:30)
       const utc = now.getTime() + now.getTimezoneOffset() * 60000;
       const istTime = new Date(utc + 5.5 * 3600000);
-      
+
       const target = new Date(istTime);
       target.setHours(15, 20, 0, 0); // 3:20 PM IST auto square-off
-      
+
       const diff = target.getTime() - istTime.getTime();
       if (diff > 0 && istTime.getHours() >= 9) {
         const hours = Math.floor(diff / 3600000);
@@ -258,7 +258,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       try {
         const es = new EventSource(`/api/v1/market/option-chain/stream?symbol=${sym}&strikeRange=20`);
         sources.push(es);
-      } catch (_) {}
+      } catch (_) { }
     });
 
     return () => {
@@ -297,7 +297,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         await fetch(`/api/v1/orders/${existingTarget.id || existingTarget.orderId || existingTarget.order_id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       const netQty = getNetQty(pos);
@@ -637,7 +637,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
           await fetch(`/api/v1/orders/${existingTarget.id || existingTarget.orderId || existingTarget.order_id}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => {});
+          }).catch(() => { });
         }
       }
 
@@ -1037,11 +1037,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 setMobileTab('POSITIONS');
                 navigate('/portfolio/positions');
               }}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                mobileTab === 'POSITIONS'
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'POSITIONS'
                   ? 'bg-[var(--primary)] text-white shadow-xs'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
-              }`}
+                }`}
             >
               Positions {openPositions.length > 0 && `(${openPositions.length})`}
             </button>
@@ -1053,11 +1052,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 setMobileTab('ORDERS');
                 navigate('/portfolio/orders');
               }}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                mobileTab === 'ORDERS'
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'ORDERS'
                   ? 'bg-[var(--primary)] text-white shadow-xs'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
-              }`}
+                }`}
             >
               Orders {orders.filter(isTodayOrder).length > 0 && `(${orders.filter(isTodayOrder).length})`}
             </button>
@@ -1069,11 +1067,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 setMobileTab('TRADE_HISTORY');
                 navigate('/portfolio/history');
               }}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                mobileTab === 'TRADE_HISTORY'
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'TRADE_HISTORY'
                   ? 'bg-[var(--primary)] text-white shadow-xs'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
-              }`}
+                }`}
             >
               History {closedTrades.length > 0 && `(${closedTrades.length})`}
             </button>
@@ -1244,11 +1241,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {/* ── Action Notification Banner ── */}
         {actionMessage && (
           <div
-            className={`p-2.5 rounded-xl text-xs font-bold border flex items-center justify-between ${
-              actionMessage.type === 'success'
+            className={`p-2.5 rounded-xl text-xs font-bold border flex items-center justify-between ${actionMessage.type === 'success'
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30'
-            }`}
+              }`}
           >
             <span>{actionMessage.text}</span>
             <button type="button" onClick={() => setActionMessage(null)} className="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold">
@@ -1317,9 +1313,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                       </div>
                       <div className="text-right flex-shrink-0">
                         <div
-                          className={`font-mono text-[14px] font-black tabular-nums ${
-                            isGain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                          }`}
+                          className={`font-mono text-[14px] font-black tabular-nums ${isGain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                            }`}
                         >
                           {isGain ? '+' : ''}₹{uPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
@@ -1391,9 +1386,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`px-1.5 py-0.2 rounded font-black text-[9px] ${
-                            isBuy ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                          }`}
+                          className={`px-1.5 py-0.2 rounded font-black text-[9px] ${isBuy ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                            }`}
                         >
                           {order.side}
                         </span>
@@ -1401,13 +1395,12 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                       </div>
 
                       <span
-                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                          isFilled
+                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${isFilled
                             ? 'bg-emerald-500/10 text-emerald-600'
                             : isPending
-                            ? 'bg-amber-500/10 text-amber-600'
-                            : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
-                        }`}
+                              ? 'bg-amber-500/10 text-amber-600'
+                              : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
+                          }`}
                       >
                         {order.status}
                       </span>
@@ -1513,9 +1506,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
             </button>
 
             <div
-              className={`font-mono text-sm font-black tabular-nums ${
-                totalPositionPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-              }`}
+              className={`font-mono text-sm font-black tabular-nums ${totalPositionPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                }`}
             >
               {totalPositionPnl >= 0 ? '+' : ''}₹{totalPositionPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
@@ -2095,11 +2087,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                       key={multiplier}
                       type="button"
                       onClick={() => setAverageLots(multiplier)}
-                      className={`py-1.5 px-2 rounded-xl border font-bold text-xs transition-all ${
-                        averageLots === multiplier
+                      className={`py-1.5 px-2 rounded-xl border font-bold text-xs transition-all ${averageLots === multiplier
                           ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
                           : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                      }`}
+                        }`}
                     >
                       +{multiplier} {multiplier === 1 ? 'Lot' : 'Lots'}
                     </button>
@@ -2129,11 +2120,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                         key={t}
                         type="button"
                         onClick={() => setAverageOrderType(t)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all ${
-                          averageOrderType === t
+                        className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all ${averageOrderType === t
                             ? 'bg-emerald-500 text-white border-emerald-500'
                             : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)]'
-                        }`}
+                          }`}
                       >
                         {t}
                       </button>

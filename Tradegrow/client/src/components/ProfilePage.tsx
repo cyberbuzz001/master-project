@@ -4,13 +4,41 @@ import {
   User as UserIcon, ShieldCheck, Wallet as WalletIcon, Lock, CheckCircle2, AlertTriangle,
   Clock, RefreshCw, Save, Building2, UploadCloud, KeyRound, HelpCircle, Shield,
   Sun, Moon, ArrowUpRight, ArrowDownLeft, QrCode, ExternalLink, Smartphone, MessageSquare, LogOut, Copy, Check,
-  Zap, FileText, Sparkles, Volume2
+  Zap, FileText, Sparkles, Volume2, ChevronRight
 } from 'lucide-react';
 import { User, Wallet, isStaffUser } from '../types';
 import { Card, CardHeader, CardTitle, Badge, Tabs, DataTable, DataTableColumn, Button, Dialog } from './ui';
 import { PermissionsDashboard } from './admin/PermissionsDashboard';
 import { SoundSettingsView } from './SoundSettingsView';
 import { soundManager } from '../utils/soundManager';
+import { launchUpiApp, SupportedUpiApp } from '../utils/upiPayment';
+
+const GPayIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+  </svg>
+);
+
+const PhonePeIcon = () => (
+  <div className="w-5 h-5 rounded-full bg-[#5f259f] flex items-center justify-center text-white font-black text-[11px] shadow-xs">
+    पे
+  </div>
+);
+
+const PaytmIcon = () => (
+  <div className="w-5 h-5 rounded bg-[#002e6e] flex items-center justify-center text-[#00baf2] font-black text-[8px] tracking-tight shadow-xs">
+    Pay
+  </div>
+);
+
+const BhimIcon = () => (
+  <div className="w-5 h-5 rounded bg-gradient-to-r from-orange-500 to-green-600 flex items-center justify-center text-white font-black text-[8px] tracking-tight shadow-xs">
+    UPI
+  </div>
+);
 
 type ProfileTab = 'account' | 'kyc' | 'bank' | 'security' | 'funds' | 'notifications' | 'support' | 'permissions' | 'appearance';
 
@@ -65,6 +93,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [showPersonalForm, setShowPersonalForm] = useState(false);
 
   const fetchProfileDetails = async () => {
     try {
@@ -436,6 +465,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  const handleLaunchUpi = (app: SupportedUpiApp) => {
+    if (fundAmount <= 0) {
+      setFundMessage({ type: 'error', text: 'Please enter a valid deposit amount greater than ₹0' });
+      return;
+    }
+    navigator.vibrate?.(25);
+    launchUpiApp(app, {
+      upiId: paymentConfig.upiId || 'expertstokks@axl',
+      merchantName: paymentConfig.merchantName || 'Trade Grow Brokerage',
+      amount: fundAmount,
+      note: 'TradeGrow Margin Deposit'
+    });
+  };
+
   const handleSubmitFundRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setFundMessage(null);
@@ -594,47 +637,220 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         items={TAB_META.filter((t) => !t.staffOnly || isStaff).map((t) => ({ value: t.key, label: t.label, icon: t.icon }))}
       />
 
-      {/* ACCOUNT TAB */}
+      {/* ACCOUNT TAB (Matching Image 7: media_1793704911890_2bfa5340.jpg) */}
       {activeTab === 'account' && (
-        <Card className="space-y-5">
-          <CardHeader className="pb-4 border-b border-[var(--border-color)] mb-0">
-            <div>
-              <CardTitle>Personal & Account Information</CardTitle>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Keep your contact details updated for official trading communications.</p>
+        <div className="space-y-4">
+          {/* TRADING BALANCE HERO CARD */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-sm space-y-4">
+            <div className="flex items-center justify-between cursor-pointer" onClick={() => navigate('/profile/funds')}>
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
+                  <span>Trading Balance</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-[var(--text-main)] num-font mt-1">
+                  ₹{(wallet?.cashBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                </div>
+              </div>
             </div>
-          </CardHeader>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className={labelClass}>Client / Account ID</label><input type="text" disabled value={user.id} className={`${inputClass} opacity-60 cursor-not-allowed font-mono`} /></div>
-            <div><label className={labelClass}>Username</label><input type="text" disabled value={user.username} className={`${inputClass} opacity-60 cursor-not-allowed font-mono`} /></div>
+            <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] bg-[var(--bg-surface-inset)] px-2.5 py-1.5 rounded-lg border border-[var(--border-color)]/60">
+              <Clock className="w-3 h-3 text-[var(--text-muted)] flex-shrink-0" />
+              <span>Last updated at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })} today</span>
+            </div>
+
+            {/* WITHDRAW & ADD FUNDS BUTTONS */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setRequestType('WITHDRAWAL');
+                  navigate('/profile/funds');
+                }}
+                className="py-3 px-4 rounded-xl border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-black text-xs sm:text-sm tracking-wider uppercase hover:bg-blue-50 dark:hover:bg-blue-950/20 active:scale-[0.98] transition-all cursor-pointer text-center"
+              >
+                Withdraw
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRequestType('DEPOSIT');
+                  navigate('/profile/funds');
+                }}
+                className="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md active:scale-[0.98] transition-all cursor-pointer text-center"
+              >
+                Add Funds
+              </button>
+            </div>
           </div>
 
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className={labelClass}>Full Legal Name</label><input type="text" required placeholder="e.g. Nikhil Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} /></div>
-              <div><label className={labelClass}>Phone Number</label><input type="tel" placeholder="e.g. +91 9876543210" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className={inputClass} /></div>
-              <div><label className={labelClass}>City / District</label><input type="text" placeholder="e.g. Mumbai, Maharashtra" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} /></div>
-              <div><label className={labelClass}>Date of Birth</label><input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} /></div>
-              <div className="md:col-span-2"><label className={labelClass}>Complete Address</label><textarea rows={3} placeholder="Street address, Flat/Building no., Landmark, Pincode" value={address} onChange={(e) => setAddress(e.target.value)} className={inputClass} /></div>
+          {/* TWO TILES: PLEDGE HOLDINGS & PAY LATER MTF */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              onClick={() => navigate('/portfolio/holdings')}
+              className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-emerald-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs">
+                    ₹
+                  </div>
+                  <span className="font-bold text-xs text-[var(--text-main)] uppercase tracking-wide">Pledge Holdings</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] leading-snug">
+                  Pledge stocks or mutual funds you hold to increase trading balance
+                </p>
+              </div>
             </div>
-            <InfoMessage msg={profileMsg} />
-            <div className="flex justify-end">
-              <Button type="submit" disabled={savingProfile} leftIcon={savingProfile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}>Save Profile Changes</Button>
-            </div>
-          </form>
 
-          {/* Sign out lives here now that the avatar in AppShell navigates
-              straight to this page instead of opening a dropdown that used to
-              hold it. Kept visually separated from the profile form above and
-              styled as destructive, per the destructive-nav-separation rule —
-              it should never sit adjacent to routine "save my details" actions. */}
-          <div className="pt-4 border-t border-[var(--border-color)]">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div
+              onClick={() => navigate('/terminal')}
+              className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-indigo-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xs">
+                    %
+                  </div>
+                  <span className="font-bold text-xs text-[var(--text-main)] uppercase tracking-wide">Pay Later (MTF)</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] leading-snug">
+                  View and analyse your MTF margin trading funding stocks
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CLIENT PROFILE ROW */}
+          <div
+            onClick={() => setShowPersonalForm(!showPersonalForm)}
+            className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition shadow-xs"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-xs">
+                {(fullName || user.username || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-[var(--text-main)]">{fullName || user.username}</h4>
+                <span className="text-xs text-[var(--text-muted)] font-mono">Client ID: TG-{user.id.slice(0, 8).toUpperCase()}</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+
+          {/* REFER & EARN BANNER */}
+          <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-[var(--text-main)]">Refer &amp; Earn ₹1,500</h4>
+                <p className="text-[11px] text-[var(--text-muted)]">Get ₹500 for each referral who activates demat</p>
+              </div>
+            </div>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`Join TradeGrow for zero brokerage stock and options trading! Register here: https://tradegrowx.in/register?ref=${user.id}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-sm cursor-pointer transition flex-shrink-0"
+              title="Share on WhatsApp"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </a>
+          </div>
+
+          {/* REPORTS & STATEMENTS */}
+          <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs">
+            <div>
+              <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-wider">Reports and Statements</h4>
+              <p className="text-[11px] text-[var(--text-muted)]">All your investments and trading in one place</p>
+            </div>
+            <div className="divide-y divide-[var(--border-color)]">
+              <button
+                type="button"
+                onClick={() => navigate('/profile/funds')}
+                className="w-full py-2.5 flex items-center justify-between text-left hover:text-[var(--primary)] transition cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <FileText className="w-4 h-4 text-[var(--text-muted)]" />
+                  <span className="text-xs font-bold text-[var(--text-main)]">Statement (Ledger &amp; P&amp;L)</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/portfolio/journal')}
+                className="w-full py-2.5 flex items-center justify-between text-left hover:text-[var(--primary)] transition cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-[var(--text-muted)]" />
+                  <span className="text-xs font-bold text-[var(--text-main)]">Trader's Diary &amp; Journal</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+              </button>
+            </div>
+          </div>
+
+          {/* EDIT PERSONAL PROFILE CARD */}
+          <Card className="space-y-4">
+            <CardHeader className="pb-3 border-b border-[var(--border-color)] mb-0 flex items-center justify-between">
+              <div>
+                <CardTitle>Personal Details &amp; Contact Info</CardTitle>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Official contact details for trading communications.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPersonalForm(!showPersonalForm)}
+                className="text-xs font-bold text-[var(--primary)] hover:underline cursor-pointer"
+              >
+                {showPersonalForm ? 'Collapse' : 'Edit Details'}
+              </button>
+            </CardHeader>
+
+            {showPersonalForm ? (
+              <form onSubmit={handleSaveProfile} className="space-y-4 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className={labelClass}>Client / Account ID</label><input type="text" disabled value={user.id} className={`${inputClass} opacity-60 cursor-not-allowed font-mono`} /></div>
+                  <div><label className={labelClass}>Username</label><input type="text" disabled value={user.username} className={`${inputClass} opacity-60 cursor-not-allowed font-mono`} /></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><label className={labelClass}>Full Legal Name</label><input type="text" required placeholder="e.g. Nikhil Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>Phone Number</label><input type="tel" placeholder="e.g. +91 9876543210" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>City / District</label><input type="text" placeholder="e.g. Mumbai, Maharashtra" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>Date of Birth</label><input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} /></div>
+                  <div className="md:col-span-2"><label className={labelClass}>Complete Address</label><textarea rows={3} placeholder="Street address, Flat/Building no., Landmark, Pincode" value={address} onChange={(e) => setAddress(e.target.value)} className={inputClass} /></div>
+                </div>
+                <InfoMessage msg={profileMsg} />
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={savingProfile} leftIcon={savingProfile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}>Save Profile Changes</Button>
+                </div>
+              </form>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Legal Name</span>
+                  <span className="font-semibold text-[var(--text-main)]">{fullName || 'Not provided'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Phone</span>
+                  <span className="font-semibold text-[var(--text-main)] font-mono">{phoneNumber || 'Not provided'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">City</span>
+                  <span className="font-semibold text-[var(--text-main)]">{city || 'Not provided'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Sign out */}
+            <div className="pt-3 border-t border-[var(--border-color)] flex items-center justify-between gap-3">
               <div>
                 <h4 className="text-xs font-bold text-[var(--text-main)]">Sign out</h4>
-                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                  Ends this session on this device. Your positions, orders and funds are unaffected.
-                </p>
+                <p className="text-[11px] text-[var(--text-muted)]">Ends session on this device safely.</p>
               </div>
               <Button
                 variant="destructive"
@@ -645,8 +861,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                 Sign out
               </Button>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       {/* KYC TAB */}
@@ -989,7 +1205,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         </Card>
       )}
 
-      {/* FUNDS TAB */}
+      {/* FUNDS TAB (Streamlined Simple 1-Tap UPI Deposit & Withdrawal) */}
       {activeTab === 'funds' && (() => {
         const totalCapital = (wallet?.cashBalance ?? 0) + (wallet?.usedMargin ?? 0);
         const usedMargin = wallet?.usedMargin ?? 0;
@@ -997,8 +1213,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         const availableWithdraw = Math.max(0, availableTrade);
         const marginUtilPct = totalCapital > 0 ? (usedMargin / totalCapital) * 100 : 0;
 
+        const handleCopyUpi = () => {
+          navigator.clipboard?.writeText(paymentConfig.upiId || 'expertstokks@axl');
+          setCopiedUpi(true);
+          setTimeout(() => setCopiedUpi(false), 2000);
+        };
+
         return (
           <div className="space-y-4">
+            {/* HERO BALANCE & MARGIN CARD */}
             <Card className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
@@ -1049,294 +1272,321 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                     style={{ width: `${Math.min(marginUtilPct, 100)}%` }}
                   />
                 </div>
-                {marginUtilPct > 85 && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--loss)] font-bold mt-1">
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span>Warning: Margin utilization is above 85%. Deposit funds to protect open positions from auto risk liquidation.</span>
-                  </div>
-                )}
               </div>
             </Card>
 
-            {/* ZERO BROKERAGE & PLATFORM CHARGES SAVED CARD */}
+            {/* ZERO BROKERAGE SAVINGS */}
             <Card className="p-4 sm:p-5 relative overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-[var(--bg-surface)] via-emerald-950/10 to-[var(--bg-surface)]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]/60">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-black text-[var(--text-main)]">Zero Brokerage &amp; Platform Savings</h3>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        100% Free
-                      </span>
-                    </div>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                      Estimated brokerage &amp; statutory taxes you kept in your pocket compared to standard retail brokers (₹20/order + STT + turnover taxes).
-                    </p>
+                    <h3 className="text-sm font-black text-[var(--text-main)]">Zero Brokerage Savings</h3>
+                    <p className="text-xs text-[var(--text-muted)]">Lifetime saved: ₹{(savings?.totalSaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} vs standard brokers</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/portfolio/journal')}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors whitespace-nowrap self-start sm:self-auto cursor-pointer"
-                >
-                  View in Journal <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 font-mono">
-                {/* Total Money Saved */}
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1 font-sans">
-                    Total Money Saved
-                  </span>
-                  <span className="text-lg sm:text-xl font-black text-emerald-400">
-                    ₹{(savings?.totalSaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="text-[10px] text-emerald-400/70 block mt-1 font-sans">
-                    ₹0 vs traditional broker costs
-                  </span>
-                </div>
-
-                {/* Brokerage Saved */}
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1 font-sans">
-                    Brokerage Saved
-                  </span>
-                  <span className="text-base sm:text-lg font-black text-[var(--text-main)]">
-                    ₹{(savings?.brokerageSaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-muted)] block mt-1 font-sans">
-                    Flat ₹20/order saved
-                  </span>
-                </div>
-
-                {/* Taxes & Charges Saved */}
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1 font-sans">
-                    Taxes &amp; Fees Saved
-                  </span>
-                  <span className="text-base sm:text-lg font-black text-[var(--text-main)]">
-                    ₹{(savings?.statutorySaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-muted)] block mt-1 font-sans">
-                    STT, GST &amp; Exchange charges
-                  </span>
-                </div>
-
-                {/* TradeGrow Platform Fee */}
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1 font-sans">
-                    TradeGrow Cost
-                  </span>
-                  <span className="text-base sm:text-lg font-black text-emerald-400">
-                    ₹0.00
-                  </span>
-                  <span className="text-[10px] text-emerald-400/80 block mt-1 font-sans font-bold">
-                    Zero Brokerage Always
-                  </span>
-                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  100% Free
+                </span>
               </div>
             </Card>
 
-            <Card className="space-y-4">
-              <CardHeader className="mb-0">
-                <h4 className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">Fund Deposit & Withdrawal Request</h4>
-                <Badge variant="info">Requires Admin Approval</Badge>
-              </CardHeader>
-            <form onSubmit={handleSubmitFundRequest} className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setRequestType('DEPOSIT')} className={`py-2 rounded-xl font-black text-xs transition border cursor-pointer ${requestType === 'DEPOSIT' ? 'bg-[var(--gain)] border-[var(--gain)] text-white' : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)]'}`}>
-                  <ArrowDownLeft className="w-3.5 h-3.5 inline mr-1" /> Request Deposit
+            {/* STREAMLINED DEPOSIT & WITHDRAWAL CARD */}
+            <Card className="space-y-5">
+              {/* TWO LARGE TABS: ADD FUNDS & WITHDRAW */}
+              <div className="grid grid-cols-2 gap-2 bg-[var(--bg-surface-inset)] p-1 rounded-xl border border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequestType('DEPOSIT');
+                    setFundMessage(null);
+                  }}
+                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                    requestType === 'DEPOSIT'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <ArrowDownLeft className="w-4 h-4" /> Add Funds
                 </button>
-                <button type="button" onClick={() => setRequestType('WITHDRAWAL')} className={`py-2 rounded-xl font-black text-xs transition border cursor-pointer ${requestType === 'WITHDRAWAL' ? 'bg-[var(--loss)] border-[var(--loss)] text-white' : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)]'}`}>
-                  <ArrowUpRight className="w-3.5 h-3.5 inline mr-1" /> Request Withdrawal
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequestType('WITHDRAWAL');
+                    setFundMessage(null);
+                  }}
+                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                    requestType === 'WITHDRAWAL'
+                      ? 'bg-rose-600 text-white shadow-sm'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <ArrowUpRight className="w-4 h-4" /> Withdraw
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>Amount (₹)</label>
-                  <input type="number" min="1" step="any" value={fundAmountInput} onChange={(e) => setFundAmountInput(e.target.value)} className={`${inputClass} font-mono font-bold`} />
-                </div>
-                <div>
-                  <label className={labelClass}>Payment Method</label>
-                  <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={inputClass}>
-                    <option value="UPI">UPI Transfer</option>
-                    <option value="IMPS_NEFT">IMPS / NEFT</option>
-                    <option value="BANK_TRANSFER">Bank Wire Transfer</option>
-                    <option value="WALLET">Digital Wallet</option>
-                  </select>
-                </div>
-              </div>
+              {/* --- DEPOSIT SECTION (STREAMLINED 1-TAP UPI) --- */}
+              {requestType === 'DEPOSIT' && (
+                <form onSubmit={handleSubmitFundRequest} className="space-y-4">
+                  {/* STEP 1: AMOUNT INPUT */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">
+                        Step 1: Enter Deposit Amount
+                      </label>
+                      <span className="text-[11px] text-[var(--text-muted)]">No limit</span>
+                    </div>
 
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Presets:</span>
-                {[500, 1000, 5000, 10000, 25000, 50000].map((preset) => (
-                  <button key={preset} type="button" onClick={() => setFundAmountInput(preset.toString())}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition border cursor-pointer ${fundAmount === preset ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)]'}`}>
-                    ₹{preset >= 1000 ? `${preset / 1000}k` : preset}
-                  </button>
-                ))}
-                {requestType === 'WITHDRAWAL' && (
-                  <button type="button" onClick={() => setFundAmountInput(Math.floor(availableBalance).toString())} className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold border border-[var(--border-color)] text-[var(--gain)] bg-[var(--bg-surface-inset)] cursor-pointer">Max</button>
-                )}
-              </div>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[var(--text-muted)]">₹</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={fundAmountInput}
+                        onChange={(e) => setFundAmountInput(e.target.value)}
+                        placeholder="50000"
+                        className="w-full pl-9 pr-4 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-blue-500 text-xl font-mono font-black text-[var(--text-main)] outline-none transition"
+                      />
+                    </div>
 
-              {requestType === 'DEPOSIT' && paymentMethod === 'UPI' && (() => {
-                const handleCopyUpi = () => {
-                  navigator.clipboard?.writeText(paymentConfig.upiId);
-                  setCopiedUpi(true);
-                  setTimeout(() => setCopiedUpi(false), 2000);
-                };
+                    {/* Quick Preset Pills */}
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      {[1000, 5000, 10000, 25000, 50000, 100000].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            setFundAmountInput(preset.toString());
+                            navigator.vibrate?.(10);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border cursor-pointer ${
+                            fundAmount === preset
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                              : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                          }`}
+                        >
+                          +₹{preset >= 100000 ? `${preset / 100000}L` : preset >= 1000 ? `${preset / 1000}k` : preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                return (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-4 shadow-sm">
-                    {/* Header Banner */}
-                    <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                  {/* STEP 2: 1-TAP INSTANT UPI APP BUTTONS */}
+                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-xl bg-[var(--gain)]/10 text-[var(--gain)]">
-                          <QrCode className="w-4 h-4" />
+                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                          <Zap className="w-3.5 h-3.5" />
                         </div>
-                        <div>
-                          <span className="text-xs font-black text-[var(--text-main)] block uppercase tracking-wider">
-                            UPI Instant Deposit
-                          </span>
-                          <span className="text-[10px] text-[var(--text-muted)] block">
-                            Scan QR, copy UPI ID, or use Quick Pay links
-                          </span>
-                        </div>
+                        <span className="text-xs font-black text-[var(--text-main)] uppercase tracking-wide">
+                          Step 2: 1-Tap Instant UPI App Pay
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[var(--gain)] bg-[var(--gain-light)] px-2.5 py-0.5 rounded-full border border-[var(--gain)]/30">
+                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         Zero Surcharge
                       </span>
                     </div>
 
-                    {/* QR Code & Payee Details Section (Responsive: Stack on mobile, side-by-side on desktop) */}
-                    <div className="flex flex-col md:flex-row items-center gap-5 bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-color)]">
-                      {/* Static QR Code Image */}
-                      <div className="w-36 h-36 bg-white p-2 rounded-2xl border border-[var(--border-color)] shrink-0 flex items-center justify-center shadow-md">
-                        <img
-                          src={paymentConfig.qrImageUrl || '/upi-qr.png'}
-                          alt="Merchant UPI Deposit QR"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/upi-qr.png';
-                          }}
-                        />
-                      </div>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Tap your UPI app below to pay ₹{fundAmount.toLocaleString('en-IN')} instantly on your phone:
+                    </p>
 
-                      {/* Payee Info & Copy UPI ID */}
-                      <div className="flex-1 w-full space-y-3 text-center md:text-left">
-                        <div>
-                          <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-0.5">
-                            Merchant Payee Name
-                          </span>
-                          <span className="text-sm font-extrabold text-[var(--text-main)] block">
-                            {paymentConfig.merchantName}
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleLaunchUpi('gpay')}
+                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-blue-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
+                      >
+                        <GPayIcon />
+                        <span className="text-xs font-bold text-[var(--text-main)]">Google Pay</span>
+                      </button>
 
-                        <div>
-                          <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
-                            Merchant UPI ID (VPA)
-                          </span>
-                          <div className="inline-flex items-center gap-2 bg-[var(--bg-body)] px-3 py-1.5 rounded-xl border border-[var(--border-color)] shadow-xs">
-                            <span className="text-xs font-mono font-extrabold text-[var(--primary)] select-all">
-                              {paymentConfig.upiId}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={handleCopyUpi}
-                              className="p-1 rounded-lg hover:bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
-                              title="Copy UPI ID"
-                            >
-                              {copiedUpi ? (
-                                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500">
-                                  <Check className="w-3.5 h-3.5" /> Copied
-                                </span>
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                      <button
+                        type="button"
+                        onClick={() => handleLaunchUpi('phonepe')}
+                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-purple-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
+                      >
+                        <PhonePeIcon />
+                        <span className="text-xs font-bold text-[var(--text-main)]">PhonePe</span>
+                      </button>
 
-                        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-                          Open Google Pay, PhonePe, Paytm, BHIM, or any UPI app to scan this QR or transfer funds to the merchant UPI ID.
-                        </p>
-                      </div>
-                    </div>
+                      <button
+                        type="button"
+                        onClick={() => handleLaunchUpi('paytm')}
+                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-sky-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
+                      >
+                        <PaytmIcon />
+                        <span className="text-xs font-bold text-[var(--text-main)]">Paytm</span>
+                      </button>
 
-                    {/* Quick Pay Direct Links Section (Responsive: Stack on mobile, row on desktop) */}
-                    {paymentConfig.quickPayLinks && paymentConfig.quickPayLinks.length > 0 && (
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider block">
-                            ⚡ Quick Pay Direct Hosted Links:
-                          </span>
-                          <span className="text-[9px] text-[var(--text-muted)]">Instant Gateway Checkout</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                          {paymentConfig.quickPayLinks.map((item, idx) => (
-                            <a
-                              key={idx}
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-[var(--gain)]/50 flex items-center justify-between md:flex-col md:items-center md:justify-center gap-1.5 transition-all shadow-xs group cursor-pointer"
-                            >
-                              <div className="text-left md:text-center">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block">
-                                  Fixed Deposit
-                                </span>
-                                <span className="text-sm font-mono font-black text-[var(--gain)] block">
-                                  ₹{item.amount.toLocaleString('en-IN')}
-                                </span>
-                              </div>
-                              <span className="text-[10px] font-bold text-[var(--text-on-accent)] bg-[var(--primary)] group-hover:bg-[var(--primary-hover)] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shadow-2xs">
-                                <span>Pay Now</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </span>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Step Guidance */}
-                    <div className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[11px] text-[var(--text-muted)] space-y-1">
-                      <div className="font-bold text-[var(--text-main)] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[var(--gain)]" />
-                        <span>How to complete your deposit:</span>
-                      </div>
-                      <ol className="list-decimal list-inside space-y-0.5 text-[10px] text-[var(--text-muted)]">
-                        <li>Scan the QR code, transfer to the UPI ID, or tap a Quick Pay amount link above.</li>
-                        <li>Copy the 12-digit UTR / Transaction Reference Number from your payment receipt.</li>
-                        <li>Paste the UTR number in the Reference / Note field below and tap Submit.</li>
-                      </ol>
+                      <button
+                        type="button"
+                        onClick={() => handleLaunchUpi('bhim')}
+                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-orange-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
+                      >
+                        <BhimIcon />
+                        <span className="text-xs font-bold text-[var(--text-main)]">BHIM / Any UPI</span>
+                      </button>
                     </div>
                   </div>
-                );
-              })()}
 
-              <div><label className={labelClass}>Reference / Note (optional)</label><input type="text" value={referenceNote} onChange={(e) => setReferenceNote(e.target.value)} placeholder="e.g. UTR number / remarks" className={inputClass} /></div>
-              <InfoMessage msg={fundMessage} />
-              <Button type="submit" disabled={submittingFundReq || fundAmount <= 0} variant={requestType === 'DEPOSIT' ? 'primary' : 'destructive'} className="w-full justify-center">
-                {submittingFundReq ? 'Processing...' : `Submit ${requestType === 'DEPOSIT' ? 'Deposit' : 'Withdrawal'} Request for Admin Approval`}
-              </Button>
-            </form>
-          </Card>
+                  {/* STEP 3: SCAN QR OR COPY UPI ID */}
+                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] flex flex-col sm:flex-row items-center gap-4">
+                    <div className="w-28 h-28 bg-white p-2 rounded-xl border border-[var(--border-color)] shrink-0 flex items-center justify-center shadow-xs">
+                      <img
+                        src={paymentConfig.qrImageUrl || '/upi-qr.png'}
+                        alt="Merchant UPI Deposit QR"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/upi-qr.png';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 w-full text-center sm:text-left space-y-2">
+                      <div>
+                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Merchant Payee</span>
+                        <span className="text-xs font-black text-[var(--text-main)]">{paymentConfig.merchantName}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1">Merchant UPI ID (VPA)</span>
+                        <div className="inline-flex items-center gap-2 bg-[var(--bg-surface)] px-3 py-1.5 rounded-xl border border-[var(--border-color)]">
+                          <span className="text-xs font-mono font-black text-blue-500 select-all">{paymentConfig.upiId}</span>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi}
+                            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+                            title="Copy UPI ID"
+                          >
+                            {copiedUpi ? (
+                              <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-0.5">
+                                <Check className="w-3.5 h-3.5" /> Copied
+                              </span>
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-[var(--text-muted)]">
+                        Scan from a second device or copy the UPI ID into your banking app.
+                      </p>
+                    </div>
+                  </div>
 
-          <Card padding="none" className="overflow-hidden">
-            <div className="p-3">
-              <div className="px-1 pb-2 text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">Fund Request History</div>
-              <DataTable columns={fundColumns} rows={fundRequests} rowKey={(r) => r.id} emptyMessage="No fund requests recorded yet." />
-            </div>
-          </Card>
-        </div>
+                  {/* STEP 4: CONFIRM DEPOSIT WITH 12-DIGIT UTR */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">
+                        Step 3: Enter 12-Digit UTR to Complete
+                      </label>
+                      <span className="text-[10px] text-[var(--text-muted)]">From payment receipt</span>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={referenceNote}
+                      onChange={(e) => setReferenceNote(e.target.value)}
+                      placeholder="e.g. 431289102834 (12-digit UTR)"
+                      className="w-full px-4 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-blue-500 text-sm font-mono font-bold text-[var(--text-main)] outline-none transition"
+                    />
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      After completing payment in Google Pay / PhonePe / Paytm, copy the 12-digit UTR reference number and submit.
+                    </p>
+                  </div>
+
+                  <InfoMessage msg={fundMessage} />
+
+                  <Button
+                    type="submit"
+                    disabled={submittingFundReq || fundAmount <= 0}
+                    variant="primary"
+                    className="w-full py-3.5 justify-center text-sm font-black shadow-md cursor-pointer"
+                  >
+                    {submittingFundReq ? 'Submitting...' : `Submit Deposit Request for ₹${fundAmount.toLocaleString('en-IN')}`}
+                  </Button>
+                </form>
+              )}
+
+              {/* --- WITHDRAWAL SECTION --- */}
+              {requestType === 'WITHDRAWAL' && (
+                <form onSubmit={handleSubmitFundRequest} className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">Withdrawal Amount</label>
+                      <span className="text-[11px] text-[var(--text-muted)]">Max withdrawable: ₹{availableWithdraw.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-bold text-[var(--text-muted)]">₹</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={availableWithdraw}
+                        step="any"
+                        value={fundAmountInput}
+                        onChange={(e) => setFundAmountInput(e.target.value)}
+                        placeholder="Enter amount"
+                        className="w-full pl-8 pr-16 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-rose-500 text-lg font-mono font-black text-[var(--text-main)] outline-none transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFundAmountInput(Math.floor(availableWithdraw).toString())}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg cursor-pointer"
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bank info summary */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Building2 className="w-4 h-4 text-indigo-500" />
+                      <div>
+                        <span className="text-xs font-bold text-[var(--text-main)] block">{bankName || 'Registered Settlement Bank'}</span>
+                        <span className="text-[11px] text-[var(--text-muted)] font-mono">{bankAccountNumber ? `A/C: ••••${bankAccountNumber.slice(-4)}` : 'Bank linked via KYC'}</span>
+                      </div>
+                    </div>
+                    <Badge variant="gain">Verified</Badge>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wide block mb-1">
+                      Remarks / Reference Note (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={referenceNote}
+                      onChange={(e) => setReferenceNote(e.target.value)}
+                      placeholder="e.g. Bank payout"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] text-xs text-[var(--text-main)] outline-none"
+                    />
+                  </div>
+
+                  <InfoMessage msg={fundMessage} />
+
+                  <Button
+                    type="submit"
+                    disabled={submittingFundReq || fundAmount <= 0 || fundAmount > availableWithdraw}
+                    variant="destructive"
+                    className="w-full py-3.5 justify-center text-sm font-black shadow-md cursor-pointer"
+                  >
+                    {submittingFundReq ? 'Submitting...' : `Request Withdrawal of ₹${fundAmount.toLocaleString('en-IN')}`}
+                  </Button>
+                </form>
+              )}
+            </Card>
+
+            {/* FUND REQUEST HISTORY TABLE */}
+            <Card padding="none" className="overflow-hidden">
+              <div className="p-3">
+                <div className="px-1 pb-2 text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">Fund Request History</div>
+                <DataTable columns={fundColumns} rows={fundRequests} rowKey={(r) => r.id} emptyMessage="No fund requests recorded yet." />
+              </div>
+            </Card>
+          </div>
         );
       })()}
 
