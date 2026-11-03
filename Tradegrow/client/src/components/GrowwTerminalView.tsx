@@ -106,12 +106,12 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
   const foList: InstrumentItem[] = [
     { symbol: 'NIFTY 24500 CE', token: 'NFO_NIFTY_24500_CE', name: 'Nifty Call Option', exchange: 'NSE', lotSize: 65, fallbackPrice: 142.50, fallbackPct: 8.5 },
     { symbol: 'NIFTY 24500 PE', token: 'NFO_NIFTY_24500_PE', name: 'Nifty Put Option', exchange: 'NSE', lotSize: 65, fallbackPrice: 88.20, fallbackPct: -6.4 },
-    { symbol: 'NIFTY 24600 CE', token: 'NFO_NIFTY_24600_CE', name: 'Nifty Call Option', exchange: 'NSE', lotSize: 25, fallbackPrice: 95.10, fallbackPct: 11.2 },
-    { symbol: 'NIFTY 24400 PE', token: 'NFO_NIFTY_24400_PE', name: 'Nifty Put Option', exchange: 'NSE', lotSize: 25, fallbackPrice: 62.40, fallbackPct: -12.1 },
-    { symbol: 'BANKNIFTY 52000 CE', token: 'NFO_BANKNIFTY_52000_CE', name: 'BankNifty Call', exchange: 'NSE', lotSize: 15, fallbackPrice: 320.10, fallbackPct: 12.1 },
-    { symbol: 'BANKNIFTY 51500 PE', token: 'NFO_BANKNIFTY_51500_PE', name: 'BankNifty Put', exchange: 'NSE', lotSize: 15, fallbackPrice: 210.80, fallbackPct: -9.5 },
-    { symbol: 'SENSEX 80000 CE', token: 'BFO_SENSEX_80000_CE', name: 'Sensex Call Option', exchange: 'BSE', lotSize: 10, fallbackPrice: 215.40, fallbackPct: 4.8 },
-    { symbol: 'SENSEX 79500 PE', token: 'BFO_SENSEX_79500_PE', name: 'Sensex Put Option', exchange: 'BSE', lotSize: 10, fallbackPrice: 175.20, fallbackPct: -3.6 },
+    { symbol: 'NIFTY 24600 CE', token: 'NFO_NIFTY_24600_CE', name: 'Nifty Call Option', exchange: 'NSE', lotSize: 65, fallbackPrice: 95.10, fallbackPct: 11.2 },
+    { symbol: 'NIFTY 24400 PE', token: 'NFO_NIFTY_24400_PE', name: 'Nifty Put Option', exchange: 'NSE', lotSize: 65, fallbackPrice: 62.40, fallbackPct: -12.1 },
+    { symbol: 'BANKNIFTY 52000 CE', token: 'NFO_BANKNIFTY_52000_CE', name: 'BankNifty Call', exchange: 'NSE', lotSize: 30, fallbackPrice: 320.10, fallbackPct: 12.1 },
+    { symbol: 'BANKNIFTY 51500 PE', token: 'NFO_BANKNIFTY_51500_PE', name: 'BankNifty Put', exchange: 'NSE', lotSize: 30, fallbackPrice: 210.80, fallbackPct: -9.5 },
+    { symbol: 'SENSEX 80000 CE', token: 'BFO_SENSEX_80000_CE', name: 'Sensex Call Option', exchange: 'BSE', lotSize: 20, fallbackPrice: 215.40, fallbackPct: 4.8 },
+    { symbol: 'SENSEX 79500 PE', token: 'BFO_SENSEX_79500_PE', name: 'Sensex Put Option', exchange: 'BSE', lotSize: 20, fallbackPrice: 175.20, fallbackPct: -3.6 },
   ];
 
   const stocksList: InstrumentItem[] = [
@@ -882,31 +882,40 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
       {/* Mobile Workspace Switcher (Visible on lg:hidden) */}
       {isMobileViewport && (
-        <div className="flex lg:hidden items-center justify-around bg-[#131722] border-b border-slate-800 px-2 py-1.5 shrink-0 z-20">
-          {[
-            { id: 'CHART', label: 'Chart', icon: TrendingUp },
-            { id: 'WATCHLIST', label: 'Watchlist', icon: List },
-            { id: 'TRADE', label: 'Order Pad', icon: Zap },
-            { id: 'POSITIONS', label: `Positions (${openPositions.length})`, icon: Briefcase },
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = mobileWorkspaceTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setMobileWorkspaceTab(tab.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  isActive
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <nav
+          role="region"
+          aria-label="Terminal Workspace Navigation"
+          className="flex lg:hidden items-center justify-around bg-[#131722] border-b border-slate-800 px-2 py-1 shrink-0 z-20"
+        >
+          <div role="tablist" aria-label="Terminal workspace views" className="flex items-center justify-around w-full">
+            {[
+              { id: 'CHART', label: 'Chart', icon: TrendingUp },
+              { id: 'WATCHLIST', label: 'Watchlist', icon: List },
+              { id: 'TRADE', label: 'Order Pad', icon: Zap },
+              { id: 'POSITIONS', label: `Positions (${openPositions.length})`, icon: Briefcase },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = mobileWorkspaceTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`terminal-panel-${tab.id.toLowerCase()}`}
+                  onClick={() => setMobileWorkspaceTab(tab.id as any)}
+                  className={`flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.98] transition-all ${
+                    isActive
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       )}
 
       {/* ============================================================ */}

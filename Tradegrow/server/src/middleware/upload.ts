@@ -36,17 +36,17 @@ const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterC
     'image/webp',
     'image/heic',
     'image/heif',
-    'application/pdf',
-    'application/octet-stream'
+    'application/pdf'
   ];
 
   const ext = path.extname(file.originalname).toLowerCase();
   const mime = (file.mimetype || '').toLowerCase();
 
-  if (allowedExts.includes(ext) || allowedMimeTypes.includes(mime)) {
+  // Strict check: Require both extension and valid image/pdf MIME type
+  if (allowedExts.includes(ext) && allowedMimeTypes.includes(mime)) {
     cb(null, true);
   } else {
-    cb(new Error(`Invalid document format (${file.originalname}). Only JPG, PNG, WEBP, and PDF files are allowed.`));
+    cb(new Error(`Invalid document format (${file.originalname}). Only genuine JPG, PNG, WEBP, and PDF files are allowed.`));
   }
 };
 

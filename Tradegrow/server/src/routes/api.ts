@@ -1050,10 +1050,11 @@ router.get('/market/mcx-active-contracts', async (req, res) => {
 });
 
 // SSE: Real-time option chain push (replaces polling)
+// SSE: Real-time option chain push using shared OptionChainBroadcaster fan-out (H-02 fix)
 router.get('/market/option-chain/stream', async (req, res) => {
   const symbol      = (req.query.symbol as string) || 'NIFTY';
   const expiry      = (req.query.expiry as string) || '';
-  const strikeRange = (req.query.strikeRange as any) || '10';
+  const strikeRange = (req.query.strikeRange as string) || '10';
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -1061,17 +1062,35 @@ router.get('/market/option-chain/stream', async (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  const sendChain = async () => {
-    try {
-      const { OptionChainEngine } = await import('../marketData/OptionChainEngine');
-      const result = await OptionChainEngine.generateOptionChain({ symbol, expiry, strikeRange });
-      res.write(`data: ${JSON.stringify({ success: true, ...result, ts: Date.now() })}\n\n`);
-    } catch (_) {}
+  const { optionChainBroadcaster } = await import('../marketData/OptionChainBroadcasterService');
+  const sub = { symbol, expiry, strikeRange };
+  const key = optionChainBroadcaster.addView(sub);
+
+  if (!key) {
+    res.write(`data: ${JSON.stringify({ success: false, error: 'Broadcaster at view capacity' })}\n\n`);
+    res.end();
+    return;
+  }
+
+  // Send immediate cached snapshot if available
+  const cached = optionChainBroadcaster.getLastSnapshot(key);
+  if (cached) {
+    res.write(`data: ${JSON.stringify({ success: true, ...cached, ts: Date.now() })}\n\n`);
+  }
+
+  // Fan out shared broadcast snapshots to this SSE connection
+  const onSnapshot = (snapshot: any) => {
+    if (snapshot.subscriptionKey === key) {
+      res.write(`data: ${JSON.stringify({ success: true, ...snapshot, ts: Date.now() })}\n\n`);
+    }
   };
 
-  await sendChain(); // send immediately on connect
-  const interval = setInterval(sendChain, 1500); // push every 1500ms
-  req.on('close', () => clearInterval(interval));
+  optionChainBroadcaster.on('snapshot', onSnapshot);
+
+  req.on('close', () => {
+    optionChainBroadcaster.off('snapshot', onSnapshot);
+    optionChainBroadcaster.removeView(key);
+  });
 });
 
 // NSE summary: PCR, Max Pain, ATM (updated every 60s from NSE)
@@ -1624,11 +1643,12 @@ router.post('/algo/webhook', async (req: Request, res: Response) => {
     }
 
     if (!user) {
-      user = await queryOne<any>(`SELECT id, status, role FROM users WHERE status = 'ACTIVE' ORDER BY created_at ASC LIMIT 1`);
+      res.status(401).json({ success: false, error: 'Unauthorized: Invalid webhook secret or authentication token.' });
+      return;
     }
 
-    if (!user || user.status !== 'ACTIVE') {
-      res.status(403).json({ success: false, error: 'Authorized active user account not found for provided secret.' });
+    if (user.status !== 'ACTIVE') {
+      res.status(403).json({ success: false, error: 'Forbidden: Account is not active.' });
       return;
     }
 

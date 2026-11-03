@@ -6,6 +6,7 @@ import { EmailService } from '../services/EmailService';
 import { query, queryOne, execute } from '../db/schema';
 import { generateUUID } from '../utils/crypto';
 import { WebhookBridge } from '../services/WebhookBridge';
+import { verifyMetaSignature, isDuplicateWebhookEvent } from '../utils/webhookSecurity';
 
 export const warRoomRouter = Router();
 const warRoom = WarRoomService.getInstance();
@@ -1012,12 +1013,20 @@ warRoomRouter.get('/warroom/content-ideas', async (req: Request, res: Response) 
  * GET /api/v1/webhooks/whatsapp
  * Meta Cloud API Webhook Challenge Verification
  */
+/**
+ * GET /api/v1/webhooks/whatsapp
+ * Meta Cloud API Webhook Challenge Verification
+ */
 warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'tradegrow_growth_secret_2026';
+  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  if (!expectedToken) {
+    console.error('[WhatsApp Webhook] WHATSAPP_WEBHOOK_VERIFY_TOKEN is not configured.');
+    return res.status(500).send('Server misconfiguration: Webhook verify token not set');
+  }
 
   if (mode === 'subscribe' && token === expectedToken) {
     console.log('[WhatsApp Webhook] ✅ Verification challenge successful.');
@@ -1029,13 +1038,25 @@ warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
 
 /**
  * POST /api/v1/webhooks/whatsapp
- * Inbound Webhook Listener for Meta Cloud API / Gupshup
+ * Inbound Webhook Listener for Meta Cloud API
+ * Verified cryptographically with HMAC-SHA256 (X-Hub-Signature-256) and replay-protected.
  */
 warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => {
   try {
+    const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
+    const signature = req.headers['x-hub-signature-256'] as string;
+    const rawBody = (req as any).rawBody;
+
+    if (process.env.NODE_ENV === 'production' || appSecret) {
+      if (!appSecret || !verifyMetaSignature(rawBody, signature, appSecret)) {
+        console.warn('[WhatsApp Webhook] ❌ Invalid or missing X-Hub-Signature-256');
+        return res.status(401).send('UNAUTHORIZED_SIGNATURE');
+      }
+    }
+
     const body = req.body;
 
-    if (body.object === 'whatsapp_business_account' && Array.isArray(body.entry)) {
+    if (body?.object === 'whatsapp_business_account' && Array.isArray(body?.entry)) {
       for (const entry of body.entry) {
         for (const change of entry.changes || []) {
           const value = change.value;
@@ -1043,9 +1064,17 @@ warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => 
           // 1. Inbound Messages
           if (Array.isArray(value?.messages)) {
             for (const msg of value.messages) {
+              const msgId = msg.id;
+              if (msgId) {
+                const isDuplicate = await isDuplicateWebhookEvent('meta_warroom_msg', msgId);
+                if (isDuplicate) {
+                  console.log(`[WhatsApp Webhook] Skipping duplicate messageId: ${msgId}`);
+                  continue;
+                }
+              }
+
               const fromPhone = `+${msg.from}`;
               const text = msg.text?.body || msg.button?.text || '';
-              const msgId = msg.id;
 
               console.log(`[WhatsApp Webhook] Inbound from ${fromPhone}: "${text}"`);
               await waService.handleInboundMessage(fromPhone, text, msgId);
@@ -1060,6 +1089,10 @@ warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => 
               const errorCode = st.errors?.[0]?.code ? String(st.errors[0].code) : undefined;
 
               if (['DELIVERED', 'READ', 'FAILED'].includes(status)) {
+                if (msgId) {
+                  const isDuplicate = await isDuplicateWebhookEvent('meta_warroom_status', `${msgId}_${status}`);
+                  if (isDuplicate) continue;
+                }
                 await waService.handleStatusUpdate(msgId, status as any, errorCode);
               }
             }
@@ -1077,10 +1110,20 @@ warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => 
 
 /**
  * POST /api/v1/webhooks/whatsapp/evolution
- * Inbound Webhook Listener for Evolution API (Baileys / Open-WA engine)
+ * Inbound Webhook Listener for Evolution API
+ * Protected with API Key authentication and replay deduplication.
  */
 warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Response) => {
   try {
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY;
+    const incomingKey = (req.headers['apikey'] || req.headers['x-api-key'] || req.headers['authorization']) as string;
+    if (process.env.NODE_ENV === 'production' || evolutionApiKey) {
+      if (!evolutionApiKey || !incomingKey || (incomingKey !== evolutionApiKey && incomingKey !== `Bearer ${evolutionApiKey}`)) {
+        console.warn('[Evolution API Webhook] ❌ Unauthorized: Missing or invalid API key');
+        return res.status(401).json({ error: 'Unauthorized: Missing or invalid API key' });
+      }
+    }
+
     const payload = req.body;
     const event = payload?.event || req.headers['x-event-type'];
 
@@ -1096,7 +1139,11 @@ warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Res
         const phoneE164 = waService.normalizePhoneE164(phone);
         const msgId = key.id || `evo_${Date.now()}`;
 
-        // Extract body text from conversation or extended text
+        const isDuplicate = await isDuplicateWebhookEvent('evo_msg', msgId);
+        if (isDuplicate) {
+          return res.status(200).json({ status: 'SKIPPED_DUPLICATE' });
+        }
+
         const bodyText = data.message?.conversation ||
           data.message?.extendedTextMessage?.text ||
           data.message?.buttonsResponseMessage?.selectedDisplayText ||
@@ -1117,6 +1164,9 @@ warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Res
         const rawStatus = String(item.update?.status || '').toUpperCase();
 
         if (msgId) {
+          const isDuplicate = await isDuplicateWebhookEvent('evo_status', `${msgId}_${rawStatus}`);
+          if (isDuplicate) continue;
+
           if (rawStatus.includes('READ') || rawStatus === 'PLAYED') {
             await waService.handleStatusUpdate(msgId, 'READ');
           } else if (rawStatus.includes('DELIVER') || rawStatus === 'DELIVERY_ACK') {
@@ -1126,16 +1176,10 @@ warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Res
       }
     }
 
-    // 3. Connection State Updates
-    else if (event === 'connection.update') {
-      const state = payload?.data?.state || payload?.data?.connection;
-      console.log(`[Evolution API Webhook] Connection state updated: ${state}`);
-    }
-
     return res.status(200).json({ status: 'SUCCESS' });
   } catch (err: any) {
-    console.error('[Evolution API Webhook] Error:', err);
-    return res.status(500).json({ status: 'ERROR', message: err.message });
+    console.error('[Evolution API Webhook] Error processing payload:', err);
+    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
   }
 });
 

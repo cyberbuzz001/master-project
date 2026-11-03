@@ -27,31 +27,33 @@
 
 import { Router, type Request, type Response } from 'express';
 import { AdvisoryWhatsAppService } from '../services/AdvisoryWhatsAppService';
+import { verifyMetaSignature, isDuplicateWebhookEvent } from '../utils/webhookSecurity';
 
 export const internalAdvisoryRouter = Router();
 
-const ACCEPTED_INTERNAL_KEYS = new Set(
-  [
-    process.env.INTERNAL_API_KEY,
-    'advisory_internal_2026_key',
-    'advisory_internal_key',
-  ].filter(Boolean) as string[]
-);
-const META_WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET || 'expert_stocks_meta_webhook';
+const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
+if (!INTERNAL_KEY) {
+  console.warn("[Security] ⚠️ INTERNAL_API_KEY environment variable is not configured. Internal routes will reject all requests.");
+}
 
-// ─── PUBLIC: Meta Webhook Endpoints (NO internal key guard) ──────────────────
+// ─── PUBLIC: Meta Webhook Endpoints (Signature-verified, NO internal key guard) ──
 
 /**
  * GET /internal/advisory/meta-webhook
- * Meta calls this to verify your webhook URL when you set it in the App Dashboard.
- * It sends hub.mode, hub.verify_token, hub.challenge — you echo hub.challenge back.
+ * Meta calls this to verify your webhook URL when configured in App Dashboard.
  */
 internalAdvisoryRouter.get('/meta-webhook', (req: Request, res: Response) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
+  const expectedToken = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET;
 
-  if (mode === 'subscribe' && token === META_WEBHOOK_SECRET) {
+  if (!expectedToken) {
+    console.error('[Advisory Meta Webhook] ADVISORY_WHATSAPP_WEBHOOK_SECRET is not configured.');
+    return res.status(500).json({ error: 'Server misconfiguration: Webhook secret not set' });
+  }
+
+  if (mode === 'subscribe' && token === expectedToken) {
     console.log('[Advisory Meta Webhook] ✅ Webhook verified by Meta.');
     return res.status(200).send(challenge);
   }
@@ -62,11 +64,23 @@ internalAdvisoryRouter.get('/meta-webhook', (req: Request, res: Response) => {
 
 /**
  * POST /internal/advisory/meta-webhook
- * Meta sends all inbound messages and delivery status updates here.
- * Parses the Meta payload and routes to AdvisoryWhatsAppService handlers.
+ * Meta sends inbound messages and delivery status updates here.
+ * Verified cryptographically with HMAC-SHA256 (X-Hub-Signature-256) and replay-protected.
  */
 internalAdvisoryRouter.post('/meta-webhook', async (req: Request, res: Response) => {
-  // Always respond 200 immediately — Meta will retry if we don't
+  const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET || process.env.ADVISORY_WHATSAPP_APP_SECRET;
+  const signature = req.headers['x-hub-signature-256'] as string;
+  const rawBody = (req as any).rawBody;
+
+  // Verify authenticity with timing-safe HMAC SHA-256
+  if (process.env.NODE_ENV === 'production' || appSecret) {
+    if (!appSecret || !verifyMetaSignature(rawBody, signature, appSecret)) {
+      console.warn('[Advisory Meta Webhook] ❌ Rejected: Invalid or missing X-Hub-Signature-256');
+      return res.status(401).json({ error: 'Unauthorized: Invalid signature' });
+    }
+  }
+
+  // Respond 200 once authenticated so Meta does not retry
   res.status(200).json({ success: true });
 
   try {
@@ -86,6 +100,13 @@ internalAdvisoryRouter.post('/meta-webhook', async (req: Request, res: Response)
           const bodyText = msg?.text?.body || msg?.button?.text || '';
 
           if (fromRaw && messageId) {
+            // Deduplicate event ID to prevent replay attacks
+            const isDuplicate = await isDuplicateWebhookEvent('meta_advisory_msg', messageId);
+            if (isDuplicate) {
+              console.log(`[Advisory Meta Webhook] Skipping duplicate messageId: ${messageId}`);
+              continue;
+            }
+
             const fromE164 = svc.normalizePhoneE164(fromRaw);
             console.log(`[Advisory Meta Webhook] Inbound from ${fromE164}: "${bodyText}"`);
             await svc.handleInboundMessage(fromE164, bodyText, messageId);
@@ -98,6 +119,9 @@ internalAdvisoryRouter.post('/meta-webhook', async (req: Request, res: Response)
           const statusValue = status?.status?.toUpperCase();
 
           if (messageId && ['DELIVERED', 'READ', 'FAILED'].includes(statusValue)) {
+            const isDuplicate = await isDuplicateWebhookEvent('meta_advisory_status', `${messageId}_${statusValue}`);
+            if (isDuplicate) continue;
+
             await svc.handleStatusUpdate(
               messageId,
               statusValue as 'DELIVERED' | 'READ' | 'FAILED',
@@ -115,7 +139,7 @@ internalAdvisoryRouter.post('/meta-webhook', async (req: Request, res: Response)
 // ─── Internal Key Guard Middleware (applies to all routes below) ──────────────
 function requireInternalKey(req: Request, res: Response, next: Function) {
   const key = req.headers['x-internal-key'] as string;
-  if (!key || !ACCEPTED_INTERNAL_KEYS.has(key)) {
+  if (!INTERNAL_KEY || key !== INTERNAL_KEY) {
     return res.status(403).json({ success: false, error: 'Forbidden: Invalid internal key' });
   }
   next();

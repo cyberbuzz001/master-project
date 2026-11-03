@@ -112,7 +112,8 @@ Route::prefix('v1')->group(function (): void {
                 });
 
                 // ---- Lead AI Controls & Scoring ----------------------------------------------------
-                Route::post('leads/{lead}/toggle-ai-pause', function (\App\Models\Lead $lead) {
+                Route::post('leads/{lead}/toggle-ai-pause', function (\Illuminate\Http\Request $request, \App\Models\Lead $lead) {
+                    abort_unless($request->user()->can('update', $lead), 403);
                     $lead->update(['is_ai_paused' => !$lead->is_ai_paused]);
                     return response()->json([
                         'success' => true,
@@ -121,7 +122,8 @@ Route::prefix('v1')->group(function (): void {
                     ]);
                 });
 
-                Route::post('leads/{lead}/recalculate-score', function (\App\Models\Lead $lead, \App\Domain\Crm\LeadScoringEngine $scoring) {
+                Route::post('leads/{lead}/recalculate-score', function (\Illuminate\Http\Request $request, \App\Models\Lead $lead, \App\Domain\Crm\LeadScoringEngine $scoring) {
+                    abort_unless($request->user()->can('update', $lead), 403);
                     $result = $scoring->scoreLead($lead);
                     return response()->json([
                         'success' => true,
@@ -145,9 +147,10 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('workflows/trigger', function (\Illuminate\Http\Request $request, \App\Domain\Crm\AutomationWorkflowEngine $engine) {
                     $request->validate([
                         'lead_id' => 'required|exists:leads,id',
-                        'workflow_code' => 'required|string',
+                        'workflow_code' => 'required|string|in:WORKFLOW_A_NEW_IMPORT,WORKFLOW_B_ELIGIBLE_INTRO,WORKFLOW_C_DEMO_NURTURING,WORKFLOW_D_APPOINTMENT',
                     ]);
                     $lead = \App\Models\Lead::findOrFail($request->input('lead_id'));
+                    abort_unless($request->user()->can('update', $lead), 403);
                     $run = $engine->triggerWorkflow($lead, $request->input('workflow_code'));
                     return response()->json([
                         'success' => (bool) $run,

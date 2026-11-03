@@ -123,11 +123,10 @@ class LeadScoringEngine
 
         $finalScore = min(100, max(0, $points));
 
-        // 7. Lead Categorization
+        // 7. Lead Categorization (Contract: COLD < 40, WARM 40-74, HOT >= 75)
         $grade = match (true) {
             $finalScore >= 75 => 'HOT',
-            $finalScore >= 50 => 'WARM',
-            $finalScore >= 25 => 'ENGAGED',
+            $finalScore >= 40 => 'WARM',
             default => 'COLD',
         };
 

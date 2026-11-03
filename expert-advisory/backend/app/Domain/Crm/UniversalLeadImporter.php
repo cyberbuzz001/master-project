@@ -252,7 +252,10 @@ Output ONLY the raw JSON array without markdown formatting.';
         // Bulk query existing leads in CRM
         $existingCrmLeads = [];
         if (!empty($allValidPhones)) {
+            // The approved duplicate policy is a rolling 90-day window. Older
+            // records remain historical and may be re-imported as a fresh lead.
             $existingCrmLeads = Lead::query()
+                ->where('created_at', '>=', now()->subDays(90))
                 ->whereIn('mobile', $allValidPhones)
                 ->get()
                 ->keyBy('mobile')

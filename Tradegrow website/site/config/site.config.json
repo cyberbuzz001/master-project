@@ -5,7 +5,6 @@
     "Any null/empty value renders on the site as 'Information to be verified' — never as an invented fact.",
     "After editing this file run: node build/build.js"
   ],
-
   "brand": {
     "name": "Trade Grow",
     "legalName": "Trade Grow",
@@ -13,7 +12,6 @@
     "domain": "https://trust.tradegrowx.in",
     "logoText": "Trade Grow"
   },
-
   "entity": {
     "legalName": "Trade Grow LLP",
     "entityType": "LLP",
@@ -36,10 +34,9 @@
       "pincode": ""
     }
   },
-
   "regulatory": {
     "sebi": {
-      "status": "verified",
+      "status": "pending",
       "registrationNumber": "Facilitated through Registered Intermediary",
       "registrationType": "Technology & Platform Brand",
       "statement": "Trade Grow operates as a technology/platform brand. Securities transactions, where applicable, are facilitated through the relevant registered intermediary.",
@@ -52,27 +49,35 @@
     "exchanges": [
       {
         "name": "NSE",
-        "status": "verified",
+        "status": "pending",
         "memberCode": "Access through registered intermediary",
-        "segments": ["Equity Cash", "Futures & Options (F&O)"],
+        "segments": [
+          "Equity Cash",
+          "Futures & Options (F&O)"
+        ],
         "verifyUrl": null,
         "verifyLabel": null,
         "certificateDoc": null
       },
       {
         "name": "BSE",
-        "status": "verified",
+        "status": "pending",
         "memberCode": "Access through registered intermediary",
-        "segments": ["Equity Cash", "Futures & Options (F&O)"],
+        "segments": [
+          "Equity Cash",
+          "Futures & Options (F&O)"
+        ],
         "verifyUrl": "https://www.bseindia.com/members/MembersDirectory.html",
         "verifyLabel": "Verify on BSE",
         "certificateDoc": null
       },
       {
         "name": "MCX",
-        "status": "verified",
+        "status": "pending",
         "memberCode": "As supported by the associated intermediary",
-        "segments": ["Commodity Derivatives"],
+        "segments": [
+          "Commodity Derivatives"
+        ],
         "verifyUrl": "https://www.mcxindia.com",
         "verifyLabel": "Verify on MCX",
         "certificateDoc": null
@@ -81,7 +86,7 @@
     "depositories": [
       {
         "name": "CDSL",
-        "status": "verified",
+        "status": "pending",
         "dpId": "Client Demat Safeguards via Executing Intermediary",
         "relationship": "Client funds/securities are handled according to the applicable intermediary structure and regulatory requirements.",
         "verifyUrl": "https://www.cdslindia.com/DP/dplist.aspx",
@@ -90,7 +95,7 @@
       },
       {
         "name": "NSDL",
-        "status": "verified",
+        "status": "pending",
         "dpId": "Client Demat Safeguards via Executing Intermediary",
         "relationship": "Client funds/securities are handled according to the applicable intermediary structure and regulatory requirements.",
         "verifyUrl": "https://nsdl.co.in/dpsch.php",
@@ -106,7 +111,6 @@
     },
     "_disclaimerIfPending": "Trade Grow operates as a modern technology and trading platform brand serving clients across PAN India."
   },
-
   "officers": {
     "compliance": {
       "name": "Compliance Cell",
@@ -127,7 +131,6 @@
       "phone": "WhatsApp Support"
     }
   },
-
   "support": {
     "phone": "+91 95896 15649",
     "phoneDisplay": "WhatsApp Support",
@@ -140,13 +143,32 @@
     "hours": "9:00 AM – 6:00 PM IST",
     "workingDays": "Monday to Friday",
     "escalation": [
-      { "level": "Level 1", "channel": "Customer Support", "contact": "info@tradegrowx.in | WhatsApp Support", "tat": "24 hours" },
-      { "level": "Level 2", "channel": "Head of Customer Service", "contact": "info@tradegrowx.in", "tat": "48 hours" },
-      { "level": "Level 3", "channel": "Compliance Desk", "contact": "info@tradegrowx.in", "tat": "3 business days" },
-      { "level": "Level 4", "channel": "Regulatory Escalation", "contact": "Regulatory Grievance Redressal Portal", "tat": "As per regulatory norms" }
+      {
+        "level": "Level 1",
+        "channel": "Customer Support",
+        "contact": "info@tradegrowx.in | WhatsApp Support",
+        "tat": "24 hours"
+      },
+      {
+        "level": "Level 2",
+        "channel": "Head of Customer Service",
+        "contact": "info@tradegrowx.in",
+        "tat": "48 hours"
+      },
+      {
+        "level": "Level 3",
+        "channel": "Compliance Desk",
+        "contact": "info@tradegrowx.in",
+        "tat": "3 business days"
+      },
+      {
+        "level": "Level 4",
+        "channel": "Regulatory Escalation",
+        "contact": "Regulatory Grievance Redressal Portal",
+        "tat": "As per regulatory norms"
+      }
     ]
   },
-
   "app": {
     "type": "Web Application (PWA)",
     "description": "Progressive Web App with one-tap Add to Home Screen shortcut on mobile & desktop",
@@ -158,26 +180,94 @@
     "screenshotsAreIllustrative": true,
     "demoVideoUrl": null
   },
-
   "documents": [
-    { "key": "terms",            "title": "Terms & Conditions",        "url": "/terms/",            "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "privacy",          "title": "Privacy Policy",            "url": "/privacy/",          "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "risk",             "title": "Risk Disclosure Document",  "url": "/risk-disclosure/",  "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "investor-charter", "title": "Investor Charter",          "url": "/investor-charter/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "charges",          "title": "Schedule of Charges",       "url": "/pricing/",          "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "grievance",        "title": "Grievance Redressal Policy","url": "/grievance-policy/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "aof",              "title": "Account Opening Form & Annexures", "url": "/open-account/", "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" },
-    { "key": "pmla",             "title": "AML / PMLA Policy",         "url": "/pmla-policy/",      "version": "1.0", "effectiveDate": "2026-01-01", "status": "verified" }
+    {
+      "key": "terms",
+      "title": "Terms & Conditions",
+      "url": "/terms/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "privacy",
+      "title": "Privacy Policy",
+      "url": "/privacy/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "risk",
+      "title": "Risk Disclosure Document",
+      "url": "/risk-disclosure/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "investor-charter",
+      "title": "Investor Charter",
+      "url": "/investor-charter/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "charges",
+      "title": "Schedule of Charges",
+      "url": "/pricing/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "grievance",
+      "title": "Grievance Redressal Policy",
+      "url": "/grievance-policy/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "aof",
+      "title": "Account Opening Form & Annexures",
+      "url": "/open-account/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    },
+    {
+      "key": "pmla",
+      "title": "AML / PMLA Policy",
+      "url": "/pmla-policy/",
+      "version": "1.0",
+      "effectiveDate": "2026-01-01",
+      "status": "verified"
+    }
   ],
-
   "cta": {
-    "primary":   { "label": "Explore Trade Grow", "href": "/platform/" },
-    "secondary": { "label": "Verify Our Details", "href": "/verify/" },
-    "pricing":   { "label": "View Pricing",       "href": "/pricing/" },
-    "platform":  { "label": "See Platform",       "href": "/platform/" },
-    "account":   { "label": "Start Account Opening", "href": "/open-account/" }
+    "primary": {
+      "label": "Explore Trade Grow",
+      "href": "/platform/"
+    },
+    "secondary": {
+      "label": "Verify Our Details",
+      "href": "/verify/"
+    },
+    "pricing": {
+      "label": "View Pricing",
+      "href": "/pricing/"
+    },
+    "platform": {
+      "label": "See Platform",
+      "href": "/platform/"
+    },
+    "account": {
+      "label": "Start Account Opening",
+      "href": "/open-account/"
+    }
   },
-
   "headlineVariants": [
     "Trade Smarter. Understand Your Costs. Grow With Confidence.",
     "Don't Just Trust a New Broker. Verify One.",
@@ -185,7 +275,6 @@
     "Know Exactly What Every Trade Costs You.",
     "A New Platform. An Open Rulebook."
   ],
-
   "compliance": {
     "pendingLabel": "Facilitated via Registered Intermediary",
     "illustrativeLabel": "Illustrative interface — not a live screenshot",
@@ -194,7 +283,6 @@
     "chargesDisclaimer": "Brokerage is set by Trade Grow. Statutory and regulatory charges (STT/CTT, GST, Stamp Duty, Exchange Transaction Charges, SEBI Turnover Fees, DP charges and any other applicable levies) are set by the Government, Exchanges, Depositories and SEBI — they are collected by the broker and passed on. These are payable irrespective of the brokerage plan.",
     "otpWarning": "Trade Grow will never ask for your OTP, password, PIN, UPI PIN or card PIN. Enter your OTP only on the official Trade Grow app or website."
   },
-
   "analytics": {
     "provider": null,
     "siteId": null,

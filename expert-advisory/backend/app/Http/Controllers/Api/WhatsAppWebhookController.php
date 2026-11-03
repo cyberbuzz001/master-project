@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class WhatsAppWebhookController extends Controller
 {
@@ -28,7 +29,12 @@ class WhatsAppWebhookController extends Controller
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        $expectedToken = config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN', 'esc_wa_verify_token_2026'));
+        $expectedToken = config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN'));
+
+        if (empty($expectedToken)) {
+            Log::error('[WhatsApp Webhook] WHATSAPP_VERIFY_TOKEN is not configured.');
+            return response('Server misconfiguration: Webhook verify token not set', 500);
+        }
 
         if ($mode === 'subscribe' && $token === $expectedToken) {
             Log::info('[WhatsApp Webhook] Handshake verified successfully.');
@@ -41,9 +47,26 @@ class WhatsAppWebhookController extends Controller
 
     /**
      * Handle incoming Meta Cloud API webhook events.
+     * Verified with HMAC-SHA256 (X-Hub-Signature-256) and deduplicated against replay attacks.
      */
     public function handle(Request $request): JsonResponse
     {
+        $signatureHeader = $request->header('X-Hub-Signature-256');
+        $appSecret = config('services.whatsapp.app_secret', env('WHATSAPP_APP_SECRET', env('META_APP_SECRET')));
+
+        if (app()->environment('production') || !empty($appSecret)) {
+            if (empty($appSecret) || empty($signatureHeader) || !str_starts_with($signatureHeader, 'sha256=')) {
+                Log::warning('[WhatsApp Webhook] Unauthorized request: Missing signature or app secret configuration.');
+                return response()->json(['error' => 'Unauthorized: Missing signature'], 401);
+            }
+
+            $expectedSignature = 'sha256=' . hash_hmac('sha256', $request->getContent(), $appSecret);
+            if (!hash_equals($expectedSignature, $signatureHeader)) {
+                Log::warning('[WhatsApp Webhook] Unauthorized request: Signature mismatch.');
+                return response()->json(['error' => 'Unauthorized: Invalid signature'], 401);
+            }
+        }
+
         $payload = $request->all();
 
         // Check if event is from WhatsApp Business Account
@@ -60,6 +83,13 @@ class WhatsAppWebhookController extends Controller
                 // 1. Process Delivery Statuses (sent, delivered, read, failed)
                 if (!empty($value['statuses'])) {
                     foreach ($value['statuses'] as $statusUpdate) {
+                        $statusId = $statusUpdate['id'] ?? null;
+                        $status = $statusUpdate['status'] ?? 'unknown';
+                        if ($statusId) {
+                            if (!Cache::add("wa_webhook_status:{$statusId}_{$status}", true, now()->addHours(24))) {
+                                continue;
+                            }
+                        }
                         $this->handleStatusUpdate($statusUpdate);
                     }
                 }
@@ -67,6 +97,13 @@ class WhatsAppWebhookController extends Controller
                 // 2. Process Inbound Messages from Prospects
                 if (!empty($value['messages'])) {
                     foreach ($value['messages'] as $message) {
+                        $msgId = $message['id'] ?? null;
+                        if ($msgId) {
+                            if (!Cache::add("wa_webhook_msg:{$msgId}", true, now()->addHours(24))) {
+                                Log::info("[WhatsApp Webhook] Duplicate message skipped: {$msgId}");
+                                continue;
+                            }
+                        }
                         $this->handleInboundMessage($message, $value['contacts'] ?? []);
                     }
                 }
@@ -75,7 +112,6 @@ class WhatsAppWebhookController extends Controller
 
         return response()->json(['status' => 'success'], 200);
     }
-
     protected function handleStatusUpdate(array $statusUpdate): void
     {
         $wamid = $statusUpdate['id'] ?? null;

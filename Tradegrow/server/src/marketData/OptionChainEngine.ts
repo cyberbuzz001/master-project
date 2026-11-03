@@ -3,6 +3,7 @@ import { GreeksEngine } from './GreeksEngine';
 import { MarketDataEngine } from './MarketDataEngine';
 import { query } from '../db/schema';
 import { nseOptionChainService } from './NseOptionChainService';
+import { getLotSizeForSymbol } from '../utils/lotSize';
 
 export interface OptionChainFilterParams {
   symbol: string;
@@ -84,7 +85,7 @@ export class OptionChainEngine {
     const step = isSensex ? 100 : isBanknifty ? 100 : isMidcp ? 25 : 50;
 
     // Lot sizes (authoritative source)
-    const lotSize = isSensex ? 20 : isBanknifty ? 30 : isFinnifty ? 60 : isMidcp ? 120 : 65;
+    const lotSize = getLotSizeForSymbol(underlying);
 
     // Strike Range Filter: '5' -> ±5 (Default 11 strikes), '10' -> ±10 (21 strikes), '20' -> ±20, 'ALL' -> ±50
     const rangeCount = params.strikeRange === '10' ? 10 : params.strikeRange === '20' ? 20 : params.strikeRange === 'ALL' ? 50 : 5;

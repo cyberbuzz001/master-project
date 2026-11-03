@@ -32,13 +32,13 @@ const PRESET_WATCHLISTS: Record<string, WatchlistItem[]> = {
   WL_2: [
     { token: 'NSE_NIFTY24850CE', symbol: 'NIFTY 24850 CE', name: 'NIFTY Weekly Call Option', exchange: 'NFO', category: 'FO', lotSize: 65 },
     { token: 'NSE_NIFTY24800PE', symbol: 'NIFTY 24800 PE', name: 'NIFTY Weekly Put Option', exchange: 'NFO', category: 'FO', lotSize: 65 },
-    { token: 'NSE_BANKNIFTY52000CE', symbol: 'BANKNIFTY 52000 CE', name: 'BANKNIFTY Weekly Call Option', exchange: 'NFO', category: 'FO', lotSize: 35 },
+    { token: 'NSE_BANKNIFTY52000CE', symbol: 'BANKNIFTY 52000 CE', name: 'BANKNIFTY Weekly Call Option', exchange: 'NFO', category: 'FO', lotSize: 30 },
     { token: 'BSE_SENSEX', symbol: 'SENSEX', name: 'BSE SENSEX Index', exchange: 'BSE', category: 'INDICES', lotSize: 20 },
   ],
   WL_3: [
     { token: 'NSE_NIFTY50', symbol: 'NIFTY 50', name: 'NIFTY 50 Index', exchange: 'NSE', category: 'INDICES', lotSize: 65 },
     { token: 'BSE_SENSEX', symbol: 'SENSEX', name: 'BSE SENSEX Index', exchange: 'BSE', category: 'INDICES', lotSize: 20 },
-    { token: 'NSE_BANKNIFTY', symbol: 'BANK NIFTY', name: 'NIFTY Bank Index', exchange: 'NSE', category: 'INDICES', lotSize: 35 },
+    { token: 'NSE_BANKNIFTY', symbol: 'BANK NIFTY', name: 'NIFTY Bank Index', exchange: 'NSE', category: 'INDICES', lotSize: 30 },
     { token: 'NSE_FINNIFTY', symbol: 'FIN NIFTY', name: 'NIFTY Financial Services', exchange: 'NSE', category: 'INDICES', lotSize: 60 },
   ],
   WL_4: [
@@ -324,7 +324,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6 w-full font-body text-[var(--text-main)] pb-24 md:pb-0">
+    <div className="flex flex-col gap-4 sm:gap-6 w-full font-body text-[var(--text-main)]">
       {/* Top Header & Search Card */}
       <Card className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -476,7 +476,15 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(idx)}
                   onClick={clickable ? () => onSelectSymbolForTerminal!(item.symbol, item.token, item.exchange) : undefined}
-                  className={`flex items-center justify-between gap-3 px-3.5 py-3 select-none transition-colors ${
+                  className={`flex items-center justify-between gap-3 px-3.5 py-3 min-h-[52px] select-none transition-colors border-l-[3.5px] ${
+                    item.category === 'FO'
+                      ? 'border-indigo-500'
+                      : item.category === 'INDICES'
+                      ? 'border-amber-500'
+                      : isPositive
+                      ? 'border-emerald-500'
+                      : 'border-rose-500'
+                  } ${
                     clickable ? 'cursor-pointer hover:bg-[var(--bg-surface-elevated)]' : ''
                   } ${draggedIdx === idx ? 'opacity-40 bg-[var(--primary-light)]' : ''}`}
                 >

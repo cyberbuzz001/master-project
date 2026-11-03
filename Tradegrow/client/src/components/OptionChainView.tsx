@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { OptionChainItem, MarketTick } from '../types';
 import { OrderPreviewModal, OrderPreviewDetails } from './OrderPreviewModal';
 import { OptionStrategyBuilder } from './OptionStrategyBuilder';
-import { Calendar, Search, Activity, Layers, ArrowUpRight, ArrowDownRight, X, SlidersHorizontal, ChevronDown, Plus, TrendingUp } from 'lucide-react';
+import { Calendar, Search, Activity, Layers, ArrowUpRight, ArrowDownRight, X, SlidersHorizontal, ChevronDown, Plus, TrendingUp, LayoutGrid, Table2 } from 'lucide-react';
 import { useSubscribeTokens } from '../hooks/useMarketSocket';
 import { useTickFreshness, useMultiTickFreshness } from '../hooks/useTickFreshness';
 import { getSpotToken } from './SpotPriceTicker';
@@ -34,6 +34,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   const [viewMode, setViewMode] = useState<'LTP_OI' | 'GREEKS' | 'VOLUME'>(() => {
     return (sessionStorage.getItem('tradegrow_oc_viewmode') as any) || 'LTP_OI';
   });
+  const [mobileDisplayMode, setMobileDisplayMode] = useState<'CARDS' | 'TABLE'>(() => {
+    return (sessionStorage.getItem('tradegrow_oc_mobile_mode') as any) || 'CARDS';
+  });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [basketMode, setBasketMode] = useState<boolean>(false);
   const [isStrategyBuilderOpen, setIsStrategyBuilderOpen] = useState<boolean>(false);
@@ -49,6 +52,12 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
       sessionStorage.setItem('tradegrow_oc_viewmode', viewMode);
     } catch (_) {}
   }, [viewMode]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('tradegrow_oc_mobile_mode', mobileDisplayMode);
+    } catch (_) {}
+  }, [mobileDisplayMode]);
 
   const [activeLtpKey, setActiveLtpKey] = useState<string | null>(null);
 
@@ -557,6 +566,36 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                 </button>
               ))}
             </div>
+
+            {/* Mobile View Toggle: Cards vs Table (lg:hidden) */}
+            <div className="flex lg:hidden items-center bg-[var(--bg-surface-inset)] border border-[var(--border-color)] p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setMobileDisplayMode('CARDS')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                  mobileDisplayMode === 'CARDS'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+                title="Cards view"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Cards</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileDisplayMode('TABLE')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                  mobileDisplayMode === 'TABLE'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+                title="Table view"
+              >
+                <Table2 className="w-3.5 h-3.5" />
+                <span>Table</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -700,67 +739,264 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             </tbody>
           </table>
 
-          {/* MOBILE COMPACT TABLE VIEW (Matching Image 2) */}
-          <table className="w-full text-xs text-center border-collapse num-font tabular-nums lg:hidden">
-            <thead>
-              <tr className="border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)] text-[10px] text-[var(--text-muted)] uppercase font-bold tracking-wider">
-                <th className="py-2 px-2 text-left">Volume</th>
-                <th className="py-2 px-2 text-center text-[var(--call-accent)] font-black">Call LTP</th>
-                <th className="py-2 px-2 text-center bg-[var(--bg-surface)] text-[var(--text-main)] font-black border-x border-[var(--border-color)]">Strike Price</th>
-                <th className="py-2 px-2 text-center text-[var(--put-accent)] font-black">Put LTP</th>
-                <th className="py-2 px-2 text-right">Volume</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border-color)]">
+          {/* MOBILE VIEW (lg:hidden) */}
+          {mobileDisplayMode === 'CARDS' ? (
+            <div className="lg:hidden p-2.5 flex flex-col gap-2.5">
               {filteredChain.map((row, idx) => {
                 const isAtm = row.strikePrice === atmStrike;
                 const ceTick = freshnessMap.get(row.ce?.instrumentToken || '');
                 const peTick = freshnessMap.get(row.pe?.instrumentToken || '');
 
+                const ceLtp = (ceTick?.tick?.ltp && ceTick.tick.ltp > 0) ? ceTick.tick.ltp : row.ce.ltp;
+                const peLtp = (peTick?.tick?.ltp && peTick.tick.ltp > 0) ? peTick.tick.ltp : row.pe.ltp;
+
+                const ceChgPct = ceTick?.tick?.changePercent ?? row.ce.changePercent ?? 0;
+                const peChgPct = peTick?.tick?.changePercent ?? row.pe.changePercent ?? 0;
+
                 const nextRow = filteredChain[idx + 1];
                 const effectiveSpot = liveSpotLtp > 0 ? liveSpotLtp : spotPrice;
+                const isCeItm = row.strikePrice < effectiveSpot;
+                const isPeItm = row.strikePrice > effectiveSpot;
                 const showSpotLine = effectiveSpot >= row.strikePrice && nextRow && effectiveSpot < nextRow.strikePrice;
 
                 return (
                   <React.Fragment key={row.strikePrice}>
-                    <OptionChainRow
-                      row={row}
-                      isAtm={isAtm}
-                      spotPrice={liveSpotLtp}
-                      viewMode={viewMode}
-                      ceTick={ceTick?.tick}
-                      peTick={peTick?.tick}
-                      activeLtpKey={activeLtpKey}
-                      onSelectLtp={setActiveLtpKey}
-                      onOpenOrder={handleOpenOrder}
-                      onOpenChart={(contract) => {
-                        setSelectedChartContract(contract);
-                        setIsChartOpen(true);
-                      }}
-                      underlying={symbol}
-                      expiry={expiry}
-                      lotSize={lotSize}
-                      exchange={symbol.startsWith('SENSEX') || symbol.startsWith('BANKEX') ? 'BSE' : 'NSE'}
-                      isMobile={true}
-                    />
+                    <div
+                      className={`p-3 rounded-2xl border transition-all ${
+                        isAtm
+                          ? 'bg-amber-500/10 border-amber-500/50 shadow-sm'
+                          : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)]'
+                      }`}
+                    >
+                      {/* Card Header: Strike Price centered with ATM / ITM badges */}
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--border-color)]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black text-[var(--call-accent)] uppercase tracking-wider">CALL (CE)</span>
+                          {isCeItm && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                              ITM
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Mobile Spot Price Indicator Row (Matching Image 2) */}
-                    {showSpotLine && (
-                      <tr className="bg-[var(--bg-surface-inset)] border-y-2 border-rose-500 font-bold">
-                        <td colSpan={5} className="py-1.5 px-2">
-                          <div className="flex items-center justify-center gap-2 text-rose-400 font-mono text-xs">
-                            <span className="text-[10px] text-[var(--text-muted)] font-semibold uppercase">Long Buildup |</span>
-                            <span className="text-rose-400 font-bold">{liveSpotLtp.toFixed(2)}</span>
-                            <span className="text-[10px] text-rose-500">{liveSpotChangePct.toFixed(2)}%</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-black text-sm text-[var(--text-main)]">
+                            {row.strikePrice.toLocaleString('en-IN')}
+                          </span>
+                          {isAtm && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 uppercase">
+                              ATM
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {isPeItm && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">
+                              ITM
+                            </span>
+                          )}
+                          <span className="text-[10px] font-black text-[var(--put-accent)] uppercase tracking-wider">PUT (PE)</span>
+                        </div>
+                      </div>
+
+                      {/* Card Body: 2 Columns for CE and PE */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* CALL SIDE */}
+                        <div className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+                          isCeItm ? 'bg-[var(--call-bg-itm)] border-emerald-500/20' : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)]'
+                        }`}>
+                          <div>
+                            <div className="flex items-baseline justify-between gap-1 mb-1">
+                              <span className="text-xs font-mono font-bold text-[var(--text-main)]">
+                                ₹{ceLtp.toFixed(2)}
+                              </span>
+                              <span className={`text-[10px] font-mono font-semibold ${ceChgPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {ceChgPct >= 0 ? '+' : ''}{ceChgPct.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+                              <span>OI: {(row.ce.openInterest / 1000).toFixed(1)}k</span>
+                              <span>IV: {row.ce.iv?.toFixed(1) || '12.0'}%</span>
+                            </div>
                           </div>
-                        </td>
-                      </tr>
+                          <div className="flex items-center gap-1.5 mt-2.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.vibrate?.(25);
+                                handleOpenOrder(row.ce.instrumentToken, row.strikePrice, 'CE', ceLtp, 'BUY');
+                              }}
+                              className="flex-1 min-h-[42px] py-1.5 px-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 active:scale-95 transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                            >
+                              <span>BUY CE</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedChartContract({
+                                  underlying: symbol,
+                                  symbol: `${symbol} ${row.strikePrice} CE`,
+                                  strike: row.strikePrice,
+                                  optionType: 'CE',
+                                  expiry: expiry || row.expiry || new Date().toISOString().slice(0, 10),
+                                  exchange: symbol.startsWith('SENSEX') || symbol.startsWith('BANKEX') ? 'BSE' : 'NSE',
+                                  instrumentToken: row.ce.instrumentToken,
+                                  lotSize,
+                                  initialLtp: ceLtp,
+                                  iv: row.ce.iv,
+                                  delta: row.ce.delta,
+                                  openInterest: row.ce.openInterest,
+                                });
+                                setIsChartOpen(true);
+                              }}
+                              className="min-h-[42px] px-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-[var(--text-muted)] hover:text-white hover:bg-blue-600 transition-colors flex items-center justify-center cursor-pointer"
+                              title="Chart"
+                            >
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* PUT SIDE */}
+                        <div className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+                          isPeItm ? 'bg-[var(--put-bg-itm)] border-rose-500/20' : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)]'
+                        }`}>
+                          <div>
+                            <div className="flex items-baseline justify-between gap-1 mb-1">
+                              <span className="text-xs font-mono font-bold text-[var(--text-main)]">
+                                ₹{peLtp.toFixed(2)}
+                              </span>
+                              <span className={`text-[10px] font-mono font-semibold ${peChgPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {peChgPct >= 0 ? '+' : ''}{peChgPct.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+                              <span>OI: {(row.pe.openInterest / 1000).toFixed(1)}k</span>
+                              <span>IV: {row.pe.iv?.toFixed(1) || '12.0'}%</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-2.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.vibrate?.(25);
+                                handleOpenOrder(row.pe.instrumentToken, row.strikePrice, 'PE', peLtp, 'BUY');
+                              }}
+                              className="flex-1 min-h-[42px] py-1.5 px-2 rounded-lg bg-rose-500 text-white font-black text-xs hover:bg-rose-400 active:scale-95 transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                            >
+                              <span>BUY PE</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedChartContract({
+                                  underlying: symbol,
+                                  symbol: `${symbol} ${row.strikePrice} PE`,
+                                  strike: row.strikePrice,
+                                  optionType: 'PE',
+                                  expiry: expiry || row.expiry || new Date().toISOString().slice(0, 10),
+                                  exchange: symbol.startsWith('SENSEX') || symbol.startsWith('BANKEX') ? 'BSE' : 'NSE',
+                                  instrumentToken: row.pe.instrumentToken,
+                                  lotSize,
+                                  initialLtp: peLtp,
+                                  iv: row.pe.iv,
+                                  delta: row.pe.delta,
+                                  openInterest: row.pe.openInterest,
+                                });
+                                setIsChartOpen(true);
+                              }}
+                              className="min-h-[42px] px-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-[var(--text-muted)] hover:text-white hover:bg-blue-600 transition-colors flex items-center justify-center cursor-pointer"
+                              title="Chart"
+                            >
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Spot divider on Mobile Cards */}
+                    {showSpotLine && (
+                      <div className="my-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-rose-400 font-bold">
+                          <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                          <span className="uppercase text-[10px] tracking-wider">Spot Price</span>
+                        </div>
+                        <div className="font-mono font-bold text-rose-300">
+                          ₹{liveSpotLtp.toFixed(2)}
+                          <span className="ml-1.5 text-[10px] text-rose-400 font-semibold">
+                            {liveSpotChangePct >= 0 ? '+' : ''}{liveSpotChangePct.toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </React.Fragment>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <table className="w-full text-xs text-center border-collapse num-font tabular-nums lg:hidden">
+              <thead>
+                <tr className="border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)] text-[10px] text-[var(--text-muted)] uppercase font-bold tracking-wider">
+                  <th className="py-2 px-2 text-left">Volume</th>
+                  <th className="py-2 px-2 text-center text-[var(--call-accent)] font-black">Call LTP</th>
+                  <th className="py-2 px-2 text-center bg-[var(--bg-surface)] text-[var(--text-main)] font-black border-x border-[var(--border-color)]">Strike Price</th>
+                  <th className="py-2 px-2 text-center text-[var(--put-accent)] font-black">Put LTP</th>
+                  <th className="py-2 px-2 text-right">Volume</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-color)]">
+                {filteredChain.map((row, idx) => {
+                  const isAtm = row.strikePrice === atmStrike;
+                  const ceTick = freshnessMap.get(row.ce?.instrumentToken || '');
+                  const peTick = freshnessMap.get(row.pe?.instrumentToken || '');
+
+                  const nextRow = filteredChain[idx + 1];
+                  const effectiveSpot = liveSpotLtp > 0 ? liveSpotLtp : spotPrice;
+                  const showSpotLine = effectiveSpot >= row.strikePrice && nextRow && effectiveSpot < nextRow.strikePrice;
+
+                  return (
+                    <React.Fragment key={row.strikePrice}>
+                      <OptionChainRow
+                        row={row}
+                        isAtm={isAtm}
+                        spotPrice={liveSpotLtp}
+                        viewMode={viewMode}
+                        ceTick={ceTick?.tick}
+                        peTick={peTick?.tick}
+                        activeLtpKey={activeLtpKey}
+                        onSelectLtp={setActiveLtpKey}
+                        onOpenOrder={handleOpenOrder}
+                        onOpenChart={(contract) => {
+                          setSelectedChartContract(contract);
+                          setIsChartOpen(true);
+                        }}
+                        underlying={symbol}
+                        expiry={expiry}
+                        lotSize={lotSize}
+                        exchange={symbol.startsWith('SENSEX') || symbol.startsWith('BANKEX') ? 'BSE' : 'NSE'}
+                        isMobile={true}
+                      />
+
+                      {/* Mobile Spot Price Indicator Row (Matching Image 2) */}
+                      {showSpotLine && (
+                        <tr className="bg-[var(--bg-surface-inset)] border-y-2 border-rose-500 font-bold">
+                          <td colSpan={5} className="py-1.5 px-2">
+                            <div className="flex items-center justify-center gap-2 text-rose-400 font-mono text-xs">
+                              <span className="text-[10px] text-[var(--text-muted)] font-semibold uppercase">Long Buildup |</span>
+                              <span className="text-rose-400 font-bold">{liveSpotLtp.toFixed(2)}</span>
+                              <span className="text-[10px] text-rose-500">{liveSpotChangePct.toFixed(2)}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
 
         </div>
       </div>

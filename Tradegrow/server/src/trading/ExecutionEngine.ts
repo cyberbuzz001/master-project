@@ -174,6 +174,16 @@ export class ExecutionEngine {
         this.unregisterPendingOrder(order.id);
 
         const isBsModel = (tick as any)?.bidQty === 500 && (tick as any)?.askQty === 500;
+        const tickSource = (isBsModel || (tick as any)?.source === 'SYNTHETIC') ? 'BLACK_SCHOLES_SYNTHETIC' : 'LIVE_FEED';
+
+        // Precondition Guard (H-12): Synthetic Black-Scholes ticks cannot authorize a live or real-money fill
+        if (tickSource === 'BLACK_SCHOLES_SYNTHETIC' && ((order as any)?.is_live || (order as any)?.trading_mode === 'LIVE')) {
+          console.error(`[ExecutionEngine] Refusing execution for live order ${order.id}: Synthetic Black-Scholes tick provenance detected.`);
+          order.isEvaluating = false;
+          this.registerPendingOrder(order);
+          return;
+        }
+
         const freshnessTag = (Date.now() - (tick.timestamp || Date.now()) <= 15000)
           ? 'live'
           : (isBsModel ? 'synthetic_skew' : 'cached_stale');
@@ -182,7 +192,7 @@ export class ExecutionEngine {
           : (order.order_type === 'LIMIT' ? 'LIMIT_MATCH' : 'STOP_LOSS');
 
         const provenance = {
-          tickSource: isBsModel ? 'BLACK_SCHOLES_SYNTHETIC' : 'LIVE_FEED',
+          tickSource,
           tickTimestamp: tick.timestamp || Date.now(),
           tickLtp: tick.ltp,
           tickBid: bidPrice,

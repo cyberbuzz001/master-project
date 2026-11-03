@@ -6,7 +6,7 @@
  * order is ever submitted; see the Phase 1 section of the RMS overhaul plan
  * for the full design rationale.
  */
-import { query } from '../db/schema';
+import { query, queryOne } from '../db/schema';
 import { redis } from '../db/redis';
 import { MarketDataEngine } from '../marketData/MarketDataEngine';
 import { executeSquareOff } from './RmsSquareOffAction';
@@ -70,6 +70,22 @@ export class RmsAutoSquareOffEngine {
     if (!enabled) {
       console.log(`[RmsAutoSquareOffEngine] Disabled via MIS_AUTO_SQUARE_OFF_ENABLED — skipping run for ${targetExchange || 'ALL'}.`);
       return { ranAt, mode, enabled, marketOpen, lockAcquired: false, processed: 0, skipped: 0, failed: 0, results: [] };
+    }
+
+    // Holiday & Market Hours Execution Gate (H-11 Fix)
+    const holidayRow = await queryOne<any>(
+      `SELECT holiday_name FROM trading_holidays WHERE holiday_date = CURRENT_DATE AND (segment = 'ALL' OR segment = $1) LIMIT 1`,
+      [segment]
+    ).catch(() => null);
+
+    if (holidayRow) {
+      console.log(`[RmsAutoSquareOffEngine] 🏖️ Exchange holiday detected (${holidayRow.holiday_name}) for ${segment} — skipping square-off.`);
+      return { ranAt, mode, enabled, marketOpen: false, lockAcquired: false, processed: 0, skipped: 0, failed: 0, results: [] };
+    }
+
+    if (!marketOpen && process.env.NODE_ENV === 'production') {
+      console.log(`[RmsAutoSquareOffEngine] Market closed for segment ${segment} — skipping auto square-off.`);
+      return { ranAt, mode, enabled, marketOpen: false, lockAcquired: false, processed: 0, skipped: 0, failed: 0, results: [] };
     }
 
     const lockKey = targetExchange ? `${RUN_LOCK_KEY}:${targetExchange}` : RUN_LOCK_KEY;

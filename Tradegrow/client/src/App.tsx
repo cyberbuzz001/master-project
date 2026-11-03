@@ -278,7 +278,7 @@ function AuthenticatedApp({
             <Suspense fallback={routeSuspenseFallback}>
               <Routes>
                 <Route path="/" element={
-                  <div className="max-w-lg mx-auto px-3 pt-3 pb-24">
+                  <div className="max-w-lg mx-auto px-3 pt-3 pb-mobile-nav">
                     <GrowwExploreView
                       token={token}
                       wallet={wallet}
@@ -299,44 +299,44 @@ function AuthenticatedApp({
 
                 <Route path="/portfolio" element={<Navigate to="/portfolio/positions" replace />} />
                 <Route path="/portfolio/positions" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <OrdersPositionsView token={token} initialTab="POSITIONS" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                   </div>
                 } />
                 <Route path="/portfolio/orders" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <OrdersPositionsView token={token} initialTab="ORDERS" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                   </div>
                 } />
                 <Route path="/portfolio/history" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <OrdersPositionsView token={token} initialTab="TRADE_HISTORY" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                   </div>
                 } />
                 <Route path="/portfolio/holdings" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <PortfolioHoldingsAnalyticsView token={token || ''} wallet={wallet} riskRestriction={user?.riskRestriction} onRefreshWallet={fetchWallet} initialTab="HOLDINGS" />
                   </div>
                 } />
                 <Route path="/portfolio/analytics" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <PortfolioHoldingsAnalyticsView token={token || ''} wallet={wallet} riskRestriction={user?.riskRestriction} onRefreshWallet={fetchWallet} initialTab="ANALYTICS" />
                   </div>
                 } />
                 <Route path="/portfolio/journal" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <TradingJournalView token={token || ''} />
                   </div>
                 } />
 
                 <Route path="/option-chain" element={
-                  <div className="max-w-2xl mx-auto p-2 pb-24">
+                  <div className="max-w-2xl mx-auto p-2 pb-mobile-nav">
                     <OptionChainView token={token} onRefreshWallet={fetchWallet} riskRestriction={user?.riskRestriction} />
                   </div>
                 } />
 
                 <Route path="/watchlist" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <GrowwWatchlistView
                       token={token || ''}
                       onRefreshWallet={fetchWallet}
@@ -347,7 +347,7 @@ function AuthenticatedApp({
                 } />
 
                 <Route path="/admin/*" element={
-                  <div className="max-w-4xl mx-auto p-2 pb-24">
+                  <div className="max-w-4xl mx-auto p-2 pb-mobile-nav">
                     {isStaffUser(user.role) ? (
                       <AdminPanel token={token} theme={theme} onToggleTheme={toggleTheme} />
                     ) : (
@@ -360,7 +360,7 @@ function AuthenticatedApp({
 
                 <Route path="/profile" element={<Navigate to="/profile/account" replace />} />
                 <Route path="/profile/:tab" element={
-                  <div className="max-w-lg mx-auto p-3 pb-24">
+                  <div className="max-w-lg mx-auto p-3 pb-mobile-nav">
                     <ProfilePage user={user} wallet={wallet} token={token} theme={theme} onToggleTheme={toggleTheme} onLogout={onLogout} onRefreshWallet={fetchWallet} />
                   </div>
                 } />

@@ -110,6 +110,25 @@ class AiService
                 }
             }
 
+            // Bounded Continuation Loop (H-08 fix): Feed tool results back to model for grounded output
+            if (!empty($toolResults)) {
+                $continuationRequest = new AICompletionRequest(
+                    model: $modelIdentifier,
+                    systemPrompt: $systemPrompt,
+                    messages: [
+                        ['role' => 'user', 'content' => $userMessage],
+                        ['role' => 'assistant', 'content' => $result->content ?: 'Processing tool request...'],
+                        ['role' => 'user', 'content' => 'Tool execution outputs: ' . json_encode($toolResults)],
+                    ],
+                    tools: [], // bounded: no further tool branching
+                    temperature: 0.2,
+                    maxTokens: 2000,
+                    runUuid: $request->runUuid,
+                );
+
+                $result = $provider->complete($continuationRequest);
+            }
+
             // Run compliance and grounding validation
             $screenResult = $this->guardian->screen($result->content, $toolResults);
 

@@ -135,7 +135,7 @@ class ToolGateway
 
         return [
             'id' => $lead->id,
-            'name' => $lead->name,
+            'name' => $lead->full_name ?? 'Unknown',
             'status' => $lead->status,
             'source' => $lead->source?->name ?? 'Unknown',
             'created_at' => $lead->created_at->toISOString(),

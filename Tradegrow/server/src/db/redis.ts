@@ -111,6 +111,27 @@ class RedisService {
   /**
    * Get cache value by key
    */
+  /**
+   * Set cache if not exists (NX) with TTL in seconds. Returns true if key was set, false if existed.
+   */
+  public async setIfNotExists(key: string, value: string, ttlSeconds = 86400): Promise<boolean> {
+    if (this.isAvailable()) {
+      try {
+        const res = await this.client!.set(key, value, 'EX', ttlSeconds, 'NX');
+        return res === 'OK';
+      } catch (err: any) {
+        console.warn(`[Redis] setIfNotExists failed for key ${key}, falling back to memory:`, err.message);
+      }
+    }
+    const now = Date.now();
+    const existing = this.inMemoryCache.get(key);
+    if (existing && now <= existing.expiresAt) {
+      return false;
+    }
+    this.inMemoryCache.set(key, { value, expiresAt: now + (ttlSeconds * 1000) });
+    return true;
+  }
+
   public async get(key: string): Promise<string | null> {
     if (this.isAvailable()) {
       try {

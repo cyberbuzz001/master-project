@@ -65,17 +65,17 @@ export async function seedDatabase(): Promise<void> {
 
     // 4. Seed instrument master (Top Indian Bluechips & Indices)
     const instruments = [
-      { token: 'NSE_NIFTY50',     exchange: 'NSE', segment: 'EQ', symbol: 'NIFTY 50',     ts: 'NIFTY50',       name: 'Nifty 50 Index',            lot: 25, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
-      { token: 'NSE_BANKNIFTY',   exchange: 'NSE', segment: 'EQ', symbol: 'BANKNIFTY',     ts: 'BANKNIFTY',     name: 'Nifty Bank Index',           lot: 15, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
-      { token: 'BSE_SENSEX',      exchange: 'BSE', segment: 'EQ', symbol: 'SENSEX',         ts: 'SENSEX',        name: 'BSE Sensex Index',            lot: 10, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
+      { token: 'NSE_NIFTY50',     exchange: 'NSE', segment: 'EQ', symbol: 'NIFTY 50',     ts: 'NIFTY50',       name: 'Nifty 50 Index',            lot: 65, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
+      { token: 'NSE_BANKNIFTY',   exchange: 'NSE', segment: 'EQ', symbol: 'BANKNIFTY',     ts: 'BANKNIFTY',     name: 'Nifty Bank Index',           lot: 30, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
+      { token: 'BSE_SENSEX',      exchange: 'BSE', segment: 'EQ', symbol: 'SENSEX',         ts: 'SENSEX',        name: 'BSE Sensex Index',            lot: 20, tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'INDEX' },
       { token: 'NSE_RELIANCE',    exchange: 'NSE', segment: 'EQ', symbol: 'RELIANCE',       ts: 'RELIANCE-EQ',   name: 'Reliance Industries Ltd',     lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
       { token: 'NSE_TCS',         exchange: 'NSE', segment: 'EQ', symbol: 'TCS',            ts: 'TCS-EQ',        name: 'Tata Consultancy Services',   lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
       { token: 'NSE_INFY',        exchange: 'NSE', segment: 'EQ', symbol: 'INFY',           ts: 'INFY-EQ',       name: 'Infosys Limited',             lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
       { token: 'NSE_HDFCBANK',    exchange: 'NSE', segment: 'EQ', symbol: 'HDFCBANK',       ts: 'HDFCBANK-EQ',   name: 'HDFC Bank Limited',           lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
       { token: 'NSE_ICICIBANK',   exchange: 'NSE', segment: 'EQ', symbol: 'ICICIBANK',      ts: 'ICICIBANK-EQ',  name: 'ICICI Bank Limited',          lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
       { token: 'NSE_TATAMOTORS',  exchange: 'NSE', segment: 'EQ', symbol: 'TATAMOTORS',     ts: 'TATAMOTORS-EQ', name: 'Tata Motors Limited',         lot: 1,  tick: 0.05, strike: 0, opt: 'XX', expiry: null, type: 'EQ' },
-      { token: 'NFO_NIFTY_24500_CE', exchange: 'NFO', segment: 'FO', symbol: 'NIFTY24500CE', ts: 'NIFTY 24500 CALL', name: 'NIFTY 24500 CALL OPTION', lot: 25, tick: 0.05, strike: 24500, opt: 'CE', expiry: '2026-08-28', type: 'OPTIDX' },
-      { token: 'NFO_NIFTY_24500_PE', exchange: 'NFO', segment: 'FO', symbol: 'NIFTY24500PE', ts: 'NIFTY 24500 PUT',  name: 'NIFTY 24500 PUT OPTION',  lot: 25, tick: 0.05, strike: 24500, opt: 'PE', expiry: '2026-08-28', type: 'OPTIDX' }
+      { token: 'NFO_NIFTY_24500_CE', exchange: 'NFO', segment: 'FO', symbol: 'NIFTY24500CE', ts: 'NIFTY 24500 CALL', name: 'NIFTY 24500 CALL OPTION', lot: 65, tick: 0.05, strike: 24500, opt: 'CE', expiry: '2026-08-28', type: 'OPTIDX' },
+      { token: 'NFO_NIFTY_24500_PE', exchange: 'NFO', segment: 'FO', symbol: 'NIFTY24500PE', ts: 'NIFTY 24500 PUT',  name: 'NIFTY 24500 PUT OPTION',  lot: 65, tick: 0.05, strike: 24500, opt: 'PE', expiry: '2026-08-28', type: 'OPTIDX' }
     ];
 
     for (const inst of instruments) {

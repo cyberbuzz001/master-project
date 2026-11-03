@@ -171,6 +171,14 @@
      Sheet primitive uses; the old classes are superseded once it ships. */
   --overlay-backdrop: rgba(15, 23, 42, 0.4);
   --shadow-focus: 0 0 0 3px var(--primary-glow);
+
+  /* Mobile Navigation Tokens & Layout Offsets (M-03 Fix) */
+  --mobile-nav-height: 64px;
+  --mobile-nav-offset: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 16px) + 16px);
+}
+
+.pb-mobile-nav {
+  padding-bottom: var(--mobile-nav-offset);
 }
 
 [data-theme="dark"],
@@ -708,6 +716,33 @@
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+.mobile-more-action {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.mobile-more-action:hover,
+.mobile-more-action:focus-visible {
+  background: var(--primary-light);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border-color));
+  outline: none;
+}
+
+.mobile-more-action:active {
+  transform: scale(0.98);
 }
 
 /* ════════════════════════════════════════════════════════════

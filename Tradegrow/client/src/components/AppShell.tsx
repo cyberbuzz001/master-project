@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Bookmark, Layers, Briefcase, User as UserIcon, ShieldCheck,
-  Search, Wallet, Plus, Sun, Moon, Bell, SlidersHorizontal, Download
+  Search, Wallet, Plus, Sun, Moon, Bell, SlidersHorizontal, Download, MoreHorizontal, X, HelpCircle
 } from 'lucide-react';
 import { User, MarketTick, isStaffUser } from '../types';
 import { useMarketSocket, useSubscribeTokens, globalTickStore } from '../hooks/useMarketSocket';
@@ -71,7 +71,28 @@ export function AppShell({
   const socket = useMarketSocket();
   const ticks = propTicks || socket.ticks;
   const [selectedIndexModal, setSelectedIndexModal] = useState<{ symbol: string; token: string; exchange: string } | null>(null);
+  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+  const moreCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const isStaff = isStaffUser(user?.role);
+
+  useEffect(() => {
+    setIsMobileMoreOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isMobileMoreOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement | null;
+      moreCloseButtonRef.current?.focus();
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') setIsMobileMoreOpen(false);
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+    previousFocusRef.current?.focus();
+    previousFocusRef.current = null;
+  }, [isMobileMoreOpen]);
 
   // Guarantee persistent real-time ticks for all key indices globally across the entire app
   const GLOBAL_INDICES = ['NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY'];
@@ -114,12 +135,11 @@ export function AppShell({
   ];
 
   const MOBILE_NAV_ITEMS: AppShellNavItem[] = [
-    { path: '/', matchPrefix: '/', label: 'Home', icon: <Home className="w-[18px] h-[18px]" /> },
-    { path: '/watchlist', matchPrefix: '/watchlist', label: 'Watchlist', icon: <Bookmark className="w-[18px] h-[18px]" /> },
-    { path: '/terminal', matchPrefix: '/terminal', label: 'Terminal', icon: <SlidersHorizontal className="w-[18px] h-[18px]" /> },
-    { path: '/option-chain', matchPrefix: '/option-chain', label: 'Options', icon: <Layers className="w-[18px] h-[18px]" /> },
-    { path: '/portfolio/positions', matchPrefix: '/portfolio', label: 'Positions', icon: <Briefcase className="w-[18px] h-[18px]" /> },
-    { path: '/profile/account', matchPrefix: '/profile', label: 'Profile', icon: <UserIcon className="w-[18px] h-[18px]" /> },
+    { path: '/', matchPrefix: '/', label: 'Home', icon: <Home className="w-5 h-5" /> },
+    { path: '/watchlist', matchPrefix: '/watchlist', label: 'Watchlist', icon: <Bookmark className="w-5 h-5" /> },
+    { path: '/terminal', matchPrefix: '/terminal', label: 'Trade', icon: <SlidersHorizontal className="w-5 h-5" /> },
+    { path: '/portfolio/positions', matchPrefix: '/portfolio', label: 'Positions', icon: <Briefcase className="w-5 h-5" /> },
+    { path: '#more', matchPrefix: '/more', label: 'More', icon: <MoreHorizontal className="w-5 h-5" /> },
   ];
 
   return (
@@ -411,36 +431,98 @@ export function AppShell({
       {/* ── MOBILE BOTTOM TAB BAR ───────────────────────────────────────── */}
       <nav
         aria-label="Primary"
-        className="md:hidden mobile-nav-glass fixed bottom-0 left-0 right-0 z-50 px-1 h-15 flex items-center justify-around pb-[env(safe-area-inset-bottom,4px)]"
+        className="md:hidden mobile-nav-glass fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 min-h-[64px] flex items-center justify-around pb-[env(safe-area-inset-bottom,4px)]"
       >
         {MOBILE_NAV_ITEMS.map((item) => {
-          const active = isActive(location.pathname, item);
+          const isMore = item.path === '#more';
+          const active = isMore ? isMobileMoreOpen : isActive(location.pathname, item);
           return (
             <Link
               key={item.path}
-              to={item.path}
-              onClick={() => navigator.vibrate?.(15)}
-              className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors ${
-                active ? 'text-[var(--primary)] font-extrabold' : 'text-[var(--text-muted)] font-semibold'
+              to={isMore ? location.pathname : item.path}
+              onClick={(event) => {
+                if (isMore) {
+                  event.preventDefault();
+                  setIsMobileMoreOpen(true);
+                }
+                navigator.vibrate?.(15);
+              }}
+              aria-current={!isMore && active ? 'page' : undefined}
+              aria-expanded={isMore ? isMobileMoreOpen : undefined}
+              aria-label={item.label}
+              className={`flex flex-1 max-w-[88px] flex-col items-center justify-center gap-1 min-h-[52px] min-w-[56px] py-1 px-1 rounded-xl active:scale-[0.97] transition-all ${
+                active ? 'text-[var(--primary)] font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text-main)] font-medium'
               }`}
             >
-              <div className={active ? 'p-1 rounded-lg bg-[var(--primary-light)] nav-icon-active' : 'p-1'}>{item.icon}</div>
-              <span className="text-[9.5px] leading-tight tracking-tight">{item.label}</span>
+              <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-[var(--primary-light)] text-[var(--primary)] shadow-xs' : 'text-[var(--text-muted)]'}`}>
+                {item.icon}
+              </div>
+              <span className="text-[11px] leading-tight tracking-tight">{item.label}</span>
             </Link>
           );
         })}
-        {isStaff && (
-          <Link
-            to="/admin"
-            className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[40px] px-1 rounded-xl active:scale-95 transition-colors ${
-              location.pathname.startsWith('/admin') ? 'text-[var(--loss)] font-extrabold' : 'text-[var(--text-muted)] font-semibold'
-            }`}
-          >
-            <ShieldCheck className="w-[18px] h-[18px]" />
-            <span className="text-[9.5px]">Admin</span>
-          </Link>
-        )}
       </nav>
+
+      {isMobileMoreOpen && (
+        <div
+          className="md:hidden mobile-bottom-sheet-backdrop"
+          role="presentation"
+          onClick={() => setIsMobileMoreOpen(false)}
+        >
+          <section
+            className="mobile-bottom-sheet-content px-4 pt-3"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-more-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p id="mobile-more-title" className="text-base font-extrabold text-[var(--text-main)]">More</p>
+                <p className="text-xs text-[var(--text-muted)]">Tools, account settings, and support</p>
+              </div>
+              <button
+                type="button"
+                ref={moreCloseButtonRef}
+                onClick={() => setIsMobileMoreOpen(false)}
+                aria-label="Close more menu"
+                className="touch-target rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pb-5">
+              <Link to="/option-chain" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
+                <Layers className="w-5 h-5 text-[var(--primary)]" />
+                <span>Option Chain</span>
+              </Link>
+              <Link to="/profile/account" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
+                <UserIcon className="w-5 h-5 text-[var(--primary)]" />
+                <span>Profile</span>
+              </Link>
+              <button type="button" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); onOpenWalletModal(); }}>
+                <Wallet className="w-5 h-5 text-[var(--primary)]" />
+                <span>Add funds</span>
+              </button>
+              <Link to="/profile/support" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
+                <HelpCircle className="w-5 h-5 text-[var(--primary)]" />
+                <span>Help & Support</span>
+              </Link>
+              <Link to="/profile/notifications" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
+                <Bell className="w-5 h-5 text-[var(--primary)]" />
+                <span>Notifications</span>
+              </Link>
+              {isStaff && (
+                <Link to="/admin" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
+                  <ShieldCheck className="w-5 h-5 text-[var(--loss)]" />
+                  <span>Admin</span>
+                </Link>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {!isStaff && <ChatWidget token={token} />}
     </>

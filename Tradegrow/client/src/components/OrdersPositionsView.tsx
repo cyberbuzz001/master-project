@@ -1261,13 +1261,26 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {mobileTab === 'POSITIONS' && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl divide-y divide-[var(--border-color)] shadow-xs overflow-hidden">
             {filteredMobilePositions.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <Zap className="w-8 h-8 text-[var(--text-muted)] mx-auto opacity-40" />
-                <h3 className="text-xs font-bold text-[var(--text-main)]">{searchQuery ? 'No matching positions' : 'No open positions'}</h3>
-                <p className="text-[11px] text-[var(--text-muted)]">Your open intraday & F&O trading positions will appear here.</p>
-                {onOpenOptionChain && (
-                  <Button size="sm" className="mt-2" onClick={() => onOpenOptionChain()}>Browse Option Chain</Button>
-                )}
+              <div className="p-8 text-center space-y-3 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-center">
+                  <Layers className="w-7 h-7 text-[var(--text-muted)] opacity-60" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-[var(--text-main)]">
+                    {searchQuery ? 'No matching positions' : 'No Positions Today'}
+                  </h3>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">
+                    P&amp;L for your open intraday &amp; F&amp;O positions will appear here.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/terminal')}
+                  className="mt-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>Search to Place Order</span>
+                </button>
               </div>
             ) : (
               filteredMobilePositions.map((pos: any) => {
@@ -1481,7 +1494,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
         {/* ── Sticky Total P&L Bar on Mobile (Floating right above Bottom Nav) ── */}
         {mobileTab === 'POSITIONS' && (
-          <div className="fixed bottom-15 left-0 right-0 z-30 bg-[var(--bg-surface)]/95 backdrop-blur-md border-t border-[var(--border-color)] px-4 py-2.5 flex items-center justify-between shadow-lg">
+          <div
+            style={{ bottom: 'calc(var(--mobile-nav-height, 64px) + env(safe-area-inset-bottom, 0px))' }}
+            className="fixed left-0 right-0 z-30 bg-[var(--bg-surface)]/95 backdrop-blur-md border-t border-[var(--border-color)] px-4 py-2.5 flex items-center justify-between shadow-lg"
+          >
             <button
               type="button"
               onClick={() => setIsTotalExpanded(!isTotalExpanded)}
@@ -1508,7 +1524,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
         {/* ── Total P&L Expanded Drawer on Mobile ── */}
         {isTotalExpanded && mobileTab === 'POSITIONS' && (
-          <div className="fixed bottom-26 left-0 right-0 z-30 bg-[var(--bg-surface)] border-t border-[var(--border-color)] p-4 shadow-2xl animate-fadeIn space-y-2 text-xs">
+          <div
+            style={{ bottom: 'calc(var(--mobile-nav-height, 64px) + env(safe-area-inset-bottom, 0px) + 48px)' }}
+            className="fixed left-0 right-0 z-30 bg-[var(--bg-surface)] border-t border-[var(--border-color)] p-4 shadow-2xl animate-fadeIn space-y-2 text-xs"
+          >
             <div className="flex justify-between">
               <span className="text-[var(--text-muted)] font-semibold">Unrealized P&L:</span>
               <span className={`font-mono font-bold ${pnlColorClass(totalUnrealizedPnl)}`}>
