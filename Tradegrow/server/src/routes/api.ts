@@ -81,9 +81,10 @@ const orderLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'development' ? 10000 : 2000,
+  max: process.env.NODE_ENV === 'development' ? 50000 : 15000,
   validate: { ip: false },
   store: getRedisStore('api'),
+  skip: (req: Request) => req.path.startsWith('/health') || req.path.startsWith('/auth'),
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'API rate limit exceeded.' } }
 });
 
