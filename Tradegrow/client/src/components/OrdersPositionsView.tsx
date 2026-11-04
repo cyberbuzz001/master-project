@@ -1257,7 +1257,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {mobileTab === 'POSITIONS' && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl divide-y divide-[var(--border-color)] shadow-xs overflow-hidden">
             {filteredMobilePositions.length === 0 ? (
-              <div className="p-8 text-center space-y-3 flex flex-col items-center">
+              <div className="p-5 sm:p-8 text-center space-y-3 flex flex-col items-center">
                 <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-center">
                   <Layers className="w-7 h-7 text-[var(--text-muted)] opacity-60" />
                 </div>
@@ -1372,7 +1372,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {mobileTab === 'ORDERS' && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl divide-y divide-[var(--border-color)] shadow-xs overflow-hidden">
             {filteredOrders.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
+              <div className="p-5 sm:p-8 text-center space-y-2">
                 <Clock className="w-8 h-8 text-[var(--text-muted)] mx-auto opacity-40" />
                 <h3 className="text-xs font-bold text-[var(--text-main)]">No Orders Today</h3>
                 <p className="text-[11px] text-[var(--text-muted)]">Orders placed during the current trading session will appear here.</p>
@@ -1494,7 +1494,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {mobileTab === 'TRADE_HISTORY' && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl divide-y divide-[var(--border-color)] shadow-xs overflow-hidden">
             {closedTrades.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
+              <div className="p-5 sm:p-8 text-center space-y-2">
                 <History className="w-8 h-8 text-[var(--text-muted)] mx-auto opacity-40" />
                 <h3 className="text-xs font-bold text-[var(--text-main)]">No Closed Trades Yet</h3>
                 <p className="text-[11px] text-[var(--text-muted)]">Completed round-trip trades will appear here with realized P&amp;L.</p>

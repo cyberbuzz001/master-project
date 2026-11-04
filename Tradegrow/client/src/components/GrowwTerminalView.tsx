@@ -571,7 +571,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
       {consoleTab === 'POSITIONS' && (
         <div className="w-full overflow-x-auto">
           {openPositions.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-500">
+            <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No open positions. Place an order to start trading.
             </div>
           ) : (
@@ -635,7 +635,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
       {consoleTab === 'ORDERS' && (
         <div className="w-full overflow-x-auto">
           {pendingOrders.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-500">
+            <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No active pending orders.
             </div>
           ) : (
@@ -689,7 +689,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
       {consoleTab === 'TRADES' && (
         <div className="w-full overflow-x-auto">
           {filledOrders.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-500">
+            <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No trades executed today yet.
             </div>
           ) : (

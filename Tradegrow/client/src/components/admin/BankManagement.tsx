@@ -180,7 +180,7 @@ export const BankManagement: React.FC<BankManagementProps> = ({ token }) => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-[var(--text-muted)]">
+      <div className="flex flex-col items-center justify-center min-h-[260px] sm:min-h-[400px] gap-3 text-[var(--text-muted)]">
         <RefreshCw className="w-8 h-8 animate-spin text-[var(--primary)]" />
         <span className="text-xs font-semibold">Loading Merchant Payment Configuration...</span>
       </div>

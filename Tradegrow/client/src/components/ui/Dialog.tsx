@@ -141,7 +141,7 @@ export function Dialog({ isOpen, onClose, title, children, footer, size = 'md', 
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {title && (
-          <div className="flex items-center justify-between px-[var(--space-xl)] py-[var(--space-lg)] border-b border-[var(--border-color)] sticky top-0 bg-[var(--bg-surface)]">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-[var(--border-color)] sticky top-0 bg-[var(--bg-surface)]">
             <h2 id="dialog-title" className="font-headline font-bold text-[var(--font-size-md)] text-[var(--text-main)]">
               {title}
             </h2>
@@ -152,9 +152,9 @@ export function Dialog({ isOpen, onClose, title, children, footer, size = 'md', 
             )}
           </div>
         )}
-        <div className="p-[var(--space-xl)]">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-2 px-[var(--space-xl)] py-[var(--space-lg)] border-t border-[var(--border-color)] sticky bottom-0 bg-[var(--bg-surface)]">
+          <div className="flex items-center justify-end gap-2 px-4 py-3 sm:px-6 sm:py-4 border-t border-[var(--border-color)] sticky bottom-0 bg-[var(--bg-surface)]">
             {footer}
           </div>
         )}

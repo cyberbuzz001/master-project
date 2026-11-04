@@ -466,13 +466,13 @@ function AuthenticatedApp({
           onToggleTerminal={() => (isTerminalMode ? navigate(-1) : navigate('/terminal'))}
         />
 
-        <main className="flex-1">
+        <main className="flex-1 pb-20 md:pb-6">
           <Suspense fallback={routeSuspenseFallback}>
             <Routes>
               <Route path="/terminal" element={<TerminalRoute token={token} wallet={wallet} onRefreshWallet={fetchWallet} theme={theme} onToggleTheme={toggleTheme} />} />
 
               <Route path="/" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <GrowwExploreView
                     token={token}
                     wallet={wallet}
@@ -487,7 +487,7 @@ function AuthenticatedApp({
               } />
 
               <Route path="/watchlist" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <GrowwWatchlistView
                     token={token}
                     onRefreshWallet={fetchWallet}
@@ -498,8 +498,8 @@ function AuthenticatedApp({
               } />
 
               <Route path="/option-chain" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-6 shadow-xs">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
+                  <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl sm:rounded-2xl p-2 sm:p-4 md:p-6 shadow-xs">
                     <OptionChainView token={token} onRefreshWallet={fetchWallet} riskRestriction={user?.riskRestriction} />
                   </div>
                 </div>
@@ -507,45 +507,45 @@ function AuthenticatedApp({
 
               <Route path="/portfolio" element={<Navigate to="/portfolio/positions" replace />} />
               <Route path="/portfolio/positions" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <OrdersPositionsView token={token} initialTab="POSITIONS" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                 </div>
               } />
               <Route path="/portfolio/orders" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <OrdersPositionsView token={token} initialTab="ORDERS" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                 </div>
               } />
               <Route path="/portfolio/history" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <OrdersPositionsView token={token} initialTab="TRADE_HISTORY" onRefreshWallet={fetchWallet} onOpenOptionChain={(sym) => navigate(sym ? `/option-chain?symbol=${encodeURIComponent(sym)}` : '/option-chain')} riskRestriction={user?.riskRestriction} />
                 </div>
               } />
               <Route path="/portfolio/holdings" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <PortfolioHoldingsAnalyticsView token={token || ''} wallet={wallet} riskRestriction={user?.riskRestriction} onRefreshWallet={fetchWallet} initialTab="HOLDINGS" />
                 </div>
               } />
               <Route path="/portfolio/analytics" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <PortfolioHoldingsAnalyticsView token={token || ''} wallet={wallet} riskRestriction={user?.riskRestriction} onRefreshWallet={fetchWallet} initialTab="ANALYTICS" />
                 </div>
               } />
               <Route path="/portfolio/journal" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <TradingJournalView token={token || ''} />
                 </div>
               } />
 
               <Route path="/profile" element={<Navigate to="/profile/account" replace />} />
               <Route path="/profile/:tab" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   <ProfilePage user={user} wallet={wallet} token={token || ''} theme={theme} onToggleTheme={toggleTheme} onLogout={onLogout} onRefreshWallet={fetchWallet} />
                 </div>
               } />
 
               <Route path="/admin/*" element={
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-[1440px] mx-auto px-2.5 sm:px-6 md:px-8 py-3 sm:py-6">
                   {isStaffUser(user.role) ? (
                     <AdminPanel token={token} theme={theme} onToggleTheme={toggleTheme} />
                   ) : (

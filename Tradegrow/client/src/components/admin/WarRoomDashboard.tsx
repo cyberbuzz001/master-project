@@ -343,7 +343,7 @@ export const WarRoomDashboard: React.FC<WarRoomDashboardProps> = ({ token }) => 
   /* ───── Loading State ───── */
   if (loading && !d) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[260px] sm:min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-[var(--border-color)] border-t-[var(--primary)] animate-spin" />

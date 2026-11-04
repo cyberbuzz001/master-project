@@ -152,7 +152,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({
         <div className="sm:hidden w-10 h-1 bg-[var(--border-color)] rounded-full mx-auto mt-2.5 mb-1" />
 
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[var(--border-color)] flex items-center justify-between">
+        <div className="p-3 sm:p-5 border-b border-[var(--border-color)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[var(--primary-light)] text-[var(--primary)] flex items-center justify-center font-bold">
               <Wallet className="w-5 h-5" />
@@ -199,7 +199,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+        <div className="p-3 sm:p-5 overflow-y-auto space-y-3 sm:space-y-4 flex-1">
           {activeTab === 'DEPOSIT' ? (
             <>
               {/* Available Balance Pill */}
@@ -250,13 +250,13 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({
                 </div>
 
                 {/* Preset Amount Chips */}
-                <div className="grid grid-cols-4 gap-2 pt-1">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-1">
                   {PRESET_AMOUNTS.map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => handlePresetClick(val)}
-                      className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      className={`py-1 sm:py-1.5 px-1 sm:px-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold border transition-all cursor-pointer ${
                         amount === val.toString()
                           ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-xs'
                           : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'

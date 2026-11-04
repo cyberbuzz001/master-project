@@ -386,9 +386,9 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
       </Card>
 
       {/* ── MULTI-WATCHLIST QUICK TABS & CATEGORY FILTER ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[var(--bg-surface)] p-2 rounded-2xl border border-[var(--border-color)]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 bg-[var(--bg-surface)] p-2 rounded-xl sm:rounded-2xl border border-[var(--border-color)]">
         {/* Watchlist Quick Switch Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none w-full sm:w-auto pb-0.5 sm:pb-0">
           {WATCHLIST_TABS.map((t) => {
             const count = (watchlistStore[t.id] || []).length;
             const isActive = activeTab === t.id;
@@ -396,7 +396,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all whitespace-nowrap ${
+                className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-[var(--primary)] text-white shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
@@ -416,12 +416,12 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
         </div>
 
         {/* Category Pill Filters */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none w-full sm:w-auto">
           {(['ALL', 'STOCKS', 'FO', 'INDICES', 'COMMODITIES'] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+              className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${
                 activeFilter === filter
                   ? 'bg-[var(--bg-surface-elevated)] text-[var(--primary)] border border-[var(--primary)]/30'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -436,7 +436,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
       {/* Watchlist Items Container */}
       <Card padding="none" className="overflow-hidden">
         {filteredWatchlist.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center gap-3">
+          <div className="p-6 sm:p-12 text-center flex flex-col items-center justify-center gap-3">
             <Eye size={32} className="text-[var(--text-muted)] opacity-50" />
             <span className="text-sm font-bold text-[var(--text-muted)]">No symbols in this watchlist yet</span>
             <p className="text-xs text-[var(--text-muted)] max-w-sm">

@@ -52,7 +52,7 @@ export const IndicatorToolbar: React.FC<IndicatorToolbarProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-10 z-50 w-80 bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl p-4 flex flex-col gap-3">
+        <div className="absolute left-0 top-10 z-50 w-72 sm:w-80 max-w-[calc(100vw-32px)] bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl p-3.5 sm:p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <span className="font-bold text-sm text-white">Technical Indicators</span>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white">

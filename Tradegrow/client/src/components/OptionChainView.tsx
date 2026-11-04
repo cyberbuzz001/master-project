@@ -352,13 +352,13 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
     <div className="flex flex-col gap-3 p-2 md:p-5 max-w-7xl mx-auto font-sans select-none text-[var(--text-main)] touch-action-manipulation">
       
       {/* ── TOP HEADER (Matching Reference Images 1 & 2) ──────────────── */}
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-3.5 rounded-2xl shadow-xl flex flex-col gap-3 backdrop-blur-xl">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-2 sm:p-3.5 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl flex flex-col gap-2.5 sm:gap-3 backdrop-blur-xl">
         
         {/* Row 1: Index Badges & Spot Price Cards */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           
           {/* Index Tabs — Horizontal scroll strip on mobile for zero vertical waste */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-0.5 w-full md:w-auto -mx-1 px-1 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-0.5 w-full md:w-auto -mx-0.5 px-0.5 sm:mx-0 sm:px-0">
             {[
               { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50' },
               { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX' },
@@ -379,33 +379,33 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                     navigator.vibrate?.(20);
                     setSymbol(item.id);
                   }}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[34px] sm:min-h-[44px] flex-shrink-0 border ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[30px] sm:min-h-[40px] flex-shrink-0 border ${
                     isActive
                       ? 'bg-[var(--bg-surface-inset)] text-[var(--text-main)] border-blue-500 shadow-xs ring-1 ring-blue-500/50'
                       : 'bg-[var(--bg-surface-inset)] text-[var(--text-muted)] border-[var(--border-color)] hover:border-[var(--border-color)] hover:text-[var(--text-main)]'
                   }`}
                 >
                   <div className="flex flex-col items-start leading-tight">
-                    <div className="flex items-center gap-1 font-bold tracking-tight text-[11px] sm:text-xs">
+                    <div className="flex items-center gap-1 font-bold tracking-tight text-[10px] sm:text-xs">
                       <span>{item.name}</span>
                       <span className="text-[8px] bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] px-1 rounded">{item.ex}</span>
                     </div>
-                    <div className="flex items-center gap-1 font-mono text-[10px] sm:text-[11px] tabular-nums mt-0.5">
+                    <div className="flex items-center gap-1 font-mono text-[9px] sm:text-[11px] tabular-nums mt-0.5">
                       {displayPrice > 0 ? (
                         <>
                           <LivePriceCell
                             value={displayPrice}
                             prefix="₹"
                             decimals={2}
-                            className="!text-[10px] sm:!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
+                            className="!text-[9px] sm:!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
                           />
-                          <span className={`flex items-center text-[9px] sm:text-[10px] font-semibold ${isPos ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
+                          <span className={`flex items-center text-[8px] sm:text-[10px] font-semibold ${isPos ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
                             {isPos ? <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                             {isPos ? '+' : ''}{displayChgPct.toFixed(2)}%
                           </span>
                         </>
                       ) : (
-                        <span className="text-[10px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
+                        <span className="text-[9px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
                       )}
                     </div>
                   </div>
@@ -415,20 +415,20 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           </div>
 
           {/* Right Header Action Items */}
-          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full md:w-auto">
+          <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-3 w-full md:w-auto">
             
             {/* Basket Mode Toggle */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2.5 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl min-h-[34px] sm:min-h-[44px]">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl min-h-[30px] sm:min-h-[40px]">
               <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--call-accent)]" />
-              <span className="text-[11px] sm:text-xs font-semibold text-[var(--text-main)] hidden sm:inline">Basket</span>
+              <span className="text-[10px] sm:text-xs font-semibold text-[var(--text-main)] hidden sm:inline">Basket</span>
               <button
                 type="button"
                 onClick={() => setBasketMode(!basketMode)}
-                className={`w-8 h-4.5 sm:w-9 sm:h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
+                className={`w-7 h-4 sm:w-9 sm:h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
                   basketMode ? 'bg-blue-600' : 'bg-[var(--bg-surface-elevated)]'
                 }`}
               >
-                <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white transition-transform ${basketMode ? 'translate-x-3.5 sm:translate-x-4' : 'translate-x-0'}`} />
+                <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white transition-transform ${basketMode ? 'translate-x-3 sm:translate-x-4' : 'translate-x-0'}`} />
               </button>
             </div>
 
@@ -436,10 +436,10 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             <button
               type="button"
               onClick={() => setIsStrategyBuilderOpen(!isStrategyBuilderOpen)}
-              className="flex items-center gap-1 sm:gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] sm:text-xs px-2.5 py-1.5 sm:px-3.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all min-h-[34px] sm:min-h-[44px]"
+              className="flex items-center gap-1 sm:gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] sm:text-xs px-2 py-1 sm:px-3.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all min-h-[30px] sm:min-h-[40px]"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>CREATE STRATEGY</span>
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">CREATE </span><span>STRATEGY</span>
             </button>
 
           </div>
@@ -520,9 +520,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           </div>
 
           {/* Controls Right Group: Strike Range & View Mode Switcher */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-0.5 max-w-full">
             {/* Strike Range Selector */}
-            <div className="flex items-center bg-[var(--bg-surface-inset)] border border-[var(--border-color)] p-1 rounded-xl">
+            <div className="flex items-center bg-[var(--bg-surface-inset)] border border-[var(--border-color)] p-0.5 sm:p-1 rounded-lg sm:rounded-xl flex-shrink-0">
               {[
                 { key: '5', label: '±5 Strikes' },
                 { key: '10', label: '±10' },
@@ -533,7 +533,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                   key={r.key}
                   type="button"
                   onClick={() => setStrikeRange(r.key as any)}
-                  className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-bold text-[11px] sm:text-xs transition-all cursor-pointer ${
                     strikeRange === r.key
                       ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-main)] shadow-xs border border-[var(--border-color)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -546,7 +546,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             </div>
 
             {/* Mode Switcher Tabs (LTP & OI / Greeks / Volume) */}
-            <div className="flex items-center bg-[var(--bg-surface-inset)] border border-[var(--border-color)] p-1 rounded-xl">
+            <div className="flex items-center bg-[var(--bg-surface-inset)] border border-[var(--border-color)] p-0.5 sm:p-1 rounded-lg sm:rounded-xl flex-shrink-0">
               {[
                 { key: 'LTP_OI', label: 'LTP & OI' },
                 { key: 'GREEKS', label: 'Greeks' },
@@ -556,7 +556,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                   key={m.key}
                   type="button"
                   onClick={() => setViewMode(m.key as any)}
-                  className={`px-3 py-1.5 rounded-lg font-extrabold text-xs transition-all cursor-pointer ${
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer ${
                     viewMode === m.key
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'

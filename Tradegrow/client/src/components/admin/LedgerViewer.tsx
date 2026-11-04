@@ -45,8 +45,8 @@ export const LedgerViewer: React.FC<LedgerViewerProps> = ({ token, onOpenCustome
     <div className="flex flex-col gap-4 h-full text-xs">
       {/* Search & Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--bg-surface)] p-3 border border-[var(--border-color)] rounded-xl">
-        <div className="flex items-center gap-2.5 flex-1 min-w-[280px] flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0 sm:min-w-[280px] flex-wrap">
+          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
             <input
               type="text"

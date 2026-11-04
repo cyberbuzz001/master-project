@@ -450,7 +450,7 @@ export function AppShell({
               aria-current={!isTrade && active ? 'page' : undefined}
               aria-expanded={isTrade ? isMobileMoreOpen : undefined}
               aria-label={item.label}
-              className={`flex flex-1 max-w-[88px] flex-col items-center justify-center gap-1 min-h-[52px] min-w-[56px] py-1 px-1 rounded-xl active:scale-[0.97] transition-all ${
+              className={`flex flex-1 min-w-0 max-w-[80px] sm:max-w-[88px] flex-col items-center justify-center gap-0.5 sm:gap-1 min-h-[48px] sm:min-h-[52px] py-1 px-0.5 sm:px-1 rounded-xl active:scale-[0.97] transition-all ${
                 active ? 'text-[var(--primary)] font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text-main)] font-medium'
               }`}
             >

@@ -290,7 +290,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const portalContent = typeof document !== 'undefined' ? (
     <div
-      className="fixed top-4 right-4 z-[999999] flex flex-col gap-2.5 max-w-[92vw] w-[380px] pointer-events-none select-none"
+      className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[999999] flex flex-col gap-2 sm:gap-2.5 max-w-[calc(100vw-24px)] w-[360px] pointer-events-none select-none"
       role="region"
       aria-label="Notifications"
     >

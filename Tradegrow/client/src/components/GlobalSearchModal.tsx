@@ -240,7 +240,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   })();
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-start justify-center pt-16 sm:pt-20 px-4 font-body text-[var(--text-main)]">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-start justify-center pt-12 sm:pt-20 px-2.5 sm:px-4 font-body text-[var(--text-main)]">
       <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
         
         {/* SEARCH INPUT BAR */}
@@ -394,7 +394,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         <span className={`font-bold text-xs ${inst.symbol.includes('CE') ? 'text-[var(--gain)]' : inst.symbol.includes('PE') ? 'text-[var(--loss)]' : 'text-[var(--text-main)]'}`}>
                           {inst.symbol}
                         </span>
-                        <span className="text-xs text-[var(--text-muted)] font-medium">{inst.name}</span>
+                        <span className="text-xs text-[var(--text-muted)] font-medium truncate max-w-[120px] sm:max-w-xs">{inst.name}</span>
                       </div>
                     </div>
 

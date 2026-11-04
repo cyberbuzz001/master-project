@@ -226,7 +226,7 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
 
   if (!risk) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-[var(--text-muted)] gap-3">
+      <div className="flex flex-col items-center justify-center min-h-[260px] sm:min-h-[400px] text-[var(--text-muted)] gap-3">
         <RefreshCw className="w-6 h-6 animate-spin text-[var(--loss)]" />
         <span className="text-xs font-semibold tracking-wider uppercase">Initializing Risk Command Center...</span>
       </div>

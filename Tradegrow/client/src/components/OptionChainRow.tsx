@@ -198,7 +198,7 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
         }`}
       >
         {/* Call Volume */}
-        <td className={`py-2.5 px-2 text-left text-[11px] text-[var(--text-muted)] font-medium ${itmCallClass}`}>
+        <td className={`py-1.5 sm:py-2.5 px-1 sm:px-2 text-left text-[10px] sm:text-[11px] text-[var(--text-muted)] font-medium ${itmCallClass}`}>
           {formatQty(row.ce.volume)}
         </td>
 
@@ -208,14 +208,14 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
             navigator.vibrate?.(25);
             onOpenOrder(row.ce.instrumentToken, row.strikePrice, 'CE', ceLtp, 'BUY');
           }}
-          className={`py-2.5 px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmCallClass} ${ceFlashClass}`}
+          className={`py-1.5 sm:py-2.5 px-1 sm:px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmCallClass} ${ceFlashClass}`}
           title="Tap to trade CE"
         >
           <div className="flex flex-col items-center justify-center">
-            <span className={`font-black text-xs ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            <span className={`font-black text-[11px] sm:text-xs ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               ₹{ceLtp.toFixed(2)}
             </span>
-            <span className={`text-[10px] font-semibold ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+            <span className={`text-[9px] sm:text-[10px] font-semibold ${formattedCePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
               {formattedCePct.text}
             </span>
           </div>
@@ -224,17 +224,17 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
         {/* STRIKE PRICE (Center Column with PCR) */}
         <td
           onClick={handleOpenCeChart}
-          className={`py-2.5 px-2 text-center font-extrabold border-x border-[var(--border-color)] cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition-colors ${
+          className={`py-1.5 sm:py-2.5 px-1 sm:px-2 text-center font-extrabold border-x border-[var(--border-color)] cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition-colors ${
             isAtm ? 'text-amber-600 dark:text-amber-400 bg-amber-500/15 font-black' : 'text-[var(--text-main)] bg-[var(--bg-surface-inset)]'
           }`}
           title="Click to view Strike Chart"
         >
           <div className="flex flex-col items-center justify-center">
-            <span className="text-xs font-black text-[var(--text-main)] flex items-center gap-1">
+            <span className="text-[11px] sm:text-xs font-black text-[var(--text-main)] flex items-center justify-center gap-0.5">
               {row.strikePrice}
-              {isAtm && <span className="text-[9px] bg-amber-400 text-slate-950 px-1 rounded font-black">ATM</span>}
+              {isAtm && <span className="text-[8px] bg-amber-400 text-slate-950 px-1 rounded font-black">ATM</span>}
             </span>
-            <span className="text-[9px] text-[var(--text-muted)] font-medium">PCR: {pcrVal}</span>
+            <span className="text-[8px] sm:text-[9px] text-[var(--text-muted)] font-medium">PCR: {pcrVal}</span>
           </div>
         </td>
 
@@ -244,21 +244,21 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
             navigator.vibrate?.(25);
             onOpenOrder(row.pe.instrumentToken, row.strikePrice, 'PE', peLtp, 'BUY');
           }}
-          className={`py-2.5 px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmPutClass} ${peFlashClass}`}
+          className={`py-1.5 sm:py-2.5 px-1 sm:px-2 text-center cursor-pointer transition-all duration-150 relative active:opacity-75 ${itmPutClass} ${peFlashClass}`}
           title="Tap to trade PE"
         >
           <div className="flex flex-col items-center justify-center">
-            <span className={`font-black text-xs ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            <span className={`font-black text-[11px] sm:text-xs ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               ₹{peLtp.toFixed(2)}
             </span>
-            <span className={`text-[10px] font-semibold ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+            <span className={`text-[9px] sm:text-[10px] font-semibold ${formattedPePct.isPos ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
               {formattedPePct.text}
             </span>
           </div>
         </td>
 
         {/* Put Volume */}
-        <td className={`py-2.5 px-2 text-right text-[11px] text-[var(--text-muted)] font-medium ${itmPutClass}`}>
+        <td className={`py-1.5 sm:py-2.5 px-1 sm:px-2 text-right text-[10px] sm:text-[11px] text-[var(--text-muted)] font-medium ${itmPutClass}`}>
           {formatQty(row.pe.volume)}
         </td>
       </tr>

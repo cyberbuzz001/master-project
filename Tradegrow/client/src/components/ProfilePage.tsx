@@ -641,14 +641,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       {activeTab === 'account' && (
         <div className="space-y-4">
           {/* TRADING BALANCE HERO CARD */}
-          <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-xs space-y-3 sm:space-y-4">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-xs space-y-2.5 sm:space-y-4">
             <div className="flex items-center justify-between cursor-pointer" onClick={() => navigate('/profile/funds')}>
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
                   <span>Trading Balance</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
-                <div className="text-xl sm:text-3xl font-black text-[var(--text-main)] num-font mt-0.5">
+                <div className="text-xl sm:text-3xl font-black text-[var(--text-main)] num-font mt-0.5 tabular-nums tracking-tight">
                   ₹{(wallet?.cashBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                 </div>
               </div>
@@ -660,14 +660,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
             </div>
 
             {/* WITHDRAW & ADD FUNDS BUTTONS */}
-            <div className="grid grid-cols-2 gap-2.5 pt-0.5">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 pt-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setRequestType('WITHDRAWAL');
                   navigate('/profile/funds');
                 }}
-                className="py-2.5 px-3 rounded-xl border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm tracking-wider uppercase hover:bg-blue-50 dark:hover:bg-blue-950/20 active:scale-[0.98] transition-all cursor-pointer text-center"
+                className="py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm tracking-wider uppercase hover:bg-blue-50 dark:hover:bg-blue-950/20 active:scale-[0.98] transition-all cursor-pointer text-center"
               >
                 Withdraw
               </button>
@@ -677,7 +677,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                   setRequestType('DEPOSIT');
                   navigate('/profile/funds');
                 }}
-                className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm tracking-wider uppercase shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center"
+                className="py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm tracking-wider uppercase shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center"
               >
                 Add Funds
               </button>
@@ -1233,22 +1233,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 num-font">
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Total Net Balance</span>
-                  <span className="text-base sm:text-lg font-black text-[var(--text-main)]">₹{totalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 num-font">
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Total Net Balance</span>
+                  <span className="text-sm sm:text-lg font-black text-[var(--text-main)] tabular-nums tracking-tight">₹{totalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Available to Trade</span>
-                  <span className="text-base sm:text-lg font-black text-[var(--gain)]">₹{availableTrade.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Available to Trade</span>
+                  <span className="text-sm sm:text-lg font-black text-[var(--gain)] tabular-nums tracking-tight">₹{availableTrade.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Available to Withdraw</span>
-                  <span className="text-base sm:text-lg font-black text-indigo-500">₹{availableWithdraw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Available to Withdraw</span>
+                  <span className="text-sm sm:text-lg font-black text-indigo-500 tabular-nums tracking-tight">₹{availableWithdraw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Blocked / Used Margin</span>
-                  <span className="text-base sm:text-lg font-black text-[var(--warning)]">₹{usedMargin.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Blocked / Used Margin</span>
+                  <span className="text-sm sm:text-lg font-black text-[var(--warning)] tabular-nums tracking-tight">₹{usedMargin.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
 

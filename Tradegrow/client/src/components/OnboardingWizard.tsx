@@ -251,11 +251,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header with Stepper Progress */}
-        <div className="p-5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)]">
+        <div className="p-3.5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-lg bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs">TG</span>
@@ -313,7 +313,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+        <div className="p-3.5 sm:p-8 overflow-y-auto flex-1 space-y-4 sm:space-y-6">
 
           {/* STEP 2: KYC DETAILS */}
           {currentStep === 2 && (

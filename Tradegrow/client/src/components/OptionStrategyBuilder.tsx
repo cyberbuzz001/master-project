@@ -317,7 +317,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
       {/* 1. TOP HEADER TOOLBAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 max-w-full">
             <span className="text-xl font-bold text-white tracking-wide">{underlying}</span>
             <span className="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-0.5 rounded-full font-semibold flex items-center gap-1">
               SPOT: <LivePriceCell value={spotPrice} prefix="₹" decimals={2} className="!p-0 !bg-transparent !text-emerald-400" />
@@ -338,7 +338,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
         </div>
 
         {/* Preset Strategies Quick Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 max-w-full">
           <span className="text-xs text-slate-400 font-semibold">PRESETS:</span>
           <button onClick={() => applyPreset('BULL_CALL_SPREAD')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition">
             Bull Call Spread
@@ -381,7 +381,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
                 const liveLtp = legTick?.ltp;
 
                 return (
-                  <div key={leg.id} className="flex items-center gap-2 bg-slate-950/80 border border-slate-800 p-3 rounded-lg text-xs">
+                  <div key={leg.id} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-slate-950/80 border border-slate-800 p-2.5 sm:p-3 rounded-lg text-xs">
                     <span className="font-bold text-slate-500 w-5">#{idx + 1}</span>
 
                     {/* Action Toggle */}
