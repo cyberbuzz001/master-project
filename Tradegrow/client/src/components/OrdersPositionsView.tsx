@@ -1304,20 +1304,25 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                     }}
                     className="p-3.5 hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer active:scale-[0.99] space-y-1.5"
                   >
-                    {/* Row 1: Symbol & P&L */}
+                    {/* Row 1: Symbol & P&L with explicit dual text badge */}
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
                         <span className="font-extrabold text-[14px] text-[var(--text-main)] tracking-tight">
                           {pos.symbol}
                         </span>
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded font-mono ${netQty > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                          {netQty > 0 ? 'BUY' : 'SELL'}
+                        </span>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-right flex-shrink-0 flex items-center gap-1.5">
                         <div
-                          className={`font-mono text-[14px] font-black tabular-nums ${isGain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                            }`}
+                          className={`font-mono text-[14px] font-black tabular-nums ${isGain ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}
                         >
                           {isGain ? '+' : ''}₹{uPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase ${isGain ? 'bg-[var(--gain-light)] text-[var(--gain)]' : 'bg-[var(--loss-light)] text-[var(--loss)]'}`}>
+                          {isGain ? 'Profit' : 'Loss'}
+                        </span>
                       </div>
                     </div>
 
@@ -1380,6 +1385,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 const isPending = ['ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING'].includes(
                   (order.status || '').toUpperCase()
                 );
+                const isRejected = (order.status || '').toUpperCase() === 'REJECTED';
 
                 return (
                   <div key={order.orderId || order.id || order.order_id} className="p-3.5 space-y-2 font-mono">
@@ -1431,6 +1437,51 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                         <X className="w-3.5 h-3.5" />
                         <span>Cancel Order</span>
                       </button>
+                    )}
+
+                    {isRejected && (
+                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-1">
+                        <div className="flex items-center gap-1 font-bold text-[11px]">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Order Rejected</span>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-muted)] leading-tight">
+                          {order.rejectReason || order.reject_reason || 'Insufficient trading margin or market volatility limit reached.'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent('open-add-funds-modal'))}
+                          className="mt-1 px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold hover:bg-rose-600 cursor-pointer text-[10px] flex items-center gap-1"
+                        >
+                          + Add Funds to Retry
+                        </button>
+                      </div>
+                    )}
+
+                    {isFilled && (
+                      <div className="flex items-center justify-between pt-1 border-t border-[var(--border-color)] text-[10px]">
+                        <span className="text-[var(--text-muted)] font-mono">
+                          {order.createdAt || order.created_at ? new Date(order.createdAt || order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Filled'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.dispatchEvent(
+                              new CustomEvent('open-quick-order-modal', {
+                                detail: {
+                                  symbol: order.symbol,
+                                  exchange: order.exchange || 'NSE',
+                                  side: order.side,
+                                  price: parseFloat(order.price || order.averagePrice || 0)
+                                }
+                              })
+                            );
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-[var(--primary)] font-bold hover:border-[var(--primary)] transition-colors cursor-pointer"
+                        >
+                          Repeat Order
+                        </button>
+                      </div>
                     )}
                   </div>
                 );

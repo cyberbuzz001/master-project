@@ -17,6 +17,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { OrderPreviewModal, OrderPreviewDetails } from './components/OrderPreviewModal';
 import { MobileChartModal } from './components/mobile/MobileChartModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
+import { AddFundsModal } from './components/AddFundsModal';
 import { PWAInstallBanner } from './components/mobile/PWAInstallBanner';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './context/ToastContext';
@@ -185,6 +186,7 @@ function AuthenticatedApp({
   const [isMobileOrderModalOpen, setIsMobileOrderModalOpen] = useState<boolean>(false);
 
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -244,6 +246,21 @@ function AuthenticatedApp({
     setIsMobileOrderModalOpen(true);
   };
 
+  useEffect(() => {
+    const handleQuickOrderEvent = (e: any) => {
+      if (e.detail) {
+        openMobileQuickOrder(e.detail);
+      }
+    };
+    const handleAddFundsEvent = () => setIsAddFundsOpen(true);
+    window.addEventListener('open-quick-order-modal', handleQuickOrderEvent);
+    window.addEventListener('open-add-funds-modal', handleAddFundsEvent);
+    return () => {
+      window.removeEventListener('open-quick-order-modal', handleQuickOrderEvent);
+      window.removeEventListener('open-add-funds-modal', handleAddFundsEvent);
+    };
+  }, []);
+
   useKeyboardShortcuts({
     token,
     onOpenSearch: () => setIsSearchOpen(true),
@@ -269,7 +286,7 @@ function AuthenticatedApp({
             theme={theme}
             onToggleTheme={toggleTheme}
             onOpenSearch={() => setIsSearchOpen(true)}
-            onOpenWalletModal={() => goToProfileTab('FUNDS')}
+            onOpenWalletModal={() => setIsAddFundsOpen(true)}
             isTerminalMode={location.pathname === '/terminal'}
             onToggleTerminal={() => (location.pathname === '/terminal' ? navigate(-1) : navigate('/terminal'))}
           />
@@ -417,6 +434,14 @@ function AuthenticatedApp({
             wallet={wallet}
             onRefreshWallet={fetchWallet}
           />
+          <AddFundsModal
+            isOpen={isAddFundsOpen}
+            onClose={() => setIsAddFundsOpen(false)}
+            walletBalance={wallet?.cashBalance || 0}
+            userToken={token || ''}
+            username={user?.username || 'Trader'}
+            onSuccess={() => fetchWallet()}
+          />
 
           <PWAInstallBanner />
         </div>
@@ -436,7 +461,7 @@ function AuthenticatedApp({
           theme={theme}
           onToggleTheme={toggleTheme}
           onOpenSearch={() => setIsSearchOpen(true)}
-          onOpenWalletModal={() => goToProfileTab('FUNDS')}
+          onOpenWalletModal={() => setIsAddFundsOpen(true)}
           isTerminalMode={isTerminalMode}
           onToggleTerminal={() => (isTerminalMode ? navigate(-1) : navigate('/terminal'))}
         />
@@ -571,6 +596,14 @@ function AuthenticatedApp({
           token={token || ''}
           wallet={wallet}
           onRefreshWallet={fetchWallet}
+        />
+        <AddFundsModal
+          isOpen={isAddFundsOpen}
+          onClose={() => setIsAddFundsOpen(false)}
+          walletBalance={wallet?.cashBalance || 0}
+          userToken={token || ''}
+          username={user?.username || 'Trader'}
+          onSuccess={() => fetchWallet()}
         />
 
         <PWAInstallBanner />

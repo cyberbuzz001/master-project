@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { MarketTick } from '../types';
 import {
   Search, Plus, Trash2, ArrowUp, ArrowDown, Bookmark, X,
-  GripVertical, Eye, Bell
+  GripVertical, Eye, Bell, TrendingUp, Layers, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useMultiTickFreshness } from '../hooks/useTickFreshness';
 import { useSubscribeTokens, useMarketSocket } from '../hooks/useMarketSocket';
@@ -105,6 +105,8 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'STOCKS' | 'FO' | 'INDICES' | 'COMMODITIES'>('ALL');
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [selectedActionItem, setSelectedActionItem] = useState<WatchlistItem | null>(null);
+  const [showDetails, setShowDetails] = useState<boolean>(false);
 
   // ── Cloud Database Synchronization ──────────────────────────────────────
   useEffect(() => {
@@ -475,7 +477,14 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                   onDragStart={() => handleDragStart(idx)}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(idx)}
-                  onClick={clickable ? () => onSelectSymbolForTerminal!(item.symbol, item.token, item.exchange) : undefined}
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      setSelectedActionItem(item);
+                      setShowDetails(false);
+                    } else if (clickable) {
+                      onSelectSymbolForTerminal!(item.symbol, item.token, item.exchange);
+                    }
+                  }}
                   className={`flex items-center justify-between gap-3 px-3.5 py-3 min-h-[52px] select-none transition-colors border-l-[3.5px] ${
                     item.category === 'FO'
                       ? 'border-indigo-500'
@@ -586,6 +595,194 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
           </div>
         )}
       </Card>
+
+      {/* ── MOBILE QUICK ACTION SHEET ── */}
+      {selectedActionItem && (
+        <div
+          className="md:hidden mobile-bottom-sheet-backdrop"
+          role="presentation"
+          onClick={() => setSelectedActionItem(null)}
+        >
+          <section
+            className="mobile-bottom-sheet-content px-4 pt-3 pb-6 space-y-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="watchlist-sheet-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sheet Handle */}
+            <div className="w-10 h-1 bg-[var(--border-color)] rounded-full mx-auto -mt-1 mb-2" />
+
+            {/* Header: Instrument, Name, LTP */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 id="watchlist-sheet-title" className="text-base font-black text-[var(--text-main)]">
+                    {selectedActionItem.symbol}
+                  </h3>
+                  <Badge variant={selectedActionItem.category === 'FO' ? 'primary' : 'neutral'}>
+                    {selectedActionItem.exchange}
+                  </Badge>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{selectedActionItem.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedActionItem(null)}
+                aria-label="Close"
+                className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Live Price Row */}
+            {(() => {
+              const tick = ticks?.get(selectedActionItem.token);
+              const price = tick?.ltp || 0;
+              const chg = tick?.change || 0;
+              const pct = tick?.changePercent || 0;
+              const isGain = chg >= 0;
+              return (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)]">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] block">Current Price (LTP)</span>
+                    <span className="text-xl font-black font-mono text-[var(--text-main)]">
+                      ₹{price > 0 ? price.toFixed(2) : '—'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={isGain ? 'gain' : 'loss'}>
+                      {isGain ? '+' : ''}{chg.toFixed(2)} ({isGain ? '+' : ''}{pct.toFixed(2)}%)
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Primary Action Buttons: BUY (Green) and SELL (Red) */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const tick = ticks?.get(selectedActionItem.token);
+                  const price = tick?.ltp || 0;
+                  window.dispatchEvent(
+                    new CustomEvent('open-quick-order-modal', {
+                      detail: { symbol: selectedActionItem.symbol, token: selectedActionItem.token, exchange: selectedActionItem.exchange, side: 'BUY', price },
+                    })
+                  );
+                  setSelectedActionItem(null);
+                }}
+                className="py-3 px-4 rounded-xl text-sm font-black bg-[var(--gain)] text-white shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>BUY</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const tick = ticks?.get(selectedActionItem.token);
+                  const price = tick?.ltp || 0;
+                  window.dispatchEvent(
+                    new CustomEvent('open-quick-order-modal', {
+                      detail: { symbol: selectedActionItem.symbol, token: selectedActionItem.token, exchange: selectedActionItem.exchange, side: 'SELL', price },
+                    })
+                  );
+                  setSelectedActionItem(null);
+                }}
+                className="py-3 px-4 rounded-xl text-sm font-black bg-[var(--loss)] text-white shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>SELL</span>
+              </button>
+            </div>
+
+            {/* Secondary Action Links: View Chart, Option Chain, Details, Remove */}
+            <div className="space-y-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const item = selectedActionItem;
+                  setSelectedActionItem(null);
+                  if (onSelectSymbolForTerminal) {
+                    onSelectSymbolForTerminal(item.symbol, item.token, item.exchange);
+                  }
+                }}
+                className="w-full p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--primary)] text-xs font-bold text-[var(--text-main)] flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[var(--primary)]" />
+                  <span>View Chart &amp; Depth</span>
+                </div>
+                <span className="text-[11px] text-[var(--primary)]">Open &rarr;</span>
+              </button>
+
+              {(selectedActionItem.category === 'FO' || selectedActionItem.category === 'INDICES' || ['NIFTY 50', 'SENSEX', 'BANK NIFTY', 'FIN NIFTY'].includes(selectedActionItem.symbol)) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sym = selectedActionItem.symbol.replace(/ .*/, '');
+                    setSelectedActionItem(null);
+                    window.location.href = `/option-chain?symbol=${encodeURIComponent(sym)}`;
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-indigo-500 text-xs font-bold text-[var(--text-main)] flex items-center justify-between transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-indigo-500" />
+                    <span>Open Option Chain</span>
+                  </div>
+                  <span className="text-[11px] text-indigo-400">View Strikes &rarr;</span>
+                </button>
+              )}
+
+              {/* Expandable Technical Data (Progressive Disclosure) */}
+              <button
+                type="button"
+                onClick={() => setShowDetails(!showDetails)}
+                className="w-full p-2.5 rounded-xl bg-[var(--bg-surface-inset)] text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <span>View Details &amp; Stats</span>
+                {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {showDetails && (
+                <div className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Lot Size</span>
+                    <span className="font-mono font-bold text-[var(--text-main)]">{selectedActionItem.lotSize || 1}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Category</span>
+                    <span className="font-mono font-bold text-[var(--text-main)]">{selectedActionItem.category}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Day Volume</span>
+                    <span className="font-mono font-bold text-[var(--text-main)]">
+                      {ticks?.get(selectedActionItem.token)?.volume?.toLocaleString('en-IN') || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Exchange</span>
+                    <span className="font-mono font-bold text-[var(--text-main)]">{selectedActionItem.exchange}</span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleRemoveSymbol(selectedActionItem.token);
+                  setSelectedActionItem(null);
+                }}
+                className="w-full p-2.5 rounded-xl text-xs font-bold text-[var(--loss)] hover:bg-[var(--loss-light)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove from {WATCHLIST_TABS.find((t) => t.id === activeTab)?.label}</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };

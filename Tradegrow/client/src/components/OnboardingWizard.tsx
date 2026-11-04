@@ -261,12 +261,23 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <span className="w-7 h-7 rounded-lg bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs">TG</span>
               <span className="text-sm font-black tracking-tight">Trade<span className="text-[var(--primary)]">Grow</span> Onboarding</span>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface)] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] px-2.5 py-1 rounded-lg hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
+                title="Your progress is saved automatically"
+              >
+                Save &amp; Continue Later
+              </button>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface)] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Stepper Strip */}
@@ -315,6 +326,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   Choose automated online verification via Didit or fill details manually.
                 </p>
+              </div>
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" />
+                <div className="leading-snug">
+                  <span className="font-bold block text-[var(--text-main)]">Why is KYC required?</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    SEBI &amp; PMLA regulations mandate verified PAN and Aadhaar identity verification to prevent identity theft and activate your trading Demat account.
+                  </span>
+                </div>
               </div>
 
               {kycMsg && (
@@ -470,6 +490,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   Add your bank account for seamless 1-tap withdrawal settlements.
                 </p>
+              </div>
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 flex items-start gap-2.5">
+                <Building2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" />
+                <div className="leading-snug">
+                  <span className="font-bold block text-[var(--text-main)]">Why is Bank verification required?</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    SEBI mandates that all deposit credits and withdrawal settlements route strictly through your verified registered bank account to safeguard against unauthorized transfers.
+                  </span>
+                </div>
               </div>
 
               {bankMsg && (

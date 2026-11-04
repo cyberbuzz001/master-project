@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Bookmark, Layers, Briefcase, User as UserIcon, ShieldCheck,
-  Search, Wallet, Plus, Sun, Moon, Bell, SlidersHorizontal, Download, MoreHorizontal, X, HelpCircle
+  Search, Wallet, Plus, Sun, Moon, Bell, SlidersHorizontal, Download, MoreHorizontal, X, HelpCircle, Clock
 } from 'lucide-react';
 import { User, MarketTick, isStaffUser } from '../types';
 import { useMarketSocket, useSubscribeTokens, globalTickStore } from '../hooks/useMarketSocket';
@@ -137,9 +137,9 @@ export function AppShell({
   const MOBILE_NAV_ITEMS: AppShellNavItem[] = [
     { path: '/', matchPrefix: '/', label: 'Home', icon: <Home className="w-5 h-5" /> },
     { path: '/watchlist', matchPrefix: '/watchlist', label: 'Watchlist', icon: <Bookmark className="w-5 h-5" /> },
-    { path: '/terminal', matchPrefix: '/terminal', label: 'Trade', icon: <SlidersHorizontal className="w-5 h-5" /> },
-    { path: '/portfolio/positions', matchPrefix: '/portfolio', label: 'Positions', icon: <Briefcase className="w-5 h-5" /> },
-    { path: '#more', matchPrefix: '/more', label: 'More', icon: <MoreHorizontal className="w-5 h-5" /> },
+    { path: '#trade', matchPrefix: '/terminal', label: 'Trade', icon: <SlidersHorizontal className="w-5 h-5" /> },
+    { path: '/portfolio/positions', matchPrefix: '/portfolio', label: 'Portfolio', icon: <Briefcase className="w-5 h-5" /> },
+    { path: '/profile/account', matchPrefix: '/profile', label: 'Account', icon: <UserIcon className="w-5 h-5" /> },
   ];
 
   return (
@@ -434,21 +434,21 @@ export function AppShell({
         className="md:hidden mobile-nav-glass fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 min-h-[64px] flex items-center justify-around pb-[env(safe-area-inset-bottom,4px)]"
       >
         {MOBILE_NAV_ITEMS.map((item) => {
-          const isMore = item.path === '#more';
-          const active = isMore ? isMobileMoreOpen : isActive(location.pathname, item);
+          const isTrade = item.path === '#trade';
+          const active = isTrade ? isMobileMoreOpen : isActive(location.pathname, item);
           return (
             <Link
               key={item.path}
-              to={isMore ? location.pathname : item.path}
+              to={isTrade ? location.pathname : item.path}
               onClick={(event) => {
-                if (isMore) {
+                if (isTrade) {
                   event.preventDefault();
                   setIsMobileMoreOpen(true);
                 }
                 navigator.vibrate?.(15);
               }}
-              aria-current={!isMore && active ? 'page' : undefined}
-              aria-expanded={isMore ? isMobileMoreOpen : undefined}
+              aria-current={!isTrade && active ? 'page' : undefined}
+              aria-expanded={isTrade ? isMobileMoreOpen : undefined}
               aria-label={item.label}
               className={`flex flex-1 max-w-[88px] flex-col items-center justify-center gap-1 min-h-[52px] min-w-[56px] py-1 px-1 rounded-xl active:scale-[0.97] transition-all ${
                 active ? 'text-[var(--primary)] font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text-main)] font-medium'
@@ -478,8 +478,8 @@ export function AppShell({
           >
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p id="mobile-more-title" className="text-base font-extrabold text-[var(--text-main)]">More</p>
-                <p className="text-xs text-[var(--text-muted)]">Tools, account settings, and support</p>
+                <p id="mobile-more-title" className="text-base font-extrabold text-[var(--text-main)]">Trade Actions</p>
+                <p className="text-xs text-[var(--text-muted)]">Quick access to trading tools &amp; execution</p>
               </div>
               <button
                 type="button"
@@ -492,33 +492,76 @@ export function AppShell({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pb-5">
-              <Link to="/option-chain" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
-                <Layers className="w-5 h-5 text-[var(--primary)]" />
-                <span>Option Chain</span>
-              </Link>
-              <Link to="/profile/account" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
-                <UserIcon className="w-5 h-5 text-[var(--primary)]" />
-                <span>Profile</span>
-              </Link>
-              <button type="button" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); onOpenWalletModal(); }}>
-                <Wallet className="w-5 h-5 text-[var(--primary)]" />
-                <span>Add funds</span>
+            <div className="grid grid-cols-2 gap-2.5 pb-3">
+              <button
+                type="button"
+                className="mobile-more-action"
+                onClick={() => { setIsMobileMoreOpen(false); onOpenSearch(); }}
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Search className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="font-bold text-xs block text-[var(--text-main)]">Search</span>
+                  <span className="text-[10px] text-[var(--text-muted)] block">Find any stock</span>
+                </div>
               </button>
-              <Link to="/profile/support" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
-                <HelpCircle className="w-5 h-5 text-[var(--primary)]" />
-                <span>Help & Support</span>
+
+              <Link
+                to="/option-chain"
+                className="mobile-more-action"
+                onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}
+              >
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="font-bold text-xs block text-[var(--text-main)]">Option Chain</span>
+                  <span className="text-[10px] text-[var(--text-muted)] block">Nifty, Bank Nifty</span>
+                </div>
               </Link>
-              <Link to="/profile/notifications" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
-                <Bell className="w-5 h-5 text-[var(--primary)]" />
-                <span>Notifications</span>
+
+              <Link
+                to="/portfolio/orders"
+                className="mobile-more-action"
+                onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="font-bold text-xs block text-[var(--text-main)]">Orders</span>
+                  <span className="text-[10px] text-[var(--text-muted)] block">Open & filled</span>
+                </div>
               </Link>
-              {isStaff && (
-                <Link to="/admin" className="mobile-more-action" onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}>
-                  <ShieldCheck className="w-5 h-5 text-[var(--loss)]" />
-                  <span>Admin</span>
+
+              <Link
+                to="/portfolio/positions"
+                className="mobile-more-action"
+                onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}
+              >
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="font-bold text-xs block text-[var(--text-main)]">Positions</span>
+                  <span className="text-[10px] text-[var(--text-muted)] block">Live P&L tracking</span>
+                </div>
+              </Link>
+
+              <div className="col-span-2 pt-2 border-t border-[var(--border-color)]">
+                <Link
+                  to="/terminal"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-xs font-bold text-[var(--text-main)] hover:border-[var(--primary)] transition-colors"
+                  onClick={() => { setIsMobileMoreOpen(false); navigator.vibrate?.(15); }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <SlidersHorizontal className="w-4 h-4 text-[var(--primary)]" />
+                    <span>Advanced Terminal &amp; Chart</span>
+                  </div>
+                  <span className="text-[11px] text-[var(--primary)] font-bold">Open &rarr;</span>
                 </Link>
-              )}
+              </div>
             </div>
           </section>
         </div>

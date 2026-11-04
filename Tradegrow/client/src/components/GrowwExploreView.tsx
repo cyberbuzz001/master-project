@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, ArrowUpRight, ArrowDownRight, Layers, Award, Landmark, TrendingUp,
   Activity, Sparkles, Shield, Cpu, Zap, Search as SearchIcon, AlertTriangle,
-  AlertCircle, CheckCircle2, Clock, ArrowRight, ShieldAlert, CreditCard
+  AlertCircle, CheckCircle2, Clock, ArrowRight, ShieldAlert, CreditCard, Bookmark, Plus
 } from 'lucide-react';
 import { MarketTick, Wallet, Position } from '../types';
 import { useSubscribeTokens, useMarketSocket } from '../hooks/useMarketSocket';
@@ -397,7 +397,10 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
         <Card
           padding="md"
           interactive
-          onClick={() => onOpenProfile?.('FUNDS')}
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-add-funds-modal'));
+            if (window.innerWidth >= 768) onOpenProfile?.('FUNDS');
+          }}
           className="border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-2">
@@ -465,26 +468,92 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
         </div>
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 bg-[var(--bg-surface)] border border-[var(--border-color)] px-3.5 py-2.5 rounded-2xl">
-        <div className="flex items-center gap-2 mr-1">
-          <Zap className="w-4 h-4 text-[var(--primary)]" aria-hidden="true" />
-          <span className="text-xs font-bold">Quick Actions</span>
-        </div>
-        {[
-          { label: '+ Buy Equity', onClick: () => handleSelectRow('RELIANCE'), cls: 'bg-[var(--primary-light)] text-[var(--primary)] border-[var(--primary)]/30 hover:bg-[var(--primary)] hover:text-white' },
-          { label: 'Option Chain Matrix', onClick: () => onOpenOptionChain?.(), cls: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 hover:bg-indigo-500 hover:text-white' },
-          { label: 'Market Scanner', onClick: onOpenSearch, icon: <SearchIcon className="w-3.5 h-3.5" aria-hidden="true" />, cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500 hover:text-white' },
-        ].map((a) => (
-          <button
-            key={a.label}
-            onClick={a.onClick}
-            className={`min-h-[44px] md:min-h-0 px-3.5 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 cursor-pointer active:scale-[0.97] transition-all duration-[var(--duration-fast)] ease-[var(--easing-default)] ${a.cls}`}
-          >
-            {a.icon}{a.label}
-          </button>
-        ))}
+      {/* ── 4 ESSENTIAL QUICK ACTIONS ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-add-funds-modal'));
+            if (window.innerWidth >= 768) onOpenProfile?.('FUNDS');
+          }}
+          className="min-h-[52px] p-3 rounded-2xl bg-[var(--primary-light)] border border-[var(--primary)]/30 text-[var(--primary)] flex items-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer hover:bg-[var(--primary)] hover:text-white group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center flex-shrink-0 group-hover:bg-white group-hover:text-[var(--primary)] transition-colors">
+            <Plus className="w-4 h-4" />
+          </div>
+          <div className="text-left min-w-0">
+            <span className="text-xs font-black block leading-tight">Add Funds</span>
+            <span className="text-[10px] opacity-80 block truncate">Instant UPI</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="min-h-[52px] p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-main)] flex items-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer hover:border-[var(--primary)]/50 group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0">
+            <SearchIcon className="w-4 h-4" />
+          </div>
+          <div className="text-left min-w-0">
+            <span className="text-xs font-black block leading-tight">Search Stocks</span>
+            <span className="text-[10px] text-[var(--text-muted)] block truncate">Scrips &amp; contracts</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/watchlist')}
+          className="min-h-[52px] p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-main)] flex items-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer hover:border-[var(--primary)]/50 group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center flex-shrink-0">
+            <Bookmark className="w-4 h-4" />
+          </div>
+          <div className="text-left min-w-0">
+            <span className="text-xs font-black block leading-tight">Watchlist</span>
+            <span className="text-[10px] text-[var(--text-muted)] block truncate">Live tracked</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/portfolio/orders')}
+          className="min-h-[52px] p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-main)] flex items-center gap-2.5 active:scale-[0.98] transition-all cursor-pointer hover:border-[var(--primary)]/50 group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center flex-shrink-0">
+            <Clock className="w-4 h-4" />
+          </div>
+          <div className="text-left min-w-0">
+            <span className="text-xs font-black block leading-tight">Orders</span>
+            <span className="text-[10px] text-[var(--text-muted)] block truncate">Today's trades</span>
+          </div>
+        </button>
       </div>
+
+      {/* ── START TRADING CARD FOR BEGINNERS (Prominent, Calm, Zero Jargon) ── */}
+      {openPositionsCount === 0 && (
+        <div className="p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-[var(--bg-surface)] to-[var(--bg-surface)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-black text-[var(--text-main)]">Ready for your first trade?</h3>
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-snug">
+                Zero brokerage on equity delivery. Explore live market opportunities or test strategies in paper trading mode.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-black bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <span>Start Trading Now</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
         <div className="lg:col-span-8 space-y-5 sm:space-y-6">
