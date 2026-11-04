@@ -328,27 +328,27 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   return (
     <div className="flex flex-col gap-4 sm:gap-6 w-full font-body text-[var(--text-main)]">
       {/* Top Header & Search Card */}
-      <Card className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <Bookmark className="w-5 h-5 text-[var(--primary)]" />
-            <h1 className="text-xl font-black tracking-tight">Multi-Watchlist</h1>
-            <Badge variant="primary">{currentList.length} Tracked</Badge>
+      <Card padding="none" className="p-3 sm:p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
+        <div className="w-full md:w-auto flex items-center justify-between md:block">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--primary)] flex-shrink-0" />
+            <h1 className="text-sm sm:text-base md:text-xl font-bold tracking-tight">Multi-Watchlist</h1>
+            <Badge variant="primary" className="text-[10px] sm:text-xs py-0.5 px-2">{currentList.length} Tracked</Badge>
           </div>
-          <p className="text-xs text-[var(--text-muted)] font-medium mt-1">
+          <p className="hidden sm:block text-xs text-[var(--text-muted)] font-medium mt-1">
             Real-time streaming market prices. Drag to reorder, tap any instrument to trade.
           </p>
         </div>
 
         <div className="relative w-full md:w-80">
           <div className="relative flex items-center">
-            <Search size={16} className="absolute left-3.5 text-[var(--text-muted)]" />
+            <Search size={15} className="absolute left-3 text-[var(--text-muted)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search scrip or option to add..."
-              className="w-full pl-10 pr-8 py-2 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl text-xs font-bold placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-all"
+              className="w-full pl-9 pr-8 py-1.5 sm:py-2 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl text-xs font-bold placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-all"
             />
             {searchQuery && (
               <button

@@ -302,20 +302,20 @@ export const TradingJournalView: React.FC<TradingJournalViewProps> = ({ token })
       <PortfolioNav active="JOURNAL" />
 
       {/* Action Header & Date Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--bg-surface)] p-4 rounded-2xl border border-[var(--border-color)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--bg-surface)] p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[var(--border-color)]">
         <div>
-          <h1 className="text-xl font-black text-[var(--text-main)] flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-emerald-500" />
-            Trading Journal & Tax Analytics
+          <h1 className="text-sm sm:text-base md:text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0" />
+            <span>Trading Journal &amp; Tax Analytics</span>
           </h1>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">
-            Institutional performance diagnostics, win-rate analytics, risk:reward ratios & tax reports.
+          <p className="text-[11px] sm:text-xs text-[var(--text-muted)] mt-0.5 hidden sm:block">
+            Institutional performance diagnostics, win-rate analytics, risk:reward ratios &amp; tax reports.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* Timeframe selector */}
-          <div className="flex items-center bg-[var(--bg-surface-elevated)] p-1 rounded-xl border border-[var(--border-color)] text-xs font-bold">
+          <div className="flex items-center bg-[var(--bg-surface-elevated)] p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-[var(--border-color)] text-[11px] sm:text-xs font-bold">
             {[
               { label: '7D', value: 7 },
               { label: '30D', value: 30 },
@@ -325,7 +325,7 @@ export const TradingJournalView: React.FC<TradingJournalViewProps> = ({ token })
               <button
                 key={item.value}
                 onClick={() => setDays(item.value)}
-                className={`px-3 py-1 rounded-lg transition-all ${
+                className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-md sm:rounded-lg transition-all cursor-pointer ${
                   days === item.value
                     ? 'bg-emerald-500 text-white shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -336,54 +336,54 @@ export const TradingJournalView: React.FC<TradingJournalViewProps> = ({ token })
             ))}
           </div>
 
-          <Button variant="secondary" size="sm" onClick={fetchJournalData} disabled={loading}>
+          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3" onClick={fetchJournalData} disabled={loading} title="Refresh">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
 
-          <Button variant="secondary" size="sm" onClick={handleExportCsv} disabled={trades.length === 0}>
+          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={handleExportCsv} disabled={trades.length === 0} title="Export CSV">
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="hidden sm:inline">Export Tax P&L (CSV)</span>
+            <span className="hidden sm:inline">Export Tax P&amp;L (CSV)</span>
           </Button>
 
-          <Button variant="secondary" size="sm" onClick={() => setIsContractNoteOpen(true)}>
+          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={() => setIsContractNoteOpen(true)} title="Contract Note">
             <FileText className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Contract Note (ECN)</span>
           </Button>
 
-          <Button variant="secondary" size="sm" onClick={handlePrint} disabled={trades.length === 0}>
+          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={handlePrint} disabled={trades.length === 0} title="Print Statement">
             <Printer className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">Print Statement</span>
+            <span className="hidden sm:inline">Print</span>
           </Button>
         </div>
       </div>
 
       {/* ZERO-COST PLATFORM SAVINGS HERO BANNER */}
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 via-[var(--bg-surface)] to-[var(--bg-surface)] p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 via-[var(--bg-surface)] to-[var(--bg-surface)] p-3 sm:p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                <Sparkles className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </span>
-              <h3 className="text-base font-black text-[var(--text-main)] flex items-center gap-2">
-                Brokerage &amp; Platform Charges Saved
+              <h3 className="text-xs sm:text-base font-bold text-[var(--text-main)] flex items-center gap-1.5 sm:gap-2">
+                Brokerage &amp; Charges Saved
               </h3>
-              <Badge variant="gain" className="text-[10px] font-bold">
+              <Badge variant="gain" className="text-[9px] sm:text-[10px] font-bold py-0.2 px-1.5">
                 ₹0 Flat Fee
               </Badge>
             </div>
-            <p className="text-xs text-[var(--text-muted)] max-w-2xl">
+            <p className="hidden sm:block text-xs text-[var(--text-muted)] max-w-2xl">
               At TradeGrow, all equity delivery, intraday, and F&amp;O trades incur <span className="text-emerald-400 font-bold">₹0 brokerage</span> and zero platform taxes. Here is what you saved compared to standard discount brokers (₹20/order + STT + turnover taxes).
             </p>
           </div>
 
           {/* Big Stat Pill */}
-          <div className="flex items-center gap-3 bg-[var(--bg-surface-elevated)]/80 border border-emerald-500/25 px-4 py-2.5 rounded-xl self-start lg:self-auto">
+          <div className="flex items-center gap-2.5 bg-[var(--bg-surface-elevated)]/80 border border-emerald-500/25 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl self-start lg:self-auto">
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+              <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
                 Total You Saved
               </span>
-              <span className="text-xl sm:text-2xl font-black font-mono text-emerald-400">
+              <span className="text-lg sm:text-2xl font-black font-mono text-emerald-400">
                 ₹{(metrics?.savings?.totalSaved ?? ((metrics?.totalTrades || 0) * 40)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -391,34 +391,34 @@ export const TradingJournalView: React.FC<TradingJournalViewProps> = ({ token })
         </div>
 
         {/* Micro Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-[var(--border-color)]/60 text-xs">
-          <div className="bg-[var(--bg-surface-elevated)]/40 p-2.5 rounded-xl border border-[var(--border-color)]/40">
-            <span className="text-[10px] text-[var(--text-muted)] block">Brokerage Saved (₹20/order)</span>
-            <span className="font-mono font-bold text-[var(--text-main)] text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-[var(--border-color)]/60 text-xs">
+          <div className="bg-[var(--bg-surface-elevated)]/40 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-[var(--border-color)]/40">
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block truncate">Brokerage Saved (₹20)</span>
+            <span className="font-mono font-bold text-[var(--text-main)] text-xs sm:text-sm">
               ₹{(metrics?.savings?.brokerageSaved ?? ((metrics?.totalTrades || 0) * 40)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-[10px] text-emerald-500 block mt-0.5">₹0 charged on TradeGrow</span>
+            <span className="text-[9px] sm:text-[10px] text-emerald-500 block mt-0.5">₹0 on TradeGrow</span>
           </div>
-          <div className="bg-[var(--bg-surface-elevated)]/40 p-2.5 rounded-xl border border-[var(--border-color)]/40">
-            <span className="text-[10px] text-[var(--text-muted)] block">Statutory &amp; STT Taxes Saved</span>
-            <span className="font-mono font-bold text-[var(--text-main)] text-sm">
+          <div className="bg-[var(--bg-surface-elevated)]/40 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-[var(--border-color)]/40">
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block truncate">Statutory &amp; STT</span>
+            <span className="font-mono font-bold text-[var(--text-main)] text-xs sm:text-sm">
               ₹{(metrics?.savings?.statutorySaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">Exchange, STT &amp; GST</span>
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block mt-0.5">Exchange &amp; GST</span>
           </div>
-          <div className="bg-[var(--bg-surface-elevated)]/40 p-2.5 rounded-xl border border-[var(--border-color)]/40">
-            <span className="text-[10px] text-[var(--text-muted)] block">TradeGrow Cost</span>
-            <span className="font-mono font-black text-emerald-400 text-sm">
+          <div className="bg-[var(--bg-surface-elevated)]/40 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-[var(--border-color)]/40">
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block truncate">TradeGrow Cost</span>
+            <span className="font-mono font-black text-emerald-400 text-xs sm:text-sm">
               ₹0.00
             </span>
-            <span className="text-[10px] text-emerald-400/80 block mt-0.5">100% Free Always</span>
+            <span className="text-[9px] sm:text-[10px] text-emerald-400/80 block mt-0.5">100% Free</span>
           </div>
-          <div className="bg-[var(--bg-surface-elevated)]/40 p-2.5 rounded-xl border border-[var(--border-color)]/40">
-            <span className="text-[10px] text-[var(--text-muted)] block">Average Saved / Trade</span>
-            <span className="font-mono font-bold text-indigo-400 text-sm">
+          <div className="bg-[var(--bg-surface-elevated)]/40 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-[var(--border-color)]/40">
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block truncate">Saved / Trade</span>
+            <span className="font-mono font-bold text-indigo-400 text-xs sm:text-sm">
               ₹{(metrics?.totalTrades ? ((metrics?.savings?.totalSaved ?? ((metrics?.totalTrades || 0) * 40)) / metrics.totalTrades) : 0).toFixed(2)}
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">Kept in your wallet</span>
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] block mt-0.5">In your wallet</span>
           </div>
         </div>
       </div>

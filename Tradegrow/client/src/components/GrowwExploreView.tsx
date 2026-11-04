@@ -322,38 +322,38 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
       )}
 
       {/* ── 1. HERO FINANCIAL PULSE (Today's P&L, Active Positions, Available Margin) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-4">
         {/* Today's P&L Card */}
         <Card
-          padding="md"
-          className="relative overflow-hidden border border-[var(--border-color)] bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-surface-elevated)]"
+          padding="none"
+          className="p-3 sm:p-4.5 relative overflow-hidden border border-[var(--border-color)] bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-surface-elevated)]"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center ${
                   todaysPnl >= 0 ? 'bg-[var(--gain-light)] text-[var(--gain)]' : 'bg-[var(--loss-light)] text-[var(--loss)]'
                 }`}
               >
-                <TrendingUp className="w-4 h-4" />
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Today's P&amp;L</span>
+              <span className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Today's P&amp;L</span>
             </div>
-            <Badge variant={todaysPnl >= 0 ? 'gain' : 'loss'} dot>
+            <Badge variant={todaysPnl >= 0 ? 'gain' : 'loss'} dot className="text-[10px] py-0.5 px-2">
               LIVE
             </Badge>
           </div>
-          <div className="mt-1">
-            <div className={`text-2xl sm:text-3xl font-black font-mono tabular-nums ${pnlColorClass(todaysPnl)}`}>
+          <div className="mt-0.5">
+            <div className={`text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums ${pnlColorClass(todaysPnl)}`}>
               <LivePriceCell
                 value={todaysPnl}
                 prefix="₹"
                 showSign
                 colorBySign
-                className="!text-2xl sm:!text-3xl font-black"
+                className="!text-xl sm:!text-2xl md:!text-3xl font-black"
               />
             </div>
-            <div className="flex items-center gap-2 mt-1.5 text-xs font-semibold text-[var(--text-muted)]">
+            <div className="flex items-center gap-2 mt-1 text-[11px] sm:text-xs font-semibold text-[var(--text-muted)]">
               <span>Unrealized: <span className={`font-mono font-bold ${pnlColorClass(totalUnrealizedPnl)}`}>{formatPnl(totalUnrealizedPnl)}</span></span>
               <span>&bull;</span>
               <span>Realized: <span className={`font-mono font-bold ${pnlColorClass(totalRealizedPnl)}`}>{formatPnl(totalRealizedPnl)}</span></span>
@@ -363,27 +363,27 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
 
         {/* Active Open Positions Card */}
         <Card
-          padding="md"
+          padding="none"
           interactive
           onClick={() => navigate('/portfolio/positions')}
-          className="border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
+          className="p-3 sm:p-4.5 border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Layers className="w-4 h-4" />
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Open Positions</span>
+              <span className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Open Positions</span>
             </div>
-            <span className="text-xs font-bold text-[var(--primary)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              View <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-[11px] sm:text-xs font-bold text-[var(--primary)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              View <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </span>
           </div>
-          <div className="mt-1">
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums text-[var(--text-main)]">
+          <div className="mt-0.5">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums text-[var(--text-main)]">
               {openPositionsCount}
             </div>
-            <div className="flex items-center gap-2 mt-1.5 text-xs font-semibold text-[var(--text-muted)]">
+            <div className="flex items-center gap-2 mt-1 text-[11px] sm:text-xs font-semibold text-[var(--text-muted)]">
               <span className="text-[var(--gain)] font-bold">{longCount} Long</span>
               <span>&bull;</span>
               <span className="text-[var(--loss)] font-bold">{shortCount} Short</span>
@@ -395,30 +395,30 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
 
         {/* Available Trading Margin Card */}
         <Card
-          padding="md"
+          padding="none"
           interactive
           onClick={() => {
             window.dispatchEvent(new CustomEvent('open-add-funds-modal'));
             if (window.innerWidth >= 768) onOpenProfile?.('FUNDS');
           }}
-          className="border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
+          className="p-3 sm:p-4.5 border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-                <CreditCard className="w-4 h-4" />
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Available Margin</span>
+              <span className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Available Margin</span>
             </div>
-            <span className="text-xs font-bold text-[var(--primary)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+            <span className="text-[11px] sm:text-xs font-bold text-[var(--primary)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
               + Funds <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="mt-1">
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums text-[var(--text-main)]">
+          <div className="mt-0.5">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums text-[var(--text-main)]">
               ₹{availableMargin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="flex items-center justify-between mt-2 text-[11px] font-semibold text-[var(--text-muted)]">
+            <div className="flex items-center justify-between mt-1 text-[10px] sm:text-[11px] font-semibold text-[var(--text-muted)]">
               <span>Used: ₹{usedMargin.toLocaleString('en-IN')}</span>
               <span>{marginUtilization.toFixed(0)}% utilized</span>
             </div>

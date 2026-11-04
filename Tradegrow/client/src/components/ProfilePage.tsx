@@ -606,26 +606,26 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto">
       {/* PROFILE HEADER */}
-      <Card>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[var(--primary)] to-[var(--info)] flex items-center justify-center text-white text-xl font-black shadow-md flex-shrink-0">
+      <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[var(--primary)] to-[var(--info)] flex items-center justify-center text-white text-base sm:text-xl font-black shadow-md flex-shrink-0">
               {(fullName || user.username || 'T').charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-black text-[var(--text-main)]">{fullName || user.username}</h2>
-                <Badge variant={isKycVerified ? 'gain' : 'warning'} dot>{isKycVerified ? 'KYC Verified' : 'KYC Pending'}</Badge>
-                {isStaff && <Badge variant="primary">{user.role}</Badge>}
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-lg font-bold text-[var(--text-main)]">{fullName || user.username}</h2>
+                <Badge variant={isKycVerified ? 'gain' : 'warning'} dot className="text-[10px] py-0.5 px-2">{isKycVerified ? 'KYC Verified' : 'KYC Pending'}</Badge>
+                {isStaff && <Badge variant="primary" className="text-[10px] py-0.5 px-2">{user.role}</Badge>}
               </div>
-              <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5">
-                {user.email} <span className="mx-1.5 opacity-50">•</span> Client ID: TG-{user.id.slice(0, 8).toUpperCase()}
+              <p className="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium mt-0.5">
+                {user.email} <span className="mx-1 opacity-50">•</span> TG-{user.id.slice(0, 8).toUpperCase()}
               </p>
             </div>
           </div>
-          <div className="bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-4 py-2.5 rounded-xl">
-            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide block">Available Margin</span>
-            <span className="text-base font-black text-[var(--gain)] num-font">₹{(wallet?.cashBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+          <div className="bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl self-stretch sm:self-auto flex sm:block items-center justify-between">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Available Margin</span>
+            <span className="text-sm sm:text-base font-black text-[var(--gain)] num-font sm:block">₹{(wallet?.cashBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </Card>
@@ -641,33 +641,33 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       {activeTab === 'account' && (
         <div className="space-y-4">
           {/* TRADING BALANCE HERO CARD */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-sm space-y-4">
+          <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-xs space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between cursor-pointer" onClick={() => navigate('/profile/funds')}>
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
                   <span>Trading Balance</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[var(--text-main)] num-font mt-1">
+                <div className="text-xl sm:text-3xl font-black text-[var(--text-main)] num-font mt-0.5">
                   ₹{(wallet?.cashBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] bg-[var(--bg-surface-inset)] px-2.5 py-1.5 rounded-lg border border-[var(--border-color)]/60">
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[var(--text-muted)] bg-[var(--bg-surface-inset)] px-2.5 py-1 rounded-lg border border-[var(--border-color)]/60">
               <Clock className="w-3 h-3 text-[var(--text-muted)] flex-shrink-0" />
               <span>Last updated at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })} today</span>
             </div>
 
             {/* WITHDRAW & ADD FUNDS BUTTONS */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-2 gap-2.5 pt-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setRequestType('WITHDRAWAL');
                   navigate('/profile/funds');
                 }}
-                className="py-3 px-4 rounded-xl border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-black text-xs sm:text-sm tracking-wider uppercase hover:bg-blue-50 dark:hover:bg-blue-950/20 active:scale-[0.98] transition-all cursor-pointer text-center"
+                className="py-2.5 px-3 rounded-xl border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm tracking-wider uppercase hover:bg-blue-50 dark:hover:bg-blue-950/20 active:scale-[0.98] transition-all cursor-pointer text-center"
               >
                 Withdraw
               </button>
@@ -677,7 +677,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                   setRequestType('DEPOSIT');
                   navigate('/profile/funds');
                 }}
-                className="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-wider uppercase shadow-md active:scale-[0.98] transition-all cursor-pointer text-center"
+                className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm tracking-wider uppercase shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center"
               >
                 Add Funds
               </button>
@@ -688,7 +688,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
               onClick={() => navigate('/portfolio/holdings')}
-              className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-emerald-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
+              className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-emerald-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
@@ -706,7 +706,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
             <div
               onClick={() => navigate('/terminal')}
-              className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-indigo-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
+              className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-indigo-500/40 transition cursor-pointer flex items-start justify-between gap-3 shadow-xs"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
@@ -726,7 +726,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           {/* CLIENT PROFILE ROW */}
           <div
             onClick={() => setShowPersonalForm(!showPersonalForm)}
-            className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition shadow-xs"
+            className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between cursor-pointer hover:bg-[var(--bg-surface-elevated)] transition shadow-xs"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-xs">
@@ -741,7 +741,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           </div>
 
           {/* REFER & EARN BANNER */}
-          <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between gap-3 shadow-xs">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
@@ -763,7 +763,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           </div>
 
           {/* REPORTS & STATEMENTS */}
-          <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs">
             <div>
               <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-wider">Reports and Statements</h4>
               <p className="text-[11px] text-[var(--text-muted)]">All your investments and trading in one place</p>
@@ -867,7 +867,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
       {/* KYC TAB */}
       {activeTab === 'kyc' && (
-        <Card className="space-y-6">
+        <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl space-y-4 sm:space-y-6">
           <CardHeader className="pb-4 border-b border-[var(--border-color)] mb-0 flex-wrap gap-2">
             <div>
               <CardTitle>KYC & Regulatory Compliance</CardTitle>
@@ -883,7 +883,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           <InfoMessage msg={kycMessage} />
 
           {/* Visual 4-Step KYC Progress Stepper */}
-          <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
             <div className="flex items-center justify-between text-xs font-bold text-[var(--text-muted)]">
               <span>KYC Verification Steps</span>
               <span className="text-[var(--primary)] font-mono">
@@ -1080,8 +1080,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
       {/* BANK TAB */}
       {activeTab === 'bank' && (
-        <Card className="space-y-5">
-          <CardHeader className="pb-4 border-b border-[var(--border-color)] mb-0 flex-wrap gap-2">
+        <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl space-y-4 sm:space-y-5">
+          <CardHeader className="pb-3 sm:pb-4 border-b border-[var(--border-color)] mb-0 flex-wrap gap-2">
             <div>
               <CardTitle>Verified Bank Account</CardTitle>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Trading proceeds and withdrawal settlements route through this verified account.</p>
@@ -1156,8 +1156,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
       {/* SECURITY TAB */}
       {activeTab === 'security' && (
-        <Card className="space-y-5">
-          <CardHeader className="pb-4 border-b border-[var(--border-color)] mb-0">
+        <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl space-y-4 sm:space-y-5">
+          <CardHeader className="pb-3 sm:pb-4 border-b border-[var(--border-color)] mb-0">
             <div>
               <CardTitle>Security &amp; Authentication</CardTitle>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Manage your password, active sessions, and multi-factor security.</p>
@@ -1165,7 +1165,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           </CardHeader>
 
           {/* Active Session & Device Audit Panel */}
-          <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-[var(--primary)]" />
@@ -1375,7 +1375,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                   </div>
 
                   {/* STEP 2: 1-TAP INSTANT UPI APP BUTTONS */}
-                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -1434,7 +1434,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                   </div>
 
                   {/* STEP 3: SCAN QR OR COPY UPI ID */}
-                  <div className="p-4 rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] flex flex-col sm:flex-row items-center gap-4">
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] flex flex-col sm:flex-row items-center gap-4">
                     <div className="w-28 h-28 bg-white p-2 rounded-xl border border-[var(--border-color)] shrink-0 flex items-center justify-center shadow-xs">
                       <img
                         src={paymentConfig.qrImageUrl || '/upi-qr.png'}
@@ -1644,8 +1644,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
       {/* APPEARANCE TAB */}
       {activeTab === 'appearance' && (
-        <Card className="space-y-5">
-          <CardHeader className="pb-4 border-b border-[var(--border-color)] mb-0">
+        <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl space-y-4 sm:space-y-5">
+          <CardHeader className="pb-3 sm:pb-4 border-b border-[var(--border-color)] mb-0">
             <div>
               <CardTitle>Appearance & Theme</CardTitle>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Switch between Lite Mode (light) and Dark Mode for the whole app.</p>

@@ -80,9 +80,8 @@ export function Tabs({ items, value, onChange, className, ariaLabel }: TabsProps
             onClick={() => onChange(item.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={clsx(
-              // min-h-[44px] only below md — same scoped touch-target rule
-              // Button uses, so the pill row stays compact on desktop.
-              'flex items-center gap-2 px-3.5 py-1.5 min-h-[44px] md:min-h-0 rounded-[var(--radius-full)] flex-shrink-0',
+              // Compact height on mobile while maintaining smooth touch ergonomics
+              'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 min-h-[36px] sm:min-h-[40px] md:min-h-0 rounded-[var(--radius-full)] flex-shrink-0',
               'text-xs font-bold whitespace-nowrap cursor-pointer',
               'transition-all duration-[var(--duration-fast)] ease-[var(--easing-default)]',
               'focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)]',

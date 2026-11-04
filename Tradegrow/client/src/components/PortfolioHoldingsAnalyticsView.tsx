@@ -108,23 +108,23 @@ export const PortfolioHoldingsAnalyticsView: React.FC<PortfolioHoldingsAnalytics
 
       {activeTab === 'HOLDINGS' && (
         <>
-          <Card>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 num-font">
+          <Card padding="none" className="p-3 sm:p-4.5 rounded-xl sm:rounded-2xl">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 num-font">
               <div>
-                <div className="text-xs font-bold text-[var(--text-muted)] mb-1">Invested Value</div>
-                <div className="text-lg font-black text-[var(--text-main)]">₹{investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                <div className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] mb-0.5 sm:mb-1">Invested Value</div>
+                <div className="text-base sm:text-lg font-bold text-[var(--text-main)]">₹{investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               </div>
               <div>
-                <div className="text-xs font-bold text-[var(--text-muted)] mb-1">Current Value</div>
-                <div className="text-lg font-black text-[var(--text-main)]">₹{currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                <div className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] mb-0.5 sm:mb-1">Current Value</div>
+                <div className="text-base sm:text-lg font-bold text-[var(--text-main)]">₹{currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               </div>
               <div>
-                <div className="text-xs font-bold text-[var(--text-muted)] mb-1">Total P&L</div>
-                <div className={`text-lg font-black ${pnlColorClass(holdingsPnl)}`}>{formatPnl(holdingsPnl)}</div>
+                <div className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] mb-0.5 sm:mb-1">Total P&amp;L</div>
+                <div className={`text-base sm:text-lg font-bold ${pnlColorClass(holdingsPnl)}`}>{formatPnl(holdingsPnl)}</div>
               </div>
               <div>
-                <div className="text-xs font-bold text-[var(--text-muted)] mb-1">Returns</div>
-                <div className={`text-lg font-black ${pnlColorClass(holdingsPnlPct)}`}>{formatPnlPct(holdingsPnlPct)}</div>
+                <div className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] mb-0.5 sm:mb-1">Returns</div>
+                <div className={`text-base sm:text-lg font-bold ${pnlColorClass(holdingsPnlPct)}`}>{formatPnlPct(holdingsPnlPct)}</div>
               </div>
             </div>
           </Card>
