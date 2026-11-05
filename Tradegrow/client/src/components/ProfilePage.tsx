@@ -4,7 +4,7 @@ import {
   User as UserIcon, ShieldCheck, Wallet as WalletIcon, Lock, CheckCircle2, AlertTriangle,
   Clock, RefreshCw, Save, Building2, UploadCloud, KeyRound, HelpCircle, Shield,
   Sun, Moon, ArrowUpRight, ArrowDownLeft, QrCode, ExternalLink, Smartphone, MessageSquare, LogOut, Copy, Check,
-  Zap, FileText, Sparkles, Volume2, ChevronRight
+  Zap, FileText, Sparkles, Volume2, ChevronRight, Plus
 } from 'lucide-react';
 import { User, Wallet, isStaffUser } from '../types';
 import { Card, CardHeader, CardTitle, Badge, Tabs, DataTable, DataTableColumn, Button, Dialog } from './ui';
@@ -531,6 +531,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  useEffect(() => {
+    const handleFundSubmitted = () => {
+      fetchFundRequests();
+      onRefreshWallet();
+    };
+    window.addEventListener('fund-request-submitted', handleFundSubmitted);
+    return () => window.removeEventListener('fund-request-submitted', handleFundSubmitted);
+  }, [onRefreshWallet]);
+
   const handleLaunchUpi = (app: SupportedUpiApp) => {
     if (fundAmount <= 0) {
       setFundMessage({ type: 'error', text: 'Please enter a valid deposit amount greater than ₹0' });
@@ -671,8 +680,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto">
-      {/* PROFILE HEADER */}
-      <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl">
+      {/* PROFILE HEADER - Hidden when activeTab is funds so client directly sees Add Fund */}
+      {activeTab !== 'funds' && (
+        <Card padding="none" className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[var(--primary)] to-[var(--info)] flex items-center justify-center text-white text-base sm:text-xl font-black shadow-md flex-shrink-0">
@@ -695,6 +705,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           </div>
         </div>
       </Card>
+      )}
 
       <Tabs
         ariaLabel="Profile section"
@@ -1275,46 +1286,56 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         const availableWithdraw = Math.max(0, availableTrade);
         const marginUtilPct = totalCapital > 0 ? (usedMargin / totalCapital) * 100 : 0;
 
-        const handleCopyUpi = () => {
-          navigator.clipboard?.writeText(paymentConfig.upiId || 'expertstokks@axl');
-          setCopiedUpi(true);
-          setTimeout(() => setCopiedUpi(false), 2000);
-        };
-
         return (
           <div className="space-y-4">
             {/* HERO BALANCE & MARGIN CARD */}
-            <Card className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+            <Card className="p-4 sm:p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <CardTitle>Trading Funds &amp; Margin Overview</CardTitle>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Real-time ledger balance, buying power, and margin exposure.</p>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">
+                    Available Trading Margin
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black font-mono text-[var(--gain)] tracking-tight mt-0.5">
+                    ₹{availableTrade.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Real-time ledger balance, buying power, and margin exposure.</p>
                 </div>
-                <Badge variant={marginUtilPct > 85 ? 'loss' : marginUtilPct > 60 ? 'warning' : 'gain'}>
-                  {marginUtilPct.toFixed(0)}% Margin Used
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 num-font">
-                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Total Net Balance</span>
-                  <span className="text-sm sm:text-lg font-black text-[var(--text-main)] tabular-nums tracking-tight">₹{totalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Available to Trade</span>
-                  <span className="text-sm sm:text-lg font-black text-[var(--gain)] tabular-nums tracking-tight">₹{availableTrade.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Available to Withdraw</span>
-                  <span className="text-sm sm:text-lg font-black text-indigo-500 tabular-nums tracking-tight">₹{availableWithdraw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-0.5 sm:mb-1">Blocked / Used Margin</span>
-                  <span className="text-sm sm:text-lg font-black text-[var(--warning)] tabular-nums tracking-tight">₹{usedMargin.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <div className="flex items-center gap-2">
+                  <Badge variant={marginUtilPct > 85 ? 'loss' : marginUtilPct > 60 ? 'warning' : 'gain'} className="text-xs py-1 px-3">
+                    {marginUtilPct.toFixed(0)}% Margin Used
+                  </Badge>
                 </div>
               </div>
 
-              {/* Margin Utilization Meter */}
+              {/* METRIC BREAKDOWN TILES */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Total Net Balance</span>
+                  <span className="text-sm sm:text-base font-black font-mono text-[var(--text-main)] block tabular-nums">
+                    ₹{totalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Available to Trade</span>
+                  <span className="text-sm sm:text-base font-black font-mono text-[var(--gain)] block tabular-nums">
+                    ₹{availableTrade.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Available to Withdraw</span>
+                  <span className="text-sm sm:text-base font-black font-mono text-indigo-500 block tabular-nums">
+                    ₹{availableWithdraw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase block mb-1">Blocked / Used Margin</span>
+                  <span className="text-sm sm:text-base font-black font-mono text-[var(--warning)] block tabular-nums">
+                    ₹{usedMargin.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Margin Utilization Progress Bar */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between text-[11px] font-bold">
                   <span className="text-[var(--text-muted)]">Margin Utilization</span>
@@ -1322,276 +1343,124 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                     {marginUtilPct.toFixed(1)}% ({marginUtilPct > 85 ? 'Critical Warning' : marginUtilPct > 60 ? 'Moderate' : 'Safe'})
                   </span>
                 </div>
-                <div className="w-full h-2.5 rounded-full bg-[var(--bg-surface-inset)] border border-[var(--border-color)] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-[var(--bg-surface-inset)] border border-[var(--border-color)] overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${marginUtilPct > 85
-                      ? 'bg-[var(--loss)]'
-                      : marginUtilPct > 60
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      marginUtilPct > 85
+                        ? 'bg-[var(--loss)]'
+                        : marginUtilPct > 60
                         ? 'bg-[var(--warning)]'
                         : 'bg-[var(--gain)]'
-                      }`}
+                    }`}
                     style={{ width: `${Math.min(marginUtilPct, 100)}%` }}
                   />
                 </div>
               </div>
+
+              {/* ACTION BUTTONS: DIRECT POPUP TRIGGER */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-add-funds-modal'))}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Funds (Instant UPI / QR / Link)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRequestType(requestType === 'WITHDRAWAL' ? 'DEPOSIT' : 'WITHDRAWAL')}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[var(--bg-surface-inset)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-[var(--text-main)] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  <ArrowUpRight className="w-4 h-4 text-rose-500" />
+                  <span>{requestType === 'WITHDRAWAL' ? 'Hide Withdrawal Form' : 'Withdraw Funds'}</span>
+                </button>
+              </div>
             </Card>
 
-            {/* ZERO BROKERAGE SAVINGS */}
-            <Card className="p-4 sm:p-5 relative overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-[var(--bg-surface)] via-emerald-950/10 to-[var(--bg-surface)]">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                    <Sparkles className="w-5 h-5" />
+            {/* QUICK-PAY HOSTED PAYMENT LINKS SHORTCUT */}
+            <Card className="p-3.5 sm:p-4 border border-blue-500/20 bg-gradient-to-br from-[var(--bg-surface)] via-blue-500/5 to-[var(--bg-surface)] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/15 text-blue-500 flex items-center justify-center">
+                    <ExternalLink className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-[var(--text-main)]">Zero Brokerage Savings</h3>
-                    <p className="text-xs text-[var(--text-muted)]">Lifetime saved: ₹{(savings?.totalSaved ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} vs standard brokers</p>
+                    <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-wide">
+                      Quick-Pay Hosted Payment Links
+                    </h4>
+                    <p className="text-[11px] text-[var(--text-muted)]">Instant deposit via web portal, card, or UPI</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  100% Free
+                <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                  Instant
                 </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {paymentConfig.quickPayLinks.map((link) => (
+                  <a
+                    key={link.amount}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-blue-500/10 border border-[var(--border-color)] hover:border-blue-500/40 flex items-center justify-between group transition cursor-pointer shadow-2xs"
+                  >
+                    <div>
+                      <span className="text-sm font-black font-mono text-[var(--text-main)] block">
+                        ₹{link.amount.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)]">Direct Payment Link</span>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-[var(--text-muted)] group-hover:text-blue-500 transition" />
+                  </a>
+                ))}
               </div>
             </Card>
 
-            {/* STREAMLINED DEPOSIT & WITHDRAWAL CARD */}
-            <Card className="space-y-5">
-              {/* TWO LARGE TABS: ADD FUNDS & WITHDRAW */}
-              <div className="grid grid-cols-2 gap-2 bg-[var(--bg-surface-inset)] p-1 rounded-xl border border-[var(--border-color)]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequestType('DEPOSIT');
-                    setFundMessage(null);
-                  }}
-                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${requestType === 'DEPOSIT'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                    }`}
-                >
-                  <ArrowDownLeft className="w-4 h-4" /> Add Funds
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequestType('WITHDRAWAL');
-                    setFundMessage(null);
-                  }}
-                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${requestType === 'WITHDRAWAL'
-                    ? 'bg-rose-600 text-white shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                    }`}
-                >
-                  <ArrowUpRight className="w-4 h-4" /> Withdraw
-                </button>
-              </div>
-
-              {/* --- DEPOSIT SECTION (STREAMLINED 1-TAP UPI) --- */}
-              {requestType === 'DEPOSIT' && (
-                <form onSubmit={handleSubmitFundRequest} className="space-y-4">
-                  {/* STEP 1: AMOUNT INPUT */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">
-                        Step 1: Enter Deposit Amount
-                      </label>
-                      <span className="text-[11px] text-[var(--text-muted)]">No limit</span>
+            {/* WITHDRAWAL FORM (When toggled by user) */}
+            {requestType === 'WITHDRAWAL' && (
+              <Card className="space-y-4 border-rose-500/30">
+                <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center">
+                      <ArrowUpRight className="w-4 h-4" />
                     </div>
-
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[var(--text-muted)]">₹</span>
-                      <input
-                        type="number"
-                        min="1"
-                        step="any"
-                        value={fundAmountInput}
-                        onChange={(e) => setFundAmountInput(e.target.value)}
-                        placeholder="50000"
-                        className="w-full pl-9 pr-4 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-blue-500 text-xl font-mono font-black text-[var(--text-main)] outline-none transition"
-                      />
-                    </div>
-
-                    {/* Quick Preset Pills */}
-                    <div className="flex items-center gap-2 flex-wrap pt-1">
-                      {[1000, 5000, 10000, 25000, 50000, 100000].map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => {
-                            setFundAmountInput(preset.toString());
-                            navigator.vibrate?.(10);
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border cursor-pointer ${fundAmount === preset
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                            : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                            }`}
-                        >
-                          +₹{preset >= 100000 ? `${preset / 100000}L` : preset >= 1000 ? `${preset / 1000}k` : preset}
-                        </button>
-                      ))}
-                    </div>
+                    <CardTitle>Request Payout / Withdrawal</CardTitle>
                   </div>
+                  <Badge variant="gain">Bank Verified</Badge>
+                </div>
 
-                  {/* STEP 2: 1-TAP INSTANT UPI APP BUTTONS */}
-                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                          <Zap className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="text-xs font-black text-[var(--text-main)] uppercase tracking-wide">
-                          Step 2: 1-Tap Instant UPI App Pay
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        Zero Surcharge
-                      </span>
-                    </div>
-
-                    <p className="text-[11px] text-[var(--text-muted)]">
-                      Tap your UPI app below to pay ₹{fundAmount.toLocaleString('en-IN')} instantly on your phone:
-                    </p>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => handleLaunchUpi('gpay')}
-                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-blue-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
-                      >
-                        <GPayIcon />
-                        <span className="text-xs font-bold text-[var(--text-main)]">Google Pay</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleLaunchUpi('phonepe')}
-                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-purple-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
-                      >
-                        <PhonePeIcon />
-                        <span className="text-xs font-bold text-[var(--text-main)]">PhonePe</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleLaunchUpi('paytm')}
-                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-sky-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
-                      >
-                        <PaytmIcon />
-                        <span className="text-xs font-bold text-[var(--text-main)]">Paytm</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleLaunchUpi('bhim')}
-                        className="p-3 rounded-xl bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-orange-500 flex flex-col items-center justify-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer group"
-                      >
-                        <BhimIcon />
-                        <span className="text-xs font-bold text-[var(--text-main)]">BHIM / Any UPI</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* STEP 3: SCAN QR OR COPY UPI ID */}
-                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] flex flex-col sm:flex-row items-center gap-4">
-                    <div className="w-28 h-28 bg-white p-2 rounded-xl border border-[var(--border-color)] shrink-0 flex items-center justify-center shadow-xs">
-                      <img
-                        src={paymentConfig.qrImageUrl || '/upi-qr.png'}
-                        alt="Merchant UPI Deposit QR"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/upi-qr.png';
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 w-full text-center sm:text-left space-y-2">
-                      <div>
-                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block">Merchant Payee</span>
-                        <span className="text-xs font-black text-[var(--text-main)]">{paymentConfig.merchantName}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1">Merchant UPI ID (VPA)</span>
-                        <div className="inline-flex items-center gap-2 bg-[var(--bg-surface)] px-3 py-1.5 rounded-xl border border-[var(--border-color)]">
-                          <span className="text-xs font-mono font-black text-blue-500 select-all">{paymentConfig.upiId}</span>
-                          <button
-                            type="button"
-                            onClick={handleCopyUpi}
-                            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
-                            title="Copy UPI ID"
-                          >
-                            {copiedUpi ? (
-                              <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-0.5">
-                                <Check className="w-3.5 h-3.5" /> Copied
-                              </span>
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-[var(--text-muted)]">
-                        Scan from a second device or copy the UPI ID into your banking app.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* STEP 4: CONFIRM DEPOSIT WITH 12-DIGIT UTR */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">
-                        Step 3: Enter 12-Digit UTR to Complete
-                      </label>
-                      <span className="text-[10px] text-[var(--text-muted)]">From payment receipt</span>
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={referenceNote}
-                      onChange={(e) => setReferenceNote(e.target.value)}
-                      placeholder="e.g. 431289102834 (12-digit UTR)"
-                      className="w-full px-4 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-blue-500 text-sm font-mono font-bold text-[var(--text-main)] outline-none transition"
-                    />
-                    <p className="text-[10px] text-[var(--text-muted)]">
-                      After completing payment in Google Pay / PhonePe / Paytm, copy the 12-digit UTR reference number and submit.
-                    </p>
-                  </div>
-
-                  <InfoMessage msg={fundMessage} />
-
-                  <Button
-                    type="submit"
-                    disabled={submittingFundReq || fundAmount <= 0}
-                    variant="primary"
-                    className="w-full py-3.5 justify-center text-sm font-black shadow-md cursor-pointer"
-                  >
-                    {submittingFundReq ? 'Submitting...' : `Submit Deposit Request for ₹${fundAmount.toLocaleString('en-IN')}`}
-                  </Button>
-                </form>
-              )}
-
-              {/* --- WITHDRAWAL SECTION --- */}
-              {requestType === 'WITHDRAWAL' && (
                 <form onSubmit={handleSubmitFundRequest} className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">Withdrawal Amount</label>
-                      <span className="text-[11px] text-[var(--text-muted)]">Max withdrawable: ₹{availableWithdraw.toLocaleString('en-IN')}</span>
+                      <label className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">
+                        Withdrawal Amount
+                      </label>
+                      <span className="text-[11px] text-[var(--text-muted)]">
+                        Max withdrawable: ₹{availableWithdraw.toLocaleString('en-IN')}
+                      </span>
                     </div>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-bold text-[var(--text-muted)]">₹</span>
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-bold text-[var(--text-muted)]">
+                        ₹
+                      </span>
                       <input
                         type="number"
                         min="1"
-                        max={availableWithdraw}
                         step="any"
+                        required
+                        max={availableWithdraw}
                         value={fundAmountInput}
                         onChange={(e) => setFundAmountInput(e.target.value)}
-                        placeholder="Enter amount"
-                        className="w-full pl-8 pr-16 py-3 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-rose-500 text-lg font-mono font-black text-[var(--text-main)] outline-none transition"
+                        placeholder="e.g. 10000"
+                        className="w-full pl-9 pr-20 py-2.5 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] focus:border-rose-500 text-sm font-mono font-bold text-[var(--text-main)] outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => setFundAmountInput(Math.floor(availableWithdraw).toString())}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-lg cursor-pointer"
                       >
                         MAX
                       </button>
@@ -1618,7 +1487,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                       type="text"
                       value={referenceNote}
                       onChange={(e) => setReferenceNote(e.target.value)}
-                      placeholder="e.g. Bank payout"
+                      placeholder="e.g. Settlement to primary bank"
                       className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface-inset)] border border-[var(--border-color)] text-xs text-[var(--text-main)] outline-none"
                     />
                   </div>
@@ -1634,15 +1503,107 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                     {submittingFundReq ? 'Submitting...' : `Request Withdrawal of ₹${fundAmount.toLocaleString('en-IN')}`}
                   </Button>
                 </form>
-              )}
-            </Card>
+              </Card>
+            )}
 
-            {/* FUND REQUEST HISTORY TABLE */}
-            <Card padding="none" className="overflow-hidden">
-              <div className="p-3">
-                <div className="px-1 pb-2 text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">Fund Request History</div>
-                <DataTable columns={fundColumns} rows={fundRequests} rowKey={(r) => r.id} emptyMessage="No fund requests recorded yet." />
+            {/* FUND REQUEST HISTORY (OPTIMIZED TRANSACTION CARDS & MONOSPACE AMOUNT FONT) */}
+            <Card className="p-3.5 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2.5">
+                <div>
+                  <h3 className="text-xs sm:text-sm font-black text-[var(--text-main)] uppercase tracking-wider">
+                    Fund Request History
+                  </h3>
+                  <p className="text-[11px] text-[var(--text-muted)]">Live record of deposit &amp; withdrawal submissions</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchFundRequests}
+                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-inset)] transition cursor-pointer"
+                  title="Refresh History"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
               </div>
+
+              {fundRequests.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[var(--text-muted)] space-y-1">
+                  <Clock className="w-7 h-7 mx-auto opacity-40 mb-1" />
+                  <p className="font-bold text-[var(--text-main)]">No fund requests recorded yet</p>
+                  <p className="text-[11px]">Your submitted deposit and withdrawal requests will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {fundRequests.map((r) => {
+                    const isDeposit = r.request_type === 'DEPOSIT';
+                    const amountVal = parseFloat(r.amount || 0);
+                    const status = r.status || 'PENDING';
+                    const dateFormatted = new Date(r.created_at).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+
+                    return (
+                      <div
+                        key={r.id}
+                        className="p-3 sm:p-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-inset)] hover:bg-[var(--bg-surface-elevated)] transition flex items-center justify-between gap-3 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2.5 sm:gap-3 overflow-hidden">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              isDeposit ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'
+                            }`}
+                          >
+                            {isDeposit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                          </div>
+                          <div className="overflow-hidden">
+                            <span className="text-xs font-bold text-[var(--text-main)] block truncate">
+                              {isDeposit ? 'Deposit Request' : 'Withdrawal Request'}
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] font-mono block">
+                              {dateFormatted}
+                            </span>
+                            {r.reference_note && (
+                              <span className="inline-block mt-0.5 text-[9.5px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border-color)] px-1.5 py-0.5 rounded max-w-[170px] sm:max-w-xs truncate">
+                                {r.reference_note.split('\n')[0]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Amount Box: High-Contrast Monospace Font & Status Badge */}
+                        <div className="text-right flex-shrink-0">
+                          <div
+                            className={`font-mono font-black text-sm sm:text-base tracking-tight ${
+                              isDeposit ? 'text-emerald-500' : 'text-rose-500'
+                            }`}
+                          >
+                            {isDeposit ? '+' : '-'}₹{amountVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="mt-0.5 flex justify-end">
+                            <span
+                              className={`text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                                status === 'APPROVED'
+                                  ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                                  : status === 'REJECTED'
+                                  ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                                  : 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                              }`}
+                            >
+                              {status === 'PENDING' && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                              )}
+                              {status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </Card>
           </div>
         );

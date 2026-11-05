@@ -207,8 +207,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         const type = inst.optionType === 'CE' || inst.optionType === 'PE'
           ? 'OPT'
           : inst.segment?.includes('INDEX')
-          ? 'INDEX'
-          : 'EQ';
+            ? 'INDEX'
+            : 'EQ';
         list.push({
           token: inst.token,
           symbol: inst.symbol,
@@ -242,7 +242,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-start justify-center pt-3 sm:pt-20 px-2 sm:px-4 font-body text-[var(--text-main)]">
       <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
-        
+
         {/* SEARCH INPUT BAR */}
         <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)]">
           <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--primary)] flex-shrink-0" />
@@ -264,7 +264,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
         {/* RESULTS LIST */}
         <div className="max-h-[80vh] sm:max-h-[70vh] overflow-y-auto p-2.5 sm:p-3 flex flex-col gap-3 sm:gap-4">
-          
+
           {/* QUICK NAV MODULES */}
           {query === '' && (
             <div>
@@ -402,9 +402,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--bg-surface-inset)] text-[var(--text-muted)] font-bold border border-[var(--border-color)]">
                         {inst.exchange}
                       </span>
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-extrabold ${
-                        inst.type === 'OPT' ? 'bg-[var(--gain-light)] text-[var(--gain)]' : 'bg-[var(--primary-light)] text-[var(--primary)]'
-                      }`}>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-extrabold ${inst.type === 'OPT' ? 'bg-[var(--gain-light)] text-[var(--gain)]' : 'bg-[var(--primary-light)] text-[var(--primary)]'
+                        }`}>
                         {inst.type}
                       </span>
                     </div>

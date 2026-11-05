@@ -1038,8 +1038,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 navigate('/portfolio/positions');
               }}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'POSITIONS'
-                  ? 'bg-[var(--primary)] text-white shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
+                ? 'bg-[var(--primary)] text-white shadow-xs'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
                 }`}
             >
               Positions {openPositions.length > 0 && `(${openPositions.length})`}
@@ -1053,8 +1053,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 navigate('/portfolio/orders');
               }}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'ORDERS'
-                  ? 'bg-[var(--primary)] text-white shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
+                ? 'bg-[var(--primary)] text-white shadow-xs'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
                 }`}
             >
               Orders {orders.filter(isTodayOrder).length > 0 && `(${orders.filter(isTodayOrder).length})`}
@@ -1068,8 +1068,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                 navigate('/portfolio/history');
               }}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${mobileTab === 'TRADE_HISTORY'
-                  ? 'bg-[var(--primary)] text-white shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
+                ? 'bg-[var(--primary)] text-white shadow-xs'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
                 }`}
             >
               History {closedTrades.length > 0 && `(${closedTrades.length})`}
@@ -1242,8 +1242,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         {actionMessage && (
           <div
             className={`p-2.5 rounded-xl text-xs font-bold border flex items-center justify-between ${actionMessage.type === 'success'
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
-                : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30'
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
+              : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30'
               }`}
           >
             <span>{actionMessage.text}</span>
@@ -1402,10 +1402,10 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
                       <span
                         className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${isFilled
-                            ? 'bg-emerald-500/10 text-emerald-600'
-                            : isPending
-                              ? 'bg-amber-500/10 text-amber-600'
-                              : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
+                          ? 'bg-emerald-500/10 text-emerald-600'
+                          : isPending
+                            ? 'bg-amber-500/10 text-amber-600'
+                            : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
                           }`}
                       >
                         {order.status}
@@ -2139,8 +2139,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                       type="button"
                       onClick={() => setAverageLots(multiplier)}
                       className={`py-1.5 px-2 rounded-xl border font-bold text-xs transition-all ${averageLots === multiplier
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
-                          : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
+                        : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
                         }`}
                     >
                       +{multiplier} {multiplier === 1 ? 'Lot' : 'Lots'}
@@ -2172,8 +2172,8 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                         type="button"
                         onClick={() => setAverageOrderType(t)}
                         className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all ${averageOrderType === t
-                            ? 'bg-emerald-500 text-white border-emerald-500'
-                            : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)]'
+                          ? 'bg-emerald-500 text-white border-emerald-500'
+                          : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-muted)]'
                           }`}
                       >
                         {t}
