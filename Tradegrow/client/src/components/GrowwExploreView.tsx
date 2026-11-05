@@ -329,7 +329,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
   ];
 
   return (
-    <div className="space-y-5 sm:space-y-6 pb-28 md:pb-12 font-body text-[var(--text-main)]">
+    <div className="space-y-3.5 sm:space-y-6 pb-28 md:pb-12 font-body text-[var(--text-main)]">
       {/* CATEGORY FILTER — belongs on this page per the IA, not the shell.
           Always rendered regardless of category, so switching back from
           Commodities is always possible (a real dead-end bug in an early

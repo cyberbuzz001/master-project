@@ -569,168 +569,275 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     <>
       {/* TAB 1: POSITIONS */}
       {consoleTab === 'POSITIONS' && (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           {openPositions.length === 0 ? (
             <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No open positions. Place an order to start trading.
             </div>
           ) : (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
-                <tr>
-                  <th className="py-2 px-3">Symbol</th>
-                  <th className="py-2 px-3">Product</th>
-                  <th className="py-2 px-3 text-right">Net Qty</th>
-                  <th className="py-2 px-3 text-right">Avg Price</th>
-                  <th className="py-2 px-3 text-right">LTP</th>
-                  <th className="py-2 px-3 text-right">Unrealized P&L</th>
-                  <th className="py-2 px-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
+            <>
+              {/* Mobile Cards (md:hidden) */}
+              <div className="md:hidden space-y-2 p-2.5 pb-20">
                 {openPositions.map((pos) => {
                   const isPosGain = (Number(pos.unrealizedPnl) || 0) >= 0;
                   return (
-                    <tr key={pos.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-2 px-3 font-bold text-white whitespace-nowrap">
-                        {pos.symbol}
-                        <span className="text-[10px] text-slate-400 ml-1.5 font-normal">({pos.exchange || 'NSE'})</span>
-                      </td>
-                      <td className="py-2 px-3 whitespace-nowrap">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
-                          {pos.productType}
+                    <div key={pos.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-xs text-white">{pos.symbol}</span>
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 font-bold uppercase">
+                            {pos.productType}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-black font-mono tabular-nums ${isPosGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {isPosGain ? '+' : ''}₹{Number(pos.unrealizedPnl || 0).toFixed(2)}
                         </span>
-                      </td>
-                      <td className="py-2 px-3 text-right font-bold text-slate-200 tabular-nums">
-                        {pos.netQty}
-                      </td>
-                      <td className="py-2 px-3 text-right text-slate-300 tabular-nums">
-                        ₹{Number(pos.averagePrice || 0).toFixed(2)}
-                      </td>
-                      <td className="py-2 px-3 text-right font-bold text-white tabular-nums">
-                        ₹{Number(pos.ltp || 0).toFixed(2)}
-                      </td>
-                      <td className={`py-2 px-3 text-right font-black tabular-nums ${isPosGain ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {isPosGain ? '+' : ''}₹{Number(pos.unrealizedPnl || 0).toFixed(2)}
-                      </td>
-                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 text-[11px] font-mono text-slate-400 border-t border-slate-800/60 pt-1.5">
+                        <div>Qty: <strong className="text-white">{pos.netQty}</strong></div>
+                        <div>Avg: <strong className="text-slate-200">₹{Number(pos.averagePrice || 0).toFixed(2)}</strong></div>
+                        <div className="text-right">LTP: <strong className="text-white">₹{Number(pos.ltp || 0).toFixed(2)}</strong></div>
+                      </div>
+                      <div className="pt-1 flex justify-end">
                         <button
                           onClick={() => handleSquareOffPosition(pos)}
                           disabled={actionLoadingId === pos.id}
-                          className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-[11px] font-bold transition-all disabled:opacity-50"
+                          className="w-full py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-xs font-bold transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-1"
                         >
-                          {actionLoadingId === pos.id ? 'Exiting...' : 'Exit'}
+                          {actionLoadingId === pos.id ? 'Exiting...' : 'Square Off Position'}
                         </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table (hidden md:block) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                    <tr>
+                      <th className="py-2 px-3">Symbol</th>
+                      <th className="py-2 px-3">Product</th>
+                      <th className="py-2 px-3 text-right">Net Qty</th>
+                      <th className="py-2 px-3 text-right">Avg Price</th>
+                      <th className="py-2 px-3 text-right">LTP</th>
+                      <th className="py-2 px-3 text-right">Unrealized P&L</th>
+                      <th className="py-2 px-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {openPositions.map((pos) => {
+                      const isPosGain = (Number(pos.unrealizedPnl) || 0) >= 0;
+                      return (
+                        <tr key={pos.id} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="py-2 px-3 font-bold text-white whitespace-nowrap">
+                            {pos.symbol}
+                            <span className="text-[10px] text-slate-400 ml-1.5 font-normal">({pos.exchange || 'NSE'})</span>
+                          </td>
+                          <td className="py-2 px-3 whitespace-nowrap">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                              {pos.productType}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-bold text-slate-200 tabular-nums">
+                            {pos.netQty}
+                          </td>
+                          <td className="py-2 px-3 text-right text-slate-300 tabular-nums">
+                            ₹{Number(pos.averagePrice || 0).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-bold text-white tabular-nums">
+                            ₹{Number(pos.ltp || 0).toFixed(2)}
+                          </td>
+                          <td className={`py-2 px-3 text-right font-black tabular-nums ${isPosGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isPosGain ? '+' : ''}₹{Number(pos.unrealizedPnl || 0).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-3 text-center whitespace-nowrap">
+                            <button
+                              onClick={() => handleSquareOffPosition(pos)}
+                              disabled={actionLoadingId === pos.id}
+                              className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-[11px] font-bold transition-all disabled:opacity-50"
+                            >
+                              {actionLoadingId === pos.id ? 'Exiting...' : 'Exit'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {/* TAB 2: PENDING ORDERS */}
       {consoleTab === 'ORDERS' && (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           {pendingOrders.length === 0 ? (
             <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No active pending orders.
             </div>
           ) : (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
-                <tr>
-                  <th className="py-2 px-3">Symbol</th>
-                  <th className="py-2 px-3">Side</th>
-                  <th className="py-2 px-3">Type</th>
-                  <th className="py-2 px-3 text-right">Price</th>
-                  <th className="py-2 px-3 text-right">Qty</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
+            <>
+              {/* Mobile Cards (md:hidden) */}
+              <div className="md:hidden space-y-2 p-2.5 pb-20">
                 {pendingOrders.map((ord) => (
-                  <tr key={ord.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-2 px-3 font-bold text-white whitespace-nowrap">{ord.symbol}</td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <span className={`font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {ord.side}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-slate-300 whitespace-nowrap">{ord.order_type}</td>
-                    <td className="py-2 px-3 text-right font-bold text-white tabular-nums">₹{Number(ord.price || 0).toFixed(2)}</td>
-                    <td className="py-2 px-3 text-right text-slate-300 tabular-nums">{ord.quantity}</td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">
+                  <div key={ord.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${ord.side === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                          {ord.side}
+                        </span>
+                        <span className="font-bold text-xs text-white">{ord.symbol}</span>
+                      </div>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
                         {ord.status}
                       </span>
-                    </td>
-                    <td className="py-2 px-3 text-center whitespace-nowrap">
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-slate-800/60 pt-1.5">
+                      <span>Type: <strong className="text-white">{ord.order_type}</strong></span>
+                      <span>Qty: <strong className="text-white">{ord.quantity}</strong></span>
+                      <span>Price: <strong className="text-white">₹{Number(ord.price || 0).toFixed(2)}</strong></span>
+                    </div>
+                    <div className="pt-1 flex justify-end">
                       <button
                         onClick={() => handleCancelOrder(ord.id)}
                         disabled={actionLoadingId === ord.id}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-bold transition-all disabled:opacity-50"
+                        className="w-full py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all disabled:opacity-50 active:scale-95"
                       >
-                        {actionLoadingId === ord.id ? 'Cancelling...' : 'Cancel'}
+                        {actionLoadingId === ord.id ? 'Cancelling...' : 'Cancel Order'}
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table (hidden md:block) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                    <tr>
+                      <th className="py-2 px-3">Symbol</th>
+                      <th className="py-2 px-3">Side</th>
+                      <th className="py-2 px-3">Type</th>
+                      <th className="py-2 px-3 text-right">Price</th>
+                      <th className="py-2 px-3 text-right">Qty</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {pendingOrders.map((ord) => (
+                      <tr key={ord.id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="py-2 px-3 font-bold text-white whitespace-nowrap">{ord.symbol}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className={`font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {ord.side}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-300 whitespace-nowrap">{ord.order_type}</td>
+                        <td className="py-2 px-3 text-right font-bold text-white tabular-nums">₹{Number(ord.price || 0).toFixed(2)}</td>
+                        <td className="py-2 px-3 text-right text-slate-300 tabular-nums">{ord.quantity}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">
+                            {ord.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => handleCancelOrder(ord.id)}
+                            disabled={actionLoadingId === ord.id}
+                            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-bold transition-all disabled:opacity-50"
+                          >
+                            {actionLoadingId === ord.id ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {/* TAB 3: TRADES */}
       {consoleTab === 'TRADES' && (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           {filledOrders.length === 0 ? (
             <div className="p-4 sm:p-8 text-center text-xs text-slate-500">
               No trades executed today yet.
             </div>
           ) : (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
-                <tr>
-                  <th className="py-2 px-3">Time</th>
-                  <th className="py-2 px-3">Symbol</th>
-                  <th className="py-2 px-3">Side</th>
-                  <th className="py-2 px-3 text-right">Filled Qty</th>
-                  <th className="py-2 px-3 text-right">Avg Fill Price</th>
-                  <th className="py-2 px-3">Product</th>
-                  <th className="py-2 px-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
+            <>
+              {/* Mobile Cards (md:hidden) */}
+              <div className="md:hidden space-y-2 p-2.5 pb-20">
                 {filledOrders.map((ord) => (
-                  <tr key={ord.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-2 px-3 text-slate-400 text-[11px] whitespace-nowrap">
-                      {ord.created_at ? new Date(ord.created_at).toLocaleTimeString('en-IN') : '--'}
-                    </td>
-                    <td className="py-2 px-3 font-bold text-white whitespace-nowrap">{ord.symbol}</td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <span className={`font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {ord.side}
+                  <div key={ord.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs font-mono">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${ord.side === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                          {ord.side}
+                        </span>
+                        <span className="font-bold text-white">{ord.symbol}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {ord.created_at ? new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
                       </span>
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-slate-200 tabular-nums">{ord.filled_quantity || ord.quantity}</td>
-                    <td className="py-2 px-3 text-right text-emerald-400 font-bold tabular-nums">
-                      ₹{Number(ord.average_price || ord.price || 0).toFixed(2)}
-                    </td>
-                    <td className="py-2 px-3 text-slate-300 whitespace-nowrap">{ord.product_type}</td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
-                        FILLED
-                      </span>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/60 pt-1">
+                      <span>Qty: <strong className="text-white">{ord.filled_quantity || ord.quantity}</strong> ({ord.product_type})</span>
+                      <span>Avg: <strong className="text-emerald-400 font-bold">₹{Number(ord.average_price || ord.price || 0).toFixed(2)}</strong></span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table (hidden md:block) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 bg-[#0b0e14] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                    <tr>
+                      <th className="py-2 px-3">Time</th>
+                      <th className="py-2 px-3">Symbol</th>
+                      <th className="py-2 px-3">Side</th>
+                      <th className="py-2 px-3 text-right">Filled Qty</th>
+                      <th className="py-2 px-3 text-right">Avg Fill Price</th>
+                      <th className="py-2 px-3">Product</th>
+                      <th className="py-2 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filledOrders.map((ord) => (
+                      <tr key={ord.id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="py-2 px-3 text-slate-400 text-[11px] whitespace-nowrap">
+                          {ord.created_at ? new Date(ord.created_at).toLocaleTimeString('en-IN') : '--'}
+                        </td>
+                        <td className="py-2 px-3 font-bold text-white whitespace-nowrap">{ord.symbol}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className={`font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {ord.side}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-slate-200 tabular-nums">{ord.filled_quantity || ord.quantity}</td>
+                        <td className="py-2 px-3 text-right text-emerald-400 font-bold tabular-nums">
+                          ₹{Number(ord.average_price || ord.price || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-slate-300 whitespace-nowrap">{ord.product_type}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
+                            FILLED
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -1094,7 +1201,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
         </div>
 
         {/* PANE 3: RIGHT ORDER ENTRY & 5-LEVEL DEPTH */}
-        <div className={`${isMobileViewport ? (mobileWorkspaceTab === 'TRADE' ? 'flex flex-1 w-full h-full' : 'hidden') : 'w-80 md:w-84 flex-shrink-0 flex'} bg-[#131722] border-l border-slate-800 flex-col overflow-y-auto`}>
+        <div className={`${isMobileViewport ? (mobileWorkspaceTab === 'TRADE' ? 'flex flex-1 w-full h-full pb-24' : 'hidden') : 'w-80 md:w-84 flex-shrink-0 flex'} bg-[#131722] border-l border-slate-800 flex-col overflow-y-auto`}>
           
           {/* Order Placement Box */}
           <div className="p-4 border-b border-slate-800 bg-[#0b0e14]/50 relative">

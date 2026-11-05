@@ -326,7 +326,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 w-full font-body text-[var(--text-main)]">
+    <div className="flex flex-col gap-3 sm:gap-6 w-full font-body text-[var(--text-main)] pb-20 sm:pb-0">
       {/* Top Header & Search Card */}
       <Card padding="none" className="p-3 sm:p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
         <div className="w-full md:w-auto flex items-center justify-between md:block">

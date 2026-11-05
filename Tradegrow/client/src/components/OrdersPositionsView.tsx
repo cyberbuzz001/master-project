@@ -1026,7 +1026,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       {/* ════════════════════════════════════════════════════════════════════════
           1. MOBILE INTERFACE (MATCHING EXACT BROKER SCREENSHOT)
          ════════════════════════════════════════════════════════════════════════ */}
-      <div className="md:hidden space-y-2.5">
+      <div className="md:hidden space-y-2.5 pb-28 sm:pb-32">
         {/* ── Top Header Navigation Bar (Positions, Orders, History, Holdings, Analytics, Journal) ── */}
         <div className="flex items-center justify-between pb-1 pt-1 border-b border-[var(--border-color)]">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 max-w-[calc(100vw-85px)]">

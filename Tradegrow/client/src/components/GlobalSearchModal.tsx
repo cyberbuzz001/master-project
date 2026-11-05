@@ -240,30 +240,30 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   })();
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-start justify-center pt-12 sm:pt-20 px-2.5 sm:px-4 font-body text-[var(--text-main)]">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-start justify-center pt-3 sm:pt-20 px-2 sm:px-4 font-body text-[var(--text-main)]">
       <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
         
         {/* SEARCH INPUT BAR */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)]">
-          <Search className="w-5 h-5 text-[var(--primary)]" />
+        <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-[var(--border-color)] bg-[var(--bg-surface-inset)]">
+          <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--primary)] flex-shrink-0" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={isAdminUser ? "Jump to customer, order ID, option strike, or nav section (Ctrl+K)..." : "Search Nifty, Sensex, Equity & Options (e.g. NIFTY 24850 CE)..."}
-            className="w-full bg-transparent text-[var(--text-main)] placeholder-[var(--text-muted)] font-sans text-sm focus:outline-none"
+            className="w-full bg-transparent text-[var(--text-main)] placeholder-[var(--text-muted)] font-sans text-xs sm:text-sm focus:outline-none"
           />
           <kbd className="hidden sm:inline bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-muted)] text-[10px] font-mono px-2 py-0.5 rounded">
             Esc
           </kbd>
-          <button onClick={onClose} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-lg cursor-pointer">
+          <button onClick={onClose} className="p-1 sm:p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-lg cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* RESULTS LIST */}
-        <div className="max-h-[70vh] overflow-y-auto p-3 flex flex-col gap-4">
+        <div className="max-h-[80vh] sm:max-h-[70vh] overflow-y-auto p-2.5 sm:p-3 flex flex-col gap-3 sm:gap-4">
           
           {/* QUICK NAV MODULES */}
           {query === '' && (

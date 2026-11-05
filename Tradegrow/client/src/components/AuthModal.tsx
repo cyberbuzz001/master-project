@@ -308,7 +308,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
   const iconClass = 'w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none';
 
   return (
-    <div className="min-h-dvh w-full bg-[var(--bg-body)] text-[var(--text-main)] font-body flex items-center justify-center p-2.5 sm:p-6">
+    <div className="min-h-dvh w-full bg-[var(--bg-body)] text-[var(--text-main)] font-body flex items-center justify-center p-2 sm:p-6">
       <div className="auth-card w-full max-w-5xl grid lg:grid-cols-[1.05fr_1fr] rounded-[var(--radius-xl)] overflow-hidden border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-[var(--shadow-xl)]">
 
         {/* ── BRAND PANEL (desktop only) ─────────────────────────────────
@@ -377,7 +377,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
         </aside>
 
         {/* ── FORM PANEL ─────────────────────────────────────────────── */}
-        <main className="p-4 sm:p-8 md:p-10 flex flex-col justify-center">
+        <main className="p-3.5 sm:p-8 md:p-10 flex flex-col justify-center">
           {/* Compact brand lockup — only shown where the brand panel isn't */}
           <div className="lg:hidden flex items-center gap-2.5 mb-4 sm:mb-8">
             <span className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--primary)] text-white flex items-center justify-center shadow-[var(--shadow-md)]">
@@ -525,7 +525,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
                   <span>Change details / email</span>
                 </button>
 
-                <h2 className="text-2xl font-black tracking-tight">Verify Your Email</h2>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight">Verify Your Email</h2>
                 <p className="text-sm text-[var(--text-muted)] mt-1.5">
                   We've sent a 6-digit verification code to <strong className="text-[var(--text-main)]">{email}</strong>. Enter it below to activate your trading account:
                 </p>

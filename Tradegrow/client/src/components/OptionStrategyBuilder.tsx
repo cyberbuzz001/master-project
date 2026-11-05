@@ -338,18 +338,18 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
         </div>
 
         {/* Preset Strategies Quick Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 max-w-full">
-          <span className="text-xs text-slate-400 font-semibold">PRESETS:</span>
-          <button onClick={() => applyPreset('BULL_CALL_SPREAD')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 max-w-full">
+          <span className="text-[11px] text-slate-400 font-semibold whitespace-nowrap flex-shrink-0">PRESETS:</span>
+          <button onClick={() => applyPreset('BULL_CALL_SPREAD')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition whitespace-nowrap flex-shrink-0">
             Bull Call Spread
           </button>
-          <button onClick={() => applyPreset('BEAR_PUT_SPREAD')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition">
+          <button onClick={() => applyPreset('BEAR_PUT_SPREAD')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition whitespace-nowrap flex-shrink-0">
             Bear Put Spread
           </button>
-          <button onClick={() => applyPreset('LONG_STRADDLE')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition">
+          <button onClick={() => applyPreset('LONG_STRADDLE')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition whitespace-nowrap flex-shrink-0">
             Straddle
           </button>
-          <button onClick={() => applyPreset('IRON_CONDOR')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition">
+          <button onClick={() => applyPreset('IRON_CONDOR')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded border border-slate-700 transition whitespace-nowrap flex-shrink-0">
             Iron Condor
           </button>
         </div>
@@ -417,7 +417,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
                     </div>
 
                     {/* Strike Selector */}
-                    <div className="flex-1 min-w-[100px]">
+                    <div className="flex-1 min-w-[85px]">
                       <label className="text-[10px] text-slate-500 block leading-none mb-0.5">STRIKE (±{strikeStep})</label>
                       <input
                         type="number"
@@ -429,7 +429,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
                     </div>
 
                     {/* Lots Input */}
-                    <div className="w-20">
+                    <div className="w-16 sm:w-20">
                       <label className="text-[10px] text-slate-500 block leading-none mb-0.5">LOTS ({lotSize})</label>
                       <input
                         type="number"
@@ -441,7 +441,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
                     </div>
 
                     {/* Premium Input */}
-                    <div className="w-28">
+                    <div className="w-24 sm:w-28">
                       <div className="flex items-center justify-between leading-none mb-0.5">
                         <label className="text-[10px] text-slate-500">PREMIUM (₹)</label>
                         {liveLtp !== undefined && liveLtp > 0 && (
