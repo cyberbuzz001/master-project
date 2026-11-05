@@ -156,6 +156,44 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     }
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/') || file.type.includes('svg') || file.size < 800 * 1024) return file;
+    try {
+      return await new Promise<File>((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const maxDim = 1600;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { resolve(file); return; }
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (!blob) { resolve(file); return; }
+            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.82);
+        };
+        img.onerror = () => resolve(file);
+        img.src = url;
+      });
+    } catch (_) {
+      return file;
+    }
+  };
+
   const handleManualKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingManualKyc(true);
@@ -167,8 +205,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     formData.append('bankAccountNumber', bankAccountNumber || 'PENDING');
     formData.append('bankIfsc', bankIfsc || 'PENDING');
     formData.append('bankName', bankName || 'PENDING');
-    if (panFile) { formData.append('panDoc', panFile); formData.append('panDocument', panFile); }
-    if (aadhaarFile) { formData.append('aadhaarFrontDoc', aadhaarFile); formData.append('aadhaarFront', aadhaarFile); }
+    if (panFile) {
+      const comp = await compressImage(panFile);
+      formData.append('panDoc', comp);
+      formData.append('panDocument', comp);
+    }
+    if (aadhaarFile) {
+      const comp = await compressImage(aadhaarFile);
+      formData.append('aadhaarFrontDoc', comp);
+      formData.append('aadhaarFront', comp);
+    }
 
     try {
       const res = await fetch('/api/v1/kyc/submit', {
@@ -176,7 +222,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
-      const data = await res.json();
+      let data: any = {};
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        const msg = res.status === 504 ? 'Request timed out. Please try again.' : text.startsWith('<') ? `Server error (${res.status})` : text;
+        data = { success: res.ok, error: { message: msg } };
+      }
       if (data.success) {
         setKycMsg({ type: 'success', text: 'KYC submitted successfully! Proceeding to bank details.' });
         setTimeout(() => setCurrentStep(3), 1000);
@@ -184,7 +238,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         setKycMsg({ type: 'error', text: data.error?.message || 'Submission failed' });
       }
     } catch (err: any) {
-      setKycMsg({ type: 'error', text: err.message });
+      setKycMsg({ type: 'error', text: err.message || 'Network error while submitting KYC' });
     } finally {
       setSubmittingManualKyc(false);
     }

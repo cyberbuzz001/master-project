@@ -39,6 +39,23 @@ interface MoverRow {
   internalToken?: string;
 }
 
+interface TradedContractRow {
+  symbol: string;
+  displaySymbol?: string;
+  name?: string;
+  price: number;
+  change?: number;
+  changePercent?: number;
+  volume?: number | string;
+  oi?: number | string;
+  logo?: string;
+  underlying?: string;
+  strike?: number;
+  optionType?: 'CE' | 'PE';
+  token?: string;
+  isAtm?: boolean;
+}
+
 const INDEX_META = [
   { label: 'NIFTY 50', token: 'NSE_NIFTY50', exchange: 'NSE' },
   { label: 'SENSEX', token: 'BSE_SENSEX', exchange: 'BSE' },
@@ -64,8 +81,13 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
   const category = (searchParams.get('category')?.toUpperCase() as Category) || 'STOCKS';
 
   const [moverTab, setMoverTab] = useState<'GAINERS' | 'LOSERS' | 'VOLUME'>('GAINERS');
+  const [tradedTab, setTradedTab] = useState<'OPTIONS' | 'STOCKS'>('OPTIONS');
   const [serverMovers, setServerMovers] = useState<{ gainers: MoverRow[]; losers: MoverRow[]; volumeShockers: MoverRow[] }>({
     gainers: [], losers: [], volumeShockers: [],
+  });
+  const [serverTraded, setServerTraded] = useState<{ options: TradedContractRow[]; stocks: TradedContractRow[] }>({
+    options: [],
+    stocks: [],
   });
   const [positions, setPositions] = useState<Position[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -79,7 +101,19 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
     'NSE_SBIN', 'NSE_BHARTIARTL', 'NSE_TATAMOTORS', 'NSE_TATASTEEL', 'NSE_HAL',
     'NSE_NIFTY50', 'BSE_SENSEX', 'NSE_BANKNIFTY', 'NSE_FINNIFTY',
   ];
-  useSubscribeTokens(exploreTokens);
+
+  // Dynamic real-time token subscriptions for all active movers and traded contracts
+  const allSubTokens = useMemo(() => {
+    const set = new Set<string>(exploreTokens);
+    serverMovers.gainers.forEach(s => (s.internalToken || s.symbol) && set.add(s.internalToken || s.symbol));
+    serverMovers.losers.forEach(s => (s.internalToken || s.symbol) && set.add(s.internalToken || s.symbol));
+    serverMovers.volumeShockers.forEach(s => (s.internalToken || s.symbol) && set.add(s.internalToken || s.symbol));
+    serverTraded.options.forEach(o => o.token && set.add(o.token));
+    serverTraded.stocks.forEach(s => (s.token || s.symbol) && set.add(s.token || s.symbol));
+    return Array.from(set);
+  }, [serverMovers, serverTraded]);
+
+  useSubscribeTokens(allSubTokens);
 
   const [initialQuotes, setInitialQuotes] = useState<Record<string, MarketTick>>({});
 
@@ -95,15 +129,31 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
     });
   }, []);
 
+  // Real-time daily market movers & most traded contracts polling loop
   useEffect(() => {
-    fetch('/api/v1/market/top-movers')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setServerMovers({ gainers: data.gainers || [], losers: data.losers || [], volumeShockers: data.volumeShockers || [] });
-        }
-      })
-      .catch(() => {});
+    const fetchMoversAndTraded = () => {
+      fetch('/api/v1/market/top-movers')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setServerMovers({ gainers: data.gainers || [], losers: data.losers || [], volumeShockers: data.volumeShockers || [] });
+          }
+        })
+        .catch(() => {});
+
+      fetch('/api/v1/market/most-traded-contracts')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setServerTraded({ options: data.options || [], stocks: data.stocks || [] });
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchMoversAndTraded();
+    const interval = setInterval(fetchMoversAndTraded, 8000); // 8-second refresh for live real-time movers
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -133,12 +183,23 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
       .catch(() => {});
   }, [token]);
 
-  const mostTraded: MoverRow[] = [
+  const defaultMostTradedOptions: TradedContractRow[] = [
+    { symbol: 'NIFTY 24600 CE', displaySymbol: 'NIFTY 24600 CALL', underlying: 'NIFTY', strike: 24600, optionType: 'CE', token: 'NSE_NIFTY50', price: 142.50, change: 18.20, changePercent: 14.64, volume: '85.2L', isAtm: true, logo: 'CE' },
+    { symbol: 'NIFTY 24600 PE', displaySymbol: 'NIFTY 24600 PUT', underlying: 'NIFTY', strike: 24600, optionType: 'PE', token: 'NSE_NIFTY50', price: 98.40, change: -24.10, changePercent: -19.67, volume: '78.9L', isAtm: true, logo: 'PE' },
+    { symbol: 'BANKNIFTY 52100 CE', displaySymbol: 'BANKNIFTY 52100 CALL', underlying: 'BANKNIFTY', strike: 52100, optionType: 'CE', token: 'NSE_BANKNIFTY', price: 345.80, change: 52.40, changePercent: 17.86, volume: '49.2L', isAtm: true, logo: 'CE' },
+    { symbol: 'BANKNIFTY 52100 PE', displaySymbol: 'BANKNIFTY 52100 PUT', underlying: 'BANKNIFTY', strike: 52100, optionType: 'PE', token: 'NSE_BANKNIFTY', price: 215.20, change: -48.30, changePercent: -18.33, volume: '43.1L', isAtm: true, logo: 'PE' },
+  ];
+
+  const defaultMostTradedStocks: TradedContractRow[] = [
     { symbol: 'NSE_RELIANCE', name: 'Reliance Industries', price: 3014.20, change: 68.40, changePercent: 2.32, logo: 'RE' },
     { symbol: 'NSE_TCS', name: 'Tata Consultancy', price: 4210.50, change: 92.10, changePercent: 2.24, logo: 'TC' },
     { symbol: 'NSE_INFY', name: 'Infosys Limited', price: 1890.30, change: -12.40, changePercent: -0.65, logo: 'IN' },
     { symbol: 'NSE_HDFCBANK', name: 'HDFC Bank', price: 1642.80, change: 14.30, changePercent: 0.88, logo: 'HD' },
   ];
+
+  const activeTradedList: TradedContractRow[] = tradedTab === 'OPTIONS'
+    ? (serverTraded.options.length > 0 ? serverTraded.options.slice(0, 4) : defaultMostTradedOptions)
+    : (serverTraded.stocks.length > 0 ? serverTraded.stocks.slice(0, 4) : defaultMostTradedStocks);
 
   const defaultMovers: MoverRow[] = [
     { symbol: 'NSE_HAL', name: 'Hindustan Aeronaut.', price: 4886.70, change: 241.70, changePercent: 5.20, volume: 2818585, logo: 'HA' },
@@ -557,28 +618,68 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
         <div className="lg:col-span-8 space-y-5 sm:space-y-6">
           <Card>
-            <CardTitle className="flex items-center gap-2 mb-4"><Sparkles className="w-4 h-4 text-[var(--primary)]" />Most Traded Contracts & Stocks</CardTitle>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {mostTraded.map((stock) => {
-                const liveTick = ticks?.get(stock.symbol);
-                const price = liveTick ? liveTick.ltp : stock.price;
-                const change = liveTick ? liveTick.change : (stock as any).change ?? (stock as any).changePct ?? 0;
-                const changePct = liveTick ? liveTick.changePercent : (stock as any).changePercent ?? (stock as any).changePct ?? 0;
+            <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 sm:mb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[var(--primary)]" />
+                <span>Most Traded Contracts &amp; Stocks</span>
+              </CardTitle>
+              <Tabs
+                ariaLabel="Traded instruments filter"
+                value={tradedTab}
+                onChange={(v) => setTradedTab(v as typeof tradedTab)}
+                items={[
+                  { value: 'OPTIONS', label: 'Options (F&O)' },
+                  { value: 'STOCKS', label: 'Active Stocks' },
+                ]}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              {activeTradedList.map((item) => {
+                const liveTick = ticks?.get(item.token || item.symbol);
+                const price = liveTick && liveTick.ltp > 0 ? liveTick.ltp : item.price;
+                const change = liveTick ? liveTick.change : (item.change ?? 0);
+                const changePct = liveTick ? liveTick.changePercent : (item.changePercent ?? 0);
                 const isGain = change >= 0;
+                const isOption = Boolean(item.optionType);
+
                 return (
                   <div
-                    key={stock.symbol}
-                    onClick={() => handleSelectRow(stock.name, price)}
-                    className="bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] p-3.5 rounded-xl hover:border-[var(--primary)]/40 transition-all cursor-pointer group"
+                    key={item.symbol}
+                    onClick={() => {
+                      if (isOption) {
+                        onOpenOptionChain ? onOpenOptionChain(item.underlying) : navigate(`/option-chain?symbol=${item.underlying}`);
+                      } else {
+                        handleSelectRow(item.name || item.symbol, price);
+                      }
+                    }}
+                    className="bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] p-2.5 sm:p-3.5 rounded-xl hover:border-[var(--primary)]/40 transition-all cursor-pointer group flex flex-col justify-between"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/20 font-black flex items-center justify-center text-xs mb-2 group-hover:scale-105 transition-transform">
-                      {stock.logo}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-black flex items-center justify-center text-[10px] sm:text-xs group-hover:scale-105 transition-transform ${
+                        isOption 
+                          ? (item.optionType === 'CE' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-500 border border-rose-500/30')
+                          : 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/20'
+                      }`}>
+                        {item.logo || (isOption ? item.optionType : 'EQ')}
+                      </div>
+                      {isOption && (
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.optionType === 'CE' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
+                          {item.optionType}
+                        </span>
+                      )}
                     </div>
-                    <h4 className="font-bold text-xs truncate mb-1">{stock.name}</h4>
-                    <div className="num-font font-bold text-xs">₹{price.toFixed(2)}</div>
-                    <div className={`num-font font-bold text-[11px] flex items-center gap-0.5 mt-0.5 ${isGain ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
-                      {isGain ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      <span>{Math.abs(change).toFixed(2)} ({Math.abs(changePct).toFixed(2)}%)</span>
+                    <div>
+                      <h4 className="font-bold text-xs truncate mb-0.5 text-[var(--text-main)]" title={item.displaySymbol || item.name || item.symbol}>
+                        {item.displaySymbol || item.name || item.symbol}
+                      </h4>
+                      <div className="num-font font-bold text-xs sm:text-sm">
+                        <LivePriceCell value={price} prefix="₹" decimals={2} className="!p-0 !bg-transparent font-bold" />
+                      </div>
+                      <div className={`num-font font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 mt-0.5 ${isGain ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>
+                        {isGain ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        <span>{isGain ? '+' : ''}{change.toFixed(2)} ({isGain ? '+' : ''}{changePct.toFixed(2)}%)</span>
+                      </div>
                     </div>
                   </div>
                 );

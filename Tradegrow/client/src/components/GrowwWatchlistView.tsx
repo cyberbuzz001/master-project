@@ -147,7 +147,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
           setIsCloudSynced(true);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => { isCancelled = true; };
   }, [token]);
@@ -157,7 +157,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   useEffect(() => {
     try {
       localStorage.setItem('tradegrow_multi_watchlists', JSON.stringify(watchlistStore));
-    } catch (_) {}
+    } catch (_) { }
   }, [watchlistStore]);
 
   const activeTokens = useMemo(() => currentList.map((item) => item.token), [currentList]);
@@ -199,14 +199,14 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
               category: inst.optionType === 'CE' || inst.optionType === 'PE'
                 ? 'FO'
                 : inst.segment?.includes('INDEX')
-                ? 'INDICES'
-                : 'STOCKS',
+                  ? 'INDICES'
+                  : 'STOCKS',
               lotSize: inst.lotSize || 1,
             }));
             setRemoteSuggestions(mapped);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     }, 150);
 
     return () => clearTimeout(timer);
@@ -261,7 +261,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
             symbol: item.symbol,
             exchange: item.exchange
           })
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
   };
@@ -285,7 +285,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
           watchlistId: targetDbId,
           instrumentToken: tokenToRemove
         })
-      }).catch(() => {});
+      }).catch(() => { });
     }
   };
 
@@ -321,7 +321,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
           watchlistId: targetDbId,
           tokens: updated.map(x => x.token)
         })
-      }).catch(() => {});
+      }).catch(() => { });
     }
   };
 
@@ -396,17 +396,15 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-[var(--primary)] text-white shadow-xs'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
-                }`}
+                className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all whitespace-nowrap ${isActive
+                  ? 'bg-[var(--primary)] text-white shadow-xs'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
+                  }`}
               >
                 <span>{t.label}</span>
                 <span
-                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
-                  }`}
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
+                    }`}
                 >
                   {count}
                 </span>
@@ -421,11 +419,10 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${
-                activeFilter === filter
-                  ? 'bg-[var(--bg-surface-elevated)] text-[var(--primary)] border border-[var(--primary)]/30'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-              }`}
+              className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${activeFilter === filter
+                ? 'bg-[var(--bg-surface-elevated)] text-[var(--primary)] border border-[var(--primary)]/30'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
             >
               {filter}
             </button>
@@ -491,11 +488,10 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                       : item.category === 'INDICES'
                       ? 'border-amber-500'
                       : isPositive
-                      ? 'border-emerald-500'
-                      : 'border-rose-500'
-                  } ${
-                    clickable ? 'cursor-pointer hover:bg-[var(--bg-surface-elevated)]' : ''
-                  } ${draggedIdx === idx ? 'opacity-40 bg-[var(--primary-light)]' : ''}`}
+                        ? 'border-emerald-500'
+                        : 'border-rose-500'
+                    } ${clickable ? 'cursor-pointer hover:bg-[var(--bg-surface-elevated)]' : ''
+                    } ${draggedIdx === idx ? 'opacity-40 bg-[var(--primary-light)]' : ''}`}
                 >
                   {/* Left: Drag Handle & Scrip Title */}
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -544,9 +540,8 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                           />
                         </div>
                         <div
-                          className={`text-[12px] font-semibold leading-tight ${
-                            isPositive ? 'text-[var(--gain)]' : 'text-[var(--loss)]'
-                          }`}
+                          className={`text-[12px] font-semibold leading-tight ${isPositive ? 'text-[var(--gain)]' : 'text-[var(--loss)]'
+                            }`}
                         >
                           {isPositive ? '+' : ''}
                           {change.toFixed(2)} ({isPositive ? '+' : ''}

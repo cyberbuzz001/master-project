@@ -15,13 +15,13 @@ function createPool(): Pool {
   const databaseUrl = process.env.DATABASE_URL;
 
   const poolConfig = {
-    max: parseInt(process.env.PG_POOL_MAX || '25', 10),
+    max: parseInt(process.env.PG_POOL_MAX || '35', 10),
     min: parseInt(process.env.PG_POOL_MIN || '2', 10),
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 3000,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
     keepAlive: true,
     keepAliveInitialDelayMillis: 10000,
-    statement_timeout: parseInt(process.env.PG_STATEMENT_TIMEOUT || '5000', 10)
+    statement_timeout: parseInt(process.env.PG_STATEMENT_TIMEOUT || '15000', 10)
   };
 
   if (databaseUrl) {

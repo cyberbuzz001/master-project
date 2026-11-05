@@ -44,19 +44,19 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   useEffect(() => {
     try {
       sessionStorage.setItem('tradegrow_oc_strikerange', strikeRange);
-    } catch (_) {}
+    } catch (_) { }
   }, [strikeRange]);
 
   useEffect(() => {
     try {
       sessionStorage.setItem('tradegrow_oc_viewmode', viewMode);
-    } catch (_) {}
+    } catch (_) { }
   }, [viewMode]);
 
   useEffect(() => {
     try {
       sessionStorage.setItem('tradegrow_oc_mobile_mode', mobileDisplayMode);
-    } catch (_) {}
+    } catch (_) { }
   }, [mobileDisplayMode]);
 
   const [activeLtpKey, setActiveLtpKey] = useState<string | null>(null);
@@ -180,7 +180,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [symbol, expiryType, expiry]);
 
   useEffect(() => {
@@ -240,8 +240,8 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
     const sentimentColor = pcr > 1.2
       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
       : pcr < 0.8
-      ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
-      : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+        ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+        : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
     return { callOI, putOI, total, pcr, callPct, putPct, sentiment, sentimentColor };
   }, [chain, totalCallOI, totalPutOI, pcrRatio]);
 
@@ -266,12 +266,12 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             sseActive = true;
             applyOptionChainData(parsed);
           }
-        } catch (_) {}
+        } catch (_) { }
       };
 
       eventSource.onerror = () => {
         sseActive = false;
-        try { eventSource?.close(); } catch (_) {}
+        try { eventSource?.close(); } catch (_) { }
       };
     } catch (_) {
       sseActive = false;
@@ -350,13 +350,13 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
   return (
     <div className="flex flex-col gap-3 p-2 md:p-5 max-w-7xl mx-auto font-sans select-none text-[var(--text-main)] touch-action-manipulation">
-      
+
       {/* ── TOP HEADER (Matching Reference Images 1 & 2) ──────────────── */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-2 sm:p-3.5 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl flex flex-col gap-2.5 sm:gap-3 backdrop-blur-xl">
-        
+
         {/* Row 1: Index Badges & Spot Price Cards */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
-          
+
           {/* Index Tabs — Horizontal scroll strip on mobile for zero vertical waste */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto flex-nowrap scrollbar-none py-0.5 w-full md:w-auto -mx-1 px-1 sm:mx-0 sm:px-0">
             {[
@@ -416,7 +416,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
           {/* Right Header Action Items */}
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-3 w-full md:w-auto">
-            
+
             {/* Basket Mode Toggle */}
             <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl min-h-[30px] sm:min-h-[40px]">
               <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--call-accent)]" />
@@ -424,9 +424,8 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
               <button
                 type="button"
                 onClick={() => setBasketMode(!basketMode)}
-                className={`w-7 h-4 sm:w-9 sm:h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
-                  basketMode ? 'bg-blue-600' : 'bg-[var(--bg-surface-elevated)]'
-                }`}
+                className={`w-7 h-4 sm:w-9 sm:h-5 rounded-full p-0.5 transition-colors cursor-pointer ${basketMode ? 'bg-blue-600' : 'bg-[var(--bg-surface-elevated)]'
+                  }`}
               >
                 <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white transition-transform ${basketMode ? 'translate-x-3 sm:translate-x-4' : 'translate-x-0'}`} />
               </button>
@@ -448,7 +447,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
         {/* Row 2: Expiry, Search, Stat Badges, Mode Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 text-xs border-t border-[var(--border-color)]">
-          
+
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Expiry Selector */}
             <div className="flex items-center gap-1 sm:gap-1.5">
@@ -533,11 +532,10 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                   key={r.key}
                   type="button"
                   onClick={() => setStrikeRange(r.key as any)}
-                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-bold text-[11px] sm:text-xs transition-all cursor-pointer ${
-                    strikeRange === r.key
-                      ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-main)] shadow-xs border border-[var(--border-color)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
+                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-bold text-[11px] sm:text-xs transition-all cursor-pointer ${strikeRange === r.key
+                    ? 'bg-[var(--bg-surface-elevated)] text-[var(--text-main)] shadow-xs border border-[var(--border-color)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
                   title={`Show ${r.label}`}
                 >
                   {r.label}
@@ -556,11 +554,10 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                   key={m.key}
                   type="button"
                   onClick={() => setViewMode(m.key as any)}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer ${
-                    viewMode === m.key
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer ${viewMode === m.key
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
                 >
                   {m.label}
                 </button>
@@ -573,9 +570,8 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
       </div>
 
       {actionMessage && (
-        <div className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between ${
-          actionMessage.type === 'success' ? 'bg-[var(--gain-light)] text-[var(--gain)] border-[var(--gain)]/30' : 'bg-[var(--loss-light)] text-[var(--loss)] border-[var(--loss)]/30'
-        }`}>
+        <div className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between ${actionMessage.type === 'success' ? 'bg-[var(--gain-light)] text-[var(--gain)] border-[var(--gain)]/30' : 'bg-[var(--loss-light)] text-[var(--loss)] border-[var(--loss)]/30'
+          }`}>
           <span>{actionMessage.text}</span>
           <button type="button" onClick={() => setActionMessage(null)} aria-label="Dismiss message" className="text-[var(--text-muted)] hover:text-[var(--text-main)]">
             <X className="w-4 h-4" />
@@ -603,7 +599,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
       {/* ── MAIN OPTION CHAIN TABLE ─────────────────────────────────── */}
       <div ref={tableRef} className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
         <div className="overflow-x-auto">
-          
+
           {/* DESKTOP TABLE VIEW */}
           <table className="w-full text-xs text-center border-collapse num-font tabular-nums hidden lg:table">
             <thead>

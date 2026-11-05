@@ -15,10 +15,10 @@ import { launchUpiApp, SupportedUpiApp } from '../utils/upiPayment';
 
 const GPayIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
   </svg>
 );
 
@@ -106,7 +106,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         setAddress(data.profile.address || '');
         setDateOfBirth(data.profile.dateOfBirth || '');
       }
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -183,7 +183,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           setBankName(data.application.bank_name || '');
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   };
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       if (data.success && data.session?.sessionUrl) {
         setDiditSessionUrl(data.session.sessionUrl);
         setDiditSessionStatus(data.session.status || 'In Progress');
-        
+
         // Open verification portal in window
         const popup = window.open(data.session.sessionUrl, 'DiditKYC', 'width=520,height=780,scrollbars=yes,resizable=yes');
         if (!popup) {
@@ -228,7 +228,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                 fetchKycStatus();
               }
             }
-          } catch (_) {}
+          } catch (_) { }
         }, 4000);
         setTimeout(() => clearInterval(pollInterval), 180000); // 3 mins timeout
       } else {
@@ -291,6 +291,46 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
     }
   };
 
+  const compressImageIfNeeded = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/') || file.type.includes('svg')) return file;
+    if (file.size < 800 * 1024) return file;
+    try {
+      return await new Promise<File>((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const maxDim = 1600;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { resolve(file); return; }
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (!blob) { resolve(file); return; }
+            const compressed = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+            resolve(compressed);
+          }, 'image/jpeg', 0.82);
+        };
+        img.onerror = () => resolve(file);
+        img.src = url;
+      });
+    } catch (_) {
+      return file;
+    }
+  };
+
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingKyc(true);
@@ -302,10 +342,26 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
     formData.append('bankAccountNumber', bankAccountNumber);
     formData.append('bankIfsc', bankIfsc);
     formData.append('bankName', bankName);
-    if (panFile) { formData.append('panDoc', panFile); formData.append('panDocument', panFile); }
-    if (aadhaarFrontFile) { formData.append('aadhaarFrontDoc', aadhaarFrontFile); formData.append('aadhaarFront', aadhaarFrontFile); }
-    if (aadhaarBackFile) { formData.append('aadhaarBackDoc', aadhaarBackFile); formData.append('aadhaarBack', aadhaarBackFile); }
-    if (bankProofFile) { formData.append('bankProofDoc', bankProofFile); formData.append('bankProof', bankProofFile); }
+    if (panFile) {
+      const comp = await compressImageIfNeeded(panFile);
+      formData.append('panDoc', comp);
+      formData.append('panDocument', comp);
+    }
+    if (aadhaarFrontFile) {
+      const comp = await compressImageIfNeeded(aadhaarFrontFile);
+      formData.append('aadhaarFrontDoc', comp);
+      formData.append('aadhaarFront', comp);
+    }
+    if (aadhaarBackFile) {
+      const comp = await compressImageIfNeeded(aadhaarBackFile);
+      formData.append('aadhaarBackDoc', comp);
+      formData.append('aadhaarBack', comp);
+    }
+    if (bankProofFile) {
+      const comp = await compressImageIfNeeded(bankProofFile);
+      formData.append('bankProofDoc', comp);
+      formData.append('bankProof', comp);
+    }
 
     try {
       const res = await fetchWithAuth('/api/v1/kyc/submit', { method: 'POST', body: formData });
@@ -422,7 +478,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       const res = await fetchWithAuth('/api/v1/funds/my-requests');
       const data = await res.json();
       if (data.success && Array.isArray(data.requests)) setFundRequests(data.requests);
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const fetchPaymentConfig = async () => {
@@ -437,14 +493,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
           quickPayLinks: Array.isArray(data.settings.quickPayLinks) && data.settings.quickPayLinks.length > 0
             ? data.settings.quickPayLinks
             : [
-                { amount: 1000, url: 'https://onetapay.com/pp/MjkzNw==' },
-                { amount: 5000, url: 'https://onetapay.com/pp/MjkzNQ==' },
-                { amount: 10000, url: 'https://onetapay.com/pp/MjkzNg==' }
-              ],
+              { amount: 1000, url: 'https://onetapay.com/pp/MjkzNw==' },
+              { amount: 5000, url: 'https://onetapay.com/pp/MjkzNQ==' },
+              { amount: 10000, url: 'https://onetapay.com/pp/MjkzNg==' }
+            ],
           bankDetails: data.settings.bankDetails
         });
       }
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const [savings, setSavings] = useState<{
@@ -463,7 +519,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       if (data.success && data.savings) {
         setSavings(data.savings);
       }
-    } catch (_) {}
+    } catch (_) { }
   };
 
   useEffect(() => {
@@ -550,7 +606,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
       const res = await fetchWithAuth('/api/v1/support/tickets');
       const data = await res.json();
       if (data.success && Array.isArray(data.tickets)) setSupportTickets(data.tickets);
-    } catch (_) {}
+    } catch (_) { }
   };
 
   useEffect(() => {
@@ -910,16 +966,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
               ].map((s) => (
                 <div
                   key={s.step}
-                  className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
-                    s.done
-                      ? 'bg-[var(--gain-light)] border-[var(--gain)]/30 text-[var(--gain)]'
-                      : 'bg-[var(--bg-surface)] border-[var(--border-color)] text-[var(--text-muted)]'
-                  }`}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${s.done
+                    ? 'bg-[var(--gain-light)] border-[var(--gain)]/30 text-[var(--gain)]'
+                    : 'bg-[var(--bg-surface)] border-[var(--border-color)] text-[var(--text-muted)]'
+                    }`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${
-                      s.done ? 'bg-[var(--gain)] text-white' : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
-                    }`}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${s.done ? 'bg-[var(--gain)] text-white' : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
+                      }`}
                   >
                     {s.done ? <Check className="w-3 h-3" /> : s.step}
                   </div>
@@ -932,15 +986,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
             <button
               type="button"
               onClick={() => setKycMethod('DIDIT')}
-              className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border flex items-start gap-3 ${
-                kycMethod === 'DIDIT'
-                  ? 'bg-[var(--bg-surface)] border-[var(--primary)] shadow-sm'
-                  : 'border-transparent hover:bg-[var(--bg-surface)]/50 text-[var(--text-muted)]'
-              }`}
+              className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border flex items-start gap-3 ${kycMethod === 'DIDIT'
+                ? 'bg-[var(--bg-surface)] border-[var(--primary)] shadow-sm'
+                : 'border-transparent hover:bg-[var(--bg-surface)]/50 text-[var(--text-muted)]'
+                }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                kycMethod === 'DIDIT' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'bg-[var(--bg-body)] text-[var(--text-tertiary)]'
-              }`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${kycMethod === 'DIDIT' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'bg-[var(--bg-body)] text-[var(--text-tertiary)]'
+                }`}>
                 <Zap className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -957,15 +1009,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
             <button
               type="button"
               onClick={() => setKycMethod('MANUAL')}
-              className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border flex items-start gap-3 ${
-                kycMethod === 'MANUAL'
-                  ? 'bg-[var(--bg-surface)] border-[var(--primary)] shadow-sm'
-                  : 'border-transparent hover:bg-[var(--bg-surface)]/50 text-[var(--text-muted)]'
-              }`}
+              className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border flex items-start gap-3 ${kycMethod === 'MANUAL'
+                ? 'bg-[var(--bg-surface)] border-[var(--primary)] shadow-sm'
+                : 'border-transparent hover:bg-[var(--bg-surface)]/50 text-[var(--text-muted)]'
+                }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                kycMethod === 'MANUAL' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'bg-[var(--bg-body)] text-[var(--text-tertiary)]'
-              }`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${kycMethod === 'MANUAL' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'bg-[var(--bg-body)] text-[var(--text-tertiary)]'
+                }`}>
                 <FileText className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -1274,13 +1324,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-[var(--bg-surface-inset)] border border-[var(--border-color)] overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      marginUtilPct > 85
-                        ? 'bg-[var(--loss)]'
-                        : marginUtilPct > 60
+                    className={`h-full rounded-full transition-all duration-500 ${marginUtilPct > 85
+                      ? 'bg-[var(--loss)]'
+                      : marginUtilPct > 60
                         ? 'bg-[var(--warning)]'
                         : 'bg-[var(--gain)]'
-                    }`}
+                      }`}
                     style={{ width: `${Math.min(marginUtilPct, 100)}%` }}
                   />
                 </div>
@@ -1315,11 +1364,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                     setRequestType('DEPOSIT');
                     setFundMessage(null);
                   }}
-                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                    requestType === 'DEPOSIT'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
+                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${requestType === 'DEPOSIT'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
                 >
                   <ArrowDownLeft className="w-4 h-4" /> Add Funds
                 </button>
@@ -1329,11 +1377,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                     setRequestType('WITHDRAWAL');
                     setFundMessage(null);
                   }}
-                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                    requestType === 'WITHDRAWAL'
-                      ? 'bg-rose-600 text-white shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
+                  className={`py-2.5 rounded-lg font-black text-xs sm:text-sm tracking-wide transition cursor-pointer flex items-center justify-center gap-1.5 ${requestType === 'WITHDRAWAL'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
                 >
                   <ArrowUpRight className="w-4 h-4" /> Withdraw
                 </button>
@@ -1374,11 +1421,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                             setFundAmountInput(preset.toString());
                             navigator.vibrate?.(10);
                           }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border cursor-pointer ${
-                            fundAmount === preset
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border cursor-pointer ${fundAmount === preset
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-[var(--bg-surface-inset)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                            }`}
                         >
                           +₹{preset >= 100000 ? `${preset / 100000}L` : preset >= 1000 ? `${preset / 1000}k` : preset}
                         </button>

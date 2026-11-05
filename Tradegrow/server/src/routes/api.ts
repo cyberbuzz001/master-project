@@ -62,8 +62,9 @@ const getRedisStore = (prefix: string) => {
 // ============================================================
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 500 : 50,
-  validate: { ip: false },
+  max: process.env.NODE_ENV === 'development' ? 500 : 150,
+  keyGenerator: (req: any) => getClientIp(req),
+  validate: { ip: false, keyGeneratorIpFallback: false },
   store: getRedisStore('auth'),
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts. Please wait 15 minutes.' } },
   standardHeaders: true,
@@ -81,10 +82,14 @@ const orderLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'development' ? 50000 : 15000,
-  validate: { ip: false },
+  max: process.env.NODE_ENV === 'development' ? 50000 : 25000,
+  keyGenerator: (req: any) => getClientIp(req),
+  validate: { ip: false, keyGeneratorIpFallback: false },
   store: getRedisStore('api'),
-  skip: (req: Request) => req.path.startsWith('/health') || req.path.startsWith('/auth'),
+  skip: (req: Request) => {
+    const url = req.originalUrl || req.url || req.path || '';
+    return url.includes('/health') || url.includes('/auth') || req.path.startsWith('/health') || req.path.startsWith('/auth');
+  },
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'API rate limit exceeded.' } }
 });
 
@@ -1111,40 +1116,156 @@ router.get('/market/option-summary', async (req, res) => {
   }
 });
 
-// Real-time Top Movers API: Gainers, Losers, Volume Shockers for F&O Stocks
+// Real-time Top Movers API: Dynamically sorted Gainers, Losers, Volume Shockers based on live ticks
 router.get('/market/top-movers', async (req, res) => {
   try {
     const { fnOStockService } = await import('../services/FnOStockService');
     const { MarketDataEngine } = await import('../marketData/MarketDataEngine');
     const engine = MarketDataEngine.getInstance();
 
-    const data = fnOStockService.getTopMovers();
-
     const updateStockWithTick = (stock: any) => {
       const liveTick = engine.getCachedTick(stock.internalToken) || engine.getCachedTick(stock.symbol);
-      if (liveTick) {
+      if (liveTick && liveTick.ltp > 0) {
+        const prevClose = liveTick.close || stock.close || liveTick.ltp;
+        const change = liveTick.change !== undefined ? liveTick.change : (liveTick.ltp - prevClose);
+        const changePercent = liveTick.changePercent !== undefined ? liveTick.changePercent : ((change / (prevClose || 1)) * 100);
         return {
           ...stock,
           price: liveTick.ltp,
-          open: liveTick.open,
-          high: liveTick.high,
-          low: liveTick.low,
-          close: liveTick.close,
-          change: liveTick.change,
-          changePercent: liveTick.changePercent,
+          open: liveTick.open || stock.open,
+          high: liveTick.high || stock.high,
+          low: liveTick.low || stock.low,
+          close: prevClose,
+          change: Number(change.toFixed(2)),
+          changePercent: Number(changePercent.toFixed(2)),
           volume: liveTick.volume || stock.volume,
         };
       }
       return stock;
     };
 
+    // Dynamically update ALL F&O stocks with live streaming ticks, THEN rank them
+    const allStocks = fnOStockService.getAllStocks().map(updateStockWithTick);
+    const gainers = [...allStocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 8);
+    const losers = [...allStocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 8);
+    const volumeShockers = [...allStocks].sort((a, b) => (b.volume || 0) - (a.volume || 0)).slice(0, 8);
+
     res.json({
       success: true,
-      gainers: data.gainers.map(updateStockWithTick),
-      losers: data.losers.map(updateStockWithTick),
-      volumeShockers: data.volumeShockers.map(updateStockWithTick),
-      allStocks: data.allStocks.map(updateStockWithTick),
+      gainers,
+      losers,
+      volumeShockers,
+      allStocks,
       timestamp: Date.now(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Real-time Most Traded F&O Contracts (Options & Equities) for Home Screen
+router.get('/market/most-traded-contracts', async (req, res) => {
+  try {
+    const { OptionChainEngine } = await import('../marketData/OptionChainEngine');
+    const { fnOStockService } = await import('../services/FnOStockService');
+    const { MarketDataEngine } = await import('../marketData/MarketDataEngine');
+    const engine = MarketDataEngine.getInstance();
+
+    // 1. Fetch NIFTY and BANKNIFTY option chains to extract active ATM contracts
+    const [niftyChain, bankniftyChain] = await Promise.allSettled([
+      OptionChainEngine.generateOptionChain({ symbol: 'NIFTY', strikeRange: '5' }),
+      OptionChainEngine.generateOptionChain({ symbol: 'BANKNIFTY', strikeRange: '5' })
+    ]);
+
+    const optionContracts: any[] = [];
+
+    const processChain = (result: PromiseSettledResult<any>, underlying: string) => {
+      if (result.status === 'fulfilled' && result.value?.chain) {
+        const atm = result.value.atmStrike;
+        const rows = result.value.chain.slice(0, 5);
+        for (const row of rows) {
+          const strike = row.strikePrice || (row as any).strike;
+          if (row.ce) {
+            const liveTick = row.ce.instrumentToken ? engine.getCachedTick(row.ce.instrumentToken) : null;
+            const ltp = liveTick?.ltp || row.ce.ltp || 0;
+            const chg = liveTick?.change ?? row.ce.change ?? 0;
+            const chgPct = liveTick?.changePercent ?? row.ce.changePercent ?? 0;
+            optionContracts.push({
+              symbol: `${underlying} ${strike} CE`,
+              displaySymbol: `${underlying} ${strike} CALL`,
+              underlying,
+              strike: strike,
+              optionType: 'CE',
+              token: row.ce.instrumentToken || `NFO_${underlying}_${strike}_CE`,
+              price: ltp,
+              change: chg,
+              changePercent: chgPct,
+              volume: liveTick?.volume || row.ce.volume || 0,
+              oi: row.ce.oi || 0,
+              isAtm: strike === atm,
+              logo: 'CE'
+            });
+          }
+          if (row.pe) {
+            const liveTick = row.pe.instrumentToken ? engine.getCachedTick(row.pe.instrumentToken) : null;
+            const ltp = liveTick?.ltp || row.pe.ltp || 0;
+            const chg = liveTick?.change ?? row.pe.change ?? 0;
+            const chgPct = liveTick?.changePercent ?? row.pe.changePercent ?? 0;
+            optionContracts.push({
+              symbol: `${underlying} ${strike} PE`,
+              displaySymbol: `${underlying} ${strike} PUT`,
+              underlying,
+              strike: strike,
+              optionType: 'PE',
+              token: row.pe.instrumentToken || `NFO_${underlying}_${strike}_PE`,
+              price: ltp,
+              change: chg,
+              changePercent: chgPct,
+              volume: liveTick?.volume || row.pe.volume || 0,
+              oi: row.pe.oi || 0,
+              isAtm: strike === atm,
+              logo: 'PE'
+            });
+          }
+        }
+      }
+    };
+
+    processChain(niftyChain, 'NIFTY');
+    processChain(bankniftyChain, 'BANKNIFTY');
+
+    const topOptions = [...optionContracts].sort((a, b) => (b.volume || 0) - (a.volume || 0)).slice(0, 8);
+
+    // 2. Fetch top volume F&O stocks
+    const allStocks = fnOStockService.getAllStocks().map(s => {
+      const liveTick = engine.getCachedTick(s.internalToken) || engine.getCachedTick(s.symbol);
+      if (liveTick && liveTick.ltp > 0) {
+        const prevClose = liveTick.close || s.close || liveTick.ltp;
+        const change = liveTick.change !== undefined ? liveTick.change : (liveTick.ltp - prevClose);
+        const changePercent = liveTick.changePercent !== undefined ? liveTick.changePercent : ((change / (prevClose || 1)) * 100);
+        return {
+          ...s,
+          price: liveTick.ltp,
+          change: Number(change.toFixed(2)),
+          changePercent: Number(changePercent.toFixed(2)),
+          volume: liveTick.volume || s.volume,
+        };
+      }
+      return s;
+    });
+
+    const topStocks = [...allStocks].sort((a, b) => (b.volume || 0) - (a.volume || 0)).slice(0, 8);
+
+    res.json({
+      success: true,
+      options: topOptions.length > 0 ? topOptions : [
+        { symbol: 'NIFTY 24600 CE', displaySymbol: 'NIFTY 24600 CALL', underlying: 'NIFTY', strike: 24600, optionType: 'CE', token: 'NSE_NIFTY50', price: 142.50, change: 18.20, changePercent: 14.64, volume: 8520100, isAtm: true, logo: 'CE' },
+        { symbol: 'NIFTY 24600 PE', displaySymbol: 'NIFTY 24600 PUT', underlying: 'NIFTY', strike: 24600, optionType: 'PE', token: 'NSE_NIFTY50', price: 98.40, change: -24.10, changePercent: -19.67, volume: 7890200, isAtm: true, logo: 'PE' },
+        { symbol: 'BANKNIFTY 52100 CE', displaySymbol: 'BANKNIFTY 52100 CALL', underlying: 'BANKNIFTY', strike: 52100, optionType: 'CE', token: 'NSE_BANKNIFTY', price: 345.80, change: 52.40, changePercent: 17.86, volume: 4920100, isAtm: true, logo: 'CE' },
+        { symbol: 'BANKNIFTY 52100 PE', displaySymbol: 'BANKNIFTY 52100 PUT', underlying: 'BANKNIFTY', strike: 52100, optionType: 'PE', token: 'NSE_BANKNIFTY', price: 215.20, change: -48.30, changePercent: -18.33, volume: 4310500, isAtm: true, logo: 'PE' }
+      ],
+      stocks: topStocks,
+      timestamp: Date.now()
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
