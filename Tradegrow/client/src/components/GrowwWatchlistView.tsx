@@ -485,7 +485,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                       onSelectSymbolForTerminal!(item.symbol, item.token, item.exchange);
                     }
                   }}
-                  className={`flex items-center justify-between gap-3 px-3.5 py-3 min-h-[52px] select-none transition-colors border-l-[3.5px] ${
+                  className={`flex items-center justify-between gap-2.5 sm:gap-3 px-3 sm:px-3.5 py-2 sm:py-3 min-h-[46px] sm:min-h-[52px] select-none transition-colors border-l-[3.5px] ${
                     item.category === 'FO'
                       ? 'border-indigo-500'
                       : item.category === 'INDICES'

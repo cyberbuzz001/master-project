@@ -315,7 +315,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
         data = await res.json();
       } else {
         const text = await res.text();
-        data = { success: res.ok, error: { message: text || `Server responded with status ${res.status}` } };
+        let friendlyErr = `Server responded with status ${res.status}`;
+        if (res.status === 504 || text.includes('504 Gateway')) {
+          friendlyErr = 'Server request timed out. Please try again.';
+        } else if (res.status === 502 || text.includes('502 Bad Gateway')) {
+          friendlyErr = 'Server is momentarily updating. Please retry in a few moments.';
+        } else if (text.trim().startsWith('<')) {
+          friendlyErr = `Request failed (${res.status}). Please try again.`;
+        } else if (text) {
+          friendlyErr = text;
+        }
+        data = { success: res.ok, error: { message: friendlyErr } };
       }
       if (data.success) {
         setKycMessage({ type: 'success', text: data.message || 'KYC application submitted successfully!' });
@@ -1052,17 +1062,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
 
               <div className="pt-4 border-t border-[var(--border-color)] space-y-3">
                 <h4 className="text-[11px] font-bold text-[var(--text-main)] uppercase tracking-wide">Verification Documents (PDF / JPG / PNG)</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                   {[
                     { label: 'PAN Card Photo', file: panFile, set: setPanFile },
                     { label: 'Aadhaar Front', file: aadhaarFrontFile, set: setAadhaarFrontFile },
                     { label: 'Aadhaar Back', file: aadhaarBackFile, set: setAadhaarBackFile },
                     { label: 'Cancelled Cheque', file: bankProofFile, set: setBankProofFile },
                   ].map((d) => (
-                    <div key={d.label} className="bg-[var(--bg-surface-inset)] p-3.5 rounded-xl border border-[var(--border-color)]">
-                      <span className="text-[11px] font-bold text-[var(--text-main)] block mb-1">{d.label}</span>
-                      <input type="file" accept="image/*,.pdf" onChange={(e) => d.set(e.target.files?.[0] || null)} className="text-[10px] text-[var(--text-muted)] file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-[var(--primary-light)] file:text-[var(--primary)]" />
-                      {d.file && <span className="text-[10px] text-[var(--gain)] font-bold mt-1 block">✓ {d.file.name}</span>}
+                    <div key={d.label} className="bg-[var(--bg-surface-inset)] p-2.5 sm:p-3.5 rounded-xl border border-[var(--border-color)] flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-[var(--text-main)] block mb-1 truncate">{d.label}</span>
+                        <input type="file" accept="image/*,.pdf" onChange={(e) => d.set(e.target.files?.[0] || null)} className="w-full text-[9px] sm:text-[10px] text-[var(--text-muted)] file:mr-1.5 file:py-0.5 file:px-1.5 file:rounded-md file:border-0 file:text-[9px] sm:file:text-[10px] file:font-bold file:bg-[var(--primary-light)] file:text-[var(--primary)] cursor-pointer" />
+                      </div>
+                      {d.file && <span className="text-[9px] sm:text-[10px] text-[var(--gain)] font-bold mt-1 block truncate">✓ {d.file.name}</span>}
                     </div>
                   ))}
                 </div>
