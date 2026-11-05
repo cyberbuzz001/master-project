@@ -62,10 +62,10 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
         setRisk((prev: any) =>
           prev
             ? {
-                ...prev,
-                marginAlerts: (prev.marginAlerts || []).filter((a: any) => a.id !== id),
-                rmsBlocks: (prev.rmsBlocks || []).filter((b: any) => b.id !== id),
-              }
+              ...prev,
+              marginAlerts: (prev.marginAlerts || []).filter((a: any) => a.id !== id),
+              rmsBlocks: (prev.rmsBlocks || []).filter((b: any) => b.id !== id),
+            }
             : prev
         );
         setFeedback({ type: 'success', message: 'Risk event marked resolved.' });
@@ -266,13 +266,12 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
       {/* Feedback Toast Banner */}
       {feedback && (
         <div
-          className={`flex items-center justify-between p-3.5 rounded-xl border backdrop-blur-md transition-all shadow-md ${
-            feedback.type === 'success'
+          className={`flex items-center justify-between p-3.5 rounded-xl border backdrop-blur-md transition-all shadow-md ${feedback.type === 'success'
               ? 'bg-[var(--gain-light)]/40 border-[var(--gain)]/60 text-[var(--gain)]'
               : feedback.type === 'error'
-              ? 'bg-[var(--loss-light)]/40 border-[var(--loss)]/60 text-[var(--loss)]'
-              : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-main)]'
-          }`}
+                ? 'bg-[var(--loss-light)]/40 border-[var(--loss)]/60 text-[var(--loss)]'
+                : 'bg-[var(--bg-surface-elevated)] border-[var(--border-color)] text-[var(--text-main)]'
+            }`}
         >
           <div className="flex items-center gap-2.5 text-xs font-semibold">
             {feedback.type === 'success' ? (
@@ -387,13 +386,12 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-24 bg-[var(--bg-body)] rounded-full h-2 overflow-hidden border border-[var(--border-color)]">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            utilPct > 90
+                          className={`h-full rounded-full transition-all duration-500 ${utilPct > 90
                               ? 'bg-[var(--loss)] shadow-[0_0_8px_rgba(244,63,94,0.6)]'
                               : utilPct > 75
-                              ? 'bg-[var(--warning)] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
-                              : 'bg-[var(--primary)]'
-                          }`}
+                                ? 'bg-[var(--warning)] shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                                : 'bg-[var(--primary)]'
+                            }`}
                           style={{ width: `${utilPct}%` }}
                         />
                       </div>
@@ -469,34 +467,31 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
           {(risk.marginAlerts || []).map((a: any) => (
             <div
               key={a.id}
-              className={`flex items-center gap-3 p-3.5 rounded-xl border backdrop-blur-md transition-all ${
-                a.severity === 'CRITICAL'
+              className={`flex items-center gap-3 p-3.5 rounded-xl border backdrop-blur-md transition-all ${a.severity === 'CRITICAL'
                   ? 'bg-[var(--loss-light)]/40 border-[var(--loss)]/80 shadow-[0_0_15px_rgba(244,63,94,0.1)]'
                   : a.severity === 'HIGH'
-                  ? 'bg-[var(--warning-light)]/40 border-[var(--warning)]/80'
-                  : 'bg-[var(--bg-surface)]/80 border-[var(--border-color)]'
-              }`}
+                    ? 'bg-[var(--warning-light)]/40 border-[var(--warning)]/80'
+                    : 'bg-[var(--bg-surface)]/80 border-[var(--border-color)]'
+                }`}
             >
               <span
-                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                  a.severity === 'CRITICAL'
+                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${a.severity === 'CRITICAL'
                     ? 'bg-[var(--loss)] shadow-[0_0_10px_rgba(248,113,113,0.8)] animate-pulse'
                     : a.severity === 'HIGH'
-                    ? 'bg-[var(--warning)] shadow-[0_0_10px_rgba(251,191,36,0.8)]'
-                    : 'bg-[var(--bg-surface-elevated)]'
-                }`}
+                      ? 'bg-[var(--warning)] shadow-[0_0_10px_rgba(251,191,36,0.8)]'
+                      : 'bg-[var(--bg-surface-elevated)]'
+                  }`}
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[var(--text-main)]">{a.event_type}</span>
                   <span
-                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded ${
-                      a.severity === 'CRITICAL'
+                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded ${a.severity === 'CRITICAL'
                         ? 'bg-[var(--loss)]/20 text-[var(--loss)]'
                         : a.severity === 'HIGH'
-                        ? 'bg-[var(--warning)]/20 text-[var(--warning)]'
-                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
-                    }`}
+                          ? 'bg-[var(--warning)]/20 text-[var(--warning)]'
+                          : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)]'
+                      }`}
                   >
                     {a.severity}
                   </span>
@@ -730,4 +725,3 @@ export const RiskCommandCenter: React.FC<RiskCommandCenterProps> = ({ token, onO
     </div>
   );
 };
-

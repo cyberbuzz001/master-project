@@ -315,7 +315,7 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-1">
       {/* 1. TOP HEADER TOOLBAR */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 bg-slate-900/90 border border-slate-800 p-2.5 sm:p-4 rounded-xl">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 max-w-full">
             <span className="text-xl font-bold text-white tracking-wide">{underlying}</span>
@@ -324,12 +324,12 @@ export const OptionStrategyBuilder: React.FC<OptionStrategyBuilderProps> = ({ to
             </span>
           </div>
 
-          <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs">
+          <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5 sm:p-1 text-[11px] sm:text-xs">
             {SUPPORTED_UNDERLYINGS.map(u => (
               <button
                 key={u}
                 onClick={() => setUnderlying(u)}
-                className={`px-3 py-1 rounded font-bold transition ${underlying === u ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded font-bold transition ${underlying === u ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
               >
                 {u}
               </button>

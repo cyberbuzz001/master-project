@@ -358,7 +358,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
         <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           
           {/* Index Tabs — Horizontal scroll strip on mobile for zero vertical waste */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-0.5 w-full md:w-auto -mx-0.5 px-0.5 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto flex-nowrap scrollbar-none py-0.5 w-full md:w-auto -mx-1 px-1 sm:mx-0 sm:px-0">
             {[
               { id: 'NIFTY', name: 'NIFTY 50', ex: 'NSE', token: 'NSE_NIFTY50' },
               { id: 'SENSEX', name: 'BSE SENSEX', ex: 'BSE', token: 'BSE_SENSEX' },
@@ -379,7 +379,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                     navigator.vibrate?.(20);
                     setSymbol(item.id);
                   }}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[30px] sm:min-h-[40px] flex-shrink-0 border ${
+                  className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[32px] sm:min-h-[40px] flex-shrink-0 border ${
                     isActive
                       ? 'bg-[var(--bg-surface-inset)] text-[var(--text-main)] border-blue-500 shadow-xs ring-1 ring-blue-500/50'
                       : 'bg-[var(--bg-surface-inset)] text-[var(--text-muted)] border-[var(--border-color)] hover:border-[var(--border-color)] hover:text-[var(--text-main)]'

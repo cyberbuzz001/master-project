@@ -336,23 +336,23 @@ export const TradingJournalView: React.FC<TradingJournalViewProps> = ({ token })
             ))}
           </div>
 
-          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3" onClick={fetchJournalData} disabled={loading} title="Refresh">
+          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3 text-xs flex items-center justify-center" onClick={fetchJournalData} disabled={loading} title="Refresh">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
 
-          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={handleExportCsv} disabled={trades.length === 0} title="Export CSV">
+          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3 text-xs flex items-center justify-center" onClick={handleExportCsv} disabled={trades.length === 0} title="Export CSV">
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="hidden sm:inline">Export Tax P&amp;L (CSV)</span>
+            <span className="hidden sm:inline sm:ml-1.5">Export Tax P&amp;L</span>
           </Button>
 
-          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={() => setIsContractNoteOpen(true)} title="Contract Note">
+          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3 text-xs flex items-center justify-center" onClick={() => setIsContractNoteOpen(true)} title="Contract Note">
             <FileText className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Contract Note (ECN)</span>
+            <span className="hidden sm:inline sm:ml-1.5">Contract Note</span>
           </Button>
 
-          <Button variant="secondary" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs" onClick={handlePrint} disabled={trades.length === 0} title="Print Statement">
+          <Button variant="secondary" size="sm" className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3 text-xs flex items-center justify-center" onClick={handlePrint} disabled={trades.length === 0} title="Print Statement">
             <Printer className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">Print</span>
+            <span className="hidden sm:inline sm:ml-1.5">Print</span>
           </Button>
         </div>
       </div>
