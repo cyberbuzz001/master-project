@@ -10,6 +10,7 @@ import { User, Wallet, isStaffUser } from '../types';
 import { Card, CardHeader, CardTitle, Badge, Tabs, DataTable, DataTableColumn, Button, Dialog } from './ui';
 import { PermissionsDashboard } from './admin/PermissionsDashboard';
 import { SoundSettingsView } from './SoundSettingsView';
+import { CTraderIntegrationCard } from './CTraderIntegrationCard';
 import { soundManager } from '../utils/soundManager';
 import { launchUpiApp, SupportedUpiApp } from '../utils/upiPayment';
 
@@ -40,10 +41,11 @@ const BhimIcon = () => (
   </div>
 );
 
-type ProfileTab = 'account' | 'kyc' | 'bank' | 'security' | 'funds' | 'notifications' | 'support' | 'permissions' | 'appearance';
+type ProfileTab = 'account' | 'kyc' | 'bank' | 'security' | 'funds' | 'notifications' | 'support' | 'permissions' | 'appearance' | 'integrations';
 
 const TAB_META: { key: ProfileTab; label: string; icon: React.ReactNode; staffOnly?: boolean }[] = [
   { key: 'account', label: 'Account', icon: <UserIcon className="w-3.5 h-3.5" /> },
+  { key: 'integrations', label: 'cTrader', icon: <Smartphone className="w-3.5 h-3.5" /> },
   { key: 'kyc', label: 'KYC', icon: <ShieldCheck className="w-3.5 h-3.5" /> },
   { key: 'bank', label: 'Bank', icon: <Building2 className="w-3.5 h-3.5" /> },
   { key: 'security', label: 'Security', icon: <KeyRound className="w-3.5 h-3.5" /> },
@@ -797,6 +799,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
                   View and analyse your MTF margin trading funding stocks
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* CTRADER TERMINAL INTEGRATION CARD TILE */}
+          <div
+            onClick={() => navigate('/profile/integrations')}
+            className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-950/20 to-blue-950/20 border border-cyan-500/30 hover:border-cyan-500/60 transition cursor-pointer flex items-center justify-between gap-3 shadow-xs"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Smartphone className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs sm:text-sm text-[var(--text-main)]">cTrader Terminal Integration</span>
+                  <Badge variant="info">OPEN API v2</Badge>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] leading-snug">
+                  Connect official cTrader mobile (iOS/Android) &amp; desktop apps for simulated trading
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 text-cyan-400 font-bold text-xs">
+              <span>Connect</span>
+              <ChevronRight className="w-4 h-4" />
             </div>
           </div>
 
@@ -1694,6 +1721,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, wallet, token, t
             ))}
           </div>
         </Card>
+      )}
+
+      {/* CTRADER TERMINAL INTEGRATIONS TAB */}
+      {activeTab === 'integrations' && (
+        <CTraderIntegrationCard token={token} />
       )}
 
       {/* NOTIFICATIONS & SOUNDS TAB */}
