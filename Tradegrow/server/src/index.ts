@@ -22,6 +22,7 @@ import adminApiRouter from './routes/adminApi';
 import { warRoomRouter } from './routes/warRoomRoutes';
 import { ssoRouter } from './routes/ssoRoutes';
 import { internalAdvisoryRouter } from './routes/internalAdvisoryRoutes';
+import { cTraderRouter } from './routes/cTraderRoutes';
 import { SafetyLock } from './services/SafetyLock';
 import { startCronJobs, stopCronJobs, startMisAutoSquareOffJob, startExpirySettlementJob } from './utils/cronJobs';
 import { startRmsLossMonitor } from './trading/RmsLossMonitor';
@@ -123,6 +124,9 @@ app.use('/api/v1', ssoRouter);
 
 // Internal Advisory WhatsApp Routes (Expert Stocks — not public facing)
 app.use('/internal/advisory', internalAdvisoryRouter);
+
+// cTrader Terminal & Order Mapping Integration Routes
+app.use('/api/v1/integrations/ctrader', cTraderRouter);
 
 // Global JSON error handler for all /api routes (Multer errors, parse errors, uncaught errors)
 app.use('/api', (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -270,6 +274,15 @@ async function startServer() {
 
         startRmsLossMonitor();
         console.log('[Startup] ✅ RMS continuous loss-tier monitor started.');
+
+        // Initialize cTrader Open API Gateway
+        import('./trading/integrations/ctrader/cTraderGateway')
+          .then(({ CTraderGateway }) => {
+            CTraderGateway.getInstance().initialize().catch((err) => {
+              console.warn('[Startup] cTrader Gateway background initialization notice:', err.message);
+            });
+          })
+          .catch((err) => console.error('[Startup] Failed to load cTraderGateway:', err.message));
 
         const engine = MarketDataEngine.getInstance();
         const dhanProvider = engine.getDhanAdapter();
