@@ -41,7 +41,7 @@ export class CTraderGateway extends EventEmitter {
     this.config = {
       clientId: process.env.CTRADER_CLIENT_ID || 'mock_ctrader_client_id',
       clientSecret: process.env.CTRADER_CLIENT_SECRET || 'mock_ctrader_client_secret',
-      redirectUri: process.env.CTRADER_REDIRECT_URI || 'http://localhost:5000/api/v1/integrations/ctrader/oauth/callback',
+      redirectUri: process.env.CTRADER_REDIRECT_URI || 'https://tradegrowx.in/api/v1/integrations/ctrader/oauth/callback',
       environment: env,
       wsHost: isLive ? 'live.openapi.ctrader.com' : 'demo.openapi.ctrader.com',
       wsPort: 5036,
