@@ -28,7 +28,7 @@ class WhatsAppWebhookController extends Controller
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        $expectedToken = config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN', 'esc_wa_verify_token_2026'));
+        $expectedToken = (string) config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN', ''));
 
         if ($mode === 'subscribe' && $token === $expectedToken) {
             Log::info('[WhatsApp Webhook] Handshake verified successfully.');
@@ -44,6 +44,17 @@ class WhatsAppWebhookController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
+        $appSecret = (string) config('services.whatsapp.app_secret', env('WHATSAPP_APP_SECRET', ''));
+        $signature = (string) $request->header('X-Hub-Signature-256', '');
+        if ($appSecret === '' || !str_starts_with($signature, 'sha256=')) {
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
+
+        $expected = 'sha256=' . hash_hmac('sha256', $request->getContent(), $appSecret);
+        if (!hash_equals($expected, $signature)) {
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
+
         $payload = $request->all();
 
         // Check if event is from WhatsApp Business Account

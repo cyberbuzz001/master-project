@@ -15,13 +15,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
-const WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET;
-const META_APP_SECRET = process.env.META_APP_SECRET;
+const WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET?.trim() || '';
 
 const TRADEGROW_SERVER_URL =
   process.env.TRADEGROW_SERVER_URL || process.env.TRADEGROW_API_URL || 'https://tradegrowx.in';
 
-const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
+const INTERNAL_KEY = process.env.INTERNAL_API_KEY?.trim() || '';
+const META_APP_SECRET = process.env.META_APP_SECRET?.trim() || '';
+
+function verifyMetaSignature(rawBody: string, signature: string): boolean {
+  if (!META_APP_SECRET || !signature.startsWith('sha256=')) return false;
+  const expected = `sha256=${crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex')}`;
+  const expectedBuffer = Buffer.from(expected);
+  const suppliedBuffer = Buffer.from(signature);
+  return expectedBuffer.length === suppliedBuffer.length && crypto.timingSafeEqual(expectedBuffer, suppliedBuffer);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET — Meta Webhook Verification Challenge
@@ -58,28 +66,19 @@ export async function GET(req: NextRequest) {
 // the payload to the TradeGrow server for processing.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  if (!META_APP_SECRET || !INTERNAL_KEY) {
-    return NextResponse.json({ success: false, error: 'WEBHOOK_CONFIGURATION_MISSING' }, { status: 503 });
+  if (!WEBHOOK_SECRET || !INTERNAL_KEY || !META_APP_SECRET) {
+    return NextResponse.json({ error: 'Webhook integration is not configured' }, { status: 503 });
   }
-
   // Always acknowledge instantly — Meta retries if we don't respond within 20s
   const rawBody = await req.text();
   const signature = req.headers.get('x-hub-signature-256') || '';
-  const expected = `sha256=${crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex')}`;
-  const sigBuf = Buffer.from(signature);
-  const expectedBuf = Buffer.from(expected);
-  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
-    return NextResponse.json({ success: false, error: 'INVALID_WEBHOOK_SIGNATURE' }, { status: 403 });
+  if (!verifyMetaSignature(rawBody, signature)) {
+    return NextResponse.json({ error: 'Invalid Meta webhook signature' }, { status: 401 });
   }
-  let body: unknown;
-  try {
-    body = JSON.parse(rawBody);
-  } catch {
-    return NextResponse.json({ success: false, error: 'INVALID_JSON' }, { status: 400 });
-  }
+  const body = JSON.parse(rawBody);
 
   // Fire and forget — forward to TradeGrow internal handler
-  forwardToTradeGrow(body, INTERNAL_KEY).catch((err) =>
+  forwardToTradeGrow(body).catch((err) =>
     console.error('[Meta Webhook] Forward error:', err?.message)
   );
 
@@ -88,7 +87,7 @@ export async function POST(req: NextRequest) {
 
 import { leadsStore } from '@/lib/leads-store';
 
-async function forwardToTradeGrow(payload: any, internalKey: string) {
+async function forwardToTradeGrow(payload: any) {
   if (!payload) return;
 
   const object = payload?.object;
@@ -128,7 +127,7 @@ async function forwardToTradeGrow(payload: any, internalKey: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-key': internalKey,
+        'x-internal-key': INTERNAL_KEY,
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),

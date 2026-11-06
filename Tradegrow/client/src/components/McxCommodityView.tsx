@@ -80,7 +80,7 @@ export const McxCommodityView: React.FC<McxCommodityViewProps> = ({ ticks, onRef
     if (!orderModal.contract) return;
     setOrderStatus(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const lotSize = getMcxLotSize(orderModal.contract.commodity);
       const numLots = Math.max(1, Number(quantity) || 1);
       const totalQty = numLots * lotSize;

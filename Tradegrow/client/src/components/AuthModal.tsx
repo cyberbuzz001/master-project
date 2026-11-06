@@ -98,7 +98,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
       .then((data) => {
         if (data.success) {
           soundManager.playSound('login_success');
-          if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+          if (data.refreshToken) sessionStorage.setItem('refreshToken', data.refreshToken);
           onSuccess(data.token, data.user);
         } else {
           soundManager.playSound('payment_failed');
@@ -197,7 +197,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
       const data = await res.json();
       if (data.success) {
         soundManager.playSound('login_success');
-        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+        if (data.refreshToken) sessionStorage.setItem('refreshToken', data.refreshToken);
         onSuccess(data.token, data.user);
       } else {
         soundManager.playSound('payment_failed');

@@ -5,6 +5,7 @@ namespace App\Domain\Research;
 use App\Models\Client;
 use App\Models\ResearchDistribution;
 use App\Models\ResearchVersion;
+use App\Models\RiskProfile;
 use Carbon\CarbonImmutable;
 
 class ResearchDistributionService
@@ -41,7 +42,9 @@ class ResearchDistributionService
         $maxRecRiskRank = 1;
         $maxRecRiskName = 'LOW';
         foreach ($version->recommendations as $rec) {
-            $rank = self::RISK_RANKS[strtoupper($rec->risk_classification)] ?? 2;
+            // Unknown recommendation risk must be treated conservatively. A
+            // missing classification must never silently become MODERATE.
+            $rank = self::RISK_RANKS[strtoupper($rec->risk_classification)] ?? 4;
             if ($rank > $maxRecRiskRank) {
                 $maxRecRiskRank = $rank;
                 $maxRecRiskName = strtoupper($rec->risk_classification);
@@ -54,18 +57,27 @@ class ResearchDistributionService
 
         foreach ($clients as $client) {
             $riskProfile = $client->riskProfiles->first();
-            $clientCategory = $riskProfile ? strtoupper($riskProfile->risk_category) : 'MODERATE';
-            $clientRank = self::RISK_RANKS[$clientCategory] ?? 2;
+            $clientCategory = $riskProfile ? strtoupper((string) $riskProfile->risk_category) : 'UNASSESSED';
+            $clientRank = $riskProfile ? (self::RISK_RANKS[$clientCategory] ?? 0) : 0;
+            $riskProfileValid = $riskProfile !== null
+                && $riskProfile->status === RiskProfile::FINALIZED
+                && ! $riskProfile->isExpired()
+                && (! (bool) config('onboarding.risk_profile.require_client_acknowledgement', true)
+                    || $riskProfile->acknowledged_at !== null)
+                && $clientRank > 0;
 
             // Suitability Gate
-            if ($maxRecRiskRank > $clientRank) {
+            if (! $riskProfileValid || $maxRecRiskRank > $clientRank) {
+                $reason = ! $riskProfileValid
+                    ? "Client has no valid acknowledged risk profile (category: {$clientCategory})."
+                    : "Recommendation risk ({$maxRecRiskName}) exceeds client assessed risk profile ({$clientCategory}).";
                 ResearchDistribution::create([
                     'research_version_id' => $version->id,
                     'client_id' => $client->id,
                     'channel' => ResearchDistribution::CHANNEL_PORTAL,
                     'sent_at' => null,
                     'delivery_status' => ResearchDistribution::STATUS_SKIPPED_SUITABILITY,
-                    'skip_reason' => "Recommendation risk ({$maxRecRiskName}) exceeds client assessed risk profile ({$clientCategory}).",
+                    'skip_reason' => $reason,
                 ]);
                 $skippedCount++;
                 continue;

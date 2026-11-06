@@ -48,6 +48,7 @@ const app = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // ============================================================
 // P1-5: Helmet.js Security Headers
@@ -56,7 +57,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:    ["'self'"],
-      scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net", "unpkg.com"],
+      scriptSrc:     isProduction ? ["'self'", "cdn.jsdelivr.net", "unpkg.com"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net", "unpkg.com"],
       styleSrc:      ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
       fontSrc:       ["'self'", "fonts.gstatic.com"],
       imgSrc:        ["'self'", "data:", "blob:"],
@@ -85,7 +86,7 @@ app.use(cors({
     // Allow same-origin requests (no origin header)
     if (!origin) return callback(null, true);
     // Allow any localhost origin (any port) for local development
-    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+    if (!isProduction && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
       return callback(null, true);
     }
     // Allow explicitly whitelisted origins
@@ -93,7 +94,7 @@ app.use(cors({
       return callback(null, true);
     }
     // Allow production platform domains and subdomains
-    const isPlatformDomain = /https?:\/\/([a-z0-9-]+\.)*(tradegrowx\.in|tradegrow\.in|expertstocks\.in|github\.io)$/i.test(origin);
+    const isPlatformDomain = /https:\/\/([a-z0-9-]+\.)*(tradegrowx\.in|tradegrow\.in|expertstocks\.in)$/i.test(origin);
     if (isPlatformDomain) {
       return callback(null, true);
     }
@@ -170,7 +171,7 @@ async function startServer() {
             method: 'POST',
             headers: {
               'access-token': process.env.DHAN_ACCESS_TOKEN,
-              'client-id': process.env.DHAN_CLIENT_ID || '1113019677',
+              'client-id': process.env.DHAN_CLIENT_ID || '',
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ IDX_I: [13] }),

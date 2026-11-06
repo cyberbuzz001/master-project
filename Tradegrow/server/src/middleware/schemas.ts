@@ -17,7 +17,7 @@ export const RegisterSchema = z.object({
     .max(16, 'Mobile number is too long')
     .regex(/^[+]?[0-9\s-]{10,16}$/, 'Please enter a valid mobile number (e.g. 9876543210 or +919876543210)'),
   password: z.string()
-    .min(6, 'Password must be at least 6 characters')
+    .min(8, 'Password must be at least 8 characters')
     .max(72, 'Password must be at most 72 characters'),
   otp: z.string()
     .trim()

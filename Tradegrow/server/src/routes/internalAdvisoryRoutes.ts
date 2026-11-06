@@ -30,10 +30,9 @@ import { AdvisoryWhatsAppService } from '../services/AdvisoryWhatsAppService';
 
 export const internalAdvisoryRouter = Router();
 
-const ACCEPTED_INTERNAL_KEYS = new Set(
-  [process.env.INTERNAL_API_KEY].filter(Boolean) as string[]
-);
-const META_WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET;
+const configuredInternalKey = process.env.INTERNAL_API_KEY?.trim();
+const ACCEPTED_INTERNAL_KEYS = new Set(configuredInternalKey ? [configuredInternalKey] : []);
+const META_WEBHOOK_SECRET = process.env.ADVISORY_WHATSAPP_WEBHOOK_SECRET?.trim();
 
 // ─── PUBLIC: Meta Webhook Endpoints (NO internal key guard) ──────────────────
 

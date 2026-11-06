@@ -11,9 +11,9 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Provider callbacks. Every event is stored before it is acted on, keyed by the provider's own event
- * id, so a replay (providers retry) can never take effect twice. An unsigned or unknown event is
- * kept for inspection and ignored — it never moves money.
+ * Provider callbacks. Authenticated events are stored before they are acted on,
+ * keyed by the provider's own event id, so replays cannot take effect twice.
+ * Unsigned payloads are quarantined under a content-derived id and never move money.
  */
 final class WebhookProcessor
 {
@@ -32,11 +32,33 @@ final class WebhookProcessor
     {
         $signatureValid = $gateway->verifySignature($rawBody, $headers);
         $parsed = $gateway->parseEvent($payload);
-        $eventId = $parsed['event_id'] !== '' ? $parsed['event_id'] : hash('sha256', $rawBody);
 
+        // Never let an unauthenticated payload reserve the provider's real
+        // event ID. Store it under a content-derived quarantine ID instead.
+        if (! $signatureValid) {
+            $rejectedId = 'invalid-'.hash('sha256', $rawBody);
+            $event = WebhookEvent::query()->firstOrCreate(
+                ['provider' => $gateway->key(), 'event_id' => $rejectedId],
+                [
+                    'event_type' => $parsed['event_type'],
+                    'payload' => $payload,
+                    'signature_valid' => false,
+                ],
+            );
+            if ($event->status === WebhookEvent::RECEIVED) {
+                $this->close($event, WebhookEvent::FAILED, 'Signature did not match; nothing was applied.');
+                $this->audit->record('webhook.rejected', $event, new: ['provider' => $gateway->key(), 'event_type' => $parsed['event_type']], actorType: 'system');
+            }
+
+            return ['status' => 'invalid_signature', 'event' => $event, 'duplicate' => $event->wasRecentlyCreated === false];
+        }
+
+        $eventId = $parsed['event_id'] !== '' ? $parsed['event_id'] : hash('sha256', $rawBody);
         $existing = WebhookEvent::query()->where(['provider' => $gateway->key(), 'event_id' => $eventId])->first();
 
-        if ($existing !== null) {
+        // Terminal outcomes are idempotent. A received event means a previous
+        // worker died before completion, so it must be allowed to resume.
+        if ($existing !== null && $existing->status !== WebhookEvent::RECEIVED) {
             return ['status' => 'duplicate', 'event' => $existing, 'duplicate' => true];
         }
 
@@ -52,14 +74,9 @@ final class WebhookProcessor
             // Two copies of the same callback arrived at once; the first one wins.
             $event = WebhookEvent::query()->where(['provider' => $gateway->key(), 'event_id' => $eventId])->firstOrFail();
 
-            return ['status' => 'duplicate', 'event' => $event, 'duplicate' => true];
-        }
-
-        if (! $signatureValid) {
-            $this->close($event, WebhookEvent::FAILED, 'Signature did not match; nothing was applied.');
-            $this->audit->record('webhook.rejected', $event, new: ['provider' => $gateway->key(), 'event_type' => $parsed['event_type']], actorType: 'system');
-
-            return ['status' => 'invalid_signature', 'event' => $event, 'duplicate' => false];
+            if ($event->status !== WebhookEvent::RECEIVED) {
+                return ['status' => 'duplicate', 'event' => $event, 'duplicate' => true];
+            }
         }
 
         if ($parsed['status'] === null) {
@@ -78,7 +95,30 @@ final class WebhookProcessor
             return ['status' => 'unmatched', 'event' => $event, 'duplicate' => false];
         }
 
-        $result = DB::transaction(fn () => $this->apply($gateway, $invoice, $parsed));
+        if ($parsed['amount_paise'] !== null) {
+            $amountPaise = (int) $parsed['amount_paise'];
+            $outstandingPaise = $invoice->balance()->paise;
+            if ($amountPaise <= 0 || $amountPaise > $outstandingPaise) {
+                $this->close($event, WebhookEvent::FAILED, 'Gateway amount does not match the outstanding invoice balance.');
+                $this->audit->record('webhook.rejected_amount', $event, new: [
+                    'provider' => $gateway->key(),
+                    'amount_paise' => $amountPaise,
+                    'outstanding_paise' => $outstandingPaise,
+                ], actorType: 'system');
+
+                return ['status' => 'amount_mismatch', 'event' => $event, 'duplicate' => false];
+            }
+        }
+
+        $result = DB::transaction(function () use ($gateway, $invoice, $parsed): string {
+            $lockedInvoice = Invoice::query()
+                ->withoutGlobalScopes()
+                ->whereKey($invoice->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $this->apply($gateway, $lockedInvoice, $parsed);
+        });
 
         $this->close($event, WebhookEvent::PROCESSED, $result);
 
@@ -95,6 +135,9 @@ final class WebhookProcessor
             ->first();
 
         $amount = $parsed['amount_paise'] ?? $invoice->balance()->paise;
+        if ($amount <= 0 || $amount > $invoice->balance()->paise) {
+            throw new \RuntimeException('Gateway amount exceeds the outstanding invoice balance.');
+        }
 
         if ($payment === null) {
             $payment = new Payment([
@@ -112,15 +155,17 @@ final class WebhookProcessor
             ])->save();
         }
 
+        // A late failure callback must never downgrade a payment that was
+        // already verified by an earlier successful provider event.
+        if ($payment->isVerified()) {
+            return 'Payment was already verified; nothing changed.';
+        }
+
         if ($parsed['status'] === 'failed') {
             $payment->forceFill(['status' => Payment::FAILED, 'failure_reason' => 'The provider reported a failed payment.'])->save();
             $this->payments->event($payment, 'gateway_failed', 'The provider reported a failed payment.');
 
             return 'Payment marked as failed.';
-        }
-
-        if ($payment->isVerified()) {
-            return 'Payment was already verified; nothing changed.';
         }
 
         // The provider is the verifier for a gateway payment, so no second person is required —

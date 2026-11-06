@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
+import { createHash, createHmac, randomInt, timingSafeEqual } from 'crypto';
 import rateLimit from 'express-rate-limit';
 import { query, queryOne, execute, withTransaction } from '../db/schema';
 import { authenticateToken, checkRole, checkPermission, AuthenticatedRequest, getJwtSecret, getRefreshSecret } from '../middleware/auth';
@@ -28,7 +28,7 @@ import { InstrumentMasterService } from '../marketData/InstrumentMasterService';
 import { generateUUID } from '../utils/crypto';
 import { SafetyLock } from '../services/SafetyLock';
 import { checkDatabaseHealth } from '../db/pool';
-import { kycUpload } from '../middleware/upload';
+import { kycUpload, validateStoredKycFile } from '../middleware/upload';
 import { ClientCreationService } from '../services/ClientCreationService';
 import { DiditService } from '../services/diditService';
 import { gttEngine } from '../trading/GttEngine';
@@ -46,7 +46,62 @@ function getClientIp(req: Request): string {
   return req.ip ?? '127.0.0.1';
 }
 
+const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+async function issueRefreshToken(user: { id: string; username?: string; email?: string; role?: string; clientId?: string; phoneNumber?: string }, req: Request): Promise<string> {
+  const jti = generateUUID();
+  const token = jwt.sign(
+    {
+      typ: 'refresh',
+      jti,
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      clientId: user.clientId,
+      phoneNumber: user.phoneNumber,
+    },
+    getRefreshSecret(),
+    { expiresIn: '30d' }
+  );
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  await execute(
+    `INSERT INTO refresh_tokens (user_id, token_hash, device_info, ip_address, expires_at)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [user.id, tokenHash, String(req.headers['user-agent'] || '').slice(0, 500), getClientIp(req), new Date(Date.now() + REFRESH_TOKEN_TTL_MS)]
+  );
+  return token;
+}
+
 const router = Router();
+
+// OTPs are one-time credentials. Store only a digest so a cache/database
+// read cannot be used to recover a valid code.
+const hashOtp = (otp: string): string => createHash('sha256').update(otp).digest('hex');
+const allowDevOtp = process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_OTP === 'true';
+const fyersOauthStates = new Map<string, number>();
+
+function verifyDiditWebhook(req: Request): boolean {
+  const secret = process.env.DIDIT_WEBHOOK_SECRET?.trim();
+  if (!secret) return false;
+
+  const provided = String(
+    req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['x-webhook-secret'] || ''
+  ).trim();
+  if (!provided) return false;
+
+  const expectedSecret = Buffer.from(secret);
+  const suppliedSecret = Buffer.from(provided);
+  if (expectedSecret.length === suppliedSecret.length && timingSafeEqual(expectedSecret, suppliedSecret)) return true;
+
+  if (provided.startsWith('sha256=')) {
+    const expectedHmac = `sha256=${createHmac('sha256', secret).update(JSON.stringify(req.body ?? {})).digest('hex')}`;
+    const expected = Buffer.from(expectedHmac);
+    const supplied = Buffer.from(provided);
+    return expected.length === supplied.length && timingSafeEqual(expected, supplied);
+  }
+  return false;
+}
 
 // Helper to instantiate distributed Redis-backed rate limiter store
 const getRedisStore = (prefix: string) => {
@@ -105,7 +160,9 @@ router.get('/health', async (req: Request, res: Response) => {
     uptimeSeconds: Math.floor(process.uptime()),
     realMoneyTradingAllowed: SafetyLock.REAL_MONEY_TRADING_ALLOWED,
     marketDataProvider: mdProvider,
-    database: { healthy: dbHealth.healthy, latencyMs: dbHealth.latencyMs, pool: dbHealth.pool, error: dbHealth.error }
+    // Keep connection-pool details and database error text off the public
+    // health endpoint; those values can expose topology and internal failures.
+    database: { healthy: dbHealth.healthy, latencyMs: dbHealth.latencyMs }
   });
 });
 
@@ -116,12 +173,16 @@ router.get('/health/live', (req: Request, res: Response) => {
 router.get('/health/ready', async (req: Request, res: Response) => {
   const db = await checkDatabaseHealth();
   if (!db.healthy) {
-    return res.status(503).json({ ready: false, reason: 'Database connection failed', error: db.error });
+    return res.status(503).json({ ready: false, reason: 'Database connection failed' });
   }
-  res.status(200).json({ ready: true, pool: db.pool });
+  const { redis } = await import('../db/redis');
+  if (process.env.NODE_ENV === 'production' && !redis.isAvailable()) {
+    return res.status(503).json({ ready: false, reason: 'Redis durable dependency unavailable' });
+  }
+  res.status(200).json({ ready: true });
 });
 
-router.get('/health/dependencies', async (req: Request, res: Response) => {
+router.get('/health/dependencies', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: AuthenticatedRequest, res: Response) => {
   const { redis } = await import('../db/redis');
   const { getWebSocketMetrics } = await import('../websocket/server');
   const dbHealth = await checkDatabaseHealth();
@@ -129,7 +190,7 @@ router.get('/health/dependencies', async (req: Request, res: Response) => {
   const wsMetrics = getWebSocketMetrics();
   const memory = process.memoryUsage();
 
-  const dependenciesHealthy = dbHealth.healthy && (redisHealth.connected || redisHealth.mode === 'IN_MEMORY_FALLBACK');
+  const dependenciesHealthy = dbHealth.healthy && redisHealth.connected;
 
   res.status(dependenciesHealthy ? 200 : 503).json({
     status: dependenciesHealthy ? 'HEALTHY' : 'DEGRADED',
@@ -161,7 +222,7 @@ router.get('/health/dependencies', async (req: Request, res: Response) => {
  * connections exist, how many instruments are subscribed upstream, tick throughput,
  * and how many distinct option-chain views are being computed.
  */
-router.get('/health/pipeline', async (req: Request, res: Response) => {
+router.get('/health/pipeline', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: AuthenticatedRequest, res: Response) => {
   const { getWebSocketMetrics, getConnectedClientCount } = await import('../websocket/server');
   const { optionChainBroadcaster } = await import('../marketData/OptionChainBroadcasterService');
   const engine = MarketDataEngine.getInstance();
@@ -194,9 +255,13 @@ router.get('/health/instruments', (req, res) => {
 // 2. AUTHENTICATION & BROKER OAUTH API
 // ============================================================
 router.get('/auth/fyers/login', (req: Request, res: Response) => {
-  const appId = String(req.query.appId || process.env.FYERS_APP_ID || 'P3U524USN6-100');
-  const redirectUri = String(req.query.redirectUri || process.env.FYERS_REDIRECT_URI || 'https://tradegrowx.in/api/v1/auth/fyers/callback');
-  const state = String(req.query.state || 'tradegrow_state');
+  const appId = String(req.query.appId || process.env.FYERS_APP_ID || '').trim();
+  if (!appId) {
+    return res.status(503).json({ success: false, error: { code: 'BROKER_NOT_CONFIGURED', message: 'Fyers integration is not configured.' } });
+  }
+  const redirectUri = String(process.env.FYERS_REDIRECT_URI || 'https://tradegrowx.in/api/v1/auth/fyers/callback');
+  const state = generateUUID();
+  fyersOauthStates.set(state, Date.now() + 10 * 60 * 1000);
   const authUrl = generateFyersAuthUrl(appId, redirectUri, state);
 
   if (req.headers.accept?.includes('application/json') && !req.query.redirect) {
@@ -207,8 +272,13 @@ router.get('/auth/fyers/login', (req: Request, res: Response) => {
 
 router.get('/auth/fyers/callback', async (req: Request, res: Response) => {
   const authCode = String(req.query.auth_code || req.query.code || '');
-  const appId = String(process.env.FYERS_APP_ID || 'P3U524USN6-100');
-  const appSecret = String(process.env.FYERS_SECRET_KEY || 'SJULLJNM11');
+  const state = String(req.query.state || '');
+  const appId = String(process.env.FYERS_APP_ID || '').trim();
+  const appSecret = String(process.env.FYERS_SECRET_KEY || '').trim();
+
+  if (!appId || !appSecret) {
+    return res.status(503).send('Fyers integration is not configured.');
+  }
 
   if (!authCode) {
     const loginUrl = '/api/v1/auth/fyers/login';
@@ -236,6 +306,12 @@ router.get('/auth/fyers/callback', async (req: Request, res: Response) => {
   </div>
 </body>
 </html>`);
+  }
+
+  const stateExpiry = fyersOauthStates.get(state);
+  fyersOauthStates.delete(state);
+  if (!stateExpiry || stateExpiry < Date.now()) {
+    return res.status(401).send('Invalid or expired Fyers OAuth state. Please restart the connection flow.');
   }
 
   try {
@@ -347,11 +423,16 @@ router.post('/auth/register-otp', authLimiter, async (req: Request, res: Respons
       }
     }
 
-    // Generate 6-digit numeric OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    if (!redis.isAvailable()) {
+      res.status(503).json({ success: false, error: { code: 'OTP_SERVICE_UNAVAILABLE', message: 'Verification service is temporarily unavailable. Please try again shortly.' } });
+      return;
+    }
+
+    // Generate a cryptographically secure 6-digit numeric OTP.
+    const otp = randomInt(100000, 1000000).toString();
     const redisKey = `reg_otp:${normEmail}`;
 
-    await redis.set(redisKey, otp, 600); // 10 minutes TTL
+    await redis.set(redisKey, hashOtp(otp), 600); // 10 minutes TTL
 
     // Dispatch branded registration OTP email
     const { EmailService } = await import('../services/EmailService');
@@ -360,7 +441,7 @@ router.post('/auth/register-otp', authLimiter, async (req: Request, res: Respons
     res.json({
       success: true,
       message: `A 6-digit verification code has been sent to ${normEmail}.`,
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+      ...(allowDevOtp ? { devOtp: otp } : {})
     });
   } catch (err: any) {
     console.error('[API] /auth/register-otp error:', err);
@@ -399,7 +480,7 @@ router.post('/auth/register', authLimiter, validateBody(RegisterSchema), async (
         return;
       }
 
-      if (storedOtp !== cleanOtp) {
+      if (storedOtp !== hashOtp(cleanOtp)) {
         res.status(400).json({
           success: false,
           error: { code: 'INVALID_OTP', message: 'Invalid verification code. Please check your email and try again.' }
@@ -439,7 +520,7 @@ router.post('/auth/register', authLimiter, validateBody(RegisterSchema), async (
     };
 
     const token = jwt.sign(newUser, getJwtSecret(), { expiresIn: '24h' });
-    const refreshToken = jwt.sign(newUser, getRefreshSecret(), { expiresIn: '30d' });
+    const refreshToken = await issueRefreshToken(newUser, req);
 
     // Super Admin Alert: New Client Registered
     try {
@@ -531,7 +612,7 @@ router.post('/auth/login', authLimiter, validateBody(LoginSchema), async (req: R
     );
 
     const token = jwt.sign({ userId: user.id, username: user.username, email: user.email, role: user.role }, getJwtSecret(), { expiresIn: '24h' });
-    const refreshToken = jwt.sign({ userId: user.id, username: user.username, email: user.email, role: user.role }, getRefreshSecret(), { expiresIn: '30d' });
+    const refreshToken = await issueRefreshToken({ id: user.id, username: user.username, email: user.email, role: user.role }, req);
 
     await logAuditAction(user.id, user.role, 'LOGIN', 'USER', user.id, null, null, getClientIp(req) ?? '127.0.0.1');
 
@@ -567,23 +648,26 @@ router.post('/auth/forgot-password', authLimiter, async (req: Request, res: Resp
       return;
     }
 
-    // Generate 6-digit numeric OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    if (!redis.isAvailable()) {
+      res.status(503).json({ success: false, error: 'Password reset service is temporarily unavailable. Please try again shortly.' });
+      return;
+    }
+
+    // Generate a cryptographically secure 6-digit numeric OTP.
+    const otp = randomInt(100000, 1000000).toString();
     const redisKey = `pwd_reset_otp:${user.id}`;
 
-    try {
-      await redis.set(redisKey, otp, 600);
-    } catch (_) {}
+    await redis.set(redisKey, hashOtp(otp), 600);
 
-    // Record notification with OTP
+    // Record an audit notification without storing the recoverable credential.
     try {
       await execute(
         `INSERT INTO notifications (user_id, type, title, body, metadata)
          VALUES ($1, 'SYSTEM', 'Password Reset Verification OTP', $2, $3)`,
         [
           user.id,
-          `Your password reset OTP is ${otp}. It will expire in 10 minutes. If you did not request this, please ignore.`,
-          JSON.stringify({ otp, requestedAt: new Date().toISOString() })
+          'A password reset OTP was issued. It expires in 10 minutes. If you did not request this, please ignore.',
+          JSON.stringify({ requestedAt: new Date().toISOString() })
         ]
       );
     } catch (_) {}
@@ -601,8 +685,7 @@ router.post('/auth/forgot-password', authLimiter, async (req: Request, res: Resp
     res.json({
       success: true,
       message: 'A 6-digit verification OTP has been generated.',
-      userId: user.id,
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+      ...(allowDevOtp ? { devOtp: otp } : {})
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -640,28 +723,19 @@ router.post('/auth/reset-password', authLimiter, async (req: Request, res: Respo
       return;
     }
 
-    // Verify OTP from Redis or notification metadata
+    if (!redis.isAvailable()) {
+      res.status(503).json({ success: false, error: 'Password reset service is temporarily unavailable. Please try again shortly.' });
+      return;
+    }
+
+    // Verify the one-time digest from Redis. Never fall back to a database
+    // notification, where a reset code could be replayed or exposed.
     let isValid = false;
     const redisKey = `pwd_reset_otp:${targetUserId}`;
-    try {
-      const storedOtp = await redis.get(redisKey);
-      if (storedOtp && storedOtp === String(otp).trim()) {
-        isValid = true;
-        await redis.del(redisKey);
-      }
-    } catch (_) {}
-
-    if (!isValid) {
-      const recentNotif = await queryOne<any>(
-        `SELECT metadata FROM notifications 
-         WHERE user_id = $1 AND title = 'Password Reset Verification OTP' 
-           AND created_at >= NOW() - INTERVAL '10 minutes'
-         ORDER BY created_at DESC LIMIT 1`,
-        [targetUserId]
-      );
-      if (recentNotif && recentNotif.metadata?.otp === String(otp).trim()) {
-        isValid = true;
-      }
+    const storedOtpHash = await redis.get(redisKey);
+    if (storedOtpHash && storedOtpHash === hashOtp(String(otp).trim())) {
+      isValid = true;
+      await redis.del(redisKey);
     }
 
     if (!isValid) {
@@ -672,7 +746,7 @@ router.post('/auth/reset-password', authLimiter, async (req: Request, res: Respo
     // Hash new password with Argon2
     const passwordHash = await argon2.hash(newPassword);
     await execute(
-      `UPDATE users SET password_hash = $1, failed_login_attempts = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2`,
+      `UPDATE users SET password_hash = $1, password_changed_at = NOW(), failed_login_attempts = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2`,
       [passwordHash, targetUserId]
     );
 
@@ -693,7 +767,7 @@ router.get('/auth/me', authenticateToken, async (req: AuthenticatedRequest, res)
   const uRow = await queryOne<any>('SELECT id, username, email, role, full_name, phone_number, city, address, date_of_birth, is_kyc_completed, risk_restriction FROM users WHERE id = $1', [req.user!.userId]);
   const kycApp = await queryOne<any>('SELECT status FROM kyc_applications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.user!.userId]);
   const kycStatus = kycApp?.status || (uRow?.is_kyc_completed ? 'APPROVED' : ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role) ? 'APPROVED' : 'NOT_STARTED');
-  const isKycOk = ['APPROVED', 'SUBMITTED', 'UNDER_REVIEW'].includes(kycStatus) || !!uRow?.is_kyc_completed || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
+  const isKycOk = kycStatus === 'APPROVED' || !!uRow?.is_kyc_completed || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
 
   const user = {
     id: req.user!.userId,
@@ -745,7 +819,7 @@ router.get('/user/profile', authenticateToken, async (req: AuthenticatedRequest,
       [req.user!.userId]
     );
     const kycApp = await queryOne<any>('SELECT * FROM kyc_applications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.user!.userId]);
-    const isKycOk = uRow?.is_kyc_completed || ['APPROVED', 'SUBMITTED'].includes(kycApp?.status) || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
+    const isKycOk = !!uRow?.is_kyc_completed || kycApp?.status === 'APPROVED' || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
 
     res.json({
       success: true,
@@ -790,8 +864,8 @@ router.post('/user/profile', authenticateToken, async (req: AuthenticatedRequest
 router.post('/auth/change-password', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword || newPassword.length < 6) {
-      res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'New password must be at least 6 characters long' } });
+    if (!currentPassword || !newPassword || newPassword.length < 8) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'New password must be at least 8 characters long' } });
       return;
     }
 
@@ -808,7 +882,7 @@ router.post('/auth/change-password', authenticateToken, async (req: Authenticate
     }
 
     const newHash = await argon2.hash(newPassword);
-    await execute('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [newHash, req.user!.userId]);
+    await execute('UPDATE users SET password_hash = $1, password_changed_at = NOW(), updated_at = NOW() WHERE id = $2', [newHash, req.user!.userId]);
     await logAuditAction(req.user!.userId, req.user!.role, 'CHANGE_PASSWORD', 'USER', req.user!.userId, null, null, getClientIp(req));
 
     res.json({ success: true, message: 'Password changed successfully.' });
@@ -825,18 +899,61 @@ router.post('/auth/refresh', async (req: Request, res: Response) => {
   }
   try {
     const decoded = jwt.verify(refreshToken, getRefreshSecret()) as any;
+    if (!decoded || decoded.typ !== 'refresh' || typeof decoded.jti !== 'string' || !decoded.userId) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Invalid refresh token' } });
+      return;
+    }
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+    const stored = await queryOne<any>(
+      `SELECT id, user_id, revoked_at, expires_at
+       FROM refresh_tokens
+       WHERE token_hash = $1 AND user_id = $2`,
+      [tokenHash, decoded.userId]
+    );
+    if (!stored || stored.revoked_at || new Date(stored.expires_at) <= new Date()) {
+      // Reuse of a rotated token revokes the whole family.
+      await execute('UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, NOW()) WHERE user_id = $1', [decoded.userId]).catch(() => {});
+      res.status(403).json({ success: false, error: { code: 'SESSION_REVOKED', message: 'This refresh session was revoked. Please sign in again.' } });
+      return;
+    }
+    const user = await queryOne<any>('SELECT status, password_changed_at FROM users WHERE id = $1', [decoded.userId]);
+    if (!user || user.status !== 'ACTIVE') {
+      res.status(403).json({ success: false, error: { code: 'ACCOUNT_DISABLED', message: 'This account is not active.' } });
+      return;
+    }
+    if (user.password_changed_at && decoded.iat && decoded.iat * 1000 < new Date(user.password_changed_at).getTime()) {
+      res.status(403).json({ success: false, error: { code: 'SESSION_REVOKED', message: 'This refresh session was revoked. Please sign in again.' } });
+      return;
+    }
+    const revoked = await execute(
+      'UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1 AND revoked_at IS NULL',
+      [stored.id]
+    );
+    if (revoked !== 1) {
+      res.status(403).json({ success: false, error: { code: 'SESSION_REVOKED', message: 'This refresh session was already used.' } });
+      return;
+    }
+    const rotatedRefreshToken = await issueRefreshToken({ id: user.id, username: decoded.username, email: decoded.email, role: decoded.role, clientId: decoded.clientId, phoneNumber: decoded.phoneNumber }, req);
     const newToken = jwt.sign(
       { userId: decoded.userId, username: decoded.username, email: decoded.email, role: decoded.role },
       getJwtSecret(),
       { expiresIn: '24h' }
     );
-    res.json({ success: true, token: newToken });
+    res.json({ success: true, token: newToken, refreshToken: rotatedRefreshToken });
   } catch {
     res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Invalid or expired refresh token' } });
   }
 });
 
 router.post('/auth/logout', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const presentedRefreshToken = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : null;
+  if (presentedRefreshToken) {
+    const tokenHash = createHash('sha256').update(presentedRefreshToken).digest('hex');
+    await execute(
+      'UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, NOW()) WHERE user_id = $1 AND token_hash = $2',
+      [req.user!.userId, tokenHash]
+    ).catch(() => {});
+  }
   await logAuditAction(req.user!.userId, req.user!.role, 'LOGOUT', 'USER', req.user!.userId, null, null, getClientIp(req) ?? '127.0.0.1');
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -1253,7 +1370,7 @@ async function handleOrderSubmission(req: AuthenticatedRequest, res: Response) {
     }
 
     const kycApp = await queryOne<any>('SELECT status FROM kyc_applications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [userId]);
-    const isKycOk = uRow?.is_kyc_completed || ['APPROVED', 'SUBMITTED'].includes(kycApp?.status) || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
+    const isKycOk = !!uRow?.is_kyc_completed || kycApp?.status === 'APPROVED' || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
 
     if (!isKycOk) {
       res.status(403).json({
@@ -1302,6 +1419,16 @@ router.post('/orders/basket', authenticateToken, orderLimiter, async (req: Authe
       res.status(403).json({
         success: false,
         error: { code: 'ACCOUNT_DISABLED', message: 'Account is suspended or disabled' }
+      });
+      return;
+    }
+
+    const kycApp = await queryOne<any>('SELECT status FROM kyc_applications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [userId]);
+    const isKycOk = !!uRow?.is_kyc_completed || kycApp?.status === 'APPROVED' || ['SUPER_ADMIN', 'ADMIN'].includes(uRow?.role);
+    if (!isKycOk) {
+      res.status(403).json({
+        success: false,
+        error: { code: 'KYC_REQUIRED', message: 'KYC Verification Required: Please complete approved KYC before placing orders.' }
       });
       return;
     }
@@ -1607,24 +1734,18 @@ router.post('/algo/webhook', async (req: Request, res: Response) => {
       return;
     }
 
-    const webhookSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET;
-    const webhookUserId = process.env.TRADINGVIEW_WEBHOOK_USER_ID;
-    if (!webhookSecret || !webhookUserId) {
-      res.status(503).json({ success: false, error: 'TradingView webhook is not configured.' });
-      return;
+    // Resolve only a signed session token. Public identifiers (email, username,
+    // client ID) are not credentials, and an unknown credential must never select
+    // an arbitrary account.
+    let user: any = null;
+    try {
+      const decoded: any = jwt.verify(String(secret).trim(), getJwtSecret(), { algorithms: ['HS256'] });
+      if (decoded && (decoded.userId || decoded.id)) {
+        user = await queryOne<any>(`SELECT id, status, role FROM users WHERE id = $1`, [decoded.userId || decoded.id]);
+      }
+    } catch (_) {
+      user = null;
     }
-
-    const providedSecret = Buffer.from(String(secret).trim());
-    const expectedSecret = Buffer.from(webhookSecret);
-    if (providedSecret.length !== expectedSecret.length || !crypto.timingSafeEqual(providedSecret, expectedSecret)) {
-      res.status(403).json({ success: false, error: 'Invalid webhook secret.' });
-      return;
-    }
-
-    const user = await queryOne<any>(
-      `SELECT id, status, role FROM users WHERE id = $1 LIMIT 1`,
-      [webhookUserId]
-    );
 
     if (!user || user.status !== 'ACTIVE') {
       res.status(403).json({ success: false, error: 'Authorized active user account not found for provided secret.' });
@@ -2174,14 +2295,15 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
       ),
       query<any>(
         `SELECT 
-           id, order_id, instrument_token, exchange, symbol, side,
-           quantity, filled_quantity, price, average_price,
-           order_type, product_type, status, created_at
-         FROM orders
-         WHERE user_id = $1
-           AND status = 'FILLED'
-           AND (created_at AT TIME ZONE 'Asia/Kolkata')::DATE = $2::DATE
-         ORDER BY created_at ASC`,
+           o.id, o.order_id, o.instrument_token, o.exchange, o.symbol, o.side,
+           e.quantity, e.price, o.order_type, o.product_type, o.status, e.created_at,
+           e.brokerage, e.stt, e.gst, e.exchange_charges, e.total_charges
+         FROM orders o
+         JOIN executions e ON e.order_id = o.id
+         WHERE o.user_id = $1
+           AND o.status = 'FILLED'
+           AND (e.created_at AT TIME ZONE 'Asia/Kolkata')::DATE = $2::DATE
+         ORDER BY e.created_at ASC`,
         [userId, targetDateStr]
       )
     ]);
@@ -2195,9 +2317,16 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
     let futuresSellTurnover = 0;
 
     const trades = (orderRows || []).map((o) => {
-      const qty = parseInt(o.filled_quantity || o.quantity || '0', 10);
-      const rate = parseFloat(o.average_price || o.price || '0');
+      const qty = parseInt(o.quantity || '0', 10);
+      const rate = parseFloat(o.price || '0');
       const grossAmount = Number((qty * rate).toFixed(2));
+      const executionCharges = {
+        brokerage: Number(o.brokerage || 0),
+        stt: Number(o.stt || 0),
+        gst: Number(o.gst || 0),
+        exchangeCharges: Number(o.exchange_charges || 0),
+        total: Number(o.total_charges || 0),
+      };
       const isOption = o.symbol.includes('CE') || o.symbol.includes('PE') || o.symbol.includes('OPT');
       const isFuture = o.symbol.includes('FUT');
       const isDelivery = o.product_type === 'CNC';
@@ -2235,36 +2364,23 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
         quantity: qty,
         rate: Number(rate.toFixed(2)),
         grossAmount,
-        brokerageRate: 0.0,
-        brokerageTotal: 0.0,
+        brokerageRate: executionCharges.brokerage > 0 && grossAmount > 0 ? executionCharges.brokerage / grossAmount : 0,
+        brokerageTotal: executionCharges.brokerage,
         netRate: Number(rate.toFixed(2)),
-        netAmount: grossAmount,
+        netAmount: Number((grossAmount + (o.side === 'BUY' ? executionCharges.total : -executionCharges.total)).toFixed(2)),
+        charges: executionCharges,
       };
     });
 
     const totalTurnover = Number((buyTurnover + sellTurnover).toFixed(2));
 
-    let exchangeTxnCharge = 0;
-    if (optionsBuyTurnover + optionsSellTurnover > 0) {
-      exchangeTxnCharge += (optionsBuyTurnover + optionsSellTurnover) * 0.0005;
-    }
-    const nonOptionsTurnover = totalTurnover - (optionsBuyTurnover + optionsSellTurnover);
-    if (nonOptionsTurnover > 0) {
-      exchangeTxnCharge += nonOptionsTurnover * 0.0000345;
-    }
-    exchangeTxnCharge = Number(exchangeTxnCharge.toFixed(2));
-
-    const sttCtt = Number((
-      optionsSellTurnover * 0.00125 +
-      futuresSellTurnover * 0.0002 +
-      equityDeliveryTurnover * 0.001 +
-      equityIntradaySellTurnover * 0.00025
-    ).toFixed(2));
-
-    const sebiTurnoverFee = Number((totalTurnover * 0.000001).toFixed(2));
-    const stampDuty = Number((buyTurnover * 0.00003).toFixed(2));
-    const gst = Number(((exchangeTxnCharge + sebiTurnoverFee) * 0.18).toFixed(2));
-    const totalTaxesAndCharges = Number((sttCtt + exchangeTxnCharge + sebiTurnoverFee + stampDuty + gst).toFixed(2));
+    const exchangeTxnCharge = Number((orderRows || []).reduce((sum, o) => sum + Number(o.exchange_charges || 0), 0).toFixed(2));
+    const sttCtt = Number((orderRows || []).reduce((sum, o) => sum + Number(o.stt || 0), 0).toFixed(2));
+    const gst = Number((orderRows || []).reduce((sum, o) => sum + Number(o.gst || 0), 0).toFixed(2));
+    const brokerage = Number((orderRows || []).reduce((sum, o) => sum + Number(o.brokerage || 0), 0).toFixed(2));
+    const totalTaxesAndCharges = Number((orderRows || []).reduce((sum, o) => sum + Number(o.total_charges || 0), 0).toFixed(2));
+    const sebiTurnoverFee = 0;
+    const stampDuty = 0;
     const netObligation = Number((sellTurnover - buyTurnover - totalTaxesAndCharges).toFixed(2));
     const payType = netObligation >= 0 ? 'PAY_OUT_TO_CLIENT' : 'PAY_IN_BY_CLIENT';
 
@@ -2283,18 +2399,18 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
         contractNoteNo,
         tradeDate: targetDateStr,
         settlementDate,
-        settlementNo: `2026${targetDateStr.replace(/-/g, '').slice(4)}`,
+        settlementNo: null,
         broker: {
-          name: 'Trade Grow (LLP)',
-          tagline: 'Zero-Brokerage Intelligent Derivatives Trading',
-          sebiRegNo: 'INZ000293431',
-          nseMemberCode: '90234',
-          bseMemberCode: '6743',
-          mcxMemberCode: '56820',
-          address: 'TradeGrow Towers, Bandra-Kurla Complex (BKC), Bandra East, Mumbai - 400051',
-          email: 'info@tradegrowx.in',
-          phone: '+91 95896 15649',
-          website: 'https://tradegrowx.in',
+          name: process.env.BROKER_LEGAL_NAME || null,
+          tagline: 'Simulation execution ledger',
+          sebiRegNo: process.env.BROKER_SEBI_REG_NO || null,
+          nseMemberCode: process.env.BROKER_NSE_MEMBER_CODE || null,
+          bseMemberCode: process.env.BROKER_BSE_MEMBER_CODE || null,
+          mcxMemberCode: process.env.BROKER_MCX_MEMBER_CODE || null,
+          address: process.env.BROKER_REGISTERED_ADDRESS || null,
+          email: process.env.BROKER_SUPPORT_EMAIL || null,
+          phone: process.env.BROKER_SUPPORT_PHONE || null,
+          website: process.env.BROKER_WEBSITE || null,
         },
         client: {
           clientCode,
@@ -2308,7 +2424,7 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
           buyTurnover: Number(buyTurnover.toFixed(2)),
           sellTurnover: Number(sellTurnover.toFixed(2)),
           totalTurnover,
-          brokerage: 0.0,
+          brokerage,
           exchangeTxnCharge,
           sttCtt,
           sebiTurnoverFee,
@@ -2317,6 +2433,8 @@ router.get('/portfolio/contract-notes', authenticateToken, async (req: Authentic
           totalTaxesAndCharges,
           netObligation,
           payType,
+          accountingMode: 'SIMULATION_EXECUTION_LEDGER',
+          disclaimer: 'This simulated contract note is derived from recorded execution charges and is not a broker, exchange or depository settlement statement.',
         },
       }
     });
@@ -2345,12 +2463,12 @@ router.post('/funds/request', authenticateToken, async (req: AuthenticatedReques
 
     if (requestType === 'WITHDRAWAL') {
       const wallet = await VirtualWalletLedger.getWallet(req.user!.userId);
-      if (!wallet || wallet.buyingPower < reqAmount) {
+      if (!wallet || wallet.withdrawableBalance < reqAmount) {
         res.status(400).json({
           success: false,
           error: {
             code: 'INSUFFICIENT_FUNDS',
-            message: `Insufficient available funds for withdrawal. Available: ₹${wallet?.buyingPower.toFixed(2) || '0.00'}`
+            message: `Insufficient withdrawable funds. Available: ₹${wallet?.withdrawableBalance.toFixed(2) || '0.00'}`
           }
         });
         return;
@@ -2452,12 +2570,12 @@ router.post('/funds/instant', authenticateToken, async (req: AuthenticatedReques
 
     if (requestType === 'WITHDRAWAL') {
       const wallet = await VirtualWalletLedger.getWallet(req.user!.userId);
-      if (!wallet || wallet.buyingPower < reqAmount) {
+      if (!wallet || wallet.withdrawableBalance < reqAmount) {
         res.status(400).json({
           success: false,
           error: {
             code: 'INSUFFICIENT_FUNDS',
-            message: `Insufficient available funds for withdrawal. Available: ₹${wallet?.buyingPower.toFixed(2) || '0.00'}`
+            message: `Insufficient withdrawable funds. Available: ₹${wallet?.withdrawableBalance.toFixed(2) || '0.00'}`
           }
         });
         return;
@@ -2513,7 +2631,9 @@ router.post('/funds/instant', authenticateToken, async (req: AuthenticatedReques
   }
 });
 
-router.post('/funds/reset-margin', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// Margin resets are an administrative reconciliation action. They must never
+// be callable by a customer to rewrite their own wallet or P&L.
+router.post('/funds/reset-margin', authenticateToken, checkPermission('FUNDS_MANAGE'), async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.userId;
 
@@ -2568,6 +2688,10 @@ router.post('/funds/add-capital', authenticateToken, async (req: AuthenticatedRe
   try {
     const isAdmin = req.user?.role === 'ADMIN' || req.user?.role === 'SUPER_ADMIN';
     const isDemoAllowed = process.env.ALLOW_DEMO_WALLET_TOPUP === 'true';
+    if (isAdmin) {
+      res.status(403).json({ success: false, error: { code: 'SELF_ADJUSTMENT_FORBIDDEN', message: 'Administrators must use an approved fund request workflow for capital changes.' } });
+      return;
+    }
     if (!isAdmin && !isDemoAllowed) {
       res.status(403).json({
         success: false,
@@ -2836,6 +2960,11 @@ router.post('/admin/users/:id/adjust-balance', authenticateToken, checkRole(['SU
   const { amount, reason } = req.body;
   const targetUserId = req.params.id as string;
 
+  if (targetUserId === req.user!.userId) {
+    res.status(403).json({ success: false, error: { code: 'SELF_ADJUSTMENT_FORBIDDEN', message: 'Administrators cannot adjust their own trading wallet.' } });
+    return;
+  }
+
   const user = await queryOne<any>('SELECT id FROM users WHERE id = $1', [targetUserId]);
   if (!user) {
     res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
@@ -2918,7 +3047,7 @@ router.get('/kyc/status', authenticateToken, async (req: AuthenticatedRequest, r
       [userId]
     );
 
-    const isKycOk = uRow?.is_kyc_completed || ['APPROVED', 'SUBMITTED'].includes(kycApp?.status) || ['SUPER_ADMIN', 'ADMIN'].includes(req.user!.role);
+    const isKycOk = !!uRow?.is_kyc_completed || kycApp?.status === 'APPROVED' || ['SUPER_ADMIN', 'ADMIN'].includes(req.user!.role);
 
     let documents: any[] = [];
     if (kycApp) {
@@ -2988,6 +3117,9 @@ router.get('/kyc/didit/status', authenticateToken, async (req: AuthenticatedRequ
 // Didit Webhook Callback
 router.post('/kyc/didit/webhook', async (req: Request, res: Response) => {
   try {
+    if (!verifyDiditWebhook(req)) {
+      return res.status(401).json({ success: false, error: { code: 'INVALID_WEBHOOK_SIGNATURE', message: 'Webhook signature is invalid or not configured.' } });
+    }
     await DiditService.handleWebhook(req.body);
     res.json({ success: true });
   } catch (err: any) {
@@ -3069,6 +3201,19 @@ router.post(
       if (!panNumber || !aadhaarNumber) {
         res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'PAN and Aadhaar numbers are required' } });
         return;
+      }
+
+      // Multer's client MIME field is not trustworthy. Validate the stored
+      // file signature before creating any KYC document record.
+      if (files) {
+        const uploadedFiles = Object.values(files).flat();
+        for (const file of uploadedFiles) {
+          if (!(await validateStoredKycFile(file))) {
+            await Promise.all(uploadedFiles.map((f) => import('fs/promises').then(({ unlink }) => unlink(f.path).catch(() => undefined))));
+            res.status(400).json({ success: false, error: { code: 'INVALID_FILE_CONTENT', message: 'One or more KYC files do not match their declared document format.' } });
+            return;
+          }
+        }
       }
 
       let kycApp = await queryOne<any>(
@@ -3275,11 +3420,7 @@ router.get('/funds/payment-settings', authenticateToken, async (_req: Authentica
     const settingsMap: Record<string, string> = {};
     settingsRows.forEach(r => { settingsMap[r.key] = r.value; });
 
-    let quickPayLinks = [
-      { amount: 1000, url: 'https://onetapay.com/pp/MjkzNw==' },
-      { amount: 5000, url: 'https://onetapay.com/pp/MjkzNQ==' },
-      { amount: 10000, url: 'https://onetapay.com/pp/MjkzNg==' }
-    ];
+    let quickPayLinks: Array<{ amount: number; url: string }> = [];
 
     if (settingsMap['MERCHANT_QUICK_PAY_LINKS']) {
       try {
@@ -3293,16 +3434,16 @@ router.get('/funds/payment-settings', authenticateToken, async (_req: Authentica
     res.json({
       success: true,
       settings: {
-        upiId: settingsMap['LINKPE_UPI_ID'] || process.env.LINKPE_UPI_ID || 'expertstokks@axl',
-        merchantName: settingsMap['LINKPE_MERCHANT_NAME'] || process.env.LINKPE_MERCHANT_NAME || 'Trade Grow Brokerage',
-        qrImageUrl: settingsMap['MERCHANT_QR_IMAGE'] || '/upi-qr.png',
+        upiId: settingsMap['LINKPE_UPI_ID'] || process.env.LINKPE_UPI_ID || null,
+        merchantName: settingsMap['LINKPE_MERCHANT_NAME'] || process.env.LINKPE_MERCHANT_NAME || null,
+        qrImageUrl: settingsMap['MERCHANT_QR_IMAGE'] || null,
         quickPayLinks,
         bankDetails: {
-          bankName: settingsMap['MERCHANT_BANK_NAME'] || 'HDFC Bank',
-          accountName: settingsMap['MERCHANT_ACCOUNT_NAME'] || 'Trade Grow Technologies Pvt Ltd',
-          accountNumber: settingsMap['MERCHANT_ACCOUNT_NUMBER'] || '50200098765432',
-          ifscCode: settingsMap['MERCHANT_IFSC'] || 'HDFC0001234',
-          branch: settingsMap['MERCHANT_BRANCH'] || 'Mumbai Main Branch'
+          bankName: settingsMap['MERCHANT_BANK_NAME'] || null,
+          accountName: settingsMap['MERCHANT_ACCOUNT_NAME'] || null,
+          accountNumber: settingsMap['MERCHANT_ACCOUNT_NUMBER'] || null,
+          ifscCode: settingsMap['MERCHANT_IFSC'] || null,
+          branch: settingsMap['MERCHANT_BRANCH'] || null
         }
       }
     });

@@ -107,7 +107,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
   }, []);
 
   useEffect(() => {
-    const userToken = token || localStorage.getItem('token') || localStorage.getItem('stocksharp_token');
+    const userToken = token || sessionStorage.getItem('token') || sessionStorage.getItem('stocksharp_token');
     if (!userToken) return;
 
     fetch('/api/v1/portfolio/positions?todayOnly=true', { headers: { Authorization: `Bearer ${userToken}` } })

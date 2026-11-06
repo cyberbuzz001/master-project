@@ -76,7 +76,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   // Fetch live wallet balance when modal opens
   useEffect(() => {
     if (!isOpen) return;
-    const authToken = userToken || localStorage.getItem('token') || '';
+    const authToken = userToken || sessionStorage.getItem('token') || '';
     if (!authToken) return;
     fetch('/api/v1/auth/me', { headers: { Authorization: `Bearer ${authToken}` } })
       .then((res) => res.json())
@@ -134,7 +134,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
       instrumentToken: detailsProp.token,
     });
 
-    const authToken = userToken || localStorage.getItem('token') || '';
+    const authToken = userToken || sessionStorage.getItem('token') || '';
 
     fetch(`/api/v1/margin/quote?${queryParams.toString()}`, { headers: { Authorization: `Bearer ${authToken}` } })
       .then((res) => res.json())
@@ -195,7 +195,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
     soundManager.playSound('order_placed');
 
     try {
-      const authToken = userToken || localStorage.getItem('token') || '';
+    const authToken = userToken || sessionStorage.getItem('token') || '';
       const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const res = await fetch('/api/v1/orders', {
         method: 'POST',

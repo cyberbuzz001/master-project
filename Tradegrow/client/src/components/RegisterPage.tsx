@@ -31,7 +31,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         if (onSuccess) {
           onSuccess(token, user);
         } else {
-          localStorage.setItem('token', token);
+          sessionStorage.setItem('token', token);
           window.location.href = '/';
         }
       }}

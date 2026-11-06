@@ -790,7 +790,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
         onClose={() => setIsPreviewOpen(false)}
         onConfirm={handleConfirmOrder}
         details={selectedOrderDetails}
-        userToken={token || localStorage.getItem('token') || ''}
+        userToken={token || sessionStorage.getItem('token') || ''}
         riskRestriction={riskRestriction}
       />
 

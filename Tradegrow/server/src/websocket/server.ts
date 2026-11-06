@@ -7,6 +7,8 @@ import { getJwtSecret } from '../middleware/auth';
 import { adminEventBus, AdminEvent } from '../utils/adminEventBus';
 import { recordChatMessage } from '../utils/chatMessages';
 import { maybeGenerateSupportBotReply } from '../utils/supportBot';
+import { queryOne } from '../db/schema';
+import { getPermissionCatalogEntry } from '../config/permissionCatalog';
 
 export interface ExtendedWebSocket extends WebSocket {
   isAlive?: boolean;
@@ -15,6 +17,7 @@ export interface ExtendedWebSocket extends WebSocket {
   subscriptions?: Set<string>;
   adminWatchedUsers?: Set<string>;
   adminWatchAll?: boolean;
+  permissions?: Set<string>;
 }
 
 // Matches adminApi.ts's own ADMIN_ROLES list — this one previously omitted OPERATIONS_MANAGER,
@@ -67,6 +70,25 @@ let totalMessagesBroadcast = 0;
 let totalDroppedFrames = 0;
 let wssInstance: WebSocketServer | null = null;
 
+function hasEventPermission(ws: ExtendedWebSocket, eventType: string): boolean {
+  if (ws.permissions?.has('ADMIN_BROAD_VIEW') && ws.permissions.has('ORDERS_MONITOR_VIEW') && ws.permissions.has('FUNDS_OVERVIEW_VIEW')) {
+    return true;
+  }
+  if (eventType.startsWith('ORDER_') || eventType === 'POSITION_UPDATED' || eventType === 'EXECUTION_FILLED') {
+    return ws.permissions?.has('ORDERS_MONITOR_VIEW') === true;
+  }
+  if (eventType.startsWith('FUNDS_') || eventType.includes('WITHDRAW') || eventType.includes('DEPOSIT')) {
+    return ws.permissions?.has('FUNDS_OVERVIEW_VIEW') === true;
+  }
+  if (eventType.startsWith('KYC_')) {
+    return ws.permissions?.has('KYC_QUEUE_VIEW') === true;
+  }
+  if (eventType.startsWith('CHAT_')) {
+    return ws.permissions?.has('SUPPORT_CHAT_VIEW') === true;
+  }
+  return false;
+}
+
 /**
  * Delivers a payload directly to every currently-connected socket for one user,
  * regardless of admin-watch flags — the one delivery path `adminEventBus`'s
@@ -109,10 +131,11 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
     'NSE_RELIANCE', 'NSE_TCS', 'NSE_INFY', 'NSE_HDFCBANK'
   ];
 
-  wss.on('connection', (ws: ExtendedWebSocket, req) => {
+  wss.on('connection', async (ws: ExtendedWebSocket, req) => {
     ws.isAlive = true;
     ws.subscriptions = new Set();
     ws.adminWatchedUsers = new Set();
+    ws.permissions = new Set();
 
     // Register default subscriptions in index
     defaultTokens.forEach(t => {
@@ -125,22 +148,42 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
       });
     });
 
-    // Authenticate token via query string (?token=xyz)
-    const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');
-    const token = urlParams.get('token');
+    // Authenticate through the WebSocket subprotocol instead of a query
+    // string, which would expose bearer tokens in URLs, logs and history.
+    const protocolHeader = req.headers['sec-websocket-protocol'];
+    const protocols = typeof protocolHeader === 'string' ? protocolHeader.split(',').map((value) => value.trim()) : [];
+    const bearerProtocol = protocols.find((value) => value.startsWith('bearer.'));
+    const token = bearerProtocol ? bearerProtocol.slice('bearer.'.length) : null;
     if (token) {
       try {
         const decoded = jwt.verify(token, getJwtSecret()) as any;
-        ws.userId = decoded.userId;
-        ws.userRole = decoded.role || 'USER';
+        const account = await queryOne<any>('SELECT status, role FROM users WHERE id = $1', [decoded.userId]);
+        if (account?.status === 'ACTIVE') {
+          ws.userId = decoded.userId;
+          ws.userRole = account.role || 'USER';
+          const permissionKeys = [
+            'ADMIN_BROAD_VIEW', 'ORDERS_MONITOR_VIEW', 'FUNDS_OVERVIEW_VIEW',
+            'KYC_QUEUE_VIEW', 'SUPPORT_CHAT_VIEW', 'SUPPORT_CHAT_RESPOND'
+          ];
+          const granted = await Promise.all(permissionKeys.map(async (key) => {
+            const entry = getPermissionCatalogEntry(key);
+            if (!entry) return false;
+            const override = await queryOne<{ granted: boolean }>(
+              'SELECT granted FROM manager_permissions WHERE manager_id = $1 AND permission_key = $2',
+              [decoded.userId, key]
+            );
+            return override ? !!override.granted : entry.defaultRoles.includes(ws.userRole!);
+          }));
+          permissionKeys.forEach((key, index) => { if (granted[index]) ws.permissions!.add(key); });
+        }
       } catch (err) {
-        // Continue unauthenticated for public market tick subscriptions
+        // Continue unauthenticated for public market tick subscriptions.
       }
     }
 
     ws.on('pong', () => { ws.isAlive = true; });
 
-    ws.on('message', (message: Buffer) => {
+    ws.on('message', async (message: Buffer) => {
       try {
         const data = JSON.parse(message.toString());
 
@@ -181,8 +224,10 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
 
         // ── ADMIN-ONLY: Subscribe to a customer's real-time events ──────────
         } else if (data.action === 'ADMIN_SUBSCRIBE' && data.userId) {
-          if (!ws.userRole || !ADMIN_ROLES.includes(ws.userRole)) {
-            ws.send(JSON.stringify({ type: 'ERROR', code: 'FORBIDDEN', message: 'Admin role required to subscribe to user events' }));
+          const canWatch = ['ORDERS_MONITOR_VIEW', 'FUNDS_OVERVIEW_VIEW', 'KYC_QUEUE_VIEW', 'SUPPORT_CHAT_VIEW']
+            .some((permission) => ws.permissions?.has(permission));
+          if (!canWatch) {
+            ws.send(JSON.stringify({ type: 'ERROR', code: 'FORBIDDEN', message: 'A customer-event view permission is required' }));
           } else {
             ws.adminWatchedUsers?.add(data.userId);
             ws.send(JSON.stringify({ type: 'ADMIN_SUBSCRIBED', userId: data.userId }));
@@ -197,8 +242,8 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
         // wide queue views — OrderMonitor, FundsDashboard — as opposed to
         // ADMIN_SUBSCRIBE's single-customer drill-down) ─────────────────────
         } else if (data.action === 'ADMIN_SUBSCRIBE_ALL') {
-          if (!ws.userRole || !ADMIN_ROLES.includes(ws.userRole)) {
-            ws.send(JSON.stringify({ type: 'ERROR', code: 'FORBIDDEN', message: 'Admin role required to subscribe to platform-wide events' }));
+          if (!ws.permissions?.has('ADMIN_BROAD_VIEW') || !ws.permissions.has('ORDERS_MONITOR_VIEW') || !ws.permissions.has('FUNDS_OVERVIEW_VIEW')) {
+            ws.send(JSON.stringify({ type: 'ERROR', code: 'FORBIDDEN', message: 'Platform-wide order and funds permissions are required' }));
           } else {
             ws.adminWatchAll = true;
             ws.send(JSON.stringify({ type: 'ADMIN_SUBSCRIBED_ALL' }));
@@ -211,6 +256,10 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
         // ── LIVE CHAT: customer sends to support, or staff replies to one customer ──
         } else if (data.action === 'CHAT_SEND' && typeof data.text === 'string' && data.text.trim()) {
           const isStaff = !!ws.userRole && ADMIN_ROLES.includes(ws.userRole) && ws.userRole !== 'USER';
+          if (isStaff && !ws.permissions?.has('SUPPORT_CHAT_RESPOND')) {
+            ws.send(JSON.stringify({ type: 'ERROR', code: 'FORBIDDEN', message: 'Live-chat response permission required' }));
+            return;
+          }
           const customerId = isStaff ? data.toUserId : ws.userId;
           if (!ws.userId || !customerId) {
             ws.send(JSON.stringify({ type: 'ERROR', code: 'INVALID_CHAT', message: isStaff ? 'toUserId is required when a staff member sends a chat message.' : 'Not authenticated.' }));
@@ -319,7 +368,8 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
     wss.clients.forEach((client: ExtendedWebSocket) => {
       if (
         client.readyState === WebSocket.OPEN &&
-        (client.adminWatchedUsers?.has(event.userId) || client.adminWatchAll)
+        (client.adminWatchedUsers?.has(event.userId) || client.adminWatchAll) &&
+        hasEventPermission(client, event.type)
       ) {
         try {
           if (client.bufferedAmount <= 512 * 1024) {

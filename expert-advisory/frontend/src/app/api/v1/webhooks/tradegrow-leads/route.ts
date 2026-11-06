@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { leadsStore } from "@/lib/leads-store";
 
-const WEBHOOK_SECRET = process.env.WEBHOOK_BRIDGE_SECRET;
+const WEBHOOK_SECRET = process.env.WEBHOOK_BRIDGE_SECRET?.trim() || "";
 
 /**
  * Constant-time HMAC-SHA256 signature verification
@@ -99,7 +99,10 @@ function assignAgent(data: { capitalRange?: string; segments?: string | string[]
 export async function POST(request: NextRequest) {
   try {
     if (!WEBHOOK_SECRET) {
-      return NextResponse.json({ success: false, error: "WEBHOOK_CONFIGURATION_MISSING" }, { status: 503 });
+      return NextResponse.json(
+        { success: false, error: "WEBHOOK_NOT_CONFIGURED" },
+        { status: 503 }
+      );
     }
     const rawBody = await request.text();
     const signature = request.headers.get("x-tradegrow-signature") || "";

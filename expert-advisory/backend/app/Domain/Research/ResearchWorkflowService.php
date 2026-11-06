@@ -315,6 +315,14 @@ class ResearchWorkflowService
             throw ApiException::unprocessable('RESEARCH_EXPIRED', 'Research validity date has already passed. It cannot be published.');
         }
 
+        // Approval may have happened long before publication. Recheck the
+        // attached market snapshot at the final release boundary so stale
+        // prices cannot be broadcast to clients under an old approval.
+        if ($version->data_snapshot_id === null || $version->snapshot === null) {
+            throw ApiException::unprocessable('DATA_SNAPSHOT_REQUIRED', 'A market data snapshot must be attached before publishing.');
+        }
+        $this->snapshotService->assertFresh($version->snapshot);
+
         // Enforce fail-closed Compliance Gate check
         $this->complianceGate->assertCanPublish($version->report->category);
 

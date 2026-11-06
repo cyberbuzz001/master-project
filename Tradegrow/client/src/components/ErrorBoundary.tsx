@@ -30,8 +30,8 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleReset = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
     window.location.href = '/';
   };
 

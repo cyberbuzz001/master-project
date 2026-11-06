@@ -34,7 +34,7 @@ class PerformanceLedgerService
                 'mfe' => 0.0,
                 'mae' => 0.0,
                 'outcome' => ResearchPerformance::OUTCOME_PENDING,
-                'methodology_version' => 'v1.0',
+                'methodology_version' => 'v1.1-post-publication-spot',
                 'computed_at' => $publishedAt,
             ]);
         }
@@ -69,10 +69,23 @@ class PerformanceLedgerService
                 continue;
             }
 
+            // A provider's daily high/low can include prints from before the
+            // recommendation was published. Until timestamped post-publication
+            // bars are available, use only the observed quote after publication
+            // rather than claiming an intraday excursion we cannot order.
+            $quoteTimestamp = CarbonImmutable::instance($quote->timestamp);
+            if ($quoteTimestamp <= $perf->published_at || $quoteTimestamp->diffInHours($now) > 24) {
+                continue;
+            }
+
             $entryRef = (float) $perf->entry_ref;
-            $currentHigh = max((float) $perf->high_after, (float) $quote->high);
-            $currentLow = min((float) $perf->low_after, (float) $quote->low);
-            $currentClose = (float) $quote->close;
+            if ($entryRef <= 0) {
+                continue;
+            }
+            $observedPrice = (float) $quote->ltp;
+            $currentHigh = max((float) $perf->high_after, $observedPrice);
+            $currentLow = min((float) $perf->low_after, $observedPrice);
+            $currentClose = $observedPrice;
 
             $targets = is_array($rec->targets) ? $rec->targets : [];
             $target1 = ! empty($targets) ? (float) $targets[0] : 0.0;

@@ -8,6 +8,7 @@ export interface AuthenticatedUser {
   username: string;
   email: string;
   role: string;
+  iat?: number;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -27,11 +28,14 @@ function getJwtSecret(): string {
   return secret;
 }
 
-const authUserCache = new Map<string, { user: AuthenticatedUser; expiresAt: number }>();
+type CachedAuthUser = AuthenticatedUser & { status: string; passwordChangedAt?: number };
+const authUserCache = new Map<string, { user: CachedAuthUser; expiresAt: number }>();
 
 export async function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers['authorization'];
-  const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null) || (req.query?.token as string) || null;
+  // Accept credentials only through the Authorization header. Query-string
+  // bearer tokens leak through URLs, access logs, referrers and browser history.
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
   if (!token) {
     res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication token missing' } });
@@ -45,25 +49,42 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
     // Check in-memory cache for user verification to prevent per-request DB queries
     const cached = authUserCache.get(decoded.userId);
     if (cached && Date.now() < cached.expiresAt) {
+      if (cached.user.status !== 'ACTIVE') {
+        res.status(403).json({ success: false, error: { code: 'ACCOUNT_DISABLED', message: 'This account is not active.' } });
+        return;
+      }
+      if (cached.user.passwordChangedAt && decoded.iat && decoded.iat * 1000 < cached.user.passwordChangedAt) {
+        res.status(403).json({ success: false, error: { code: 'SESSION_REVOKED', message: 'Your session was revoked. Please sign in again.' } });
+        return;
+      }
       req.user.role = cached.user.role;
       return next();
     }
 
     // Verify user existence in database
-    const dbUser = await queryOne<any>('SELECT id, username, email, role FROM users WHERE id = $1', [decoded.userId]);
+    const dbUser = await queryOne<any>('SELECT id, username, email, role, status, password_changed_at FROM users WHERE id = $1', [decoded.userId]);
     if (dbUser) {
+      if (dbUser.status !== 'ACTIVE') {
+        authUserCache.delete(decoded.userId);
+        res.status(403).json({ success: false, error: { code: 'ACCOUNT_DISABLED', message: 'This account is not active.' } });
+        return;
+      }
       req.user.role = dbUser.role;
-      authUserCache.set(decoded.userId, { user: { ...decoded, role: dbUser.role }, expiresAt: Date.now() + 60000 });
+      authUserCache.set(decoded.userId, { user: { ...decoded, role: dbUser.role, status: dbUser.status, passwordChangedAt: dbUser.password_changed_at ? new Date(dbUser.password_changed_at).getTime() : undefined }, expiresAt: Date.now() + 60000 });
     } else {
       // Look up by email or username in case database was re-seeded with new UUIDs
       const matchedUser = await queryOne<any>(
-        'SELECT id, username, email, role FROM users WHERE email = $1 OR username = $2',
+        'SELECT id, username, email, role, status, password_changed_at FROM users WHERE email = $1 OR username = $2',
         [decoded.email || '', decoded.username || '']
       );
       if (matchedUser) {
+        if (matchedUser.status !== 'ACTIVE') {
+          res.status(403).json({ success: false, error: { code: 'ACCOUNT_DISABLED', message: 'This account is not active.' } });
+          return;
+        }
         req.user.userId = matchedUser.id;
         req.user.role = matchedUser.role;
-        authUserCache.set(matchedUser.id, { user: { ...decoded, userId: matchedUser.id, role: matchedUser.role }, expiresAt: Date.now() + 60000 });
+        authUserCache.set(matchedUser.id, { user: { ...decoded, userId: matchedUser.id, role: matchedUser.role, status: matchedUser.status, passwordChangedAt: matchedUser.password_changed_at ? new Date(matchedUser.password_changed_at).getTime() : undefined }, expiresAt: Date.now() + 60000 });
       } else {
         res.status(401).json({
           success: false,
@@ -192,6 +213,22 @@ export function validateStartupEnvironment(): void {
       errors.push(`  ❌ ${req.key}: missing — ${req.description}`);
     } else if (req.minLength && val.length < req.minLength) {
       errors.push(`  ❌ ${req.key}: too short (${val.length} chars, need ≥ ${req.minLength}) — ${req.description}`);
+    }
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    if (process.env.REAL_MONEY_TRADING !== 'false') {
+      errors.push('  ❌ REAL_MONEY_TRADING: must be explicitly set to false for this simulation deployment');
+    }
+    const origins = (process.env.ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
+    if (origins.length === 0 || origins.some((origin) => /localhost|127\.0\.0\.1/i.test(origin))) {
+      errors.push('  ❌ ALLOWED_ORIGINS: production must contain explicit non-localhost origins');
+    }
+    if (process.env.ALLOW_DEV_OTP === 'true') {
+      errors.push('  ❌ ALLOW_DEV_OTP: development OTP disclosure must be disabled in production');
+    }
+    if (!process.env.REDIS_URL?.trim()) {
+      errors.push('  ❌ REDIS_URL: production requires a shared Redis server; in-memory fallback is not permitted');
     }
   }
 

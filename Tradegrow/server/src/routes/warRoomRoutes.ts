@@ -1,16 +1,61 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { WarRoomService } from '../services/WarRoomService';
 import { WhatsAppAutomationService } from '../services/WhatsAppAutomationService';
 import { EmailService } from '../services/EmailService';
 import { query, queryOne, execute } from '../db/schema';
 import { generateUUID } from '../utils/crypto';
 import { WebhookBridge } from '../services/WebhookBridge';
+import { authenticateToken, AuthenticatedRequest, checkPermission } from '../middleware/auth';
 
 export const warRoomRouter = Router();
 const warRoom = WarRoomService.getInstance();
 const waService = WhatsAppAutomationService.getInstance();
 const emailService = EmailService.getInstance();
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function constantTimeEquals(left: string, right: string): boolean {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function requireInternalKey(req: Request, res: Response, next: () => void): void {
+  const configured = process.env.INTERNAL_API_KEY?.trim();
+  const supplied = String(req.headers['x-internal-key'] || '').trim();
+  if (!configured) {
+    res.status(503).json({ success: false, error: { code: 'INTERNAL_AUTH_NOT_CONFIGURED', message: 'Internal integration is not configured.' } });
+    return;
+  }
+  if (!supplied || !constantTimeEquals(supplied, configured)) {
+    res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Internal authentication required.' } });
+    return;
+  }
+  next();
+}
+
+function isWhatsAppWebhookAuthenticated(req: Request): boolean {
+  const configured = process.env.WHATSAPP_WEBHOOK_SECRET?.trim();
+  const supplied = String(req.headers['x-webhook-secret'] || req.headers['x-api-key'] || '').trim();
+  if (configured && supplied && constantTimeEquals(supplied, configured)) return true;
+
+  const appSecret = process.env.WHATSAPP_APP_SECRET?.trim();
+  const signature = String(req.headers['x-hub-signature-256'] || '').trim();
+  if (appSecret && signature.startsWith('sha256=')) {
+    const expected = `sha256=${crypto.createHmac('sha256', appSecret).update(JSON.stringify(req.body ?? {})).digest('hex')}`;
+    return constantTimeEquals(signature, expected);
+  }
+  return false;
+}
 
 /**
  * Helper to build an attractive, responsive notification email HTML
@@ -29,8 +74,8 @@ function buildAlertEmailHtml(params: {
     .map(
       (d) => `
       <tr>
-        <td style="padding: 7px 0; color: #64748B; font-size: 13px; font-weight: 500; border-bottom: 1px solid #1E293B;">${d.label}</td>
-        <td style="padding: 7px 0; color: #F8FAFC; font-size: 13px; font-weight: 600; text-align: right; border-bottom: 1px solid #1E293B;">${d.value || 'N/A'}</td>
+        <td style="padding: 7px 0; color: #64748B; font-size: 13px; font-weight: 500; border-bottom: 1px solid #1E293B;">${escapeHtml(d.label)}</td>
+        <td style="padding: 7px 0; color: #F8FAFC; font-size: 13px; font-weight: 600; text-align: right; border-bottom: 1px solid #1E293B;">${escapeHtml(d.value || 'N/A')}</td>
       </tr>`
     )
     .join('');
@@ -39,7 +84,7 @@ function buildAlertEmailHtml(params: {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>${params.headline}</title>
+  <title>${escapeHtml(params.headline)}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #F8FAFC;">
   <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #020617; padding: 24px 0;">
@@ -60,7 +105,7 @@ function buildAlertEmailHtml(params: {
                   </td>
                   <td align="right">
                     <span style="display: inline-block; background-color: ${params.badgeColor || '#10B981'}20; color: ${params.badgeColor || '#10B981'}; border: 1px solid ${params.badgeColor || '#10B981'}50; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">
-                      ${params.badgeTitle}
+                      ${escapeHtml(params.badgeTitle)}
                     </span>
                   </td>
                 </tr>
@@ -69,8 +114,8 @@ function buildAlertEmailHtml(params: {
           </tr>
           <tr>
             <td style="padding: 28px 32px;">
-              <h2 style="margin: 0 0 12px; color: #F8FAFC; font-size: 18px; font-weight: 700;">${params.headline}</h2>
-              <p style="margin: 0 0 20px; color: #94A3B8; font-size: 14px; line-height: 1.6;">${params.summary}</p>
+              <h2 style="margin: 0 0 12px; color: #F8FAFC; font-size: 18px; font-weight: 700;">${escapeHtml(params.headline)}</h2>
+              <p style="margin: 0 0 20px; color: #94A3B8; font-size: 14px; line-height: 1.6;">${escapeHtml(params.summary)}</p>
               
               <div style="background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
                 <table style="width: 100%; border-collapse: collapse;">
@@ -83,8 +128,8 @@ function buildAlertEmailHtml(params: {
               ${
                 params.actionUrl
                   ? `<div style="text-align: center; margin-top: 24px;">
-                      <a href="${params.actionUrl}" style="display: inline-block; background-color: #10B981; color: #022C22; font-weight: 700; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 14px;">
-                        ${params.actionLabel || 'View Record'}
+                      <a href="${escapeHtml(params.actionUrl)}" style="display: inline-block; background-color: #10B981; color: #022C22; font-weight: 700; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                        ${escapeHtml(params.actionLabel || 'View Record')}
                       </a>
                     </div>`
                   : ''
@@ -179,7 +224,7 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
       extraHtml += `
         <div style="background-color: #0F172A; border-left: 3px solid #38BDF8; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
           <strong style="color: #38BDF8; font-size: 13px; display: block; margin-bottom: 4px;">Message / Investor Note:</strong>
-          <span style="color: #E2E8F0; font-size: 13px; line-height: 1.5; white-space: pre-wrap;">${message}</span>
+          <span style="color: #E2E8F0; font-size: 13px; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</span>
         </div>`;
     }
 
@@ -188,8 +233,8 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
         .map(
           (q: any, idx: number) => `
           <div style="padding: 8px 0; border-bottom: 1px solid #1E293B; font-size: 12px;">
-            <div style="color: #94A3B8; font-weight: 600;">${idx + 1}. ${q.question}</div>
-            <div style="color: #10B981; font-weight: 700; margin-top: 2px;">&rarr; ${q.answer}</div>
+            <div style="color: #94A3B8; font-weight: 600;">${idx + 1}. ${escapeHtml(q.question)}</div>
+            <div style="color: #10B981; font-weight: 700; margin-top: 2px;">&rarr; ${escapeHtml(q.answer)}</div>
           </div>`
         )
         .join('');
@@ -342,14 +387,17 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
     // 4. Cross-Domain Webhook Bridge: Dispatch signed lead.captured event to Expert Stocks CRM
     if (source !== 'EXPERT_STOCKS_SITE') {
       try {
-        const webhookUrl = process.env.EXPERT_STOCKS_WEBHOOK_URL || 'https://expertstocks.in/api/v1/webhooks/tradegrow-leads';
-        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET;
-        if (webhookSecret) {
-          WebhookBridge.getInstance().deliverEvent({
-            url: webhookUrl,
-            secret: webhookSecret,
-            event: 'lead.captured',
-            payload: {
+        const webhookUrl = process.env.EXPERT_STOCKS_WEBHOOK_URL;
+        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET?.trim();
+        if (!webhookUrl || !webhookSecret) {
+          console.warn('[WebhookBridge] Lead delivery skipped: webhook URL or secret is not configured.');
+          return res.status(201).json({ success: true, leadCode: result?.leadCode, message: 'Consultation request received.' });
+        }
+        WebhookBridge.getInstance().deliverEvent({
+          url: webhookUrl,
+          secret: webhookSecret,
+          event: 'lead.captured',
+          payload: {
             leadCode: result?.leadCode,
             fullName: fullName ? String(fullName).trim() : undefined,
             phone: cleanPhone,
@@ -369,13 +417,10 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
             referralCode,
             creatorCode,
             timestamp: new Date().toISOString()
-            }
-          }).catch((whErr: any) => {
-            console.warn('[WebhookBridge] Expert Stocks CRM delivery deferred:', whErr.message);
-          });
-        } else {
-          console.warn('[WebhookBridge] WEBHOOK_BRIDGE_SECRET is not configured; CRM delivery skipped.');
-        }
+          }
+        }).catch((whErr: any) => {
+          console.warn('[WebhookBridge] Expert Stocks CRM delivery deferred:', whErr.message);
+        });
       } catch (whErr: any) {
         console.warn('[WebhookBridge] Failed to enqueue event:', whErr.message);
       }
@@ -414,8 +459,9 @@ warRoomRouter.post('/public/support/tickets', async (req: Request, res: Response
       });
     }
 
-    const ticketNum = Math.floor(1000 + Math.random() * 9000);
-    const ticketId = `TG-TKT-2026-${ticketNum}`;
+    // Use an unguessable reference; four-digit ticket numbers allow easy
+    // enumeration of other customers' support records.
+    const ticketId = `TG-TKT-2026-${generateUUID().slice(0, 12).toUpperCase()}`;
     const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
     const cleanCategory = category || 'General Query';
     const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -455,7 +501,7 @@ warRoomRouter.post('/public/support/tickets', async (req: Request, res: Response
       extraHtml: `
         <div style="background-color: #0F172A; border-left: 3px solid #EF4444; padding: 14px 18px; margin-bottom: 20px; border-radius: 4px;">
           <strong style="color: #F8FAFC; font-size: 13px; display: block; margin-bottom: 6px;">Ticket Description:</strong>
-          <span style="color: #CBD5E1; font-size: 13px; line-height: 1.6; white-space: pre-wrap;">${message}</span>
+          <span style="color: #CBD5E1; font-size: 13px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(message)}</span>
         </div>`,
       actionUrl: `https://tradegrowx.in/admin`,
       actionLabel: 'Open Support Console'
@@ -531,9 +577,9 @@ warRoomRouter.get('/public/support/tickets/:ref', async (req: Request, res: Resp
     }
 
     const ticket = await queryOne<any>(
-      `SELECT id, customer_id, category, priority, subject, description, status, admin_notes, created_at, updated_at
+      `SELECT id, category, status, created_at, updated_at
        FROM support_tickets
-       WHERE UPPER(id) = $1 OR UPPER(customer_id) = $1
+       WHERE UPPER(id) = $1
        ORDER BY created_at DESC
        LIMIT 1`,
       [ref]
@@ -554,7 +600,7 @@ warRoomRouter.get('/public/support/tickets/:ref', async (req: Request, res: Resp
         category: ticket.category || 'General',
         createdAt: ticket.created_at,
         updatedAt: ticket.updated_at,
-        notes: ticket.admin_notes || 'Ticket has been queued for investigation by support staff.'
+        message: 'Ticket status is available to the holder of this reference.'
       }
     });
   } catch (err: any) {
@@ -683,11 +729,11 @@ warRoomRouter.get(['/public/onboarding/status/:ref', '/public/onboarding/status'
     let lead: any = null;
     try {
       lead = await queryOne<any>(
-        `SELECT lead_code, full_name, phone_e164, stage, score, created_at, updated_at
+        `SELECT lead_code, stage, updated_at
          FROM warroom.leads
-         WHERE UPPER(lead_code) = $1 OR phone_e164 = $2 OR phone_e164 = $3
+         WHERE UPPER(lead_code) = $1
          LIMIT 1`,
-        [rawRef, rawRef, `+91${rawRef.replace(/\D/g, '').slice(-10)}`]
+        [rawRef]
       );
     } catch (err: any) {
       console.warn('[WarRoom API] Status query DB error:', err.message);
@@ -752,7 +798,6 @@ warRoomRouter.get(['/public/onboarding/status/:ref', '/public/onboarding/status'
       success: true,
       data: {
         ref: lead?.lead_code || rawRef,
-        fullName: lead?.full_name || 'Registered Applicant',
         stage: currentStageKey,
         stageIndex: stageDetails.stageIndex,
         stageName: stageDetails.stageName,
@@ -775,6 +820,10 @@ warRoomRouter.get(['/public/onboarding/status/:ref', '/public/onboarding/status'
  * GET /api/v1/warroom/dashboard
  * Executive 1,000 Users North Star Cockpit Data
  */
+// All War Room dashboards, CRM records and control actions are staff-only.
+// Public lead/support/onboarding routes are declared above this boundary.
+warRoomRouter.use('/warroom', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'));
+
 warRoomRouter.get('/warroom/dashboard', async (_req: Request, res: Response) => {
   try {
     const data = await warRoom.getExecutiveDashboard();
@@ -825,7 +874,7 @@ warRoomRouter.get('/warroom/pacing', async (req: Request, res: Response) => {
  * POST /api/v1/internal/events/activation
  * Internal hook triggered when a user executes their first trade or funds their wallet
  */
-warRoomRouter.post('/internal/events/activation', async (req: Request, res: Response) => {
+warRoomRouter.post('/internal/events/activation', requireInternalKey, async (req: Request, res: Response) => {
   try {
     const { userId, orderId, actionType } = req.body;
     if (!userId) {
@@ -931,9 +980,13 @@ warRoomRouter.post('/warroom/creators', async (req: Request, res: Response) => {
  * GET /api/v1/warroom/referral-stats/:userId
  * Customer "Refer & Earn" stats
  */
-warRoomRouter.get('/warroom/referral-stats/:userId', async (req: Request, res: Response) => {
+warRoomRouter.get('/warroom/referral-stats/:userId', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = String(req.params.userId);
+    const isPrivileged = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(req.user?.role || '');
+    if (req.user?.userId !== userId && !isPrivileged) {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You may only view your own referral statistics.' } });
+    }
 
     // Check if referral code exists for user, else generate one
     let refRes = await query<any>(
@@ -1021,7 +1074,7 @@ warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN?.trim();
 
   if (expectedToken && mode === 'subscribe' && token === expectedToken) {
     console.log('[WhatsApp Webhook] ✅ Verification challenge successful.');
@@ -1037,6 +1090,9 @@ warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
  */
 warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => {
   try {
+    if (!isWhatsAppWebhookAuthenticated(req)) {
+      return res.status(401).send('WEBHOOK_UNAUTHORIZED');
+    }
     const body = req.body;
 
     if (body.object === 'whatsapp_business_account' && Array.isArray(body.entry)) {
@@ -1085,6 +1141,9 @@ warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => 
  */
 warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Response) => {
   try {
+    if (!isWhatsAppWebhookAuthenticated(req)) {
+      return res.status(401).json({ status: 'UNAUTHORIZED' });
+    }
     const payload = req.body;
     const event = payload?.event || req.headers['x-event-type'];
 
@@ -1514,7 +1573,10 @@ warRoomRouter.get('/advisory/order-preview', (req: Request, res: Response) => {
       });
     }
 
-    const secret = process.env.ADVISORY_SHARED_SECRET || 'advisory_shared_secret_2026';
+    const secret = process.env.ADVISORY_SHARED_SECRET?.trim();
+    if (!secret) {
+      return res.status(503).json({ success: false, error: { code: 'ADVISORY_NOT_CONFIGURED', message: 'Advisory integration is not configured.' } });
+    }
     let decoded: any;
     try {
       decoded = jwt.verify(token, secret);
@@ -1523,6 +1585,10 @@ warRoomRouter.get('/advisory/order-preview', (req: Request, res: Response) => {
         success: false,
         error: { code: 'EXPIRED_OR_INVALID', message: 'The advisory recommendation link has expired or is invalid.' }
       });
+    }
+
+    if (!decoded.symbol || !decoded.action || !decoded.targetPrice || !decoded.advisoryReportId || !decoded.analystName || !decoded.analystRegNumber) {
+      return res.status(400).json({ success: false, error: { code: 'INCOMPLETE_RECOMMENDATION', message: 'Signed recommendation is missing required research identity or trade fields.' } });
     }
 
     return res.json({
@@ -1535,8 +1601,8 @@ warRoomRouter.get('/advisory/order-preview', (req: Request, res: Response) => {
         targetPrice: decoded.targetPrice,
         stopLoss: decoded.stopLoss,
         advisoryReportId: decoded.advisoryReportId,
-        analystName: decoded.analystName || 'Expert Stocks Research Desk',
-        analystRegNumber: decoded.analystRegNumber || 'INH000000000',
+        analystName: decoded.analystName,
+        analystRegNumber: decoded.analystRegNumber,
         disclaimer: 'This order ticket is generated via an independent SEBI Registered Research Analyst recommendation. Investment in securities market are subject to market risks. Read all related documents carefully before investing. Trade Grow acts solely as the execution broker and does not provide financial advice.'
       }
     });
@@ -1553,30 +1619,24 @@ warRoomRouter.get('/advisory/order-preview', (req: Request, res: Response) => {
  * POST /api/v1/auth/sso/ticket
  * Issues a single-use, 60-second SSO ticket for cross-system seamless authentication
  */
-warRoomRouter.post('/auth/sso/ticket', async (req: Request, res: Response) => {
+warRoomRouter.post('/auth/sso/ticket', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, error: { message: 'Authentication required' } });
-    }
+    const user = await queryOne<any>(
+      `SELECT id, client_id, phone_number, email, role, is_kyc_completed
+       FROM users WHERE id = $1 AND status = 'ACTIVE'`,
+      [req.user!.userId]
+    );
+    if (!user) return res.status(403).json({ success: false, error: { message: 'Active user account required' } });
 
-    const token = authHeader.split(' ')[1];
-    const jwtSecret = process.env.JWT_SECRET || 'stocksharp_jwt_s3cr3t_2026_virtual_trading_platform_secure_key_minimum_32_chars';
-    let user: any;
-    try {
-      user = jwt.verify(token, jwtSecret);
-    } catch (_) {
-      return res.status(401).json({ success: false, error: { message: 'Invalid authentication session' } });
-    }
-
-    const ssoSecret = process.env.SSO_SHARED_SECRET || jwtSecret;
+    const ssoSecret = process.env.SSO_SHARED_SECRET?.trim();
+    if (!ssoSecret) return res.status(503).json({ success: false, error: { message: 'SSO is not configured' } });
     const ticketPayload = {
       sub: user.id,
-      clientCode: user.client_code || user.id,
-      phoneE164: user.phone,
+      clientCode: user.client_id || user.id,
+      phoneE164: user.phone_number,
       email: user.email,
       role: user.role || 'client',
-      kycStatus: user.kyc_status || 'VERIFIED',
+      kycStatus: user.is_kyc_completed ? 'VERIFIED' : 'PENDING',
       nonce: generateUUID().slice(0, 12),
       iat: Math.floor(Date.now() / 1000)
     };
@@ -1611,7 +1671,8 @@ warRoomRouter.post('/auth/sso/verify', (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: { message: 'Ticket string is required' } });
     }
 
-    const ssoSecret = process.env.SSO_SHARED_SECRET || process.env.JWT_SECRET || 'stocksharp_jwt_s3cr3t_2026_virtual_trading_platform_secure_key_minimum_32_chars';
+    const ssoSecret = process.env.SSO_SHARED_SECRET?.trim();
+    if (!ssoSecret) return res.status(503).json({ success: false, error: { message: 'SSO is not configured' } });
     let decoded: any;
     try {
       decoded = jwt.verify(ticket, ssoSecret);
@@ -1640,7 +1701,7 @@ warRoomRouter.post('/auth/sso/verify', (req: Request, res: Response) => {
  * GET /api/v1/internal/clients/:phone/360
  * Returns aggregated Client 360 dossier combining Demat KYC state, Wallet Balance, and CRM Lead record
  */
-warRoomRouter.get('/internal/clients/:phone/360', async (req: Request, res: Response) => {
+warRoomRouter.get('/internal/clients/:phone/360', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: Request, res: Response) => {
   try {
     const rawPhone = String(req.params.phone);
     const phoneE164 = warRoom.normalizePhone(rawPhone);

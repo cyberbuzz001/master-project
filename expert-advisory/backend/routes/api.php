@@ -25,7 +25,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('leads', [PublicController::class, 'storeLead'])->middleware('throttle:public-forms');
         Route::get('verify/{token}', [PublicController::class, 'verifyDocument'])->where('token', '[a-z0-9]{40}')->middleware('throttle:public-forms');
         Route::post('grievances', [\App\Http\Controllers\Api\V1\SupportController::class, 'storePublicGrievance'])->middleware('throttle:public-forms');
-        Route::get('grievances/{trackingNumber}', [\App\Http\Controllers\Api\V1\SupportController::class, 'showPublicGrievance'])->where('trackingNumber', 'GRV\-[0-9]{4}\-[0-9]{5}')->middleware('throttle:public-forms');
+        Route::get('grievances/{trackingNumber}', [\App\Http\Controllers\Api\V1\SupportController::class, 'showPublicGrievance'])->where('trackingNumber', 'GRV\-[0-9]{4}\-[A-Fa-f0-9]{16}')->middleware('throttle:public-forms');
     });
 
     // ---- Payment provider callbacks --------------------------------------------------------
@@ -104,11 +104,11 @@ Route::prefix('v1')->group(function (): void {
 
                 // ---- Universal Lead Import & Automation --------------------------------------------
                 Route::prefix('leads/universal-import')->group(function (): void {
-                    Route::post('preview', [\App\Http\Controllers\Api\UniversalImportController::class, 'preview']);
-                    Route::post('execute', [\App\Http\Controllers\Api\UniversalImportController::class, 'execute']);
-                    Route::get('batches', [\App\Http\Controllers\Api\UniversalImportController::class, 'batches']);
-                    Route::get('batches/{id}', [\App\Http\Controllers\Api\UniversalImportController::class, 'showBatch']);
-                    Route::post('download-report', [\App\Http\Controllers\Api\UniversalImportController::class, 'downloadReport']);
+                    Route::post('preview', [\App\Http\Controllers\Api\UniversalImportController::class, 'preview'])->middleware('can:leads.import');
+                    Route::post('execute', [\App\Http\Controllers\Api\UniversalImportController::class, 'execute'])->middleware('can:leads.import');
+                    Route::get('batches', [\App\Http\Controllers\Api\UniversalImportController::class, 'batches'])->middleware('can:leads.import');
+                    Route::get('batches/{id}', [\App\Http\Controllers\Api\UniversalImportController::class, 'showBatch'])->middleware('can:leads.import');
+                    Route::post('download-report', [\App\Http\Controllers\Api\UniversalImportController::class, 'downloadReport'])->middleware('can:leads.import');
                 });
 
                 // ---- Lead AI Controls & Scoring ----------------------------------------------------
@@ -119,7 +119,7 @@ Route::prefix('v1')->group(function (): void {
                         'is_ai_paused' => (bool) $lead->is_ai_paused,
                         'message' => $lead->is_ai_paused ? 'AI paused. Human agent takeover active.' : 'AI resumed for automated conversation.',
                     ]);
-                });
+                })->middleware(['can:leads.update', 'can:update,lead']);
 
                 Route::post('leads/{lead}/recalculate-score', function (\App\Models\Lead $lead, \App\Domain\Crm\LeadScoringEngine $scoring) {
                     $result = $scoring->scoreLead($lead);
@@ -130,7 +130,7 @@ Route::prefix('v1')->group(function (): void {
                         'conversion_probability' => $result['conversion_probability'],
                         'explanation' => $result['explanation'],
                     ]);
-                });
+                })->middleware(['can:leads.update', 'can:update,lead']);
 
                 // ---- Vendor Performance Analytics --------------------------------------------------
                 Route::get('analytics/vendor-performance', function (\Illuminate\Http\Request $request, \App\Domain\Crm\VendorPerformanceService $service) {
@@ -139,7 +139,7 @@ Route::prefix('v1')->group(function (): void {
                         'data' => $service->getVendorMetrics($request->all()),
                         'batch_metrics' => $service->getImportBatchMetrics(),
                     ]);
-                });
+                })->middleware('can:analytics.view');
 
                 // ---- Automated Workflows Trigger ---------------------------------------------------
                 Route::post('workflows/trigger', function (\Illuminate\Http\Request $request, \App\Domain\Crm\AutomationWorkflowEngine $engine) {
@@ -153,7 +153,7 @@ Route::prefix('v1')->group(function (): void {
                         'success' => (bool) $run,
                         'workflow_run' => $run,
                     ]);
-                });
+                })->middleware('can:automation.manage');
             });
 
             // ---- Employee workspace -----------------------------------------------------------

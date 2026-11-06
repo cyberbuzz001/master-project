@@ -259,7 +259,7 @@ export class WhatsAppAutomationService {
     // ─────────────────────────────────────────────────────────────
     if (provider === 'EVOLUTION_API' || provider === 'OPEN_WA') {
       const evoUrl = this.getEvoBaseUrl();
-      const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+      const evoKey = process.env.WHATSAPP_API_KEY?.trim() || '';
       const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
       const cleanNumber = phoneE164.replace(/\D/g, '');
 
@@ -540,7 +540,7 @@ export class WhatsAppAutomationService {
    */
   public async getConnectionState(): Promise<{ state: string; instance: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {
@@ -559,7 +559,7 @@ export class WhatsAppAutomationService {
    */
   public async getQRCode(): Promise<{ qrcode?: string; base64?: string; state?: string; pairingCode?: string; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {
@@ -584,7 +584,7 @@ export class WhatsAppAutomationService {
    */
   public async getPairingCode(phone: string): Promise<{ pairingCode?: string; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
     const cleanNumber = phone.replace(/\D/g, '');
 
@@ -604,7 +604,7 @@ export class WhatsAppAutomationService {
    */
   public async restartInstance(): Promise<{ success: boolean; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {

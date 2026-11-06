@@ -96,7 +96,9 @@ class UniversalImportController extends Controller
      */
     public function batches(): JsonResponse
     {
+        $user = request()->user();
         $batches = LeadImportBatch::with(['vendor', 'campaign', 'uploadedBy'])
+            ->when(! $user->can('leads.view_all'), fn ($query) => $query->where('uploaded_by_id', $user->id))
             ->latest('id')
             ->paginate(20);
 
@@ -109,9 +111,13 @@ class UniversalImportController extends Controller
     /**
      * Get details of a single batch.
      */
-    public function showBatch(int $id): JsonResponse
+    public function showBatch(Request $request, int $id): JsonResponse
     {
         $batch = LeadImportBatch::with(['vendor', 'campaign', 'uploadedBy'])->findOrFail($id);
+
+        if (! $request->user()->can('leads.view_all') && (int) $batch->uploaded_by_id !== (int) $request->user()->id) {
+            abort(403);
+        }
 
         return response()->json([
             'success' => true,

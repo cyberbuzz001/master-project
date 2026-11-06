@@ -36,10 +36,10 @@ CREATE INDEX IF NOT EXISTS idx_local_candles_symbol ON local_market_candles(symb
 -- Insert default system configuration entries if not existing
 INSERT INTO system_config (key, value) VALUES
   ('PRIMARY_MARKET_DATA_PROVIDER', 'ALPHAVANTAGE'),
-  ('ALPHAVANTAGE_API_KEY', 'CC23XT2DVHARWKAU'),
-  ('ANGELONE_API_KEY', '4DBv6HvT'),
-  ('ANGELONE_CLIENT_ID', 'N89824'),
-  ('ANGELONE_CLIENT_SECRET', '9691'),
-  ('ANGELONE_TOTP_SECRET', 'AV7KF7BEJBOOCVIS53TZZB2VEU'),
+  ('ALPHAVANTAGE_API_KEY', ''),
+  ('ANGELONE_API_KEY', ''),
+  ('ANGELONE_CLIENT_ID', ''),
+  ('ANGELONE_CLIENT_SECRET', ''),
+  ('ANGELONE_TOTP_SECRET', ''),
   ('INDIAN_STOCK_MARKET_API_BASE_URL', 'https://indian-stock-market-api.p.rapidapi.com')
 ON CONFLICT (key) DO NOTHING;

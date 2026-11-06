@@ -6,6 +6,7 @@ import { queryOne, execute } from '../db/schema';
 import { SSOTicketPayload, SSOTicketExchangeRequest, SSOTicketExchangeResponse } from '../contracts/SSO';
 import { AdvisoryRecommendationPayload, AdvisoryOrderPreviewResponse } from '../contracts/Advisory';
 import { OMS } from '../trading/OMS';
+import { redis } from '../db/redis';
 
 export const ssoRouter = Router();
 
@@ -24,16 +25,13 @@ export function isStaffRole(role: string): boolean {
   return STAFF_ROLES.has((role || '').toUpperCase());
 }
 
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+function getSsoTicketSecret(): string {
+  const secret = process.env.SSO_TICKET_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET is not configured');
+    throw new Error('SSO_TICKET_SECRET is not configured');
   }
   return secret;
 }
-
-// In-memory consumed nonce cache to prevent SSO ticket replay attacks
-const consumedSsoNonces = new Set<string>();
 
 /**
  * GET /api/v1/auth/sso/staff-desks
@@ -120,7 +118,7 @@ ssoRouter.post('/ticket', authenticateToken, async (req: AuthenticatedRequest, r
     const nowSec = Math.floor(Date.now() / 1000);
     const nonce = crypto.randomUUID();
 
-    const payload: SSOTicketPayload & { isStaff: boolean } = {
+    const payload: SSOTicketPayload & { isStaff: boolean; typ: string } = {
       sub: user.id,
       clientCode: user.client_id || user.username || user.id,
       phoneE164: user.phone_number || '',
@@ -132,9 +130,14 @@ ssoRouter.post('/ticket', authenticateToken, async (req: AuthenticatedRequest, r
       iat: nowSec,
       exp: nowSec + 60, // 60 seconds validity
       isStaff: true,
+      typ: 'sso_ticket',
     };
 
-    const ticket = jwt.sign(payload, getJwtSecret(), { algorithm: 'HS256' });
+    const ticket = jwt.sign(payload, getSsoTicketSecret(), {
+      algorithm: 'HS256',
+      issuer: 'tradegrow.sso',
+      audience: 'expert-stocks.staff',
+    });
 
     res.json({
       success: true,
@@ -161,23 +164,39 @@ ssoRouter.post('/exchange', async (req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
+    if (!['EXPERT_STOCKS', 'TRADEGROW_WEB'].includes(targetApp)) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_TARGET', message: 'Unsupported SSO target' } });
+      return;
+    }
+
+    if (!redis.isAvailable()) {
+      res.status(503).json({ success: false, error: { code: 'SSO_UNAVAILABLE', message: 'Secure SSO replay protection is unavailable' } });
+      return;
+    }
+
     let decoded: any;
     try {
-      decoded = jwt.verify(ticket, getJwtSecret());
+      decoded = jwt.verify(ticket, getSsoTicketSecret(), {
+        algorithms: ['HS256'],
+        issuer: 'tradegrow.sso',
+        audience: 'expert-stocks.staff',
+      });
     } catch (err: any) {
       res.status(401).json({ success: false, error: { code: 'INVALID_TICKET', message: 'Ticket expired or signature invalid' } });
       return;
     }
 
-    // Replay protection: check and mark nonce
-    if (consumedSsoNonces.has(decoded.nonce)) {
+    if (!decoded || typeof decoded !== 'object' || decoded.typ !== 'sso_ticket' || typeof decoded.nonce !== 'string' || decoded.nonce.length < 20) {
+      res.status(401).json({ success: false, error: { code: 'INVALID_TICKET', message: 'Ticket context is invalid' } });
+      return;
+    }
+
+    // Replay protection is atomic and shared across application replicas.
+    const nonceClaimed = await redis.setNx(`sso:nonce:${decoded.nonce}`, '1', 120);
+    if (!nonceClaimed) {
       res.status(401).json({ success: false, error: { code: 'TICKET_ALREADY_USED', message: 'This SSO ticket has already been consumed' } });
       return;
     }
-    consumedSsoNonces.add(decoded.nonce);
-
-    // Evict old nonces after 2 minutes
-    setTimeout(() => consumedSsoNonces.delete(decoded.nonce), 120000);
 
     // Ensure only staff tickets can be exchanged across desks
     if (!decoded.isStaff && !isStaffRole(decoded.role)) {
@@ -199,15 +218,19 @@ ssoRouter.post('/exchange', async (req: AuthenticatedRequest, res: Response): Pr
       [decoded.sub]
     );
 
-    if (!user || user.status !== 'ACTIVE') {
+    if (!user || user.status !== 'ACTIVE' || !isStaffRole(user.role)) {
       res.status(403).json({ success: false, error: { code: 'ACCOUNT_DISABLED', message: 'Employee account is inactive or disabled' } });
       return;
     }
 
     // Issue application token for employee
+    const accessSecret = process.env.JWT_SECRET;
+    if (!accessSecret) {
+      throw new Error('JWT_SECRET is not configured');
+    }
     const token = jwt.sign(
       { userId: user.id, username: user.username, email: user.email, role: user.role, isStaff: true, targetApp: targetApp || 'EXPERT_STOCKS' },
-      getJwtSecret(),
+      accessSecret,
       { expiresIn: '12h' }
     );
 
@@ -238,7 +261,7 @@ ssoRouter.post('/advisory/preview-order', authenticateToken, async (req: Authent
   try {
     const payload = req.body as AdvisoryRecommendationPayload;
 
-    if (!payload.symbol || !payload.action || !payload.targetPrice) {
+    if (!payload.symbol || !payload.action || !payload.targetPrice || !payload.advisoryReportId || !payload.analystName || !payload.analystRegNumber) {
       res.status(400).json({ success: false, error: { code: 'INVALID_PAYLOAD', message: 'Missing recommendation fields' } });
       return;
     }
@@ -250,9 +273,9 @@ ssoRouter.post('/advisory/preview-order', authenticateToken, async (req: Authent
       productType: payload.productType || 'CNC',
       targetPrice: payload.targetPrice,
       stopLoss: payload.stopLoss,
-      advisoryReportId: payload.advisoryReportId || '',
-      analystName: payload.analystName || 'SEBI Registered Research Analyst',
-      analystRegNumber: payload.analystRegNumber || 'INH000000000',
+      advisoryReportId: payload.advisoryReportId,
+      analystName: payload.analystName,
+      analystRegNumber: payload.analystRegNumber,
       disclaimer: 'DISCLAIMER: Investments in securities market are subject to market risks. Read all scheme related documents carefully before investing. TradeGrow and Expert Stocks are independent entities. TradeGrow provides execution-only brokerage and is not liable for performance of recommendations provided by independent registered analysts.',
     };
 

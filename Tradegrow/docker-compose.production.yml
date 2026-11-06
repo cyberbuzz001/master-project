@@ -20,7 +20,7 @@ volumes:
 services:
   # ── 1. PostgreSQL 16 Primary Database (TimescaleDB) ─────────────────────────
   postgres:
-    image: timescale/timescaledb:latest-pg16
+    image: timescale/timescaledb:2.17.2-pg16
     container_name: tradegrow_postgres
     environment:
       POSTGRES_DB:       ${PG_DATABASE:-tradegrow}
@@ -43,7 +43,7 @@ services:
 
   # ── 2. Redis 7 (Cache, Pub/Sub, Atomic Idempotency Locks) ───────────────────
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.2-alpine
     container_name: tradegrow_redis
     command: redis-server --maxmemory 1024mb --maxmemory-policy volatile-lru --appendonly yes --appendfsync everysec
     volumes:
@@ -87,7 +87,7 @@ services:
 
   # ── 4. Trade Grow Primary Node (Broker Feed & Real-time Publisher) ──────────
   app-1:
-    image: tradegrow-app:latest
+    image: "${TRADEGROW_IMAGE:?Set TRADEGROW_IMAGE to an immutable, approved image reference}"
     build:
       context: .
       dockerfile: Dockerfile
@@ -107,8 +107,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
-    ports:
-      - "5001:5001"
+    expose:
+      - "5001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -124,10 +124,6 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
-      - ./server/dist:/app/server/dist
-      - ./client/dist:/app/client/dist
-      - ./server/src/db/migrations:/app/server/src/db/migrations
-      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -138,7 +134,7 @@ services:
 
   # ── 5. Trade Grow Worker Node 2 (Stateless API & WS Replica) ────────────────
   app-2:
-    image: tradegrow-app:latest
+    image: "${TRADEGROW_IMAGE:?Set TRADEGROW_IMAGE to an immutable, approved image reference}"
     build:
       context: .
       dockerfile: Dockerfile
@@ -158,8 +154,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
-    ports:
-      - "5002:5002"
+    expose:
+      - "5002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -175,10 +171,6 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
-      - ./server/dist:/app/server/dist
-      - ./client/dist:/app/client/dist
-      - ./server/src/db/migrations:/app/server/src/db/migrations
-      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -189,7 +181,7 @@ services:
 
   # ── 6. Trade Grow Worker Node 3 (Stateless API & WS Replica) ────────────────
   app-3:
-    image: tradegrow-app:latest
+    image: "${TRADEGROW_IMAGE:?Set TRADEGROW_IMAGE to an immutable, approved image reference}"
     build:
       context: .
       dockerfile: Dockerfile
@@ -209,8 +201,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
-    ports:
-      - "5003:5003"
+    expose:
+      - "5003"
     depends_on:
       postgres:
         condition: service_healthy
@@ -226,10 +218,6 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
-      - ./server/dist:/app/server/dist
-      - ./client/dist:/app/client/dist
-      - ./server/src/db/migrations:/app/server/src/db/migrations
-      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:
@@ -240,7 +228,7 @@ services:
 
   # ── 7. Trade Grow Worker Node 4 (Stateless API & WS Replica) ────────────────
   app-4:
-    image: tradegrow-app:latest
+    image: "${TRADEGROW_IMAGE:?Set TRADEGROW_IMAGE to an immutable, approved image reference}"
     build:
       context: .
       dockerfile: Dockerfile
@@ -260,8 +248,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
-    ports:
-      - "5004:5004"
+    expose:
+      - "5004"
     depends_on:
       postgres:
         condition: service_healthy
@@ -277,10 +265,6 @@ services:
       start_period: 20s
     volumes:
       - kyc_uploads:/app/server/uploads/kyc
-      - ./server/dist:/app/server/dist
-      - ./client/dist:/app/client/dist
-      - ./server/src/db/migrations:/app/server/src/db/migrations
-      - ./server/src/db/migrations:/app/server/dist/db/migrations
     restart: unless-stopped
     stop_grace_period: 30s
     deploy:

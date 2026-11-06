@@ -59,14 +59,9 @@ class SupportController extends Controller
         return response()->json([
             'data' => [
                 'tracking_number' => $grievance->tracking_number,
-                'category' => $grievance->category,
-                'subject' => $grievance->subject,
                 'status' => $grievance->status,
                 'status_label' => Grievance::STATUSES[$grievance->status] ?? $grievance->status,
-                'sla_due_at' => $grievance->sla_due_at->toISOString(),
-                'resolved_at' => $grievance->resolved_at?->toISOString(),
-                'resolution_notes' => $grievance->resolution_notes,
-                'is_escalated_scores' => $grievance->is_escalated_scores,
+                'updated_at' => $grievance->updated_at?->toISOString(),
             ],
         ]);
     }

@@ -12,11 +12,8 @@
  *   3. isTokenExpiringSoon() — Returns true if token expires in < X minutes
  */
 
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import { sendTelegramAlert } from './telegramAlert';
-import { execute, queryOne } from '../db/schema';
 
 // Reference to the live DhanAdapter instance — set via setDhanAdapterRef()
 let dhanAdapterRef: any = null;
@@ -191,23 +188,10 @@ export function isTokenExpiringSoon(token: string, thresholdMinutes = 60): boole
  * 30-minute cron check fires the TOTP renewal.
  */
 export async function loadPersistedDhanToken(): Promise<string | null> {
-  try {
-    const row = await queryOne<{ value: string }>(`SELECT value FROM system_config WHERE key = 'DHAN_ACCESS_TOKEN'`);
-    if (!row?.value) return null;
-
-    const dbMinutesLeft = getTokenExpiryMinutes(row.value);
-    const envMinutesLeft = process.env.DHAN_ACCESS_TOKEN ? getTokenExpiryMinutes(process.env.DHAN_ACCESS_TOKEN) : -Infinity;
-
-    if (dbMinutesLeft > envMinutesLeft) {
-      console.log(`[DhanTokenRefresh] Using persisted token from system_config (${dbMinutesLeft}m left vs ${envMinutesLeft}m from env).`);
-      process.env.DHAN_ACCESS_TOKEN = row.value;
-      return row.value;
-    }
-    return null;
-  } catch (err) {
-    console.error('[DhanTokenRefresh] Warning: Could not read persisted token from system_config:', err);
-    return null;
-  }
+  // Access tokens are intentionally never read from general application
+  // configuration storage. Supply DHAN_ACCESS_TOKEN through a secret manager
+  // or use the configured TOTP renewal flow after process startup.
+  return null;
 }
 
 /**
@@ -227,7 +211,8 @@ export async function updateDhanToken(newToken: string): Promise<{ success: bool
     return { success: false, message: 'Token is already expired. Please generate a new one from https://login.dhan.co' };
   }
 
-  // Update in process.env so subsequent instantiations or lookups see the fresh token
+  // Keep the credential in process memory only. It must not be written to
+  // .env files or general application configuration rows.
   process.env.DHAN_ACCESS_TOKEN = newToken;
 
   // 1. Hot-swap in the live adapter instance
@@ -240,42 +225,6 @@ export async function updateDhanToken(newToken: string): Promise<{ success: bool
     }
   } else {
     console.warn('[DhanTokenRefresh] DhanAdapter reference not set. Token not updated in adapter.');
-  }
-
-  // 2. Persist to .env file — best-effort only. This lives in the
-  // container's writable layer, which does NOT survive a container
-  // recreate (image rebuild, `docker compose up --no-deps`, a crash
-  // restart) — it only helps a human inspecting a still-running container.
-  try {
-    const envPath = path.resolve(process.cwd(), '.env');
-    if (fs.existsSync(envPath)) {
-      let envContent = fs.readFileSync(envPath, 'utf-8');
-      // Replace the existing DHAN_ACCESS_TOKEN line
-      envContent = envContent.replace(
-        /^DHAN_ACCESS_TOKEN=.*$/m,
-        `DHAN_ACCESS_TOKEN=${newToken}`
-      );
-      fs.writeFileSync(envPath, envContent, 'utf-8');
-      console.log('[DhanTokenRefresh] ✅ Token written to .env file successfully.');
-    }
-  } catch (err) {
-    console.error('[DhanTokenRefresh] Warning: Could not write token to .env file:', err);
-  }
-
-  // 3. Persist to system_config — same table the admin "Market Data Provider"
-  // screen already writes DHAN_ACCESS_TOKEN into. Postgres survives every
-  // app-container recreate, so this (not the .env write above) is what
-  // loadPersistedDhanToken() below reads at the next server boot.
-  try {
-    await execute(
-      `INSERT INTO system_config (key, value, updated_at)
-       VALUES ('DHAN_ACCESS_TOKEN', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
-      [newToken]
-    );
-    console.log('[DhanTokenRefresh] ✅ Token persisted to system_config (survives container restarts).');
-  } catch (err) {
-    console.error('[DhanTokenRefresh] Warning: Could not persist token to system_config:', err);
   }
 
   const expiryHours = (expiresInMinutes / 60).toFixed(1);

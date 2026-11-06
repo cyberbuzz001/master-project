@@ -12,7 +12,7 @@ services:
   # PostgreSQL — Primary Database (TimescaleDB for time-series)
   # ============================================================
   postgres:
-    image: timescale/timescaledb:latest-pg16
+    image: timescale/timescaledb:2.17.2-pg16
     container_name: tradegrow_postgres
     command:
       - "postgres"
@@ -71,7 +71,7 @@ services:
   # PgBouncer — Production Connection Pooler & Multiplexer
   # ============================================================
   pgbouncer:
-    image: edoburu/pgbouncer:latest
+    image: edoburu/pgbouncer:1.23.1
     container_name: tradegrow_pgbouncer
     environment:
       DB_HOST: postgres
@@ -102,9 +102,9 @@ services:
   # Redis — Cache, Pub/Sub, Rate Limiting
   # ============================================================
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.2-alpine
     container_name: tradegrow_redis
-    command: redis-server --maxmemory 4gb --maxmemory-policy allkeys-lru --save ""
+    command: redis-server --maxmemory 4gb --maxmemory-policy noeviction --appendonly yes --appendfsync everysec --save 900 1 --save 300 10
     volumes:
       - redis_data:/data
     networks:

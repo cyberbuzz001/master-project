@@ -103,6 +103,7 @@ class ResearchDistributionTest extends TestCase
             'status' => RiskProfile::FINALIZED,
             'answers_sha256' => str_repeat('a', 64),
             'finalized_at' => now(),
+            'acknowledged_at' => now(),
         ])->save();
         $this->createActiveSubscription($clientA);
 
@@ -125,6 +126,7 @@ class ResearchDistributionTest extends TestCase
             'status' => RiskProfile::FINALIZED,
             'answers_sha256' => str_repeat('b', 64),
             'finalized_at' => now(),
+            'acknowledged_at' => now(),
         ])->save();
         $this->createActiveSubscription($clientB);
 

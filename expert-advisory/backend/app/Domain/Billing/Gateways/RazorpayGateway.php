@@ -65,7 +65,10 @@ final class RazorpayGateway implements PaymentGateway
         $payment = $payload['payload']['payment']['entity'] ?? [];
 
         return [
-            'event_id' => (string) ($payload['id'] ?? $payment['id'] ?? ''),
+            // Razorpay webhook IDs are the event identity. A payment ID is
+            // not a safe substitute because one payment can emit captured,
+            // failed and other distinct lifecycle events.
+            'event_id' => (string) ($payload['id'] ?? ''),
             'event_type' => (string) ($payload['event'] ?? 'unknown'),
             'reference' => isset($payment['id']) ? (string) $payment['id'] : null,
             'status' => match ((string) ($payload['event'] ?? '')) {

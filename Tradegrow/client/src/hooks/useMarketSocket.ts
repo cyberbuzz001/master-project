@@ -333,10 +333,10 @@ export const MarketSocketProvider: React.FC<MarketSocketProviderProps> = ({ chil
       }
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws${userToken ? `?token=${userToken}` : ''}`;
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
       setStatus(attempts === 0 ? 'CONNECTING' : 'RECONNECTING');
-      const ws = new WebSocket(wsUrl);
+      const ws = userToken ? new WebSocket(wsUrl, [`bearer.${userToken}`]) : new WebSocket(wsUrl);
       wsRef.current = ws;
       lastPongRef.current = Date.now();
 

@@ -364,6 +364,33 @@ Output ONLY the raw JSON array without markdown formatting.';
      */
     public function executeImport(array $previewResult, array $options, User $user): LeadImportBatch
     {
+        // The browser preview is advisory UI data, not an authorization or
+        // validation boundary. Rebuild the canonical rows from raw phone
+        // input and run the same server-side checks again before writing.
+        $sourceRows = is_array($previewResult['rows'] ?? null) ? $previewResult['rows'] : [];
+        $canonicalRows = array_map(function ($row, int $index): array {
+            $row = is_array($row) ? $row : [];
+            $rawMobile = (string) ($row['raw_mobile'] ?? $row['mobile'] ?? $row['mobile_e164'] ?? '');
+            $mobileE164 = PhoneNormalizer::toE164($rawMobile);
+
+            return [
+                'row_number' => (int) ($row['row_number'] ?? ($index + 1)),
+                'full_name' => isset($row['full_name']) ? trim((string) $row['full_name']) : 'Unnamed Lead',
+                'raw_mobile' => $rawMobile,
+                'mobile_e164' => $mobileE164,
+                'is_valid' => $mobileE164 !== null,
+                'phone_only' => (bool) ($row['phone_only'] ?? false),
+                'uncertain_ocr' => (bool) ($row['uncertain_ocr'] ?? false),
+                'error_reason' => $mobileE164 === null ? 'Invalid phone number format or length' : null,
+                'email' => isset($row['email']) ? trim((string) $row['email']) : null,
+                'city' => isset($row['city']) ? trim((string) $row['city']) : null,
+                'state' => isset($row['state']) ? trim((string) $row['state']) : null,
+                'preferred_language' => isset($row['preferred_language']) ? trim((string) $row['preferred_language']) : 'en',
+                'notes' => isset($row['notes']) ? trim((string) $row['notes']) : null,
+            ];
+        }, $sourceRows, array_keys($sourceRows));
+        $previewResult = $this->previewAndValidate($canonicalRows, isset($options['vendor_id']) ? (int) $options['vendor_id'] : null);
+
         return DB::transaction(function () use ($previewResult, $options, $user) {
             $summary = $previewResult['summary'];
             $rows = $previewResult['rows'];

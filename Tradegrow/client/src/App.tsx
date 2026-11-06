@@ -53,13 +53,13 @@ export default App;
 function AppRoot() {
   const [token, setToken] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('token');
+      return sessionStorage.getItem('token');
     } catch (_) {
       return null;
     }
   });
   const [user, setUser] = useState<User | null>(null);
-  const [isValidatingToken, setIsValidatingToken] = useState<boolean>(() => Boolean(localStorage.getItem('token')));
+  const [isValidatingToken, setIsValidatingToken] = useState<boolean>(() => Boolean(sessionStorage.getItem('token')));
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       return (localStorage.getItem('user_theme') as 'light' | 'dark') || 'dark';
@@ -86,8 +86,8 @@ function AppRoot() {
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('refreshToken');
     } catch (_) {}
     setToken(null);
     setUser(null);
@@ -140,7 +140,7 @@ function AppRoot() {
           }
         }}
         onSuccess={(t: string, u?: any) => {
-          localStorage.setItem('token', t);
+          sessionStorage.setItem('token', t);
           setToken(t);
           if (u) setUser(u);
           if (location.pathname.startsWith('/profile') || isRegisterPath || location.pathname === '/login') {

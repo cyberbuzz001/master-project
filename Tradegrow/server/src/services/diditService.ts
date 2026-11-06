@@ -3,7 +3,6 @@ import { generateUUID } from '../utils/crypto';
 import { logAuditAction } from '../middleware/audit';
 
 const DIDIT_API_BASE = 'https://verification.didit.me/v3';
-const DEFAULT_API_KEY = 'gP1zw26pYkNt3EyOgtHXb-HHHw_ly-1yGIcFPuxLUWA';
 const DEFAULT_WORKFLOW_ID = '2fd48ae3-8d28-42a4-a5a8-658beb28f1bc'; // Live Free KYC workflow with OCR + Liveness + Face Match + IP Analysis
 
 export interface DiditSessionResponse {
@@ -15,7 +14,11 @@ export interface DiditSessionResponse {
 
 export class DiditService {
   private static getApiKey(): string {
-    return process.env.DIDIT_API_KEY || DEFAULT_API_KEY;
+    const apiKey = process.env.DIDIT_API_KEY?.trim();
+    if (!apiKey) {
+      throw new Error('DIDIT_API_KEY is not configured');
+    }
+    return apiKey;
   }
 
   private static getWorkflowId(): string {

@@ -22,10 +22,10 @@ except ImportError:
 from SmartApi import SmartConnect
 from SmartApi.smartWebSocketV2 import SmartWebSocketV2
 
-API_KEY = os.getenv('ANGELONE_API_KEY') or os.getenv('SMARTAPI_API_KEY') or os.getenv('ANGEL_ONE_API_KEY') or '4DBv6HvT'
-CLIENT_CODE = os.getenv('ANGELONE_CLIENT_ID') or os.getenv('SMARTAPI_CLIENT_CODE') or os.getenv('ANGEL_ONE_CLIENT_CODE') or 'N89824'
-PASSWORD = os.getenv('ANGELONE_CLIENT_SECRET') or os.getenv('SMARTAPI_PASSWORD') or os.getenv('ANGEL_ONE_PASSWORD') or '9691'
-TOTP_SECRET = os.getenv('ANGELONE_TOTP_SECRET') or os.getenv('SMARTAPI_TOTP_SECRET') or os.getenv('ANGEL_ONE_TOTP_SECRET') or 'AV7KF7BEJBOOCVIS53TZZB2VEU'
+API_KEY = os.getenv('ANGELONE_API_KEY') or os.getenv('SMARTAPI_API_KEY') or os.getenv('ANGEL_ONE_API_KEY') or ''
+CLIENT_CODE = os.getenv('ANGELONE_CLIENT_ID') or os.getenv('SMARTAPI_CLIENT_CODE') or os.getenv('ANGEL_ONE_CLIENT_CODE') or ''
+PASSWORD = os.getenv('ANGELONE_CLIENT_SECRET') or os.getenv('SMARTAPI_PASSWORD') or os.getenv('ANGEL_ONE_PASSWORD') or ''
+TOTP_SECRET = os.getenv('ANGELONE_TOTP_SECRET') or os.getenv('SMARTAPI_TOTP_SECRET') or os.getenv('ANGEL_ONE_TOTP_SECRET') or ''
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))

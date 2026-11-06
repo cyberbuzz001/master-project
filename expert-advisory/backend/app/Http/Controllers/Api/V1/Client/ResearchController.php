@@ -43,6 +43,12 @@ final class ResearchController extends Controller
         $distributions = ResearchDistribution::query()
             ->where('client_id', $client->id)
             ->where('delivery_status', ResearchDistribution::STATUS_DELIVERED)
+            ->whereHas('version', function ($query) {
+                $query->where('status', ResearchVersion::STATUS_PUBLISHED)
+                    ->where(function ($validity) {
+                        $validity->whereNull('valid_until')->orWhere('valid_until', '>=', now());
+                    });
+            })
             ->with([
                 'version.report',
                 'version.author.user:id,name',
@@ -107,7 +113,7 @@ final class ResearchController extends Controller
             ->firstOrFail();
 
         $version = $report->currentVersion;
-        if ($version === null || $version->status !== ResearchVersion::STATUS_PUBLISHED) {
+        if ($version === null || $version->status !== ResearchVersion::STATUS_PUBLISHED || ($version->valid_until !== null && $version->valid_until->isPast())) {
             throw ApiException::notFound('Research report not found or not published.');
         }
 

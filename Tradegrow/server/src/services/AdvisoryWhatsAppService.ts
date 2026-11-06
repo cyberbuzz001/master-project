@@ -277,7 +277,7 @@ export class AdvisoryWhatsAppService {
     if (provider === 'EVOLUTION_API' || provider === 'OPEN_WA') {
       const evoUrl = this.getEvoBaseUrl();
       const evoKey =
-        process.env.ADVISORY_WHATSAPP_API_KEY || 'expert_stocks_evo_token';
+        process.env.ADVISORY_WHATSAPP_API_KEY?.trim() || '';
       const evoInstance =
         process.env.ADVISORY_WHATSAPP_INSTANCE_NAME || 'expert_stocks';
       const cleanNumber = phoneE164.replace(/\D/g, '');
@@ -684,7 +684,7 @@ export class AdvisoryWhatsAppService {
 
   public async getConnectionState(): Promise<{ state: string; instance: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY || 'expert_stocks_evo_token';
+    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.ADVISORY_WHATSAPP_INSTANCE_NAME || 'expert_stocks';
 
     try {
@@ -707,7 +707,7 @@ export class AdvisoryWhatsAppService {
     error?: string;
   }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY || 'expert_stocks_evo_token';
+    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.ADVISORY_WHATSAPP_INSTANCE_NAME || 'expert_stocks';
 
     try {
@@ -729,7 +729,7 @@ export class AdvisoryWhatsAppService {
 
   public async getPairingCode(phone: string): Promise<{ pairingCode?: string; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY || 'expert_stocks_evo_token';
+    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.ADVISORY_WHATSAPP_INSTANCE_NAME || 'expert_stocks';
     const cleanNumber = phone.replace(/\D/g, '');
 
@@ -747,7 +747,7 @@ export class AdvisoryWhatsAppService {
 
   public async restartInstance(): Promise<{ success: boolean; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY || 'expert_stocks_evo_token';
+    const evoKey = process.env.ADVISORY_WHATSAPP_API_KEY?.trim() || '';
     const evoInstance = process.env.ADVISORY_WHATSAPP_INSTANCE_NAME || 'expert_stocks';
 
     try {

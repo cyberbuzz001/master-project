@@ -27,6 +27,18 @@ function getClientIp(req: Request): string {
   return req.ip ?? '127.0.0.1';
 }
 
+function maskSecret(value: string | undefined | null): string {
+  const raw = String(value || '');
+  if (!raw) return '';
+  return raw.length <= 4 ? '••••' : `${'•'.repeat(Math.min(8, raw.length - 4))}${raw.slice(-4)}`;
+}
+
+const MARKET_DATA_CONFIG_KEYS = new Set([
+  'DHAN_CLIENT_ID', 'DHAN_API_KEY', 'DHAN_API_SECRET',
+  'FYERS_APP_ID', 'FYERS_SECRET_KEY', 'FYERS_ACCESS_TOKEN', 'FYERS_REDIRECT_URI',
+  'ANGELONE_API_KEY', 'ANGELONE_CLIENT_ID', 'ANGELONE_CLIENT_SECRET', 'ANGELONE_TOTP_SECRET',
+]);
+
 // A4c: MANAGER is the only role with a book-of-assigned-clients concept
 // (SUPER_ADMIN/ADMIN oversee everyone; functional roles like RISK_MANAGER/
 // FINANCE_MANAGER/KYC_OFFICER need to act across all customers for their
@@ -748,8 +760,8 @@ router.post('/customers/:id/reset-password', authenticateToken, checkPermission(
     const targetUserId = req.params.id as string;
     const { newPassword } = req.body;
 
-    if (!newPassword || newPassword.length < 6) {
-      res.status(400).json({ success: false, error: { code: 'INVALID_PASSWORD', message: 'New password must be at least 6 characters long' } });
+    if (!newPassword || newPassword.length < 8) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_PASSWORD', message: 'New password must be at least 8 characters long' } });
       return;
     }
 
@@ -764,7 +776,7 @@ router.post('/customers/:id/reset-password', authenticateToken, checkPermission(
 
     await execute(
       `UPDATE users 
-       SET password_hash = $1, failed_login_attempts = 0, updated_at = NOW() 
+       SET password_hash = $1, password_changed_at = NOW(), failed_login_attempts = 0, updated_at = NOW()
        WHERE id = $2`,
       [passwordHash, targetUserId]
     );
@@ -1645,11 +1657,7 @@ router.get('/funds/payment-settings', authenticateToken, checkPermission('PAYMEN
     const settingsMap: Record<string, string> = {};
     settingsRows.forEach(r => { settingsMap[r.key] = r.value; });
 
-    let quickPayLinks = [
-      { amount: 1000, url: 'https://onetapay.com/pp/MjkzNw==' },
-      { amount: 5000, url: 'https://onetapay.com/pp/MjkzNQ==' },
-      { amount: 10000, url: 'https://onetapay.com/pp/MjkzNg==' }
-    ];
+    let quickPayLinks: Array<{ amount: number; url: string }> = [];
 
     if (settingsMap['MERCHANT_QUICK_PAY_LINKS']) {
       try {
@@ -1663,15 +1671,15 @@ router.get('/funds/payment-settings', authenticateToken, checkPermission('PAYMEN
     res.json({
       success: true,
       settings: {
-        upiId: settingsMap['LINKPE_UPI_ID'] || process.env.LINKPE_UPI_ID || 'expertstokks@axl',
-        merchantName: settingsMap['LINKPE_MERCHANT_NAME'] || process.env.LINKPE_MERCHANT_NAME || 'Trade Grow Brokerage',
-        qrImageUrl: settingsMap['MERCHANT_QR_IMAGE'] || '/upi-qr.png',
+        upiId: settingsMap['LINKPE_UPI_ID'] || process.env.LINKPE_UPI_ID || null,
+        merchantName: settingsMap['LINKPE_MERCHANT_NAME'] || process.env.LINKPE_MERCHANT_NAME || null,
+        qrImageUrl: settingsMap['MERCHANT_QR_IMAGE'] || null,
         quickPayLinks,
-        bankName: settingsMap['MERCHANT_BANK_NAME'] || 'HDFC Bank',
-        accountName: settingsMap['MERCHANT_ACCOUNT_NAME'] || 'Trade Grow Technologies Pvt Ltd',
-        accountNumber: settingsMap['MERCHANT_ACCOUNT_NUMBER'] || '50200098765432',
-        ifscCode: settingsMap['MERCHANT_IFSC'] || 'HDFC0001234',
-        branch: settingsMap['MERCHANT_BRANCH'] || 'Mumbai Main Branch'
+        bankName: settingsMap['MERCHANT_BANK_NAME'] || null,
+        accountName: settingsMap['MERCHANT_ACCOUNT_NAME'] || null,
+        accountNumber: settingsMap['MERCHANT_ACCOUNT_NUMBER'] || null,
+        ifscCode: settingsMap['MERCHANT_IFSC'] || null,
+        branch: settingsMap['MERCHANT_BRANCH'] || null
       }
     });
   } catch (err: any) {
@@ -1798,18 +1806,18 @@ router.get('/market-data/config', authenticateToken, checkPermission('MARKET_DAT
       activeProvider,
       availableProviders: ['DHAN', 'FYERS', 'ANGELONE', 'MOCK_ENGINE'],
       keys: {
-        DHAN_CLIENT_ID: configs.DHAN_CLIENT_ID || process.env.DHAN_CLIENT_ID || '1113019677',
-        DHAN_ACCESS_TOKEN: configs.DHAN_ACCESS_TOKEN || process.env.DHAN_ACCESS_TOKEN || '',
-        DHAN_API_KEY: configs.DHAN_API_KEY || process.env.DHAN_API_KEY || '21483ef7',
-        DHAN_API_SECRET: configs.DHAN_API_SECRET || process.env.DHAN_API_SECRET || 'e9730aa4-682c-4e75-a944-94f703449b09',
+        DHAN_CLIENT_ID: configs.DHAN_CLIENT_ID || process.env.DHAN_CLIENT_ID || '',
+        DHAN_ACCESS_TOKEN: maskSecret(configs.DHAN_ACCESS_TOKEN || process.env.DHAN_ACCESS_TOKEN),
+        DHAN_API_KEY: maskSecret(configs.DHAN_API_KEY || process.env.DHAN_API_KEY),
+        DHAN_API_SECRET: maskSecret(configs.DHAN_API_SECRET || process.env.DHAN_API_SECRET),
         FYERS_APP_ID: configs.FYERS_APP_ID || process.env.FYERS_APP_ID || '',
-        FYERS_SECRET_KEY: configs.FYERS_SECRET_KEY || process.env.FYERS_SECRET_KEY || '',
-        FYERS_ACCESS_TOKEN: configs.FYERS_ACCESS_TOKEN || process.env.FYERS_ACCESS_TOKEN || '',
+        FYERS_SECRET_KEY: maskSecret(configs.FYERS_SECRET_KEY || process.env.FYERS_SECRET_KEY),
+        FYERS_ACCESS_TOKEN: maskSecret(configs.FYERS_ACCESS_TOKEN || process.env.FYERS_ACCESS_TOKEN),
         FYERS_REDIRECT_URI: configs.FYERS_REDIRECT_URI || process.env.FYERS_REDIRECT_URI || 'http://localhost:5000/api/v1/auth/fyers/callback',
         ANGELONE_API_KEY: configs.ANGELONE_API_KEY || process.env.ANGELONE_API_KEY || '',
         ANGELONE_CLIENT_ID: configs.ANGELONE_CLIENT_ID || process.env.ANGELONE_CLIENT_ID || '',
-        ANGELONE_CLIENT_SECRET: configs.ANGELONE_CLIENT_SECRET || process.env.ANGELONE_CLIENT_SECRET || '',
-        ANGELONE_TOTP_SECRET: configs.ANGELONE_TOTP_SECRET || process.env.ANGELONE_TOTP_SECRET || ''
+        ANGELONE_CLIENT_SECRET: maskSecret(configs.ANGELONE_CLIENT_SECRET || process.env.ANGELONE_CLIENT_SECRET),
+        ANGELONE_TOTP_SECRET: maskSecret(configs.ANGELONE_TOTP_SECRET || process.env.ANGELONE_TOTP_SECRET)
       }
     });
   } catch (err: any) {
@@ -1822,12 +1830,17 @@ router.post('/market-data/config', authenticateToken, checkPermission('MARKET_DA
     const { primaryProvider, keys } = req.body;
 
     if (keys && typeof keys === 'object') {
+      const keysToApply: Record<string, string> = {};
       for (const [k, v] of Object.entries(keys)) {
-        if (typeof v === 'string') {
+        if (!MARKET_DATA_CONFIG_KEYS.has(k)) continue;
+        // GET responses mask secrets; never persist a mask as a replacement
+        // credential when an admin saves unchanged form values.
+        if (typeof v === 'string' && !v.includes('•')) {
+          keysToApply[k] = v;
           await MarketDataStorageService.setSystemConfig(k, v);
         }
       }
-      MarketDataEngine.getInstance().updateProviderCredentials(keys);
+      MarketDataEngine.getInstance().updateProviderCredentials(keysToApply);
     }
 
     if (primaryProvider && typeof primaryProvider === 'string') {
@@ -1988,6 +2001,11 @@ router.post('/funds/direct-adjust', authenticateToken, checkPermission('DIRECT_B
 
     if (!userId || !requestType || !['CREDIT', 'DEBIT'].includes(requestType) || isNaN(reqAmount) || reqAmount <= 0) {
       res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'Valid userId, requestType (CREDIT/DEBIT), and positive amount required' } });
+      return;
+    }
+
+    if (userId === req.user!.userId) {
+      res.status(403).json({ success: false, error: { code: 'SELF_ADJUSTMENT_FORBIDDEN', message: 'Administrators cannot adjust their own trading wallet.' } });
       return;
     }
 

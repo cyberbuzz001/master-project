@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
+umask 077
 
 echo "=========================================================="
 echo "🚀 [TradeGrow] Starting Production Zero-Downtime Deploy"
@@ -9,13 +10,33 @@ echo "=========================================================="
 APP_DIR="/opt/tradegrow"
 BACKUP_DIR="/opt/backups"
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+BACKUP_KEY_FILE="${BACKUP_KEY_FILE:-/etc/tradegrow/backup.key}"
+
+if [ ! -r "$BACKUP_KEY_FILE" ]; then
+  echo "❌ Refusing deployment: encrypted backup key is missing or unreadable at $BACKUP_KEY_FILE"
+  exit 1
+fi
+
+if ! command -v openssl >/dev/null 2>&1; then
+  echo "❌ Refusing deployment: openssl is required for encrypted database backups"
+  exit 1
+fi
 
 mkdir -p "$BACKUP_DIR"
 
-# 1. Automatic Pre-Deployment Safety Snapshot
+# 1. Automatic Pre-Deployment Safety Snapshot (encrypted at rest)
 echo "📦 [1/6] Creating pre-deployment PostgreSQL safety backup..."
-docker exec tradegrow_postgres pg_dump -U tradegrow tradegrow | gzip > "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz"
-echo "✅ Safety snapshot created: ${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz ($(du -h "${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz" | cut -f1))"
+BACKUP_PATH="${BACKUP_DIR}/tradegrow_predeploy_${TIMESTAMP}.sql.gz.enc"
+docker exec tradegrow_postgres pg_dump -U tradegrow tradegrow \
+  | gzip \
+  | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 -pass "file:${BACKUP_KEY_FILE}" \
+  > "$BACKUP_PATH"
+sha256sum "$BACKUP_PATH" > "${BACKUP_PATH}.sha256"
+echo "✅ Encrypted safety snapshot created: $BACKUP_PATH ($(du -h "$BACKUP_PATH" | cut -f1))"
+
+# Retain only the configured recovery window on this host; copy encrypted
+# artifacts to restricted off-host storage as part of the deployment runbook.
+find "$BACKUP_DIR" -type f -name 'tradegrow_predeploy_*.sql.gz.enc*' -mtime +30 -delete
 
 # 2. Sync migrations into container
 echo "🔄 [2/6] Syncing database migrations..."

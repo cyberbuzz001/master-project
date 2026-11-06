@@ -163,9 +163,14 @@ export class ExecutionEngine {
         }
       } else if (order.order_type === 'SL' || order.order_type === 'SL_M') {
         if (order.side === 'BUY' && askPrice >= trigPrice) {
-          executePrice = order.order_type === 'SL_M' ? askPrice : price;
+          // Stop-limit orders only become eligible after the trigger; they
+          // still need the limit price to be executable. A gap above the
+          // limit must remain pending instead of fabricating a fill.
+          if (order.order_type === 'SL_M') executePrice = askPrice;
+          else if (askPrice <= price) executePrice = price;
         } else if (order.side === 'SELL' && bidPrice <= trigPrice) {
-          executePrice = order.order_type === 'SL_M' ? bidPrice : price;
+          if (order.order_type === 'SL_M') executePrice = bidPrice;
+          else if (bidPrice >= price) executePrice = price;
         }
       }
 
@@ -173,16 +178,20 @@ export class ExecutionEngine {
         order.isEvaluating = true;
         this.unregisterPendingOrder(order.id);
 
-        const isBsModel = (tick as any)?.bidQty === 500 && (tick as any)?.askQty === 500;
+          const isSynthetic = tick.isSynthetic === true || tick.source === 'synthetic_skew';
+          const tickSource = isSynthetic
+            ? 'BLACK_SCHOLES_SYNTHETIC'
+            : (tick.source && tick.source !== 'live' ? tick.source.toUpperCase() : 'LIVE_FEED');
+          const isCachedFallback = tick.source === 'cached_stale';
         const freshnessTag = (Date.now() - (tick.timestamp || Date.now()) <= 15000)
-          ? 'live'
-          : (isBsModel ? 'synthetic_skew' : 'cached_stale');
+            ? (isSynthetic ? 'synthetic_skew' : (isCachedFallback ? 'cached_fallback' : 'live'))
+            : (isSynthetic ? 'synthetic_skew' : 'cached_stale');
         const fillLogic = order.order_type === 'MARKET'
           ? (order.side === 'BUY' ? 'MARKET_ASK' : 'MARKET_BID')
           : (order.order_type === 'LIMIT' ? 'LIMIT_MATCH' : 'STOP_LOSS');
 
         const provenance = {
-          tickSource: isBsModel ? 'BLACK_SCHOLES_SYNTHETIC' : 'LIVE_FEED',
+            tickSource,
           tickTimestamp: tick.timestamp || Date.now(),
           tickLtp: tick.ltp,
           tickBid: bidPrice,
@@ -252,6 +261,7 @@ export class ExecutionEngine {
         // Fallback for options / market orders if direct tick is missing or stale
         if (!tick || isStale) {
           let fallbackLtp = 0;
+          let fallbackSource: 'OPTION_CHAIN_CACHE' | 'BLACK_SCHOLES_SYNTHETIC' | 'ORDER_PRICE_FALLBACK' | null = null;
           try {
             const { DhanAdapter } = require('../marketData/DhanAdapter');
             const mOpt = (order.symbol || '').match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
@@ -266,6 +276,7 @@ export class ExecutionEngine {
                     const leg = isCe ? row.ce : row.pe;
                     if (leg && leg.ltp > 0) {
                       fallbackLtp = leg.ltp;
+                      fallbackSource = 'OPTION_CHAIN_CACHE';
                       break;
                     }
                   }
@@ -285,7 +296,10 @@ export class ExecutionEngine {
               const spotTick = engine.getCachedTick(spotToken);
               if (spotTick && spotTick.ltp > 0) {
                 const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, 5.0 / 365.0, isCall, symName === 'SENSEX' ? 0.14 : 0.13);
-                if (bsPrice > 0) fallbackLtp = Number(bsPrice.toFixed(2));
+                if (bsPrice > 0) {
+                  fallbackLtp = Number(bsPrice.toFixed(2));
+                  fallbackSource = 'BLACK_SCHOLES_SYNTHETIC';
+                }
               }
             }
           }
@@ -293,6 +307,7 @@ export class ExecutionEngine {
           // If still no price and it's a MARKET order with order.price > 0, use order.price
           if (fallbackLtp <= 0 && order.order_type === 'MARKET' && parseFloat(order.price || '0') > 0) {
             fallbackLtp = parseFloat(order.price);
+            fallbackSource = 'ORDER_PRICE_FALLBACK';
           }
 
           if (fallbackLtp > 0) {
@@ -314,7 +329,10 @@ export class ExecutionEngine {
               change: 0,
               changePercent: 0,
               timestamp: Date.now(),
-              source: 'live'
+              // Never label a fallback valuation as a live exchange tick. The
+              // provenance is persisted with the execution and shown to users.
+              source: fallbackSource === 'BLACK_SCHOLES_SYNTHETIC' ? 'synthetic_skew' : 'cached_stale',
+              isSynthetic: fallbackSource === 'BLACK_SCHOLES_SYNTHETIC'
             };
             isStale = false;
           }
@@ -335,8 +353,14 @@ export class ExecutionEngine {
           if (order.side === 'BUY' && askPrice <= price) executePrice = price;
           if (order.side === 'SELL' && bidPrice >= price) executePrice = price;
         } else if (order.order_type === 'SL' || order.order_type === 'SL_M') {
-          if (order.side === 'BUY' && askPrice >= trigPrice) executePrice = order.order_type === 'SL_M' ? askPrice : price;
-          if (order.side === 'SELL' && bidPrice <= trigPrice) executePrice = order.order_type === 'SL_M' ? bidPrice : price;
+          if (order.side === 'BUY' && askPrice >= trigPrice) {
+            if (order.order_type === 'SL_M') executePrice = askPrice;
+            else if (askPrice <= price) executePrice = price;
+          }
+          if (order.side === 'SELL' && bidPrice <= trigPrice) {
+            if (order.order_type === 'SL_M') executePrice = bidPrice;
+            else if (bidPrice >= price) executePrice = price;
+          }
         }
 
         if (executePrice && executePrice > 0) {
@@ -357,16 +381,20 @@ export class ExecutionEngine {
           if (!claimed) continue;
           this.unregisterPendingOrder(order.id);
 
-          const isBsModel = (tick as any)?.bidQty === 500 && (tick as any)?.askQty === 500;
+          const isSynthetic = tick.isSynthetic === true || tick.source === 'synthetic_skew';
+          const tickSource = isSynthetic
+            ? 'BLACK_SCHOLES_SYNTHETIC'
+            : (tick.source && tick.source !== 'live' ? tick.source.toUpperCase() : 'LIVE_FEED');
+          const isCachedFallback = tick.source === 'cached_stale';
           const freshnessTag = (Date.now() - (tick.timestamp || Date.now()) <= 15000)
-            ? 'live'
-            : (isBsModel ? 'synthetic_skew' : 'cached_stale');
+            ? (isSynthetic ? 'synthetic_skew' : (isCachedFallback ? 'cached_fallback' : 'live'))
+            : (isSynthetic ? 'synthetic_skew' : 'cached_stale');
           const fillLogic = order.order_type === 'MARKET'
             ? (order.side === 'BUY' ? 'MARKET_ASK' : 'MARKET_BID')
             : (order.order_type === 'LIMIT' ? 'LIMIT_MATCH' : 'STOP_LOSS');
 
           const provenance = {
-            tickSource: isBsModel ? 'BLACK_SCHOLES_SYNTHETIC' : 'LIVE_FEED',
+            tickSource,
             tickTimestamp: tick.timestamp || Date.now(),
             tickLtp: tick.ltp,
             tickBid: bidPrice,
