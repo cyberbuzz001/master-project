@@ -222,18 +222,25 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 1000);
+    // Optimized fallback interval: 15 seconds when active, paused in background
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchData();
+      }
+    }, 15000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         fetchData();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
     };
   }, [token]);
 

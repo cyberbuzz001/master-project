@@ -10,9 +10,9 @@ interface AuthModalProps {
 }
 
 const TRUST_POINTS = [
-  { icon: <Zap className="w-4 h-4" />, title: 'Lowest Brokerage Trading', sub: 'Zero hidden fees with ultra-competitive brokerage rates' },
-  { icon: <ShieldCheck className="w-4 h-4" />, title: 'Direct Market Execution', sub: 'Live streaming NSE & BSE ticks with institutional-grade RMS' },
-  { icon: <LineChart className="w-4 h-4" />, title: 'Advanced F&O Terminal', sub: 'Strike-level OI, live Greeks, IV & instant order entry' },
+  { icon: <Zap className="w-4 h-4" />, title: 'Zero Financial Risk', sub: 'Master trading strategies with ₹10,00,000 in virtual simulation capital' },
+  { icon: <ShieldCheck className="w-4 h-4" />, title: 'Simulated Market Fills', sub: 'Live streaming NSE & BSE ticks with institutional-grade simulated RMS' },
+  { icon: <LineChart className="w-4 h-4" />, title: 'Advanced F&O Terminal', sub: 'Strike-level OI, live Greeks, IV & instant simulated order execution' },
 ];
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, onModeChange }) => {
@@ -374,6 +374,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, initialMode, on
               </li>
             ))}
           </ul>
+
+          <div className="mt-8 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-[var(--text-muted)] leading-relaxed">
+            <span className="font-bold text-emerald-500 block mb-0.5 uppercase tracking-wider text-[10px]">Virtual Demo Platform</span>
+            Simulated paper trading with live market feeds. Funds, margins, and orders are strictly virtual for practice and learning with zero financial risk.
+          </div>
         </aside>
 
         {/* ── FORM PANEL ─────────────────────────────────────────────── */}

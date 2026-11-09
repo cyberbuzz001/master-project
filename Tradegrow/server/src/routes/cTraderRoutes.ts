@@ -3,7 +3,7 @@
  * OAuth Linkage, Account Management, Order Routing, and Position Operations
  */
 
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { CTraderGateway } from '../trading/integrations/ctrader/cTraderGateway';
 import { CTraderOrderMapper } from '../trading/integrations/ctrader/cTraderOrderMapper';
@@ -44,6 +44,23 @@ cTraderRouter.get('/auth-url', authenticateToken, (req: AuthenticatedRequest, re
       environment: config.environment
     }
   });
+});
+
+/**
+ * GET /api/v1/integrations/ctrader/oauth/callback
+ * Handles direct browser redirection from Spotware OAuth authorization
+ */
+cTraderRouter.get('/oauth/callback', (req: Request, res: Response) => {
+  const { code, state, error, error_description } = req.query;
+  if (error) {
+    const errorMsg = String(error_description || error);
+    return res.redirect(`/profile/integrations?error=${encodeURIComponent(errorMsg)}`);
+  }
+  if (!code) {
+    return res.redirect('/profile/integrations?error=missing_authorization_code');
+  }
+  const targetUrl = `/profile/integrations?code=${encodeURIComponent(String(code))}${state ? `&state=${encodeURIComponent(String(state))}` : ''}`;
+  return res.redirect(targetUrl);
 });
 
 /**
@@ -92,10 +109,30 @@ cTraderRouter.post('/oauth/callback', authenticateToken, async (req: Authenticat
     const expiresIn = tokenData?.expires_in || 2592000; // 30 days default
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
-    const ctid = ctidTraderAccountId
-      ? parseInt(ctidTraderAccountId, 10)
-      : Math.floor(1000000 + Math.random() * 9000000);
-    const login = traderLogin || `CT-${ctid}`;
+    let resolvedCtid = ctidTraderAccountId ? parseInt(ctidTraderAccountId, 10) : 0;
+    let resolvedLogin = traderLogin || '';
+    let resolvedIsLive = config.environment === 'live';
+
+    // If real access token returned from Spotware, fetch actual trading accounts
+    if (tokenData?.access_token) {
+      try {
+        const accResponse = await fetch(`https://openapi.ctrader.com/apps/tradingaccounts?access_token=${encodeURIComponent(tokenData.access_token)}`, {
+          signal: AbortSignal.timeout(8000)
+        });
+        const accList = await accResponse.json().catch(() => null);
+        if (Array.isArray(accList) && accList.length > 0) {
+          const matched = accList[0];
+          resolvedCtid = Number(matched.ctidTraderAccountId || matched.accountId);
+          resolvedLogin = String(matched.traderLogin || resolvedCtid);
+          resolvedIsLive = Boolean(matched.isLive);
+        }
+      } catch (accErr: any) {
+        console.warn(`[cTraderRoute] Could not fetch trading accounts from Spotware:`, accErr.message);
+      }
+    }
+
+    const ctid = resolvedCtid || Math.floor(1000000 + Math.random() * 9000000);
+    const login = resolvedLogin || `CT-${ctid}`;
 
     // 2. Persist in database
     await execute(
@@ -122,11 +159,11 @@ cTraderRouter.post('/oauth/callback', authenticateToken, async (req: Authenticat
         userId,
         ctid,
         login,
-        config.environment === 'live',
+        resolvedIsLive,
         accessToken,
         refreshToken,
         expiresAt,
-        config.environment === 'live' ? 'cTrader Live Server' : 'cTrader Demo Server'
+        resolvedIsLive ? 'cTrader Live Server' : 'cTrader Demo Server'
       ]
     );
 

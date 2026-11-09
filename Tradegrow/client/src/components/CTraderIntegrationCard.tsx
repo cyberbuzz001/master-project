@@ -24,14 +24,17 @@ export const CTraderIntegrationCard: React.FC<CTraderIntegrationCardProps> = ({ 
   const [accounts, setAccounts] = useState<CTraderAccount[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Check for OAuth return code in current URL
+  // Check for OAuth return code or error in current URL
   useEffect(() => {
+    fetchAccounts();
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    if (code) {
+    const err = params.get('error');
+    if (err) {
+      setStatusMessage(`⚠️ Connection rejected or cancelled: ${decodeURIComponent(err)}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (code) {
       handleOAuthCallback(code);
-    } else {
-      fetchAccounts();
     }
   }, []);
 

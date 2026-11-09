@@ -1,5 +1,5 @@
 // TradeGrow High-Performance Service Worker
-const CACHE_NAME = 'tradegrow-shell-v5-ctrader-integration';
+const CACHE_NAME = 'tradegrow-shell-v6-paper-trading-ctrader-oauth';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

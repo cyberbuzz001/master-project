@@ -160,20 +160,20 @@ export function AppShell({
             </span>
           </Link>
 
-          {/* Center: Available Margin Quick Pill */}
+          {/* Center: Available Margin Quick Pill with Virtual Mode badge */}
           <button
             onClick={onOpenWalletModal}
-            className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-[var(--border-color)] px-2 py-1 rounded-xl text-left shadow-xs"
-            title="Deposit / withdraw funds"
+            className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-emerald-500/30 px-2 py-1 rounded-xl text-left shadow-xs"
+            title="Simulated virtual funds. Click to view wallet / add practice capital."
           >
-            <Wallet className="w-3.5 h-3.5 text-[var(--primary)] flex-shrink-0" />
+            <Wallet className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
             <div className="flex flex-col">
-              <span className="text-[8.5px] text-[var(--text-muted)] leading-none">Margin</span>
-              <span className="text-[11px] font-bold text-[var(--primary)] num-font leading-tight">
+              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-wider leading-none">Virtual Margin</span>
+              <span className="text-[11px] font-bold text-[var(--text-main)] num-font leading-tight">
                 ₹{walletBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
             </div>
-            <Plus className="w-3 text-[var(--primary)] flex-shrink-0" />
+            <Plus className="w-3 text-emerald-500 flex-shrink-0" />
           </button>
 
           {/* Right Action Icons: Search, Theme, Install, Avatar */}
@@ -316,22 +316,27 @@ export function AppShell({
             <Search className="w-5 h-5" />
           </button>
 
+          <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-black tracking-wider text-emerald-500 uppercase select-none" title="Simulated Paper Trading with live NSE/BSE market ticks. Virtual funds only.">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Paper Trading · Virtual</span>
+          </div>
+
           <button
             onClick={onOpenWalletModal}
-            className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-[var(--primary)]/40 px-2.5 py-1.5 rounded-xl transition-colors flex-shrink-0"
-            title="Deposit / withdraw funds"
+            className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-emerald-500/40 px-2.5 py-1.5 rounded-xl transition-colors flex-shrink-0"
+            title="Simulated virtual funds. Click to view wallet / add practice capital."
           >
-            <Wallet className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
+            <Wallet className="w-4 h-4 text-emerald-500 flex-shrink-0" />
             <div className="hidden lg:flex flex-col text-left">
-              <span className="text-[10px] text-[var(--text-muted)] leading-none whitespace-nowrap">Available Margin</span>
-              <span className="text-xs font-bold text-[var(--primary)] num-font leading-tight whitespace-nowrap">
+              <span className="text-[9.5px] font-black text-emerald-500 uppercase tracking-wide leading-none whitespace-nowrap">Virtual Margin</span>
+              <span className="text-xs font-bold text-[var(--text-main)] num-font leading-tight whitespace-nowrap">
                 ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
-            <span className="lg:hidden text-xs font-bold text-[var(--primary)] num-font whitespace-nowrap">
+            <span className="lg:hidden text-xs font-bold text-[var(--text-main)] num-font whitespace-nowrap">
               ₹{walletBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </span>
-            <Plus className="w-3.5 h-3.5 text-[var(--primary)] flex-shrink-0" />
+            <Plus className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
           </button>
 
           <button
