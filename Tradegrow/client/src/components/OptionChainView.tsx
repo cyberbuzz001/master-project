@@ -24,7 +24,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   // Optional deep-link (e.g. from the F&O hub's quick-access cards) — falls
   // back to the existing default when absent, so nothing changes for any
   // caller that doesn't pass it.
-  const [symbol, setSymbol] = useState<string>(() => searchParams.get('symbol')?.toUpperCase() || 'SENSEX');
+  const [symbol, setSymbol] = useState<string>(() => searchParams.get('symbol')?.toUpperCase() || 'NIFTY');
   const [expiries, setExpiries] = useState<string[]>([]);
   const [expiry, setExpiry] = useState<string>('');
   const [expiryType, setExpiryType] = useState<'NEAREST' | 'NEXT' | 'MONTHLY' | 'ALL'>('NEAREST');
@@ -62,15 +62,15 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   const [activeLtpKey, setActiveLtpKey] = useState<string | null>(null);
 
   const INDEX_FALLBACKS: Record<string, { price: number; change: number; pct: number; atm: number }> = useMemo(() => ({
-    SENSEX: { price: 72200.00, change: -440.00, pct: -0.61, atm: 72200 },
-    NIFTY: { price: 24600.00, change: -64.15, pct: -0.26, atm: 24600 },
-    BANKNIFTY: { price: 52150.00, change: 120.00, pct: 0.23, atm: 52100 },
-    FINNIFTY: { price: 23900.00, change: 15.00, pct: 0.06, atm: 23900 },
-    MIDCPNIFTY: { price: 12800.00, change: 30.00, pct: 0.23, atm: 12800 },
+    NIFTY: { price: 25240.00, change: 110.00, pct: 0.44, atm: 25250 },
+    SENSEX: { price: 81850.00, change: 420.00, pct: 0.52, atm: 81800 },
+    BANKNIFTY: { price: 60800.00, change: 290.00, pct: 0.48, atm: 60800 },
+    FINNIFTY: { price: 27670.00, change: 95.00, pct: 0.35, atm: 27650 },
+    MIDCPNIFTY: { price: 14160.00, change: 45.00, pct: 0.32, atm: 14150 },
   }), []);
 
   const cleanSym = symbol.toUpperCase().replace(/^(NSE_|BSE_)/, '');
-  const initialFallback = INDEX_FALLBACKS[cleanSym] || INDEX_FALLBACKS.SENSEX;
+  const initialFallback = INDEX_FALLBACKS[cleanSym] || INDEX_FALLBACKS.NIFTY;
 
   const [chain, setChain] = useState<OptionChainItem[]>([]);
   const [spotPrice, setSpotPrice] = useState<number>(() => initialFallback.price);
@@ -667,7 +667,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                     <OptionChainRow
                       row={row}
                       isAtm={isAtm}
-                      spotPrice={liveSpotLtp}
+                      spotPrice={effectiveSpot}
                       viewMode={viewMode}
                       ceTick={ceTick?.tick}
                       peTick={peTick?.tick}
@@ -692,7 +692,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                           <div className="flex items-center justify-center gap-2 text-rose-400 font-mono text-xs">
                             <div className="h-px bg-rose-500/40 flex-1" />
                             <span className="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded font-black tracking-wider shadow-sm">
-                              {liveSpotLtp.toFixed(2)}
+                              {effectiveSpot.toFixed(2)}
                             </span>
                             <div className="h-px bg-rose-500/40 flex-1" />
                           </div>

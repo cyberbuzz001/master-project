@@ -11,6 +11,8 @@ export interface MarketTick {
   low: number;
   close: number;
   volume: number;
+  openInterest?: number;
+  openInterestChange?: number;
   change: number;
   changePercent: number;
   bid: number;

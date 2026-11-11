@@ -132,9 +132,19 @@ export class ExpiryCalendarService {
       } catch (_) {}
     }
 
+    const defaultWeekday = cleanSym.includes('SENSEX') || cleanSym.includes('BANKEX')
+      ? 5
+      : cleanSym.includes('FINNIFTY')
+      ? 2
+      : cleanSym.includes('MIDCP')
+      ? 1
+      : 4;
+    const config = await this.getCalendarConfig(cleanSym);
+    const targetWeekday = config ? config.expiryWeekday : defaultWeekday;
+
     const nearestExpiry = allExpiriesCombined[0] || null;
     const nextExpiry = allExpiriesCombined[1] || null;
-    const monthlyExpiry = this.resolveMonthlyExpiry(allExpiriesCombined) || nearestExpiry;
+    const monthlyExpiry = this.resolveMonthlyExpiry(allExpiriesCombined, targetWeekday) || nearestExpiry;
 
     const result: ExpiryCategorization = {
       nearestExpiry,
@@ -176,14 +186,21 @@ export class ExpiryCalendarService {
   private async generateCalculatedExpiries(symbol: string): Promise<string[]> {
     const config = await this.getCalendarConfig(symbol);
     const isWeeklySupported = config ? config.weeklyExpirySupported : true;
-    const targetWeekday = config ? config.expiryWeekday : (symbol.toUpperCase().includes('SENSEX') ? 4 : 2);
+    const defaultWeekday = symbol.toUpperCase().includes('SENSEX') || symbol.toUpperCase().includes('BANKEX')
+      ? 5 // Friday
+      : symbol.toUpperCase().includes('FINNIFTY')
+      ? 2 // Tuesday
+      : symbol.toUpperCase().includes('MIDCP')
+      ? 1 // Monday
+      : 4; // Thursday (NIFTY, BANKNIFTY)
+    const targetWeekday = config ? config.expiryWeekday : defaultWeekday;
     const todayStr = this.formatYYYYMMDD(new Date());
 
     const expiries: string[] = [];
     const now = new Date();
 
     if (!isWeeklySupported) {
-      // Monthly Expiry Only (BANKNIFTY, FINNIFTY, MIDCPNIFTY -> Last Tuesday of target month)
+      // Monthly Expiry Only (BANKNIFTY -> Last Thursday; FINNIFTY -> Last Tuesday; MIDCPNIFTY -> Last Monday)
       for (let m = 0; m < 6; m++) {
         const year = now.getFullYear();
         const month = now.getMonth() + m;
@@ -206,7 +223,7 @@ export class ExpiryCalendarService {
       return expiries.sort();
     }
 
-    // Weekly Expiries (NIFTY -> Tuesday, SENSEX -> Thursday)
+    // Weekly Expiries (NIFTY -> Thursday, SENSEX -> Friday)
     for (let w = 0; w < 6; w++) {
       const d = new Date(now);
       const currentDay = d.getDay();
@@ -230,32 +247,32 @@ export class ExpiryCalendarService {
   }
 
   /**
-   * Resolves the monthly contract expiry (Last Tuesday of the target month for NIFTY/SENSEX, or last valid weekday of the month)
+   * Resolves the monthly contract expiry (Last target weekday of the target month)
    */
-  private resolveMonthlyExpiry(expiries: string[]): string | null {
+  private resolveMonthlyExpiry(expiries: string[], targetWeekday: number = 4): string | null {
     if (expiries.length === 0) return null;
     const firstExp = expiries[0];
     const year = parseInt(firstExp.slice(0, 4), 10);
     const month = parseInt(firstExp.slice(5, 7), 10) - 1; // 0-indexed month
 
-    // Calculate Last Tuesday of the month (weekday 2)
+    // Calculate Last target weekday of the month
     const lastDayOfMonth = new Date(year, month + 1, 0); // last day of month
-    let lastTuesday = new Date(lastDayOfMonth);
-    while (lastTuesday.getDay() !== 2) { // 2 = Tuesday
-      lastTuesday.setDate(lastTuesday.getDate() - 1);
+    let lastTargetDay = new Date(lastDayOfMonth);
+    while (lastTargetDay.getDay() !== targetWeekday) {
+      lastTargetDay.setDate(lastTargetDay.getDate() - 1);
     }
 
-    // Holiday adjustment for Last Tuesday if Sat/Sun
-    if (lastTuesday.getDay() === 6) lastTuesday.setDate(lastTuesday.getDate() - 1);
-    if (lastTuesday.getDay() === 0) lastTuesday.setDate(lastTuesday.getDate() - 2);
+    // Holiday adjustment for Last target day if Sat/Sun
+    if (lastTargetDay.getDay() === 6) lastTargetDay.setDate(lastTargetDay.getDate() - 1);
+    if (lastTargetDay.getDay() === 0) lastTargetDay.setDate(lastTargetDay.getDate() - 2);
 
-    const lastTuesdayStr = this.formatYYYYMMDD(lastTuesday);
+    const lastTargetDayStr = this.formatYYYYMMDD(lastTargetDay);
 
     const monthStr = firstExp.slice(0, 7);
     const currentMonthExpiries = expiries.filter(e => e.startsWith(monthStr));
 
-    if (currentMonthExpiries.includes(lastTuesdayStr)) {
-      return lastTuesdayStr;
+    if (currentMonthExpiries.includes(lastTargetDayStr)) {
+      return lastTargetDayStr;
     }
 
     if (currentMonthExpiries.length > 0) {
@@ -302,7 +319,7 @@ export class ExpiryCalendarService {
     // 3. Calculate based on entry timestamp and underlying index expiry rules
     const entryDate = entryTimestamp ? new Date(entryTimestamp) : new Date();
     const config = await this.getCalendarConfig(clean);
-    const targetWeekday = config ? config.expiryWeekday : (clean.includes('SENSEX') || clean.includes('BSE') ? 4 : 2);
+    const targetWeekday = config ? config.expiryWeekday : (clean.includes('SENSEX') || clean.includes('BANKEX') ? 5 : (clean.includes('FINNIFTY') ? 2 : (clean.includes('MIDCPNIFTY') ? 1 : 4)));
 
     const d = new Date(entryDate);
     const currentDay = d.getDay();

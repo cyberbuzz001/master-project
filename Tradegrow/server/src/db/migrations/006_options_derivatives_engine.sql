@@ -26,12 +26,12 @@ CREATE INDEX IF NOT EXISTS idx_expiry_calendars_exch  ON expiry_calendars(exchan
 -- Seed dynamic expiry calendar configurations
 INSERT INTO expiry_calendars (id, index_name, exchange, underlying_symbol, trading_symbol_prefix, weekly_expiry_supported, monthly_expiry_supported, expiry_weekday, holiday_adjustment_rule)
 VALUES
-  ('exp_nifty',     'NIFTY',      'NSE', 'NIFTY 50',    'NIFTY',      TRUE,  TRUE, 2, 'PREVIOUS_TRADING_DAY'), -- Tuesday weekly & Last Tuesday monthly
-  ('exp_sensex',    'SENSEX',     'BSE', 'SENSEX',      'SENSEX',     TRUE,  TRUE, 4, 'PREVIOUS_TRADING_DAY'), -- Thursday weekly & Last Thursday monthly
-  ('exp_banknifty', 'BANKNIFTY',  'NSE', 'BANKNIFTY',   'BANKNIFTY',  FALSE, TRUE, 2, 'PREVIOUS_TRADING_DAY'), -- Monthly expiry only (Last Tuesday)
-  ('exp_bankex',    'BANKEX',     'BSE', 'BANKEX',      'BANKEX',     FALSE, TRUE, 4, 'PREVIOUS_TRADING_DAY'), -- Monthly expiry only (Last Thursday)
+  ('exp_nifty',     'NIFTY',      'NSE', 'NIFTY 50',    'NIFTY',      TRUE,  TRUE, 4, 'PREVIOUS_TRADING_DAY'), -- Thursday weekly & Last Thursday monthly
+  ('exp_sensex',    'SENSEX',     'BSE', 'SENSEX',      'SENSEX',     TRUE,  TRUE, 5, 'PREVIOUS_TRADING_DAY'), -- Friday weekly & Last Friday monthly
+  ('exp_banknifty', 'BANKNIFTY',  'NSE', 'BANKNIFTY',   'BANKNIFTY',  FALSE, TRUE, 4, 'PREVIOUS_TRADING_DAY'), -- Monthly expiry only (Last Thursday)
+  ('exp_bankex',    'BANKEX',     'BSE', 'BANKEX',      'BANKEX',     FALSE, TRUE, 5, 'PREVIOUS_TRADING_DAY'), -- Monthly expiry only (Last Friday)
   ('exp_finnifty',  'FINNIFTY',   'NSE', 'FINNIFTY',    'FINNIFTY',   FALSE, TRUE, 2, 'PREVIOUS_TRADING_DAY'), -- Monthly expiry only (Last Tuesday)
-  ('exp_midcp',     'MIDCPNIFTY', 'NSE', 'MIDCPNIFTY',  'MIDCPNIFTY', FALSE, TRUE, 2, 'PREVIOUS_TRADING_DAY')  -- Monthly expiry only (Last Tuesday)
+  ('exp_midcp',     'MIDCPNIFTY', 'NSE', 'MIDCPNIFTY',  'MIDCPNIFTY', FALSE, TRUE, 1, 'PREVIOUS_TRADING_DAY')  -- Monthly expiry only (Last Monday)
 ON CONFLICT (index_name) DO UPDATE SET
   weekly_expiry_supported  = EXCLUDED.weekly_expiry_supported,
   monthly_expiry_supported = EXCLUDED.monthly_expiry_supported,

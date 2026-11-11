@@ -502,37 +502,16 @@ export const OptionChainRowComponent: React.FC<OptionChainRowProps> = ({
 export const OptionChainRow = React.memo(
   OptionChainRowComponent,
   (prevProps, nextProps) => {
-    const prevCeLtp = prevProps.ceTick?.ltp ?? prevProps.row.ce.ltp;
-    const nextCeLtp = nextProps.ceTick?.ltp ?? nextProps.row.ce.ltp;
-
-    const prevPeLtp = prevProps.peTick?.ltp ?? prevProps.row.pe.ltp;
-    const nextPeLtp = nextProps.peTick?.ltp ?? nextProps.row.pe.ltp;
-
-    const prevCeVol = prevProps.ceTick?.volume ?? prevProps.row.ce.volume;
-    const nextCeVol = nextProps.ceTick?.volume ?? nextProps.row.ce.volume;
-
-    const prevPeVol = prevProps.peTick?.volume ?? prevProps.row.pe.volume;
-    const nextPeVol = nextProps.peTick?.volume ?? nextProps.row.pe.volume;
-
-    const prevCeBid = prevProps.ceTick?.bid ?? prevProps.row.ce.bid;
-    const nextCeBid = nextProps.ceTick?.bid ?? nextProps.row.ce.bid;
-
-    const prevPeBid = prevProps.peTick?.bid ?? prevProps.row.pe.bid;
-    const nextPeBid = nextProps.peTick?.bid ?? nextProps.row.pe.bid;
-
-    return (
-      prevProps.row.strikePrice === nextProps.row.strikePrice &&
-      prevProps.isAtm === nextProps.isAtm &&
-      prevProps.spotPrice === nextProps.spotPrice &&
-      prevProps.viewMode === nextProps.viewMode &&
-      prevProps.activeLtpKey === nextProps.activeLtpKey &&
-      prevProps.isMobile === nextProps.isMobile &&
-      prevCeLtp === nextCeLtp &&
-      prevPeLtp === nextPeLtp &&
-      prevCeVol === nextCeVol &&
-      prevPeVol === nextPeVol &&
-      prevCeBid === nextCeBid &&
-      prevPeBid === nextPeBid
-    );
+    if (prevProps.row !== nextProps.row) return false;
+    if (prevProps.underlying !== nextProps.underlying) return false;
+    if (prevProps.expiry !== nextProps.expiry) return false;
+    if (prevProps.isAtm !== nextProps.isAtm) return false;
+    if (prevProps.spotPrice !== nextProps.spotPrice) return false;
+    if (prevProps.viewMode !== nextProps.viewMode) return false;
+    if (prevProps.activeLtpKey !== nextProps.activeLtpKey) return false;
+    if (prevProps.isMobile !== nextProps.isMobile) return false;
+    if (prevProps.ceTick !== nextProps.ceTick) return false;
+    if (prevProps.peTick !== nextProps.peTick) return false;
+    return true;
   }
 );

@@ -1124,6 +1124,12 @@ export class DhanAdapter implements IMarketDataProvider {
   private static pendingExpiryListRequests: Map<string, Promise<string[]>> = new Map();
   private static expiryListFailureCooldown: Map<string, number> = new Map();
 
+  private static dataApiBlockedUntil: number = 0;
+
+  public isDataApiBlocked(): boolean {
+    return Date.now() < DhanAdapter.dataApiBlockedUntil;
+  }
+
   public async getExpiryList(symbol: string): Promise<string[]> {
     const cleanSym = (symbol || 'NIFTY').toUpperCase().replace(/^(NSE_|BSE_)/, '');
     const SUPPORTED_SYMS: Record<string, number> = {
@@ -1137,6 +1143,10 @@ export class DhanAdapter implements IMarketDataProvider {
     const cached = DhanAdapter.expiryListCache.get(cleanSym);
     if (cached && now - cached.timestamp < 60000 && cached.expiries.length > 0) {
       return cached.expiries;
+    }
+
+    if (this.isDataApiBlocked()) {
+      return cached ? cached.expiries : [];
     }
 
     const cooldownUntil = DhanAdapter.expiryListFailureCooldown.get(cleanSym) || 0;
@@ -1165,8 +1175,14 @@ export class DhanAdapter implements IMarketDataProvider {
           signal: AbortSignal.timeout(6000)
         });
 
+        let json: any = await res.json().catch(() => ({}));
+        if (json.data && (json.data['806'] || json.data?.['806'])) {
+          console.warn('[DhanAdapter] Dhan Data APIs not Subscribed (Error 806). Cooling down for 30m.');
+          DhanAdapter.dataApiBlockedUntil = Date.now() + 30 * 60 * 1000;
+          DhanAdapter.expiryListFailureCooldown.set(cleanSym, Date.now() + 30 * 60 * 1000);
+          return [];
+        }
         if (res.ok) {
-          const json: any = await res.json();
           const expiries: string[] = json.data && Array.isArray(json.data) ? json.data : [];
           if (expiries.length > 0) {
             DhanAdapter.expiryListCache.set(cleanSym, { timestamp: Date.now(), expiries });
@@ -1223,6 +1239,10 @@ export class DhanAdapter implements IMarketDataProvider {
     // 12-second memory cache for live trading freshness while preventing rate limits
     if (cached && now - cached.timestamp < 12000 && cached.rows.length > 0) {
       return cached.rows;
+    }
+
+    if (this.isDataApiBlocked()) {
+      return cached ? cached.rows : [];
     }
 
     const cooldownUntil = DhanAdapter.optionChainFailureCooldown.get(cacheKey) || 0;
@@ -1284,8 +1304,15 @@ export class DhanAdapter implements IMarketDataProvider {
           }
         }
 
+      let json: any = await res.json().catch(() => ({}));
+      if (json.data && (json.data['806'] || json.data?.['806'])) {
+        console.warn('[DhanAdapter] Dhan Data APIs not Subscribed (Error 806). Cooling down for 30m.');
+        DhanAdapter.dataApiBlockedUntil = Date.now() + 30 * 60 * 1000;
+        DhanAdapter.optionChainFailureCooldown.set(cacheKey, Date.now() + 30 * 60 * 1000);
+        return [];
+      }
+
       if (res.ok) {
-        let json: any = await res.json();
         if (json.data && (json.data['808'] || json.data?.['808'])) {
           console.warn('[DhanAdapter] Dhan optionchain returned 808 error. Renewing via TOTP...');
           try {
