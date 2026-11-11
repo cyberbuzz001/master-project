@@ -43,7 +43,7 @@ export class CTraderGateway extends EventEmitter {
       clientSecret: process.env.CTRADER_CLIENT_SECRET || 'mock_ctrader_client_secret',
       redirectUri: process.env.CTRADER_REDIRECT_URI || 'https://tradegrowx.in/api/v1/integrations/ctrader/oauth/callback',
       environment: env,
-      wsHost: isLive ? 'live.openapi.ctrader.com' : 'demo.openapi.ctrader.com',
+      wsHost: isLive ? 'live.ctraderapi.com' : 'demo.ctraderapi.com',
       wsPort: 5036,
       authUrl: 'https://openapi.ctrader.com/apps/auth',
       tokenUrl: 'https://openapi.ctrader.com/apps/token'

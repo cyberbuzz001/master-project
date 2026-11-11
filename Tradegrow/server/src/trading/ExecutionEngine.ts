@@ -251,9 +251,9 @@ export class ExecutionEngine {
           if (tick && tick.ltp > 0) break;
         }
 
+        // If direct cached tick is missing, subscribe in background without blocking execution fallback
         if (!tick && (order.instrument_token || order.symbol)) {
           engine.subscribe([order.instrument_token || order.symbol]);
-          continue;
         }
 
         const STALENESS_THRESHOLD_MS = 30000;
@@ -292,7 +292,12 @@ export class ExecutionEngine {
               const strike = parseFloat(mOpt[2]);
               const isCall = mOpt[3].toUpperCase() === 'CE';
               const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : 'NSE_NIFTY50';
-              const spotTick = engine.getCachedTick(spotToken);
+              let spotTick: MarketTick | null | undefined = engine.getCachedTick(spotToken);
+              if (!spotTick) {
+                try {
+                  spotTick = await engine.getQuote(spotToken);
+                } catch (_) {}
+              }
               if (spotTick && spotTick.ltp > 0) {
                 const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, 5.0 / 365.0, isCall, symName === 'SENSEX' ? 0.14 : 0.13);
                 if (bsPrice > 0) fallbackLtp = Number(bsPrice.toFixed(2));
@@ -300,8 +305,8 @@ export class ExecutionEngine {
             }
           }
 
-          // If still no price and it's a MARKET order with order.price > 0, use order.price
-          if (fallbackLtp <= 0 && order.order_type === 'MARKET' && parseFloat(order.price || '0') > 0) {
+          // If still no price and order.price > 0 (for MARKET, LIMIT, SL), fallback to order.price
+          if (fallbackLtp <= 0 && parseFloat(order.price || '0') > 0) {
             fallbackLtp = parseFloat(order.price);
           }
 
@@ -316,15 +321,15 @@ export class ExecutionEngine {
               high: fallbackLtp,
               low: fallbackLtp,
               close: fallbackLtp,
-              bid: Number((fallbackLtp * 0.998).toFixed(2)),
-              ask: Number((fallbackLtp * 1.002).toFixed(2)),
+              bid: fallbackLtp,
+              ask: fallbackLtp,
               bidQty: 100,
               askQty: 100,
               volume: 1000,
               change: 0,
               changePercent: 0,
               timestamp: Date.now(),
-              source: 'live'
+              source: 'synthetic_skew'
             };
             isStale = false;
           }
