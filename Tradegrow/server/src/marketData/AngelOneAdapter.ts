@@ -61,21 +61,23 @@ export class AngelOneAdapter implements IMarketDataProvider {
 
     // Resolve angel_ticks.json path dynamically across multiple locations
     const possibleTicksPaths = [
+      '/app/server/data/angel_ticks.json',
       path.resolve(process.cwd(), 'server/data/angel_ticks.json'),
+      path.resolve(process.cwd(), 'data/angel_ticks.json'),
       path.resolve(__dirname, '../../server/data/angel_ticks.json'),
       path.resolve(__dirname, '../../data/angel_ticks.json'),
       path.resolve(__dirname, '../data/angel_ticks.json'),
-      '/app/server/data/angel_ticks.json',
       '/opt/tradegrow/server/data/angel_ticks.json'
     ];
 
     // Resolve angel_option_chain.json path dynamically across multiple locations
     const possibleChainPaths = [
+      '/app/server/data/angel_option_chain.json',
       path.resolve(process.cwd(), 'server/data/angel_option_chain.json'),
+      path.resolve(process.cwd(), 'data/angel_option_chain.json'),
       path.resolve(__dirname, '../../server/data/angel_option_chain.json'),
       path.resolve(__dirname, '../../data/angel_option_chain.json'),
       path.resolve(__dirname, '../data/angel_option_chain.json'),
-      '/app/server/data/angel_option_chain.json',
       '/opt/tradegrow/server/data/angel_option_chain.json'
     ];
     this.chainFilePath = possibleChainPaths.find(p => fs.existsSync(p)) || possibleChainPaths[0];
@@ -266,8 +268,22 @@ export class AngelOneAdapter implements IMarketDataProvider {
       : (niftyTick?.ltp   || 24500);
 
     // ── If live option chain data is available, use it ──────────────────────
-    if (this.optionChainData?.chains?.[sym]?.[expiry]) {
-      const chainData = this.optionChainData.chains[sym][expiry];
+    const symChains = this.optionChainData?.chains?.[sym];
+    let matchedExp = expiry ? expiry.slice(0, 10) : '';
+    if (symChains) {
+      if (!symChains[matchedExp]) {
+        const keys = Object.keys(symChains);
+        if (matchedExp) {
+          const found = keys.find(k => k.startsWith(matchedExp) || matchedExp.startsWith(k));
+          if (found) matchedExp = found;
+        } else if (keys.length > 0) {
+          matchedExp = keys[0];
+        }
+      }
+    }
+
+    if (symChains && matchedExp && symChains[matchedExp]) {
+      const chainData = symChains[matchedExp];
       const spot = chainData.spot || spotPrice;
       const rows: OptionChainItem[] = [];
       const nseSummary = nseOptionChainService.getSummary(sym);
@@ -275,16 +291,15 @@ export class AngelOneAdapter implements IMarketDataProvider {
       for (const row of chainData.rows) {
         const strike = row.strikePrice;
         const timeToExpiry = Math.max(1, Math.ceil(
-          (new Date(expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          (new Date(matchedExp).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         )) / 365.0;
 
         // Merge NSE OI & IV if available (refreshed every 60s)
         const nseData = nseSummary ? nseOptionChainService.getOiForStrike(sym, strike) : null;
 
-        // Use NSE IV when available (more accurate), fallback to smile approximation
         const step = sym === 'SENSEX' ? 100 : 50;
-        const ceIv = (nseData?.ceIv && nseData.ceIv > 0) ? nseData.ceIv : (sym === 'SENSEX' ? 21.0 : 14.5) + Math.abs(strike - Math.round(spot / step) * step) / step * 0.2;
-        const peIv = (nseData?.peIv && nseData.peIv > 0) ? nseData.peIv : ceIv + 0.5;
+        const ceIv = (row.ce?.iv && row.ce.iv > 0) ? row.ce.iv : (nseData?.ceIv && nseData.ceIv > 0) ? nseData.ceIv : (sym === 'SENSEX' ? 21.0 : 14.5) + Math.abs(strike - Math.round(spot / step) * step) / step * 0.2;
+        const peIv = (row.pe?.iv && row.pe.iv > 0) ? row.pe.iv : (nseData?.peIv && nseData.peIv > 0) ? nseData.peIv : ceIv + 0.5;
 
         const ceGreeks = GreeksEngine.calculateGreeks(spot, strike, timeToExpiry, true,  ceIv / 100);
         const peGreeks = GreeksEngine.calculateGreeks(spot, strike, timeToExpiry, false, peIv / 100);
@@ -295,37 +310,51 @@ export class AngelOneAdapter implements IMarketDataProvider {
         const ceLtp = (row.ce?.ltp && row.ce.ltp > 0) ? row.ce.ltp : Math.max(0.05, Number(ceBsPrice.toFixed(2)));
         const peLtp = (row.pe?.ltp && row.pe.ltp > 0) ? row.pe.ltp : Math.max(0.05, Number(peBsPrice.toFixed(2)));
 
-        const ceOi = nseData?.ceOi || row.ce?.oi || 0;
-        const peOi = nseData?.peOi || row.pe?.oi || 0;
+        const ceOi = (row.ce?.openInterest && row.ce.openInterest > 0) ? row.ce.openInterest : (nseData?.ceOi || row.ce?.oi || 0);
+        const peOi = (row.pe?.openInterest && row.pe.openInterest > 0) ? row.pe.openInterest : (nseData?.peOi || row.pe?.oi || 0);
         const ceVol = row.ce?.volume || 0;
         const peVol = row.pe?.volume || 0;
 
         rows.push({
           strikePrice: strike,
-          expiry,
+          expiry: matchedExp,
           ce: {
             instrumentToken: row.ce?.token || `${sym === 'SENSEX' ? 'BFO' : 'NFO'}_${sym}_${strike}_CE`,
+            tradingSymbol: row.ce?.tradingSymbol,
             ltp:   ceLtp,
+            bid:   row.ce?.bid || Number((ceLtp * 0.998).toFixed(2)),
+            ask:   row.ce?.ask || Number((ceLtp * 1.002).toFixed(2)),
             change: row.ce?.change || 0,
+            changePercent: row.ce?.changePercent || 0,
             volume: ceVol,
             openInterest: ceOi,
-            iv:    ceGreeks.iv,
-            delta: ceGreeks.delta,
-            gamma: ceGreeks.gamma,
-            theta: ceGreeks.theta,
-            vega:  ceGreeks.vega,
+            openInterestChange: row.ce?.openInterestChange || 0,
+            iv:    row.ce?.iv || ceGreeks.iv,
+            delta: row.ce?.delta || ceGreeks.delta,
+            gamma: row.ce?.gamma || ceGreeks.gamma,
+            theta: row.ce?.theta || ceGreeks.theta,
+            vega:  row.ce?.vega || ceGreeks.vega,
+            source: 'live',
+            isSynthetic: false,
           },
           pe: {
             instrumentToken: row.pe?.token || `${sym === 'SENSEX' ? 'BFO' : 'NFO'}_${sym}_${strike}_PE`,
+            tradingSymbol: row.pe?.tradingSymbol,
             ltp:   peLtp,
+            bid:   row.pe?.bid || Number((peLtp * 0.998).toFixed(2)),
+            ask:   row.pe?.ask || Number((peLtp * 1.002).toFixed(2)),
             change: row.pe?.change || 0,
+            changePercent: row.pe?.changePercent || 0,
             volume: peVol,
             openInterest: peOi,
-            iv:    peGreeks.iv,
-            delta: peGreeks.delta,
-            gamma: peGreeks.gamma,
-            theta: peGreeks.theta,
-            vega:  peGreeks.vega,
+            openInterestChange: row.pe?.openInterestChange || 0,
+            iv:    row.pe?.iv || peGreeks.iv,
+            delta: row.pe?.delta || peGreeks.delta,
+            gamma: row.pe?.gamma || peGreeks.gamma,
+            theta: row.pe?.theta || peGreeks.theta,
+            vega:  row.pe?.vega || peGreeks.vega,
+            source: 'live',
+            isSynthetic: false,
           },
         });
       }
@@ -333,8 +362,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
       if (rows.length > 0) return rows;
     }
 
-    const res = await OptionChainEngine.generateOptionChain({ symbol: sym, spotPrice, expiry });
-    return res.chain;
+    return [];
   }
 
   /** Returns real expiry dates from Instrument Master for a given symbol */
@@ -388,12 +416,13 @@ export class AngelOneAdapter implements IMarketDataProvider {
               close: ltp,
               volume: parseInt(row.ce.volume || '0', 10),
               change: parseFloat(row.ce.change || '0'),
-              changePercent: parseFloat(row.ce.change || '0'),
-              bid: Number((ltp * 0.995).toFixed(2)),
-              ask: Number((ltp * 1.005).toFixed(2)),
+              changePercent: parseFloat(row.ce.changePercent ?? row.ce.change ?? '0'),
+              bid: row.ce.bid || Number((ltp * 0.998).toFixed(2)),
+              ask: row.ce.ask || Number((ltp * 1.002).toFixed(2)),
               bidQty: 100,
               askQty: 100,
               timestamp: ts,
+              source: 'live',
             };
 
             this.tickCache.set(`${segment}_${tokenStr}`, tick);
@@ -420,12 +449,13 @@ export class AngelOneAdapter implements IMarketDataProvider {
               close: ltp,
               volume: parseInt(row.pe.volume || '0', 10),
               change: parseFloat(row.pe.change || '0'),
-              changePercent: parseFloat(row.pe.change || '0'),
-              bid: Number((ltp * 0.995).toFixed(2)),
-              ask: Number((ltp * 1.005).toFixed(2)),
+              changePercent: parseFloat(row.pe.changePercent ?? row.pe.change ?? '0'),
+              bid: row.pe.bid || Number((ltp * 0.998).toFixed(2)),
+              ask: row.pe.ask || Number((ltp * 1.002).toFixed(2)),
               bidQty: 100,
               askQty: 100,
               timestamp: ts,
+              source: 'live',
             };
 
             this.tickCache.set(`${segment}_${tokenStr}`, tick);

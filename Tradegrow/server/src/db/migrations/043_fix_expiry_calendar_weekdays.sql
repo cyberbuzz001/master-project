@@ -15,3 +15,4 @@ UPDATE expiry_calendars SET expiry_weekday = 4, updated_at = NOW() WHERE index_n
 UPDATE expiry_calendars SET expiry_weekday = 5, updated_at = NOW() WHERE index_name = 'BANKEX';
 UPDATE expiry_calendars SET expiry_weekday = 2, updated_at = NOW() WHERE index_name = 'FINNIFTY';
 UPDATE expiry_calendars SET expiry_weekday = 1, updated_at = NOW() WHERE index_name = 'MIDCPNIFTY';
+

@@ -94,43 +94,47 @@ export class ExpiryCalendarService {
       return cached.data;
     }
 
-    // 1. Query live Dhan API first (authoritative & fast <50ms)
-    let dhanExpiries: string[] = [];
+    // 1. Check Angel One / Exchange master instruments in DB first (authoritative real-world exchange contracts)
+    let dbExpiries: string[] = [];
     try {
-      const { MarketDataEngine } = await import('../marketData/MarketDataEngine');
-      const dhan = MarketDataEngine.getInstance().getDhanAdapter();
-      dhanExpiries = await Promise.race([
-        dhan.getExpiryList(cleanSym),
-        new Promise<string[]>((res) => setTimeout(() => res([]), 2000))
-      ]);
+      const rows = await query<{ expiry: string }>(
+        `SELECT DISTINCT expiry FROM instruments
+         WHERE (UPPER(symbol) = $1 OR UPPER(name) = $1)
+           AND expiry IS NOT NULL AND expiry >= $2
+         ORDER BY expiry ASC LIMIT 25`,
+        [cleanSym, todayStr]
+      );
+      dbExpiries = rows.map(r => {
+        if (!r.expiry) return '';
+        const d = new Date(r.expiry);
+        return isNaN(d.getTime()) ? '' : this.formatYYYYMMDD(d);
+      }).filter(Boolean);
     } catch (_) {}
 
-    // 2. Fast calendar calculation from exchange rules
-    const calculatedExpiries = await this.generateCalculatedExpiries(cleanSym);
-
-    // Combine expiries
-    let allExpiriesCombined = Array.from(new Set([...dhanExpiries, ...calculatedExpiries]))
-      .filter(e => e && e >= todayStr)
-      .sort();
-
-    // 3. Fallback to DB only if combined is still empty
-    if (allExpiriesCombined.length === 0) {
+    // 2. Query live Dhan API if DB has no expiries
+    let dhanExpiries: string[] = [];
+    if (dbExpiries.length === 0) {
       try {
-        const rows = await query<{ expiry: string }>(
-          `SELECT DISTINCT expiry FROM instruments
-           WHERE (UPPER(symbol) = $1 OR UPPER(name) = $1)
-             AND expiry IS NOT NULL AND expiry >= $2
-           ORDER BY expiry ASC LIMIT 20`,
-          [cleanSym, todayStr]
-        );
-        const dbExpiries = rows.map(r => {
-          if (!r.expiry) return '';
-          const d = new Date(r.expiry);
-          return isNaN(d.getTime()) ? '' : this.formatYYYYMMDD(d);
-        }).filter(Boolean);
-        allExpiriesCombined = Array.from(new Set([...dbExpiries, ...calculatedExpiries])).filter(e => e >= todayStr).sort();
+        const { MarketDataEngine } = await import('../marketData/MarketDataEngine');
+        const dhan = MarketDataEngine.getInstance().getDhanAdapter();
+        dhanExpiries = await Promise.race([
+          dhan.getExpiryList(cleanSym),
+          new Promise<string[]>((res) => setTimeout(() => res([]), 2000))
+        ]);
       } catch (_) {}
     }
+
+    // 3. Fallback to calculated expiries from exchange rules only if DB and broker have no expiries
+    let calculatedExpiries: string[] = [];
+    if (dbExpiries.length === 0 && dhanExpiries.length === 0) {
+      calculatedExpiries = await this.generateCalculatedExpiries(cleanSym);
+    }
+
+    // Combine expiries (prioritize DB, then Dhan, then calculated)
+    const baseExpiries = dbExpiries.length > 0 ? dbExpiries : (dhanExpiries.length > 0 ? dhanExpiries : calculatedExpiries);
+    let allExpiriesCombined = Array.from(new Set(baseExpiries))
+      .filter(e => e && e >= todayStr)
+      .sort();
 
     const defaultWeekday = cleanSym.includes('SENSEX') || cleanSym.includes('BANKEX')
       ? 5

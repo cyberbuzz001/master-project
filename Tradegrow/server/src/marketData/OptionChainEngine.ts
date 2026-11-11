@@ -288,6 +288,109 @@ export class OptionChainEngine {
 
 
 
+    // Tier 0: Query Live Angel One Real-Time Option Chain Feed
+    try {
+      const angelAdapter = MarketDataEngine.getInstance().getAngelOneAdapter();
+      if (angelAdapter) {
+        const angelChain = await angelAdapter.getOptionChain(underlying, expiry);
+        if (angelChain && angelChain.length > 0) {
+          const liveSpotTick = MarketDataEngine.getInstance().getCachedTick(spotToken);
+          const liveSpot = (liveSpotTick && liveSpotTick.ltp > 0) ? liveSpotTick.ltp : spotPrice;
+          if (liveSpot > 0) {
+            OptionChainEngine.lastKnownSpotPrices.set(spotToken, liveSpot);
+          }
+          const liveAtmStrike = Math.round(liveSpot / step) * step;
+
+          const filteredAngelChain = filterAndSanitizeChain(angelChain, liveSpot, liveAtmStrike);
+
+          // Proactively subscribe and broadcast all active strike tokens
+          try {
+            const mde = MarketDataEngine.getInstance();
+            const visibleTokens: string[] = [];
+            filteredAngelChain.forEach(item => {
+              if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
+              if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
+
+              if (item.ce?.instrumentToken && item.ce.ltp > 0) {
+                mde.broadcastTick({
+                  instrumentToken: item.ce.instrumentToken,
+                  exchange,
+                  symbol: `${underlying} ${item.strikePrice} CE`,
+                  tradingSymbol: item.ce.tradingSymbol || item.ce.instrumentToken,
+                  ltp: item.ce.ltp,
+                  open: item.ce.ltp,
+                  high: item.ce.ltp,
+                  low: item.ce.ltp,
+                  close: item.ce.ltp,
+                  bid: item.ce.bid || item.ce.ltp,
+                  ask: item.ce.ask || item.ce.ltp,
+                  bidQty: 0,
+                  askQty: 0,
+                  volume: item.ce.volume || 0,
+                  change: item.ce.change || 0,
+                  changePercent: item.ce.changePercent || 0,
+                  timestamp: Date.now(),
+                  source: 'live'
+                });
+              }
+              if (item.pe?.instrumentToken && item.pe.ltp > 0) {
+                mde.broadcastTick({
+                  instrumentToken: item.pe.instrumentToken,
+                  exchange,
+                  symbol: `${underlying} ${item.strikePrice} PE`,
+                  tradingSymbol: item.pe.tradingSymbol || item.pe.instrumentToken,
+                  ltp: item.pe.ltp,
+                  open: item.pe.ltp,
+                  high: item.pe.ltp,
+                  low: item.pe.ltp,
+                  close: item.pe.ltp,
+                  bid: item.pe.bid || item.pe.ltp,
+                  ask: item.pe.ask || item.pe.ltp,
+                  bidQty: 0,
+                  askQty: 0,
+                  volume: item.pe.volume || 0,
+                  change: item.pe.change || 0,
+                  changePercent: item.pe.changePercent || 0,
+                  timestamp: Date.now(),
+                  source: 'live'
+                });
+              }
+            });
+            if (visibleTokens.length > 0) {
+              mde.subscribe(visibleTokens);
+            }
+          } catch (_) {}
+
+          let totalCallOI = 0;
+          let totalPutOI = 0;
+          filteredAngelChain.forEach(item => {
+            totalCallOI += item.ce?.openInterest || 0;
+            totalPutOI += item.pe?.openInterest || 0;
+          });
+          const pcrRatio = totalCallOI > 0 ? Number((totalPutOI / totalCallOI).toFixed(2)) : 1.0;
+          return {
+            underlying,
+            exchange,
+            spotPrice: liveSpot,
+            futuresPrice: liveSpot + (isBanknifty ? 140 : isSensex ? 210 : 65),
+            atmStrike: liveAtmStrike,
+            expiry,
+            lotSize,
+            spotSource: liveSpotTick?.source || 'live',
+            spotChange: liveSpotTick?.change ?? 0,
+            spotChangePercent: liveSpotTick?.changePercent ?? 0,
+            pcrRatio,
+            maxPainStrike: liveAtmStrike,
+            totalCallOI,
+            totalPutOI,
+            chain: filteredAngelChain
+          };
+        }
+      }
+    } catch (err: any) {
+      console.warn('[OptionChainEngine] Angel One live chain check fallback:', err.message);
+    }
+
     // Tier 1: Query Authoritative Dhan HQ Option Chain Matrix
     try {
       const dhanAdapter = MarketDataEngine.getInstance().getDhanAdapter();
