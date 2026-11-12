@@ -9,13 +9,32 @@ import { ApiError, type ApiErrorBody, type ApiSuccess } from "./api-types";
 
 let csrfReady: Promise<void> | null = null;
 
-function readCookie(name: string): string | null {
-  const match = document.cookie.split("; ").find((row) => row.startsWith(`${name}=`));
-  return match ? decodeURIComponent(match.split("=").slice(1).join("=")) : null;
+function clearLegacyCookies(): void {
+  if (typeof document === "undefined") return;
+  const cookies = document.cookie.split("; ");
+  for (const c of cookies) {
+    const [name, val] = c.split("=");
+    if ((name === "XSRF-TOKEN" || name === "esc_session") && val && !val.startsWith("eyJ")) {
+      // Clear host-only legacy demo cookies
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+    }
+  }
 }
 
-async function ensureCsrf(force = false): Promise<void> {
-  if (!force && readCookie("XSRF-TOKEN")) return;
+export function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  clearLegacyCookies();
+  const rows = document.cookie.split("; ").filter((row) => row.startsWith(`${name}=`));
+  if (rows.length === 0) return null;
+  // If multiple exist (e.g. legacy host vs domain), prefer the valid encrypted Laravel token
+  const bestMatch = rows.find((r) => r.includes("=eyJ")) ?? rows[rows.length - 1];
+  return decodeURIComponent(bestMatch.split("=").slice(1).join("="));
+}
+
+export async function ensureCsrf(force = false): Promise<void> {
+  const currentToken = readCookie("XSRF-TOKEN");
+  if (!force && currentToken && currentToken.startsWith("eyJ")) return;
   if (!csrfReady || force) {
     csrfReady = fetch("/sanctum/csrf-cookie", { credentials: "include", cache: "no-store" })
       .then((response) => {

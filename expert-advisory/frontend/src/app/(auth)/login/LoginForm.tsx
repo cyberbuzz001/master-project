@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, type FormEvent } from "react";
 import { homeFor, isServerRoute } from "@/components/app/AuthProvider";
 import { Button, Field, Input, Notice } from "@/components/ui";
-import { api } from "@/lib/api-client";
+import { api, ensureCsrf } from "@/lib/api-client";
 import { ApiError, type Me } from "@/lib/api-types";
 
 /** Only same-site relative paths are accepted as post-login destinations. */
@@ -21,6 +21,11 @@ export function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useRecovery, setUseRecovery] = useState(false);
+
+  // Pre-warm Sanctum CSRF cookie and purge any legacy mock cookies
+  useEffect(() => {
+    ensureCsrf().catch(() => {});
+  }, []);
 
   // Automatic SSO Ticket Exchange from TradeGrow Brokerage Desk
   const ssoTicket = params.get("ticket") || params.get("sso_ticket");
