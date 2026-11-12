@@ -17,7 +17,7 @@ class ScheduledAction extends Model
         return [
             'action_payload_json' => 'array',
             'scheduled_for' => 'datetime',
-            'executed_at' => 'datetime',
+            'executed_at' => 'datetime', 'claimed_at' => 'datetime', 'attempts' => 'integer',
         ];
     }
 

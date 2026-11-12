@@ -5,9 +5,6 @@ namespace App\Domain\Research;
 use App\Domain\Compliance\ComplianceGate;
 use App\Domain\MarketData\MarketDataSnapshotService;
 use App\Domain\Shared\ApiException;
-use App\Models\AuditLog;
-use App\Models\Employee;
-use App\Models\MarketDataSnapshot;
 use App\Models\ResearchApproval;
 use App\Models\ResearchRecommendation;
 use App\Models\ResearchReport;
@@ -15,6 +12,7 @@ use App\Models\ResearchVersion;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ResearchWorkflowService
@@ -37,7 +35,13 @@ class ResearchWorkflowService
             throw ApiException::forbidden('Only staff employees can create research reports.', 'EMPLOYEE_REQUIRED');
         }
 
-        return DB::transaction(function () use ($user, $employee, $data) {
+        $audience = Validator::make($data, [
+            'whatsapp_template_key' => 'nullable|string|max:100|exists:message_templates,key',
+            'eligible_service_ids' => 'nullable|array', 'eligible_service_ids.*' => 'integer|distinct|exists:services,id',
+            'eligible_trial_types' => 'nullable|array', 'eligible_trial_types.*' => 'distinct|in:equity,index_options,commodity,combo',
+        ])->validate();
+
+        return DB::transaction(function () use ($user, $employee, $data, $audience) {
             $year = CarbonImmutable::now()->year;
             $count = ResearchReport::whereYear('created_at', $year)->count() + 1;
             $reportCode = sprintf('REP-%d-%04d', $year, $count);
@@ -60,6 +64,9 @@ class ResearchWorkflowService
                 'summary' => $data['summary'] ?? null,
                 'body' => $data['body'] ?? null,
                 'sections' => $data['sections'] ?? null,
+                'whatsapp_template_key' => $audience['whatsapp_template_key'] ?? null,
+                'eligible_service_ids' => array_map('intval', $audience['eligible_service_ids'] ?? []),
+                'eligible_trial_types' => $audience['eligible_trial_types'] ?? [],
                 'author_employee_id' => $employee->id,
                 'data_snapshot_id' => $data['data_snapshot_id'] ?? null,
                 'valid_until' => isset($data['valid_until']) ? CarbonImmutable::parse($data['valid_until']) : null,
@@ -328,6 +335,9 @@ class ResearchWorkflowService
             'summary' => $version->summary,
             'body' => $version->body,
             'recommendations' => $version->recommendations->map->toArray()->all(),
+            'eligible_service_ids' => $version->eligible_service_ids,
+            'eligible_trial_types' => $version->eligible_trial_types,
+            'whatsapp_template_key' => $version->whatsapp_template_key,
             'disclosure_set_hash' => $version->disclosure_set_hash,
             'approved_by' => $version->approver_id,
             'approved_at' => $version->approved_at?->toIso8601String(),
@@ -385,6 +395,9 @@ class ResearchWorkflowService
                 'summary' => $latest->summary,
                 'body' => $latest->body,
                 'sections' => $latest->sections,
+                'whatsapp_template_key' => $latest->whatsapp_template_key,
+                'eligible_service_ids' => $latest->eligible_service_ids,
+                'eligible_trial_types' => $latest->eligible_trial_types,
                 'author_employee_id' => $employee->id,
                 'data_snapshot_id' => $latest->data_snapshot_id,
                 'valid_until' => $latest->valid_until,

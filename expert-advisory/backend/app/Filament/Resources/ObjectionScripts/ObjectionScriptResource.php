@@ -8,8 +8,8 @@ use App\Models\ObjectionScript;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -67,7 +67,7 @@ class ObjectionScriptResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('category')->label('Category')->required()->maxLength(64),
+            TextInput::make('category')->label('Category')->default('general')->required()->maxLength(64),
             TextInput::make('objection')->label('Client objection title')->required()->maxLength(255),
             Textarea::make('exact_client_statement')->label('Exact client statement')->rows(2)->maxLength(1000),
             TextInput::make('tag')->required()->maxLength(48),

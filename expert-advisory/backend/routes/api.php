@@ -1,17 +1,28 @@
 <?php
 
+use App\Domain\Crm\AutomationWorkflowEngine;
+use App\Domain\Crm\LeadScoringEngine;
+use App\Domain\Crm\VendorPerformanceService;
+use App\Http\Controllers\Api\UniversalImportController;
 use App\Http\Controllers\Api\V1\Admin\AccessController;
 use App\Http\Controllers\Api\V1\Admin\ComplianceController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\SettingsController;
+use App\Http\Controllers\Api\V1\Admin\SystemHealthController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Client\BillingController;
 use App\Http\Controllers\Api\V1\Client\OnboardingController;
+use App\Http\Controllers\Api\V1\Client\ResearchController;
 use App\Http\Controllers\Api\V1\Me\AccountController;
 use App\Http\Controllers\Api\V1\PublicController;
+use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\SsoHandoffController;
+use App\Models\Lead;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -24,8 +35,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('policies/{slug}', [PublicController::class, 'policy'])->where('slug', '[a-z0-9\-]+');
         Route::post('leads', [PublicController::class, 'storeLead'])->middleware('throttle:public-forms');
         Route::get('verify/{token}', [PublicController::class, 'verifyDocument'])->where('token', '[a-z0-9]{40}')->middleware('throttle:public-forms');
-        Route::post('grievances', [\App\Http\Controllers\Api\V1\SupportController::class, 'storePublicGrievance'])->middleware('throttle:public-forms');
-        Route::get('grievances/{trackingNumber}', [\App\Http\Controllers\Api\V1\SupportController::class, 'showPublicGrievance'])->where('trackingNumber', 'GRV\-[0-9]{4}\-[0-9]{5}')->middleware('throttle:public-forms');
+        Route::post('grievances', [SupportController::class, 'storePublicGrievance'])->middleware('throttle:public-forms');
+        Route::get('grievances/{trackingNumber}', [SupportController::class, 'showPublicGrievance'])->where('trackingNumber', 'GRV\-[0-9]{4}\-[0-9]{5}')->middleware('throttle:public-forms');
     });
 
     // ---- Payment provider callbacks --------------------------------------------------------
@@ -36,15 +47,15 @@ Route::prefix('v1')->group(function (): void {
         ->middleware('throttle:webhooks');
 
     // ---- WhatsApp Meta Cloud Webhooks -------------------------------------------------------
-    Route::get('webhooks/whatsapp', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'verify']);
-    Route::post('webhooks/whatsapp', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'handle'])
+    Route::get('webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
+    Route::post('webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])
         ->middleware('throttle:webhooks');
 
     // ---- Authentication -------------------------------------------------------------------
     Route::prefix('auth')->group(function (): void {
         Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
         Route::post('two-factor/challenge', [AuthController::class, 'twoFactorChallenge'])->middleware('throttle:two-factor');
-        Route::post('sso/consume', [\App\Http\Controllers\SsoHandoffController::class, 'consumeApi'])->middleware('throttle:login');
+        Route::post('sso/consume', [SsoHandoffController::class, 'consumeApi'])->middleware('throttle:login');
         Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     });
 
@@ -100,21 +111,22 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('settings', [SettingsController::class, 'index'])->middleware('can:settings.view');
                 Route::put('settings', [SettingsController::class, 'update'])->middleware('can:settings.manage');
                 Route::post('settings/verify', [SettingsController::class, 'verify'])->middleware('can:settings.manage');
-                Route::get('system/health', [\App\Http\Controllers\Api\V1\Admin\SystemHealthController::class, 'health'])->middleware('can:system.health.view');
+                Route::get('system/health', [SystemHealthController::class, 'health'])->middleware('can:system.health.view');
 
                 // ---- Universal Lead Import & Automation --------------------------------------------
-                Route::prefix('leads/universal-import')->group(function (): void {
-                    Route::post('preview', [\App\Http\Controllers\Api\UniversalImportController::class, 'preview']);
-                    Route::post('execute', [\App\Http\Controllers\Api\UniversalImportController::class, 'execute']);
-                    Route::get('batches', [\App\Http\Controllers\Api\UniversalImportController::class, 'batches']);
-                    Route::get('batches/{id}', [\App\Http\Controllers\Api\UniversalImportController::class, 'showBatch']);
-                    Route::post('download-report', [\App\Http\Controllers\Api\UniversalImportController::class, 'downloadReport']);
+                Route::prefix('leads/universal-import')->middleware('can:leads.import')->group(function (): void {
+                    Route::post('preview', [UniversalImportController::class, 'preview']);
+                    Route::post('execute', [UniversalImportController::class, 'execute']);
+                    Route::get('batches', [UniversalImportController::class, 'batches']);
+                    Route::get('batches/{id}', [UniversalImportController::class, 'showBatch']);
+                    Route::post('download-report', [UniversalImportController::class, 'downloadReport']);
                 });
 
                 // ---- Lead AI Controls & Scoring ----------------------------------------------------
-                Route::post('leads/{lead}/toggle-ai-pause', function (\Illuminate\Http\Request $request, \App\Models\Lead $lead) {
+                Route::post('leads/{lead}/toggle-ai-pause', function (Request $request, Lead $lead) {
                     abort_unless($request->user()->can('update', $lead), 403);
-                    $lead->update(['is_ai_paused' => !$lead->is_ai_paused]);
+                    $lead->update(['is_ai_paused' => ! $lead->is_ai_paused]);
+
                     return response()->json([
                         'success' => true,
                         'is_ai_paused' => (bool) $lead->is_ai_paused,
@@ -122,9 +134,10 @@ Route::prefix('v1')->group(function (): void {
                     ]);
                 });
 
-                Route::post('leads/{lead}/recalculate-score', function (\Illuminate\Http\Request $request, \App\Models\Lead $lead, \App\Domain\Crm\LeadScoringEngine $scoring) {
+                Route::post('leads/{lead}/recalculate-score', function (Request $request, Lead $lead, LeadScoringEngine $scoring) {
                     abort_unless($request->user()->can('update', $lead), 403);
                     $result = $scoring->scoreLead($lead);
+
                     return response()->json([
                         'success' => true,
                         'score' => $result['score'],
@@ -135,7 +148,7 @@ Route::prefix('v1')->group(function (): void {
                 });
 
                 // ---- Vendor Performance Analytics --------------------------------------------------
-                Route::get('analytics/vendor-performance', function (\Illuminate\Http\Request $request, \App\Domain\Crm\VendorPerformanceService $service) {
+                Route::middleware('can:analytics.view')->get('analytics/vendor-performance', function (Request $request, VendorPerformanceService $service) {
                     return response()->json([
                         'success' => true,
                         'data' => $service->getVendorMetrics($request->all()),
@@ -144,14 +157,15 @@ Route::prefix('v1')->group(function (): void {
                 });
 
                 // ---- Automated Workflows Trigger ---------------------------------------------------
-                Route::post('workflows/trigger', function (\Illuminate\Http\Request $request, \App\Domain\Crm\AutomationWorkflowEngine $engine) {
+                Route::middleware('can:automation.manage')->post('workflows/trigger', function (Request $request, AutomationWorkflowEngine $engine) {
                     $request->validate([
                         'lead_id' => 'required|exists:leads,id',
                         'workflow_code' => 'required|string|in:WORKFLOW_A_NEW_IMPORT,WORKFLOW_B_ELIGIBLE_INTRO,WORKFLOW_C_DEMO_NURTURING,WORKFLOW_D_APPOINTMENT',
                     ]);
-                    $lead = \App\Models\Lead::findOrFail($request->input('lead_id'));
+                    $lead = Lead::findOrFail($request->input('lead_id'));
                     abort_unless($request->user()->can('update', $lead), 403);
                     $run = $engine->triggerWorkflow($lead, $request->input('workflow_code'));
+
                     return response()->json([
                         'success' => (bool) $run,
                         'workflow_run' => $run,
@@ -183,14 +197,14 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('invoices/{uuid}/pay', [BillingController::class, 'payInvoice'])->where('uuid', '[0-9a-f\-]{36}');
                 Route::get('payments/{uuid}/receipt', [BillingController::class, 'receiptPdf'])->where('uuid', '[0-9a-f\-]{36}');
 
-                Route::get('research', [\App\Http\Controllers\Api\V1\Client\ResearchController::class, 'index']);
-                Route::get('research/{uuid}', [\App\Http\Controllers\Api\V1\Client\ResearchController::class, 'show'])->where('uuid', '[0-9a-f\-]{36}');
+                Route::get('research', [ResearchController::class, 'index']);
+                Route::get('research/{uuid}', [ResearchController::class, 'show'])->where('uuid', '[0-9a-f\-]{36}');
 
                 // Client support tickets
-                Route::get('support/tickets', [\App\Http\Controllers\Api\V1\SupportController::class, 'indexTickets']);
-                Route::post('support/tickets', [\App\Http\Controllers\Api\V1\SupportController::class, 'storeTicket']);
-                Route::get('support/tickets/{ticketNumber}', [\App\Http\Controllers\Api\V1\SupportController::class, 'showTicket']);
-                Route::post('support/tickets/{ticketNumber}/reply', [\App\Http\Controllers\Api\V1\SupportController::class, 'replyTicket']);
+                Route::get('support/tickets', [SupportController::class, 'indexTickets']);
+                Route::post('support/tickets', [SupportController::class, 'storeTicket']);
+                Route::get('support/tickets/{ticketNumber}', [SupportController::class, 'showTicket']);
+                Route::post('support/tickets/{ticketNumber}/reply', [SupportController::class, 'replyTicket']);
             });
         });
     });

@@ -34,6 +34,9 @@ use LogicException;
     'published_at',
     'publisher_id',
     'valid_until',
+    'eligible_service_ids',
+    'whatsapp_template_key',
+    'eligible_trial_types',
     'rejection_reason',
 ])]
 class ResearchVersion extends Model
@@ -41,13 +44,21 @@ class ResearchVersion extends Model
     use HasFactory;
 
     public const STATUS_DRAFT = 'DRAFT';
+
     public const STATUS_AI_REVIEW = 'AI_REVIEW';
+
     public const STATUS_COMPLIANCE_REVIEW = 'COMPLIANCE_REVIEW';
+
     public const STATUS_ANALYST_REVIEW = 'ANALYST_REVIEW';
+
     public const STATUS_APPROVED = 'APPROVED';
+
     public const STATUS_PUBLISHED = 'PUBLISHED';
+
     public const STATUS_REJECTED = 'REJECTED';
+
     public const STATUS_EXPIRED = 'EXPIRED';
+
     public const STATUS_ARCHIVED = 'ARCHIVED';
 
     public const STATUSES = [
@@ -87,6 +98,8 @@ class ResearchVersion extends Model
     {
         return [
             'version' => 'integer',
+            'eligible_service_ids' => 'array',
+            'eligible_trial_types' => 'array',
             'sections' => 'array',
             'compliance_reviewed_at' => 'datetime',
             'approved_at' => 'datetime',

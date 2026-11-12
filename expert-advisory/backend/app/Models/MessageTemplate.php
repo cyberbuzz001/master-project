@@ -22,11 +22,13 @@ class MessageTemplate extends Model
         'author_id',
         'approved_by_id',
         'approved_at',
+        'provider_template_name', 'language_code', 'provider_status', 'provider_checked_at', 'purpose', 'provider_header_format', 'provider_media_id',
     ];
 
     protected $casts = [
         'variables' => 'array',
         'approved_at' => 'datetime',
+        'provider_checked_at' => 'datetime',
     ];
 
     public function author(): BelongsTo

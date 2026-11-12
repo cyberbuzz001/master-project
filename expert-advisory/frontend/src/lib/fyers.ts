@@ -1,3 +1,5 @@
+import "server-only";
+
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -20,12 +22,12 @@ const TOKENS_CACHE_PATH =
 
 export function getFyersConfig() {
   return {
-    appId: process.env.FYERS_APP_ID || "LKT0BVGMSL-100",
-    secretKey: process.env.FYERS_SECRET_KEY || "Z90C8HPDMW",
-    clientId: process.env.FYERS_CLIENT_ID || "FAK51333",
-    pin: process.env.FYERS_PIN || "9691",
-    totpSecret: process.env.FYERS_TOTP_SECRET || "XLDTSOBQPWMJLRBL6ZKYIDXCLVPS3NUO",
-    redirectUri: process.env.FYERS_REDIRECT_URI || "https://expertstocks.in/api/v1/auth/fyers/callback",
+    appId: process.env.FYERS_APP_ID || "",
+    secretKey: process.env.FYERS_SECRET_KEY || "",
+    clientId: process.env.FYERS_CLIENT_ID || "",
+    pin: process.env.FYERS_PIN || "",
+    totpSecret: process.env.FYERS_TOTP_SECRET || "",
+    redirectUri: process.env.FYERS_REDIRECT_URI || "",
   };
 }
 
@@ -39,24 +41,26 @@ export interface FyersTokenStore {
   updatedAt: number;
 }
 
+const tokenMemory = globalThis as typeof globalThis & { __fyersTokens?: FyersTokenStore };
+
 export function readStoredTokens(): FyersTokenStore | null {
   try {
-    if ((globalThis as any).__fyersTokens) {
-      return (globalThis as any).__fyersTokens;
+    if (tokenMemory.__fyersTokens) {
+      return tokenMemory.__fyersTokens;
     }
     if (fs.existsSync(TOKENS_CACHE_PATH)) {
       const content = fs.readFileSync(TOKENS_CACHE_PATH, "utf-8");
       const parsed = JSON.parse(content);
-      (globalThis as any).__fyersTokens = parsed;
+      tokenMemory.__fyersTokens = parsed;
       return parsed;
     }
-  } catch (_) {}
+  } catch { /* An absent local cache requires OAuth authorization. */ }
   return null;
 }
 
 export function saveStoredTokens(data: FyersTokenStore): void {
   try {
-    (globalThis as any).__fyersTokens = data;
+    tokenMemory.__fyersTokens = data;
     fs.writeFileSync(TOKENS_CACHE_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (e) {
     console.error("[Fyers] Failed saving tokens to disk (in-memory preserved):", e);
@@ -101,6 +105,9 @@ export function generateTOTP(base32Secret: string): string {
  */
 export async function autoLoginFyers(): Promise<{ success: boolean; message?: string; accessToken?: string }> {
   const config = getFyersConfig();
+  if (!config.appId || !config.secretKey || !config.clientId || !config.pin || !config.totpSecret) {
+    return { success: false, message: "Broker credentials are not configured." };
+  }
   const [appIdOnly, appType] = config.appId.split("-");
   const encodeItem = (str: string) => Buffer.from(str).toString("base64");
 
@@ -201,8 +208,8 @@ export async function autoLoginFyers(): Promise<{ success: boolean; message?: st
     }
 
     return await exchangeFyersAuthCode(authCode);
-  } catch (err: any) {
-    return { success: false, message: err.message };
+  } catch (err: unknown) {
+    return { success: false, message: err instanceof Error ? err.message : "Broker request failed." };
   }
 }
 
@@ -211,6 +218,7 @@ export async function autoLoginFyers(): Promise<{ success: boolean; message?: st
  */
 export async function exchangeFyersAuthCode(code: string): Promise<{ success: boolean; accessToken?: string; message?: string }> {
   const config = getFyersConfig();
+  if (!config.appId || !config.secretKey) return { success: false, message: "Broker app is not configured." };
   const appIdHash = getAppIdHash(config.appId, config.secretKey);
 
   try {
@@ -234,8 +242,8 @@ export async function exchangeFyersAuthCode(code: string): Promise<{ success: bo
       return { success: true, accessToken: data.access_token };
     }
     return { success: false, message: data.message || JSON.stringify(data) };
-  } catch (err: any) {
-    return { success: false, message: err.message };
+  } catch (err: unknown) {
+    return { success: false, message: err instanceof Error ? err.message : "Broker request failed." };
   }
 }
 
@@ -245,8 +253,7 @@ export async function exchangeFyersAuthCode(code: string): Promise<{ success: bo
 export async function refreshFyersAccessToken(): Promise<string | null> {
   const config = getFyersConfig();
   const tokens = readStoredTokens();
-  if (!tokens?.refreshToken) return null;
-
+  if (!tokens?.refreshToken || !config.appId || !config.secretKey) return null;
   const appIdHash = getAppIdHash(config.appId, config.secretKey);
 
   try {
@@ -336,7 +343,7 @@ async function getLiveQuotesFromTradeGrow(): Promise<FyersQuoteItem[] | null> {
  */
 export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
   const config = getFyersConfig();
-  let tokens = readStoredTokens();
+  const tokens = readStoredTokens();
   let token = tokens?.accessToken;
 
   // Fallback realistic index reference data if off-market or offline
@@ -392,7 +399,7 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
 
     const data = await res.json();
     if (data.s === "ok" && Array.isArray(data.d)) {
-      return data.d.map((item: any) => {
+      return data.d.map((item: { n?: string; v?: { lp?: number; ch?: number; chp?: number; high_price?: number; low_price?: number; volume?: number } }) => {
         const v = item.v || {};
         const ltp = v.lp ?? 0;
         const change = v.ch ?? 0;
@@ -431,7 +438,7 @@ export async function getLiveMarketQuotes(): Promise<FyersQuoteItem[]> {
  * Helper to ensure an active access token is retrieved or refreshed
  */
 export async function getValidAccessToken(): Promise<string | null> {
-  let tokens = readStoredTokens();
+  const tokens = readStoredTokens();
   let token = tokens?.accessToken;
   if (!token) {
     token = (await refreshFyersAccessToken()) || "";
@@ -465,7 +472,7 @@ export interface FyersOrderResult {
   symbol: string;
   qty: number;
   message: string;
-  rawResponse?: any;
+  rawResponse?: unknown;
   placedAt: string;
 }
 
@@ -473,7 +480,7 @@ export interface FyersOrderResult {
  * Normalize human symbol (e.g. "HDFCBANK", "NIFTY 22500 CE") to Fyers V3 symbol format
  */
 export function formatFyersSymbol(symbol: string, exchange: string = "NSE"): string {
-  let s = symbol.trim().toUpperCase();
+  const s = symbol.trim().toUpperCase();
   if (s.startsWith("NSE:") || s.startsWith("BSE:") || s.startsWith("MCX:")) {
     return s;
   }
@@ -516,16 +523,14 @@ export async function placeFyersOrder(params: FyersOrderParams): Promise<FyersOr
   const timestamp = new Date().toISOString();
 
   if (!token) {
-    // In sandbox or when broker credentials not yet linked in environment
-    const sandboxOrderId = `FYERS-SBX-${Math.floor(100000 + Math.random() * 900000)}`;
     return {
-      success: true,
-      orderId: sandboxOrderId,
-      status: "SIMULATED",
+      success: false,
+      orderId: "",
+      status: "REJECTED",
       broker: "FYERS",
       symbol: fyersSymbol,
       qty: params.qty,
-      message: `[Fyers Sandbox] Pre-market GTT Order for ${params.qty} units of ${fyersSymbol} simulated successfully. Real execution activates with production API keys.`,
+      message: "Broker authorization is required before placing an order.",
       placedAt: timestamp,
     };
   }
@@ -568,7 +573,7 @@ export async function placeFyersOrder(params: FyersOrderParams): Promise<FyersOr
       rawResponse: data,
       placedAt: timestamp,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[Fyers] Order execution error:", err);
     return {
       success: false,
@@ -577,7 +582,7 @@ export async function placeFyersOrder(params: FyersOrderParams): Promise<FyersOr
       broker: "FYERS",
       symbol: fyersSymbol,
       qty: params.qty,
-      message: `Network error reaching Fyers OMS: ${err.message}`,
+      message: `Network error reaching Fyers OMS: ${err instanceof Error ? err.message : "Unknown network failure"}`,
       placedAt: timestamp,
     };
   }
@@ -586,7 +591,7 @@ export async function placeFyersOrder(params: FyersOrderParams): Promise<FyersOr
 /**
  * Fetch open positions from Fyers API V3
  */
-export async function getFyersPositions(): Promise<any[]> {
+export async function getFyersPositions(): Promise<Record<string, unknown>[]> {
   const config = getFyersConfig();
   const token = await getValidAccessToken();
   if (!token) return [];
@@ -611,7 +616,7 @@ export async function getFyersPositions(): Promise<any[]> {
 /**
  * Fetch Demat holdings from Fyers API V3
  */
-export async function getFyersHoldings(): Promise<any[]> {
+export async function getFyersHoldings(): Promise<Record<string, unknown>[]> {
   const config = getFyersConfig();
   const token = await getValidAccessToken();
   if (!token) return [];

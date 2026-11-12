@@ -2,14 +2,15 @@
 
 ## 1. Target topology (single VPS, scale-out ready)
 
+The Next.js application remains on Vercel at `www.expertstocks.in`. The VPS hosts only Laravel at `api.expertstocks.in`; Vercel's `BACKEND_URL` points to that API origin. Requests for `/office`, `/api`, `/sanctum`, Filament assets and Livewire are proxied by Next.js to Laravel.
+
 ```mermaid
 flowchart TB
   user([Browser / PWA]) --> cf[Cloudflare<br/>DNS · WAF · TLS · static cache]
   cf -->|Full strict TLS| nginx
   subgraph VPS [Linux VPS - Ubuntu 24.04 LTS]
-    nginx[Nginx<br/>TLS · HTTP/2 · gzip/brotli · rate limit]
+    nginx[Nginx<br/>api.expertstocks.in · TLS · rate limit]
     nginx -->|/api /sanctum /webhooks| fpm[PHP-FPM 8.3<br/>Laravel API]
-    nginx -->|everything else| next[Next.js server<br/>node 22 · systemd/PM2]
     sup[Supervisor] --> w1[queue:work critical]
     sup --> w2[queue:work default,comms]
     sup --> w3[queue:work ai,reports,ingest]
@@ -44,7 +45,7 @@ Scale-out path: move MySQL to a managed instance, storage to S3-compatible bucke
   backups/                       # local staging area before off-site upload
 ```
 
-Zero-downtime deploy: build in new release dir → `composer install --no-dev -o` → `npm ci && npm run build` → `php artisan migrate --force` (backwards-compatible migrations only) → `config:cache route:cache event:cache` → switch symlink → `php-fpm reload` → `queue:restart` → restart Next.js → smoke tests (`/api/v1/health`, home page) → auto-rollback symlink on failure.
+Zero-downtime API deploy: copy the `main` release into a new directory → `composer install --no-dev -o` → `php artisan migrate --force` (backwards-compatible migrations only) → `config:cache route:cache event:cache` → switch the symlink → reload PHP-FPM → restart queue workers and scheduler → smoke test `https://api.expertstocks.in/api/v1/health`. Next.js remains independently deployed by Vercel.
 
 ## 4. Security hardening
 

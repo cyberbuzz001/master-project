@@ -2,22 +2,22 @@
 
 namespace App\Filament\Resources\ResearchReports;
 
+use App\Domain\Audit\AuditLogger;
 use App\Domain\Research\ResearchWorkflowService;
 use App\Filament\Resources\ResearchReports\Pages\CreateResearchReport;
 use App\Filament\Resources\ResearchReports\Pages\ListResearchReports;
 use App\Filament\Resources\ResearchReports\Pages\ViewResearchReport;
 use App\Filament\Support\DomainAction;
 use App\Models\MarketDataSnapshot;
-use App\Models\ResearchRecommendation;
+use App\Models\MessageTemplate;
 use App\Models\ResearchReport;
 use App\Models\ResearchVersion;
+use App\Models\Service;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -27,11 +27,13 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use UnitEnum;
 
 class ResearchReportResource extends Resource
@@ -114,6 +116,26 @@ class ResearchReportResource extends Resource
             ->actions([
                 ViewAction::make(),
                 ActionGroup::make([
+                    Action::make('draft_audience')->label('Set draft audience')->visible(fn (ResearchReport $record): bool => $record->currentVersion?->status === ResearchVersion::STATUS_DRAFT && auth()->user()->can('research.edit_draft'))
+                        ->schema([
+                            Select::make('eligible_service_ids')->multiple()->options(fn () => Service::pluck('name', 'id'))->searchable(),
+                            Select::make('eligible_trial_types')->multiple()->options(['equity' => 'Equity', 'index_options' => 'Index options', 'commodity' => 'Commodity', 'combo' => 'Combo']),
+                            Select::make('whatsapp_template_key')->options(fn () => MessageTemplate::where('channel', 'whatsapp')->where('status', 'approved')->whereIn('purpose', ['research_communication', 'educational_content'])->pluck('name', 'key'))->searchable(),
+                        ])->fillForm(fn (ResearchReport $record): array => ['eligible_service_ids' => $record->currentVersion->eligible_service_ids, 'eligible_trial_types' => $record->currentVersion->eligible_trial_types, 'whatsapp_template_key' => $record->currentVersion->whatsapp_template_key])
+                        ->action(function (ResearchReport $record, array $data): void {
+                            Gate::authorize('research.edit_draft');
+                            DB::transaction(function () use ($record, $data): void {
+                                $version = ResearchVersion::whereKey($record->current_version_id)->lockForUpdate()->firstOrFail();
+                                abort_unless($version->status === ResearchVersion::STATUS_DRAFT, 409);
+                                $validated = Validator::make($data, [
+                                    'eligible_service_ids' => 'nullable|array', 'eligible_service_ids.*' => 'integer|distinct|exists:services,id',
+                                    'eligible_trial_types' => 'nullable|array', 'eligible_trial_types.*' => 'distinct|in:equity,index_options,commodity,combo',
+                                    'whatsapp_template_key' => 'nullable|string|exists:message_templates,key',
+                                ])->validate();
+                                $version->update($validated);
+                                app(AuditLogger::class)->record('research.draft_audience_updated', $version, new: $validated);
+                            });
+                        }),
                     Action::make('submit_for_review')
                         ->label('Submit for review')
                         ->icon(Heroicon::OutlinedPaperAirplane)

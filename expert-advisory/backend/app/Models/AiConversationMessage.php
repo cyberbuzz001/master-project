@@ -18,7 +18,7 @@ class AiConversationMessage extends Model
         return [
             'sent_at' => 'datetime',
             'delivered_at' => 'datetime',
-            'read_at' => 'datetime',
+            'read_at' => 'datetime', 'provider_status_at' => 'datetime',
         ];
     }
 

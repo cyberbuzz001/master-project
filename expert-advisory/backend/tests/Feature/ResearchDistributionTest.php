@@ -4,16 +4,18 @@ namespace Tests\Feature;
 
 use App\Domain\Compliance\ComplianceGate;
 use App\Domain\MarketData\MarketDataSnapshotService;
-use App\Domain\Research\ResearchDistributionService;
 use App\Domain\Research\ResearchWorkflowService;
 use App\Models\Client;
 use App\Models\Plan;
+use App\Models\PlanVersion;
 use App\Models\PolicyDocument;
 use App\Models\PolicyDocumentVersion;
 use App\Models\RegulatoryProfileVersion;
 use App\Models\ResearchDistribution;
 use App\Models\ResearchReport;
 use App\Models\RiskProfile;
+use App\Models\RiskQuestionnaire;
+use App\Models\RiskQuestionnaireVersion;
 use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\User;
@@ -77,8 +79,8 @@ class ResearchDistributionTest extends TestCase
 
         $this->prepareComplianceGate($compliance, $approver);
 
-        $questionnaire = \App\Models\RiskQuestionnaire::create(['code' => 'suitability', 'title' => 'Suitability']);
-        $qVersion = new \App\Models\RiskQuestionnaireVersion([
+        $questionnaire = RiskQuestionnaire::create(['code' => 'suitability', 'title' => 'Suitability']);
+        $qVersion = new RiskQuestionnaireVersion([
             'risk_questionnaire_id' => $questionnaire->id, 'version' => 1, 'methodology_version' => 'test-1.0',
             'bands' => [['key' => 'balanced', 'label' => 'Balanced', 'min_score' => 0, 'max_score' => 100]],
         ]);
@@ -92,7 +94,7 @@ class ResearchDistributionTest extends TestCase
             'full_name' => 'Client Conservative',
             'email' => $clientAUser->email,
         ]);
-        $rpA = new RiskProfile();
+        $rpA = new RiskProfile;
         $rpA->forceFill([
             'client_id' => $clientA->id,
             'risk_questionnaire_version_id' => $qVersion->id,
@@ -103,7 +105,9 @@ class ResearchDistributionTest extends TestCase
             'status' => RiskProfile::FINALIZED,
             'answers_sha256' => str_repeat('a', 64),
             'finalized_at' => now(),
+            'acknowledged_at' => now(),
         ])->save();
+        $clientA->forceFill(['onboarding_status' => 'ACTIVE', 'kyc_status' => 'verified'])->save();
         $this->createActiveSubscription($clientA);
 
         // 2. Client B: Aggressive risk profile with active subscription
@@ -114,7 +118,7 @@ class ResearchDistributionTest extends TestCase
             'full_name' => 'Client Aggressive',
             'email' => $clientBUser->email,
         ]);
-        $rpB = new RiskProfile();
+        $rpB = new RiskProfile;
         $rpB->forceFill([
             'client_id' => $clientB->id,
             'risk_questionnaire_version_id' => $qVersion->id,
@@ -125,10 +129,12 @@ class ResearchDistributionTest extends TestCase
             'status' => RiskProfile::FINALIZED,
             'answers_sha256' => str_repeat('b', 64),
             'finalized_at' => now(),
+            'acknowledged_at' => now(),
         ])->save();
+        $clientB->forceFill(['onboarding_status' => 'ACTIVE', 'kyc_status' => 'verified'])->save();
         $this->createActiveSubscription($clientB);
 
-        // 3. Client C: Active subscription, but NO risk profile (defaults to moderate)
+        // 3. Client C: Active subscription, but NO risk profile (must be excluded)
         $clientCUser = $this->makeClient(['email' => 'clientc@example.test']);
         $clientC = Client::create([
             'user_id' => $clientCUser->id,
@@ -141,6 +147,7 @@ class ResearchDistributionTest extends TestCase
         // 4. Create and publish HIGH risk recommendation report
         $report = $workflow->createReport($author, [
             'title' => 'High Beta Futures Call',
+            'eligible_service_ids' => [Service::where('code', 'equity-pro')->value('id')],
             'report_type' => ResearchReport::TYPE_TECHNICAL,
             'category' => ResearchReport::CATEGORY_RECOMMENDATION,
             'summary' => 'High risk trading call.',
@@ -181,7 +188,7 @@ class ResearchDistributionTest extends TestCase
             'delivery_status' => ResearchDistribution::STATUS_DELIVERED,
         ]);
 
-        // Client C (Moderate < High) -> SKIPPED_SUITABILITY
+        // Client C (no finalized risk profile) -> SKIPPED_SUITABILITY
         $this->assertDatabaseHas('research_distributions', [
             'research_version_id' => $version->id,
             'client_id' => $clientC->id,
@@ -199,7 +206,7 @@ class ResearchDistributionTest extends TestCase
             ['code' => 'equity-pro-monthly'],
             ['service_id' => $service->id, 'name' => 'Monthly', 'billing_cycle' => 'monthly', 'duration_days' => 30]
         );
-        $planVersion = \App\Models\PlanVersion::firstOrCreate(
+        $planVersion = PlanVersion::firstOrCreate(
             ['plan_id' => $plan->id, 'version' => 1],
             ['base_price_paise' => 100000, 'tax_code' => 'gst_18']
         );

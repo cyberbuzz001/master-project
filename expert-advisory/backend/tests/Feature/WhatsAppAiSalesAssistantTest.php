@@ -3,9 +3,6 @@
 namespace Tests\Feature;
 
 use App\Domain\Ai\AiWhatsAppSalesAssistant;
-use App\Domain\Communications\WhatsAppService;
-use App\Models\AiConversation;
-use App\Models\AiConversationMessage;
 use App\Models\Appointment;
 use App\Models\FreeTrial;
 use App\Models\Lead;
@@ -16,6 +13,7 @@ use App\Models\SuppressionRecord;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class WhatsAppAiSalesAssistantTest extends TestCase
@@ -23,11 +21,15 @@ class WhatsAppAiSalesAssistantTest extends TestCase
     use RefreshDatabase;
 
     private AiWhatsAppSalesAssistant $assistant;
+
     private Lead $testLead;
 
     protected function setUp(): void
     {
         parent::setUp();
+        config(['services.whatsapp.automation_enabled' => true, 'services.whatsapp.access_token' => 'test-token', 'services.whatsapp.phone_number_id' => '123', 'services.whatsapp.graph_version' => 'v23.0', 'services.whatsapp.verify_token' => 'test-verify']);
+        Http::preventStrayRequests();
+        Http::fake(['https://graph.facebook.com/v23.0/123/messages' => Http::response(['messages' => [['id' => 'wamid.test']]], 200)]);
         $this->assistant = app(AiWhatsAppSalesAssistant::class);
 
         $this->testLead = Lead::create([
@@ -39,12 +41,23 @@ class WhatsAppAiSalesAssistantTest extends TestCase
         ]);
     }
 
+    public function test_automation_disabled_still_records_inbound_and_honors_stop_without_sending(): void
+    {
+        config(['services.whatsapp.automation_enabled' => false]);
+        $result = $this->assistant->handleIncomingMessage($this->testLead, 'I want a free demo');
+        $this->assertSame('automation_disabled', $result['status']);
+        $this->assertDatabaseCount('free_trials', 0);
+        $this->assertDatabaseHas('ai_conversation_messages', ['lead_id' => $this->testLead->id, 'direction' => 'inbound']);
+        $this->assertSame('opted_out_suppressed', $this->assistant->handleIncomingMessage($this->testLead, 'STOP')['status']);
+        Http::assertNothingSent();
+    }
+
     /**
      * Test Meta Webhook handshake verification.
      */
     public function test_meta_webhook_challenge_handshake(): void
     {
-        $response = $this->get('/api/v1/webhooks/whatsapp?hub_mode=subscribe&hub_verify_token=esc_wa_verify_token_2026&hub_challenge=challenge_token_987');
+        $response = $this->get('/api/v1/webhooks/whatsapp?hub_mode=subscribe&hub_verify_token=test-verify&hub_challenge=challenge_token_987');
 
         $response->assertStatus(200);
         $this->assertEquals('challenge_token_987', $response->getContent());
@@ -79,17 +92,17 @@ class WhatsAppAiSalesAssistantTest extends TestCase
 
         $this->assertEquals('replied', $result['status']);
         $this->assertEquals('WANTS_FREE_DEMO', $result['intent']);
-        $this->assertEquals('DEMO_BOOKED', $result['next_state']);
+        $this->assertEquals('DEMO_REQUESTED', $result['next_state']);
         $this->assertStringContainsString('Complimentary Research Demo', $result['reply_text']);
 
         // Verify FreeTrial is created
         $trial = FreeTrial::where('lead_id', $this->testLead->id)->first();
         $this->assertNotNull($trial);
-        $this->assertEquals('active', $trial->status);
+        $this->assertEquals('requested', $trial->status);
         $this->assertTrue(str_starts_with($trial->trial_code, 'DEMO-'));
 
         $this->testLead->refresh();
-        $this->assertEquals('FREE_TRIAL', $this->testLead->status);
+        $this->assertEquals('NEW', $this->testLead->status);
         $this->assertNotNull($this->testLead->demo_requested_at);
     }
 
@@ -102,13 +115,13 @@ class WhatsAppAiSalesAssistantTest extends TestCase
 
         $this->assertEquals('replied', $result['status']);
         $this->assertEquals('WANTS_APPOINTMENT', $result['intent']);
-        $this->assertEquals('APPOINTMENT_BOOKED', $result['next_state']);
-        $this->assertStringContainsString('appointment has been scheduled', $result['reply_text']);
+        $this->assertEquals('APPOINTMENT_REQUESTED', $result['next_state']);
+        $this->assertStringContainsString('appointment request has been received', $result['reply_text']);
 
         // Verify Appointment record created
         $apt = Appointment::where('lead_id', $this->testLead->id)->first();
         $this->assertNotNull($apt);
-        $this->assertEquals('confirmed', $apt->status);
+        $this->assertEquals('requested', $apt->status);
         $this->assertTrue(str_starts_with($apt->appointment_code, 'APT-'));
 
         $this->testLead->refresh();
@@ -198,7 +211,7 @@ class WhatsAppAiSalesAssistantTest extends TestCase
         $this->assertEquals('replied', $result['status']);
         $this->assertEquals('WANTS_FREE_DEMO', $result['intent']);
         $this->assertStringContainsString('रिसर्च डेमो', $result['reply_text']);
-        $this->assertStringContainsString('बधाई हो', $result['reply_text']);
+        $this->assertStringContainsString('अनुरोध मिला है', $result['reply_text']);
     }
 
     /**

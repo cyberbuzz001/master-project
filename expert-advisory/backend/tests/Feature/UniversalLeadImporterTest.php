@@ -14,13 +14,14 @@ class UniversalLeadImporterTest extends TestCase
     use RefreshDatabase;
 
     private UniversalLeadImporter $importer;
+
     private User $adminUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->importer = new UniversalLeadImporter();
-        $this->adminUser = User::factory()->create(['email' => 'admin@expertstocks.in']);
+        $this->importer = new UniversalLeadImporter;
+        $this->adminUser = $this->makeStaff('super_admin', ['email' => 'admin@expertstocks.in']);
     }
 
     /**
@@ -99,9 +100,9 @@ KV;
             'country' => 'India',
         ]);
 
-        $rawText = "Rahul Sharma\t9876543210\n" .            // Valid New
-                   "Existing Customer\t9988776655\n" .        // Duplicate in CRM
-                   "Rahul Duplicate\t9876543210\n" .         // Duplicate in File
+        $rawText = "Rahul Sharma\t9876543210\n".            // Valid New
+                   "Existing Customer\t9988776655\n".        // Duplicate in CRM
+                   "Rahul Duplicate\t9876543210\n".         // Duplicate in File
                    "Invalid Person\t12345\n";                // Invalid phone
 
         $parsed = $this->importer->parseRawText($rawText);

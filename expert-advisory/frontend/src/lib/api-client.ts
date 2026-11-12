@@ -17,7 +17,14 @@ function readCookie(name: string): string | null {
 async function ensureCsrf(force = false): Promise<void> {
   if (!force && readCookie("XSRF-TOKEN")) return;
   if (!csrfReady || force) {
-    csrfReady = fetch("/sanctum/csrf-cookie", { credentials: "include" }).then(() => undefined);
+    csrfReady = fetch("/sanctum/csrf-cookie", { credentials: "include", cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new ApiError(response.status, "CSRF_UNAVAILABLE", "Unable to start a secure session. Please try again later.");
+      })
+      .catch((error: unknown) => {
+        csrfReady = null;
+        throw error;
+      });
   }
   await csrfReady;
 }

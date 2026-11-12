@@ -25,12 +25,12 @@ class MessageLog extends Model
         'status',
         'provider_message_id',
         'sent_at',
-        'error_message',
+        'error_message', 'provider_status_at',
     ];
 
     protected $casts = [
         'consent_verified' => 'boolean',
-        'sent_at' => 'datetime',
+        'sent_at' => 'datetime', 'provider_status_at' => 'datetime',
     ];
 
     protected static function booted(): void

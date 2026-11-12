@@ -13,17 +13,22 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use UnitEnum;
 
 class LeadImportBatchResource extends Resource
@@ -44,8 +49,19 @@ class LeadImportBatchResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['vendor:id,name', 'campaign:id,name', 'uploadedBy:id,name']);
+        $query = parent::getEloquentQuery()->with(['vendor:id,name', 'campaign:id,name', 'uploadedBy:id,name']);
+
+        return auth()->user()->can('leads.view_all') ? $query : $query->where('uploaded_by_id', auth()->id());
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('leads.import');
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 
     public static function table(Table $table): Table
@@ -94,6 +110,7 @@ class LeadImportBatchResource extends Resource
                     ->icon(Heroicon::OutlinedDocumentArrowDown)
                     ->color('primary')
                     ->action(function (LeadImportBatch $record) {
+                        Gate::authorize('view', $record);
                         $importer = app(UniversalLeadImporter::class);
                         $csvContent = $importer->generateValidationReportCsv($record);
 
@@ -113,130 +130,72 @@ class LeadImportBatchResource extends Resource
     {
         return Action::make('universalBulkImport')
             ->label('Bulk Upload & Paste Numbers')
+            ->visible(fn (): bool => auth()->user()->can('leads.import'))
             ->icon(Heroicon::OutlinedCloudArrowUp)
-            ->color('primary')
-            ->modalHeading('Universal Bulk Lead Importer (Excel, CSV, Raw Numbers, OCR)')
-            ->modalDescription('Paste phone numbers / contacts directly or upload spreadsheets, CSVs, or OCR screenshots. Leads are automatically validated, deduplicated, scored, and enrolled into CRM automation.')
             ->modalWidth('2xl')
-            ->schema([
-                FileUpload::make('file')
-                    ->label('Upload File (Excel .xlsx, CSV, TXT, or Screenshot Image)')
-                    ->disk('local')
-                    ->directory('lead_imports_temp')
-                    ->acceptedFileTypes([
-                        'text/csv',
-                        'text/plain',
-                        'application/vnd.ms-excel',
-                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'image/png',
-                        'image/jpeg',
-                        'image/webp',
-                    ])
-                    ->helperText('Upload an Excel file (.xlsx, .xls), CSV file, or screenshot image.'),
-                Textarea::make('raw_text')
-                    ->label('Or Paste Numbers / Contacts in Bulk')
-                    ->placeholder("Paste numbers here, for example:\n9876543210\n9123456780\nRahul Sharma — 9876543210\n\"fullName\": \"Attada Prasad\", \"mobile\": \"9912829401\"")
-                    ->rows(6)
-                    ->helperText('Accepts one phone number per line, comma-separated numbers, Name - Mobile, or JSON lines.'),
-                Select::make('vendor_id')
-                    ->label('Lead Vendor / Data Source')
-                    ->options(fn () => Vendor::pluck('name', 'id'))
-                    ->searchable()
-                    ->placeholder('Direct / Organic Ingestion'),
-                Select::make('campaign_id')
-                    ->label('Marketing Campaign')
-                    ->options(fn () => Campaign::pluck('name', 'id'))
-                    ->searchable()
-                    ->placeholder('None / General Campaign'),
-                Select::make('assign_to_employee_id')
-                    ->label('Assign All To (Optional)')
-                    ->options(fn () => app(LeadAssignmentService::class)->assignableEmployees(auth()->user())->mapWithKeys(fn (Employee $e) => [$e->id => $e->displayName()]))
-                    ->searchable()
-                    ->placeholder('Auto-Assign based on Round-Robin & Capacity')
-                    ->visible(fn () => auth()->user()?->can('leads.assign')),
-                TextInput::make('consent_basis')
-                    ->label('Statutory Consent Basis / Source')
-                    ->default('Direct Bulk Ingestion / Customer Inquiry')
-                    ->placeholder('e.g. Website registration, ad inquiry, customer opt-in')
-                    ->maxLength(255),
-                Checkbox::make('consent_whatsapp')
-                    ->label('Consent verified for WhatsApp outreach')
-                    ->default(true),
-                Checkbox::make('consent_calls')
-                    ->label('Consent verified for phone calls')
-                    ->default(true),
-            ])
-            ->action(function (array $data) {
-                $importer = app(UniversalLeadImporter::class);
-
-                $filePath = null;
-                $originalName = 'Pasted Raw Numbers/Contacts';
-                $importFormat = 'text_raw';
-                $parsedRows = [];
-
-                if (!empty($data['file'])) {
-                    $filePath = Storage::disk('local')->path($data['file']);
-                    $originalName = basename($filePath);
-                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-
-                    if (in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) {
-                        $parsedRows = $importer->parseImageScreenshot($filePath);
-                        $importFormat = 'screenshot_ocr';
-                    } else {
-                        $parsedRows = $importer->parseSpreadsheetFile($filePath, $ext);
-                        $importFormat = in_array($ext, ['xlsx', 'xls']) ? 'excel' : 'csv';
+            ->steps([
+                Step::make('Source')->schema([
+                    Hidden::make('preview_id'),
+                    Hidden::make('preview_summary'),
+                    FileUpload::make('file')->label('CSV, TXT, XLSX or screenshot')
+                        ->disk('local')->directory(fn (): string => 'lead_imports_temp/'.auth()->id())
+                        ->visibility('private')->maxSize(4096)
+                        ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/png', 'image/jpeg', 'image/webp']),
+                    Textarea::make('raw_text')->label('Or paste contacts')->rows(6)->maxLength(100000),
+                ])->afterValidation(function (Get $get, Set $set): void {
+                    Gate::authorize('leads.import');
+                    $importer = app(UniversalLeadImporter::class);
+                    $rows = [];
+                    if ($file = $get('file')) {
+                        $prefix = 'lead_imports_temp/'.auth()->id().'/';
+                        if (! str_starts_with($file, $prefix) || ! preg_match('/^[a-zA-Z0-9._-]+$/', substr($file, strlen($prefix)))) {
+                            throw ValidationException::withMessages(['file' => 'Invalid upload reference.']);
+                        }
+                        $path = Storage::disk('local')->path($file);
+                        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                        $rows = in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)
+                            ? $importer->parseImageScreenshot($path)
+                            : $importer->parseSpreadsheetFile($path, $ext);
                     }
-                }
-
-                if (!empty($data['raw_text'])) {
-                    $textRows = $importer->parseRawText($data['raw_text']);
-                    $parsedRows = array_merge($parsedRows, $textRows);
-                    if (empty($data['file'])) {
-                        $importFormat = 'text_raw';
+                    if ($text = $get('raw_text')) {
+                        $rows = array_merge($rows, $importer->parseRawText($text));
                     }
-                }
-
-                if (empty($parsedRows)) {
-                    Notification::make()
-                        ->title('Import Failed')
-                        ->body('No valid phone numbers or records could be detected in the provided file/text.')
-                        ->danger()
-                        ->send();
-                    return;
-                }
-
-                $vendorId = !empty($data['vendor_id']) ? (int) $data['vendor_id'] : null;
-                $preview = $importer->previewAndValidate($parsedRows, $vendorId);
-
-                if (($preview['summary']['total_rows'] ?? 0) === 0) {
-                    Notification::make()
-                        ->title('Import Failed')
-                        ->body('No valid contact numbers could be found in the provided data.')
-                        ->danger()
-                        ->send();
-                    return;
-                }
-
-                $batch = $importer->executeImport(
-                    previewResult: $preview,
-                    options: [
-                        'original_filename' => $originalName,
-                        'import_format' => $importFormat,
-                        'vendor_id' => $vendorId,
-                        'campaign_id' => !empty($data['campaign_id']) ? (int) $data['campaign_id'] : null,
-                        'consent_basis' => !empty($data['consent_basis']) ? $data['consent_basis'] : 'Direct Bulk CRM Ingestion',
-                        'consent_whatsapp' => (bool) ($data['consent_whatsapp'] ?? true),
-                        'consent_calls' => (bool) ($data['consent_calls'] ?? true),
-                        'assign_to_employee_id' => !empty($data['assign_to_employee_id']) ? (int) $data['assign_to_employee_id'] : null,
-                    ],
-                    user: auth()->user()
-                );
-
-                Notification::make()
-                    ->title("Import Completed: Batch {$batch->batch_code}")
-                    ->body("Accepted: {$batch->accepted_count} | Duplicates: {$batch->duplicate_count} | Invalid: {$batch->invalid_count} | Format: {$batch->import_format}")
-                    ->success()
-                    ->send();
+                    if (! $rows) {
+                        throw ValidationException::withMessages(['raw_text' => 'Upload a file or paste contacts before continuing.']);
+                    }
+                    $preview = $importer->createPreview($rows, auth()->user());
+                    $summary = $preview->payload['summary'];
+                    $details = ['Total: '.$summary['total_rows'], 'Eligible: '.$summary['eligible_import_count'],
+                        'Duplicates: '.($summary['duplicate_in_file_count'] + $summary['duplicate_in_crm_count']),
+                        'Invalid: '.$summary['invalid_count'], 'Suppressed: '.$summary['suppressed_count']];
+                    foreach (array_slice($preview->payload['rows'], 0, 25) as $row) {
+                        if ($row['validation_status'] !== 'valid_new') {
+                            $details[] = 'Row '.$row['row_number'].': '.$row['validation_status'].' — '.($row['error_reason'] ?? '');
+                        }
+                    }
+                    $set('preview_id', $preview->id);
+                    $set('preview_summary', implode("\n", $details));
+                }),
+                Step::make('Review & confirm')->schema([
+                    Textarea::make('preview_display')->formatStateUsing(fn (Get $get) => $get('preview_summary'))->label('Validation preview')->rows(10)->disabled()->dehydrated(false),
+                    Select::make('vendor_id')->label('Vendor')->options(fn () => Vendor::query()->where('status', 'active')->pluck('name', 'id'))->searchable(),
+                    Select::make('campaign_id')->label('Campaign')->options(fn () => Campaign::pluck('name', 'id'))->searchable(),
+                    Select::make('assign_to_employee_id')->label('Assign to')->visible(fn (): bool => auth()->user()->can('leads.assign'))
+                        ->options(fn () => app(LeadAssignmentService::class)->assignableEmployees(auth()->user())->mapWithKeys(fn (Employee $employee) => [$employee->id => $employee->displayName()]))->searchable(),
+                    Textarea::make('consent_basis')->label('Source and consent evidence')->required()->minLength(10)->maxLength(1000),
+                    Checkbox::make('consent_whatsapp')->label('Explicit WhatsApp opt-in is documented')->default(false),
+                    Checkbox::make('consent_calls')->label('Explicit call opt-in is documented')->default(false),
+                ]),
+            ])->action(function (array $data): void {
+                $batch = app(UniversalLeadImporter::class)->commitPreview($data['preview_id'], [
+                    'original_filename' => 'Staff upload', 'import_format' => 'universal',
+                    'consent_basis' => $data['consent_basis'], 'consent_whatsapp' => (bool) ($data['consent_whatsapp'] ?? false),
+                    'consent_calls' => (bool) ($data['consent_calls'] ?? false),
+                    'vendor_id' => $data['vendor_id'] ?? null, 'campaign_id' => $data['campaign_id'] ?? null,
+                    'assign_to_employee_id' => $data['assign_to_employee_id'] ?? null,
+                ], auth()->user());
+                Notification::make()->success()->title('Import completed: '.$batch->batch_code)
+                    ->body('Accepted: '.$batch->accepted_count.' · Duplicates: '.$batch->duplicate_count.' · Invalid: '.$batch->invalid_count)->send();
             });
     }
 

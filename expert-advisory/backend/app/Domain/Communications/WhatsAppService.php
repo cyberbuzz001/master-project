@@ -2,291 +2,151 @@
 
 namespace App\Domain\Communications;
 
+use App\Domain\Compliance\ConsentRecorder;
+use App\Domain\Crm\PhoneNormalizer;
 use App\Models\AiConversation;
 use App\Models\AiConversationMessage;
+use App\Models\Client;
 use App\Models\Lead;
 use App\Models\MessageLog;
 use App\Models\MessageTemplate;
 use App\Models\SuppressionRecord;
-use App\Models\SystemSetting;
 use Carbon\Carbon;
-use Exception;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    /**
-     * Send free-form WhatsApp message within 24h customer-service messaging window.
-     *
-     * @param string $to Phone number (10-digit or E.164)
-     * @param string $text Message content
-     * @param Lead|null $lead
-     * @param AiConversation|null $conversation
-     * @return array<string, mixed>
-     */
     public function sendText(string $to, string $text, ?Lead $lead = null, ?AiConversation $conversation = null): array
     {
-        $cleanPhone = $this->normalizePhone($to);
-
-        // 1. Check Centralized Suppression
-        if (SuppressionRecord::isSuppressed($cleanPhone, null, 'whatsapp')) {
-            Log::info("[WhatsApp] Dispatch refused: {$cleanPhone} is on suppression list.");
-            return [
-                'success' => false,
-                'status' => 'suppressed',
-                'error' => 'Contact is suppressed (opted out or DND).',
-            ];
+        $phone = PhoneNormalizer::toE164($to);
+        if (! $lead || ! $phone || $phone !== PhoneNormalizer::toE164($lead->mobile) || ! $this->isInsideCustomerServiceWindow($lead)) {
+            return $this->refused('window_expired', 'A verified inbound customer-service window is required.');
         }
-
-        // 2. Check Quiet Hours (9:00 AM to 8:00 PM IST)
-        if ($this->isQuietHoursNow()) {
-            Log::info("[WhatsApp] Dispatch deferred: Currently quiet hours (outside 9am-8pm IST).");
-            return [
-                'success' => false,
-                'status' => 'quiet_hours_deferred',
-                'error' => 'Promotional outreach is restricted outside 9:00 AM to 8:00 PM IST under TRAI/SEBI guidelines.',
-            ];
+        if ($this->blocked($lead, $phone) || mb_strlen($text) > 4096 || trim($text) === '') {
+            return $this->refused('suppressed', 'Recipient is suppressed or message is invalid.');
         }
-
-        // 3. Check 24-Hour Messaging Window for Free-form Text
-        if ($lead && !$this->isInsideCustomerServiceWindow($lead)) {
-            Log::warning("[WhatsApp] 24h session window expired for lead #{$lead->id}. Free-form text blocked; pre-approved template required.");
-            return [
-                'success' => false,
-                'status' => 'window_expired',
-                'error' => 'Customer service 24-hour window closed. Only Meta-approved templates may initiate conversation.',
-            ];
-        }
-
-        // 4. Retrieve Meta Cloud API Credentials
-        $token = env('WHATSAPP_ACCESS_TOKEN') ?: (class_exists(SystemSetting::class) ? SystemSetting::where('key', 'whatsapp_access_token')->value('value') : null);
-        $phoneId = env('WHATSAPP_PHONE_NUMBER_ID') ?: (class_exists(SystemSetting::class) ? SystemSetting::where('key', 'whatsapp_phone_number_id')->value('value') : null);
-
-        $providerMessageId = null;
-        $status = 'sent';
-        $errorMessage = null;
-
-        if (!empty($token) && !empty($phoneId)) {
-            // Live Meta Cloud Graph API v17.0+
-            $url = "https://graph.facebook.com/v17.0/{$phoneId}/messages";
-            $payload = [
-                'messaging_product' => 'whatsapp',
-                'recipient_type' => 'individual',
-                'to' => ltrim($cleanPhone, '+'),
-                'type' => 'text',
-                'text' => [
-                    'preview_url' => false,
-                    'body' => $text,
-                ],
-            ];
-
-            try {
-                $response = Http::withToken($token)->timeout(20)->post($url, $payload);
-                if ($response->successful()) {
-                    $providerMessageId = $response->json('messages.0.id');
-                    $status = 'sent';
-                } else {
-                    $status = 'failed';
-                    $errorMessage = 'Meta API Error: ' . $response->json('error.message', $response->body());
-                    Log::error('[WhatsApp] Meta dispatch error:', ['response' => $response->json()]);
-                }
-            } catch (Exception $e) {
-                $status = 'failed';
-                $errorMessage = 'Meta API Exception: ' . $e->getMessage();
-                Log::error('[WhatsApp] Meta connection error:', ['error' => $e->getMessage()]);
-            }
-        } else {
-            // Graceful Mock/Sandbox Dispatch (for development/staging environments)
-            $providerMessageId = 'mock_wamid_' . bin2hex(random_bytes(10));
-            $status = 'sent';
-            Log::info("[WhatsApp Mock Mode] Dispatched to {$cleanPhone}: {$text}");
-        }
-
-        // 5. Log Message in Database
-        if ($conversation && $lead) {
+        $result = $this->dispatch(['messaging_product' => 'whatsapp', 'to' => ltrim($phone, '+'), 'type' => 'text', 'text' => ['preview_url' => false, 'body' => $text]]);
+        if ($conversation) {
             AiConversationMessage::create([
-                'conversation_id' => $conversation->id,
-                'lead_id' => $lead->id,
-                'direction' => 'outbound',
-                'sender_type' => 'ai_assistant',
-                'message_text' => $text,
-                'provider_message_id' => $providerMessageId,
-                'delivery_status' => $status,
-                'error_message' => $errorMessage,
-                'sent_at' => $status === 'sent' ? now() : null,
+                'conversation_id' => $conversation->id, 'lead_id' => $lead->id, 'direction' => 'outbound', 'sender_type' => 'ai_assistant',
+                'message_text' => $text, 'provider_message_id' => $result['provider_message_id'] ?? null,
+                'delivery_status' => $result['status'], 'error_message' => $result['error'] ?? null,
+                'sent_at' => $result['success'] ? now() : null,
             ]);
-
             $conversation->increment('total_messages');
             $conversation->update(['last_activity_at' => now()]);
         }
 
-        return [
-            'success' => $status === 'sent',
-            'status' => $status,
-            'provider_message_id' => $providerMessageId,
-            'error' => $errorMessage,
-        ];
+        return $result;
     }
 
-    /**
-     * Send pre-approved WhatsApp Template with dynamic parameters.
-     *
-     * @param string $to
-     * @param string $templateName
-     * @param array<int, string> $parameters
-     * @param Lead|null $lead
-     * @param string $languageCode
-     * @return array<string, mixed>
-     */
-    public function sendTemplate(
-        string $to,
-        string $templateName,
-        array $parameters = [],
-        ?Lead $lead = null,
-        string $languageCode = 'en'
-    ): array {
-        $cleanPhone = $this->normalizePhone($to);
-
-        // 1. Suppression Check
-        if (SuppressionRecord::isSuppressed($cleanPhone, null, 'whatsapp')) {
-            return [
-                'success' => false,
-                'status' => 'suppressed',
-                'error' => 'Contact is suppressed.',
-            ];
+    public function sendTemplate(string $to, string $templateName, array $parameters = [], ?Lead $lead = null, string $languageCode = 'en'): array
+    {
+        if (! $lead || PhoneNormalizer::toE164($to) !== PhoneNormalizer::toE164($lead->mobile)) {
+            return $this->refused('recipient_required', 'A matching CRM recipient is required.');
         }
-
-        // 2. Consent Check for Leads
-        if ($lead && in_array($lead->communication_state, ['OPTED_OUT', 'DO_NOT_CONTACT', 'CHANNEL_RESTRICTED'])) {
-            return [
-                'success' => false,
-                'status' => 'consent_refused',
-                'error' => "Lead communication state is {$lead->communication_state}. Template dispatch refused.",
-            ];
-        }
-
-        // 3. Quiet Hours Check
-        if ($this->isQuietHoursNow()) {
-            return [
-                'success' => false,
-                'status' => 'quiet_hours_deferred',
-                'error' => 'Promotional messaging restricted during quiet hours (8pm-9am IST).',
-            ];
-        }
-
-        $token = env('WHATSAPP_ACCESS_TOKEN');
-        $phoneId = env('WHATSAPP_PHONE_NUMBER_ID');
-
-        $providerMessageId = null;
-        $status = 'sent';
-        $errorMessage = null;
-
-        if (!empty($token) && !empty($phoneId)) {
-            $components = [];
-            if (!empty($parameters)) {
-                $bodyParams = [];
-                foreach ($parameters as $p) {
-                    $bodyParams[] = ['type' => 'text', 'text' => (string) $p];
-                }
-                $components[] = [
-                    'type' => 'body',
-                    'parameters' => $bodyParams,
-                ];
-            }
-
-            $payload = [
-                'messaging_product' => 'whatsapp',
-                'to' => ltrim($cleanPhone, '+'),
-                'type' => 'template',
-                'template' => [
-                    'name' => $templateName,
-                    'language' => ['code' => $languageCode],
-                    'components' => $components,
-                ],
-            ];
-
-            try {
-                $url = "https://graph.facebook.com/v17.0/{$phoneId}/messages";
-                $response = Http::withToken($token)->timeout(20)->post($url, $payload);
-                if ($response->successful()) {
-                    $providerMessageId = $response->json('messages.0.id');
-                    $status = 'sent';
-                } else {
-                    $status = 'failed';
-                    $errorMessage = 'Meta Template Error: ' . $response->json('error.message', $response->body());
-                    Log::error('[WhatsApp Template] Meta error:', ['response' => $response->json()]);
-                }
-            } catch (Exception $e) {
-                $status = 'failed';
-                $errorMessage = 'Meta Template Exception: ' . $e->getMessage();
-            }
-        } else {
-            // Mock mode
-            $providerMessageId = 'mock_tpl_wamid_' . bin2hex(random_bytes(10));
-            $status = 'sent';
-            Log::info("[WhatsApp Mock Mode] Dispatched Template {$templateName} to {$cleanPhone}");
-        }
-
-        // Log to message_logs
+        $template = MessageTemplate::query()->where('channel', 'whatsapp')
+            ->where(fn ($q) => $q->where('key', $templateName)->orWhere('provider_template_name', $templateName))->first();
+        $result = $template ? $this->sendForRecipient($template, 'lead', $lead->id, $parameters) : $this->refused('template_unapproved', 'Approved template mapping not found.');
         MessageLog::create([
-            'channel' => 'whatsapp',
-            'recipient_type' => 'lead',
-            'recipient_id' => $lead?->id,
-            'recipient_phone' => $cleanPhone,
-            'rendered_subject' => "Template: {$templateName}",
-            'rendered_body' => "Template [{$templateName}] params: " . implode(', ', $parameters),
-            'consent_verified' => true,
-            'status' => $status,
-            'provider_message_id' => $providerMessageId,
-            'sent_at' => $status === 'sent' ? now() : null,
-            'error_message' => $errorMessage,
+            'channel' => 'whatsapp', 'recipient_type' => 'lead', 'recipient_id' => $lead->id, 'recipient_phone' => $lead->mobile,
+            'template_id' => $template?->id, 'rendered_subject' => 'Template: '.$templateName, 'rendered_body' => json_encode($parameters),
+            'consent_verified' => app(ConsentRecorder::class)->hasConsent('lead', $lead->id, 'whatsapp'),
+            'status' => $result['status'], 'provider_message_id' => $result['provider_message_id'] ?? null,
+            'sent_at' => $result['success'] ? now() : null, 'error_message' => $result['error'] ?? null,
         ]);
 
-        return [
-            'success' => $status === 'sent',
-            'status' => $status,
-            'provider_message_id' => $providerMessageId,
-            'error' => $errorMessage,
-        ];
+        return $result;
     }
 
-    /**
-     * Check if customer-service 24h messaging window is currently open.
-     */
+    public function sendForRecipient(MessageTemplate $template, string $recipientType, int $recipientId, array $parameters): array
+    {
+        $recipient = match ($recipientType) {
+            'lead' => Lead::find($recipientId), 'client' => Client::find($recipientId), default => null
+        };
+        $phone = $recipient ? PhoneNormalizer::toE164($recipient->mobile) : null;
+        if (! $recipient || ! $phone || $this->blocked($recipient, $phone)) {
+            return $this->refused('suppressed', 'Recipient is missing, invalid or suppressed.');
+        }
+        $consents = app(ConsentRecorder::class);
+        if (! $consents->hasConsent($recipientType, $recipientId, 'whatsapp') || ($template->purpose && ! $consents->hasConsent($recipientType, $recipientId, $template->purpose))) {
+            return $this->refused('consent_refused', 'Active channel and purpose consent are required.');
+        }
+        if (! $template->isApproved() || $template->provider_status !== 'APPROVED' || ! $template->provider_template_name || ! $template->provider_checked_at || $template->provider_checked_at->lt(now()->subDay())) {
+            return $this->refused('template_unapproved', 'Template approval must be current in the connected Meta account.');
+        }
+        if (count($parameters) !== count($template->variables ?? []) || collect($parameters)->contains(fn ($p) => ! is_scalar($p) || mb_strlen((string) $p) > 1024)) {
+            return $this->refused('invalid_parameters', 'Template variables do not match the approved mapping.');
+        }
+        if ($this->isQuietHoursNow()) {
+            return $this->refused('quiet_hours_deferred', 'Outside configured outreach hours.');
+        }
+        $components = $parameters ? [['type' => 'body', 'parameters' => array_map(fn ($p) => ['type' => 'text', 'text' => (string) $p], array_values($parameters))]] : [];
+        if (in_array($template->provider_header_format, ['DOCUMENT', 'IMAGE'], true)) {
+            if (! $template->provider_media_id) {
+                return $this->refused('media_required', 'Approved media is required for this template.');
+            }
+            $type = strtolower($template->provider_header_format);
+            array_unshift($components, ['type' => 'header', 'parameters' => [['type' => $type, $type => ['id' => $template->provider_media_id]]]]);
+        }
+
+        return $this->dispatch(['messaging_product' => 'whatsapp', 'to' => ltrim($phone, '+'), 'type' => 'template', 'template' => [
+            'name' => $template->provider_template_name, 'language' => ['code' => $template->language_code], 'components' => $components,
+        ]]);
+    }
+
+    private function blocked(Lead|Client $recipient, string $phone): bool
+    {
+        return SuppressionRecord::isSuppressed($phone, $recipient->email, 'whatsapp')
+            || ($recipient instanceof Lead && in_array($recipient->communication_state, ['OPTED_OUT', 'DO_NOT_CONTACT', 'CHANNEL_RESTRICTED'], true));
+    }
+
+    private function dispatch(array $payload): array
+    {
+        $token = config('services.whatsapp.access_token');
+        $phoneId = config('services.whatsapp.phone_number_id');
+        $version = config('services.whatsapp.graph_version');
+        if (! $token || ! $phoneId || ! preg_match('/^v[0-9]+\.0$/', (string) $version) || ! ctype_digit((string) $phoneId)) {
+            return $this->refused('provider_not_configured', 'WhatsApp provider is not configured.');
+        }
+        try {
+            $response = Http::withToken($token)->connectTimeout(5)->timeout(20)->post("https://graph.facebook.com/{$version}/{$phoneId}/messages", $payload);
+        } catch (ConnectionException) {
+            return $this->refused('review_required', 'Provider outcome is unknown. Reconcile before retrying.');
+        }
+        $id = $response->json('messages.0.id');
+        if ($response->successful() && is_string($id) && $id !== '') {
+            return ['success' => true, 'status' => 'accepted', 'provider_message_id' => $id, 'error' => null];
+        }
+        if ($response->status() === 429) {
+            return [...$this->refused('rate_limited', 'Provider rate limit reached.'), 'retry_after' => max(1, min(3600, (int) $response->header('Retry-After', 60)))];
+        }
+
+        return $this->refused($response->serverError() || $response->successful() ? 'review_required' : 'failed', 'Provider did not acknowledge this message.');
+    }
+
+    private function refused(string $status, string $error): array
+    {
+        return ['success' => false, 'status' => $status, 'provider_message_id' => null, 'error' => $error];
+    }
+
     public function isInsideCustomerServiceWindow(Lead $lead): bool
     {
-        if (empty($lead->last_whatsapp_received_at)) {
-            return false;
-        }
+        $received = $lead->last_whatsapp_received_at;
 
-        return $lead->last_whatsapp_received_at->diffInHours(now()) <= 24;
+        return $received && $received->lte(now()) && $received->gt(now()->subHours(24));
     }
 
-    /**
-     * Check if current time in IST is within quiet hours (8:00 PM to 9:00 AM IST).
-     */
     public function isQuietHoursNow(): bool
     {
-        $nowIst = Carbon::now('Asia/Kolkata');
-        $hour = (int) $nowIst->format('G'); // 0 to 23
+        $hour = (int) Carbon::now('Asia/Kolkata')->format('G');
 
-        // Quiet hours: before 9 AM or after 8 PM (20:00)
-        return $hour < 9 || $hour >= 20;
+        return $hour < (int) config('services.whatsapp.outreach_start_hour', 9) || $hour >= (int) config('services.whatsapp.outreach_end_hour', 20);
     }
 
-    /**
-     * Normalize Indian and international phone numbers to E.164.
-     */
     public function normalizePhone(string $raw): string
     {
-        $digits = preg_replace('/\D/', '', $raw);
-        if (strlen($digits) === 10 && preg_match('/^[6-9]/', $digits)) {
-            return '+91' . $digits;
-        }
-        if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
-            return '+' . $digits;
-        }
-        return str_starts_with(trim($raw), '+') ? '+' . $digits : '+91' . substr($digits, -10);
+        return PhoneNormalizer::toE164($raw) ?? '';
     }
 }

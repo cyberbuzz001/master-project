@@ -147,7 +147,7 @@ All production deployments should be run using `deploy/deploy.sh`:
 
 ```bash
 cd /srv/expertstocks/current
-sudo -u expertstocks bash deploy/deploy.sh master
+sudo -u expertstocks bash deploy/deploy.sh main
 ```
 
 ### What `deploy.sh` executes automatically:

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\FreeTrial;
 use App\Models\Lead;
+use App\Models\Payment;
+use App\Models\PaymentInstallment;
+use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,15 +28,15 @@ final class WorkspaceController extends Controller
         $visible = Lead::query()->visibleTo($user);
         $empId = $user->employee?->id;
 
-        $confirmedCollections = \App\Models\Payment::query()
-            ->where('status', \App\Models\Payment::SUCCEEDED)
+        $confirmedCollections = Payment::query()
+            ->where('status', Payment::SUCCEEDED)
             ->when(! $user->can('payments.view'), fn ($q) => $q->whereRaw('1 = 0'))
             ->when(! $user->can('leads.view_all') && $empId, function ($q) use ($empId) {
                 $q->whereHas('client', fn ($cq) => $cq->where('relationship_manager_employee_id', $empId));
             })
             ->sum('amount_paise');
 
-        $installmentsDue = \App\Models\PaymentInstallment::query()
+        $installmentsDue = PaymentInstallment::query()
             ->where('due_date', '<=', $endOfToday)
             ->whereIn('status', ['due', 'promised', 'overdue'])
             ->when(! $user->can('leads.view_all') && $empId, function ($q) use ($empId) {
@@ -40,18 +44,18 @@ final class WorkspaceController extends Controller
             })
             ->count();
 
-        $activeTrials = \App\Models\FreeTrial::query()
+        $activeTrials = FreeTrial::query()
             ->where('status', 'active')
             ->when(! $user->can('leads.view_all') && $empId, fn ($q) => $q->where('employee_id', $empId))
             ->count();
 
-        $trialReviewsDue = \App\Models\FreeTrial::query()
+        $trialReviewsDue = FreeTrial::query()
             ->whereIn('status', ['active', 'completed'])
             ->where('review_meeting_date', '<=', $endOfToday)
             ->when(! $user->can('leads.view_all') && $empId, fn ($q) => $q->where('employee_id', $empId))
             ->count();
 
-        $tasksCompletedToday = \App\Models\Task::query()
+        $tasksCompletedToday = Task::query()
             ->where('status', 'done')
             ->whereBetween('completed_at', [$startOfToday, $endOfToday])
             ->when($empId, fn ($q) => $q->where('assignee_employee_id', $empId))
@@ -129,6 +133,16 @@ final class WorkspaceController extends Controller
                 'onboarding_status' => $client->onboarding_status,
                 'relationship_manager' => $client->relationshipManager?->user?->name,
             ],
+            'trials' => $client === null ? [] : FreeTrial::query()->where(function ($query) use ($client): void {
+                $query->where('client_id', $client->id);
+                if ($client->lead_id) {
+                    $query->orWhere('lead_id', $client->lead_id);
+                }
+            })->latest('id')->limit(10)->get()->map(fn ($trial): array => [
+                'trial_code' => $trial->trial_code, 'trial_type' => $trial->trial_type, 'status' => $trial->status,
+                'start_date' => $trial->start_date->toDateString(), 'end_date' => $trial->end_date->toDateString(),
+                'review_meeting_date' => $trial->review_meeting_date?->toDateString(),
+            ])->all(),
             'notices' => [
                 [
                     'key' => 'market_risk',

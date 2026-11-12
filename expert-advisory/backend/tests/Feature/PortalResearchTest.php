@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domain\Compliance\ComplianceGate;
 use App\Domain\MarketData\MarketDataSnapshotService;
+use App\Domain\Research\DisclosureEngine;
 use App\Domain\Research\ResearchWorkflowService;
 use App\Models\Client;
 use App\Models\Plan;
@@ -87,6 +88,8 @@ class PortalResearchTest extends TestCase
             'email' => $clientUser->email,
         ]);
 
+        $client->forceFill(['onboarding_status' => 'ACTIVE', 'kyc_status' => 'verified'])->save();
+
         $q = RiskQuestionnaire::create(['code' => 'suitability', 'title' => 'Suitability']);
         $qv = new RiskQuestionnaireVersion([
             'risk_questionnaire_id' => $q->id, 'version' => 1, 'methodology_version' => 'test-1.0',
@@ -94,7 +97,7 @@ class PortalResearchTest extends TestCase
         ]);
         $qv->save();
 
-        $rp = new RiskProfile();
+        $rp = new RiskProfile;
         $rp->forceFill([
             'client_id' => $client->id,
             'risk_questionnaire_version_id' => $qv->id,
@@ -105,6 +108,7 @@ class PortalResearchTest extends TestCase
             'status' => RiskProfile::FINALIZED,
             'answers_sha256' => str_repeat('c', 64),
             'finalized_at' => now(),
+            'acknowledged_at' => now(),
         ])->save();
 
         $service = Service::create(['code' => 'eq-res', 'name' => 'Equity Research', 'category' => 'research']);
@@ -123,6 +127,7 @@ class PortalResearchTest extends TestCase
         // Create and publish research report
         $report = $workflow->createReport($author, [
             'title' => 'HDFC Bank Consolidation Breakout',
+            'eligible_service_ids' => [$service->id],
             'report_type' => ResearchReport::TYPE_TECHNICAL,
             'category' => ResearchReport::CATEGORY_RECOMMENDATION,
             'summary' => 'HDFC Bank breaking out of range.',
@@ -165,8 +170,16 @@ class PortalResearchTest extends TestCase
         $detailResponse->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.report_code', $report->report_code)
-            ->assertJsonPath('data.disclosures.statutory_disclaimer', \App\Domain\Research\DisclosureEngine::STANDARD_MARKET_DISCLAIMER);
+            ->assertJsonPath('data.disclosures.statutory_disclaimer', DisclosureEngine::STANDARD_MARKET_DISCLAIMER);
 
         $this->assertNotNull($detailResponse->json('data.content_hash'));
+
+        $sub->forceFill(['starts_on' => now()->addDay()])->save();
+        $this->getJson("/api/v1/client/research/{$uuid}")->assertForbidden();
+        $this->getJson('/api/v1/client/research')->assertOk()->assertJsonCount(0, 'data.reports');
+        $sub->forceFill(['starts_on' => now()->subDay()])->save();
+        $rp->forceFill(['expires_at' => now()->subSecond()])->save();
+        $this->getJson("/api/v1/client/research/{$uuid}")->assertForbidden();
+
     }
 }

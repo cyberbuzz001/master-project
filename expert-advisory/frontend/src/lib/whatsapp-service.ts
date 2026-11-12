@@ -1,6 +1,8 @@
+import "server-only";
+
 /**
  * Meta WhatsApp Cloud API Service
- * Official SEBI-Compliant WhatsApp Integration for Expert Stocks Advisory (+91 92018 00995)
+ * WhatsApp integration for Expert Stocks Advisory (+91 92018 00995)
  */
 
 export interface WhatsAppSendResult {
@@ -10,12 +12,9 @@ export interface WhatsAppSendResult {
   response?: any;
 }
 
-const META_TOKEN =
-  process.env.ADVISORY_WHATSAPP_META_TOKEN ||
-  "EAAPstDAc42kBSgoTczPmd95053NPLJzT1Gk67OoMeoITWFupZApqk2ZAGVyxD6WoMD2nEPhVbEBOV54Q7RuFqmfRaqdckgEicrOsdH4uBrxQyF8g9ZB61NwwwqTUagNZAFJamK75IQoj0Ex5BRezKc1S8gkoieuRBXCLVjT9dzB7vpBoo7LTHOav6nausoa4ZBQZDZD";
-
-const PHONE_NUMBER_ID =
-  process.env.ADVISORY_WHATSAPP_PHONE_NUMBER_ID || "1321132717756726";
+const META_TOKEN = process.env.ADVISORY_WHATSAPP_META_TOKEN || "";
+const PHONE_NUMBER_ID = process.env.ADVISORY_WHATSAPP_PHONE_NUMBER_ID || "";
+const GRAPH_VERSION = process.env.ADVISORY_WHATSAPP_GRAPH_VERSION;
 
 /**
  * Standardize phone number into WhatsApp E.164 without '+' (e.g. 918602467804)
@@ -44,6 +43,9 @@ export async function sendWhatsAppTemplate(params: {
   languageCode?: string;
   parameters?: string[];
 }): Promise<WhatsAppSendResult> {
+  if (!META_TOKEN || !PHONE_NUMBER_ID || !GRAPH_VERSION || !/^v\d+\.0$/.test(GRAPH_VERSION)) {
+    return { success: false, error: "WhatsApp provider is not configured" };
+  }
   const cleanPhone = normalizeWhatsAppNumber(params.to);
   if (!cleanPhone || cleanPhone.length < 10) {
     return { success: false, error: "Invalid phone number" };
@@ -75,7 +77,7 @@ export async function sendWhatsAppTemplate(params: {
   }
 
   try {
-    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/messages`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -83,6 +85,7 @@ export async function sendWhatsAppTemplate(params: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000),
     });
 
     const data = await response.json();
@@ -97,7 +100,8 @@ export async function sendWhatsAppTemplate(params: {
     }
 
     const messageId = data.messages?.[0]?.id;
-    console.log(`[WhatsAppService] Dispatched template "${params.templateName}" to ${cleanPhone}: ${messageId}`);
+    if (!messageId) return { success: false, error: "Provider did not acknowledge the message" };
+
     return {
       success: true,
       messageId,
@@ -116,6 +120,9 @@ export async function sendWhatsAppText(params: {
   to: string;
   text: string;
 }): Promise<WhatsAppSendResult> {
+  if (!META_TOKEN || !PHONE_NUMBER_ID || !GRAPH_VERSION || !/^v\d+\.0$/.test(GRAPH_VERSION)) {
+    return { success: false, error: "WhatsApp provider is not configured" };
+  }
   const cleanPhone = normalizeWhatsAppNumber(params.to);
   if (!cleanPhone || cleanPhone.length < 10) {
     return { success: false, error: "Invalid phone number" };
@@ -133,7 +140,7 @@ export async function sendWhatsAppText(params: {
   };
 
   try {
-    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/messages`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -141,6 +148,7 @@ export async function sendWhatsAppText(params: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000),
     });
 
     const data = await response.json();
@@ -155,7 +163,8 @@ export async function sendWhatsAppText(params: {
     }
 
     const messageId = data.messages?.[0]?.id;
-    console.log(`[WhatsAppService] Dispatched text message to ${cleanPhone}: ${messageId}`);
+    if (!messageId) return { success: false, error: "Provider did not acknowledge the message" };
+
     return {
       success: true,
       messageId,
@@ -168,7 +177,7 @@ export async function sendWhatsAppText(params: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRE-APPROVED SEBI ADVISORY TEMPLATE SHORTCUTS
+// TEMPLATE SHORTCUTS — approval must be verified in the connected Meta account
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**

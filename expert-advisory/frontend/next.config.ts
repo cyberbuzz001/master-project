@@ -30,15 +30,9 @@ const nextConfig: NextConfig = {
     }
     return {
       beforeFiles: [
-        /**
-         * Meta WhatsApp Cloud API Webhook
-         * Served directly by Next.js App Router — NOT proxied to Laravel.
-         * Meta calls: GET/POST https://expertstocks.in/internal/advisory/meta-webhook
-         */
-        {
-          source: '/internal/advisory/meta-webhook',
-          destination: '/internal/advisory/meta-webhook',
-        },
+        // Laravel owns the staff panel. Resolve it before the retired Next.js page.
+        { source: "/office", destination: `${BACKEND_URL}/office` },
+        { source: "/office/:path*", destination: `${BACKEND_URL}/office/:path*` },
       ],
       afterFiles: [],
       fallback: [
@@ -46,8 +40,6 @@ const nextConfig: NextConfig = {
         { source: "/sanctum/:path*", destination: `${BACKEND_URL}/sanctum/:path*` },
         // Staff back-office (Filament), SSO handoff, and its Livewire/asset endpoints.
         { source: "/sso", destination: `${BACKEND_URL}/sso` },
-        { source: "/office", destination: `${BACKEND_URL}/office` },
-        { source: "/office/:path*", destination: `${BACKEND_URL}/office/:path*` },
         { source: "/filament/:path*", destination: `${BACKEND_URL}/filament/:path*` },
         { source: "/css/filament/:path*", destination: `${BACKEND_URL}/css/filament/:path*` },
         { source: "/js/filament/:path*", destination: `${BACKEND_URL}/js/filament/:path*` },

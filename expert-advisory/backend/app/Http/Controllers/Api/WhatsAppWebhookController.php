@@ -2,188 +2,94 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Domain\Ai\AiWhatsAppSalesAssistant;
-use App\Domain\Crm\PhoneNormalizer;
 use App\Http\Controllers\Controller;
-use App\Models\AiConversationMessage;
-use App\Models\Lead;
+use App\Jobs\ProcessWhatsAppWebhook;
+use App\Models\WebhookEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class WhatsAppWebhookController extends Controller
 {
-    public function __construct(
-        protected AiWhatsAppSalesAssistant $assistant
-    ) {
-    }
-
-    /**
-     * Meta Webhook verification handshake (hub.challenge).
-     */
     public function verify(Request $request): Response
     {
-        $mode = $request->query('hub_mode');
-        $token = $request->query('hub_verify_token');
-        $challenge = $request->query('hub_challenge');
-
-        $expectedToken = config('services.whatsapp.verify_token', env('WHATSAPP_VERIFY_TOKEN'));
-
-        if (empty($expectedToken)) {
-            Log::error('[WhatsApp Webhook] WHATSAPP_VERIFY_TOKEN is not configured.');
-            return response('Server misconfiguration: Webhook verify token not set', 500);
+        $expected = config('services.whatsapp.verify_token');
+        if (! $expected) {
+            return response('Webhook is not configured.', 503);
+        }
+        $actual = (string) $request->query('hub_mode');
+        $token = (string) $request->query('hub_verify_token');
+        if ($actual !== 'subscribe' || ! $token || ! hash_equals($expected, $token) || ! $request->has('hub_challenge')) {
+            return response('Forbidden', 403);
         }
 
-        if ($mode === 'subscribe' && $token === $expectedToken) {
-            Log::info('[WhatsApp Webhook] Handshake verified successfully.');
-            return response($challenge, 200)->header('Content-Type', 'text/plain');
-        }
-
-        Log::warning('[WhatsApp Webhook] Handshake failed: invalid verify token.');
-        return response('Forbidden', 403);
+        return response((string) $request->query('hub_challenge'), 200)->header('Content-Type', 'text/plain');
     }
 
-    /**
-     * Handle incoming Meta Cloud API webhook events.
-     * Verified with HMAC-SHA256 (X-Hub-Signature-256) and deduplicated against replay attacks.
-     */
     public function handle(Request $request): JsonResponse
     {
-        $signatureHeader = $request->header('X-Hub-Signature-256');
-        $appSecret = config('services.whatsapp.app_secret', env('WHATSAPP_APP_SECRET', env('META_APP_SECRET')));
-
-        if (app()->environment('production') || !empty($appSecret)) {
-            if (empty($appSecret) || empty($signatureHeader) || !str_starts_with($signatureHeader, 'sha256=')) {
-                Log::warning('[WhatsApp Webhook] Unauthorized request: Missing signature or app secret configuration.');
-                return response()->json(['error' => 'Unauthorized: Missing signature'], 401);
-            }
-
-            $expectedSignature = 'sha256=' . hash_hmac('sha256', $request->getContent(), $appSecret);
-            if (!hash_equals($expectedSignature, $signatureHeader)) {
-                Log::warning('[WhatsApp Webhook] Unauthorized request: Signature mismatch.');
-                return response()->json(['error' => 'Unauthorized: Invalid signature'], 401);
-            }
+        $secret = config('services.whatsapp.app_secret');
+        $waba = config('services.whatsapp.business_account_id');
+        $phone = config('services.whatsapp.phone_number_id');
+        if (! $secret || ! $waba || ! $phone || (app()->isProduction() && config('queue.default') === 'sync')) {
+            return response()->json(['success' => false, 'message' => 'Webhook processing is not configured.'], 503);
         }
-
-        $payload = $request->all();
-
-        // Check if event is from WhatsApp Business Account
-        $entry = $payload['entry'] ?? [];
-        if (empty($entry)) {
-            return response()->json(['status' => 'ignored'], 200);
+        $signature = (string) $request->header('X-Hub-Signature-256');
+        if (! preg_match('/^sha256=[a-f0-9]{64}$/', $signature) || ! hash_equals('sha256='.hash_hmac('sha256', $request->getContent(), $secret), $signature)) {
+            return response()->json(['success' => false, 'message' => 'Invalid signature.'], 401);
         }
-
-        foreach ($entry as $item) {
-            $changes = $item['changes'] ?? [];
-            foreach ($changes as $change) {
-                $value = $change['value'] ?? [];
-
-                // 1. Process Delivery Statuses (sent, delivered, read, failed)
-                if (!empty($value['statuses'])) {
-                    foreach ($value['statuses'] as $statusUpdate) {
-                        $statusId = $statusUpdate['id'] ?? null;
-                        $status = $statusUpdate['status'] ?? 'unknown';
-                        if ($statusId) {
-                            if (!Cache::add("wa_webhook_status:{$statusId}_{$status}", true, now()->addHours(24))) {
-                                continue;
-                            }
-                        }
-                        $this->handleStatusUpdate($statusUpdate);
-                    }
+        $payload = $request->validate([
+            'object' => ['required', 'in:whatsapp_business_account'],
+            'entry' => ['required', 'array', 'max:20'], 'entry.*.id' => ['required', 'string'],
+            'entry.*.changes' => ['required', 'array', 'max:20'], 'entry.*.changes.*.value' => ['required', 'array'],
+            'entry.*.changes.*.value.metadata.phone_number_id' => ['required', 'string'],
+            'entry.*.changes.*.value.messages' => ['sometimes', 'array', 'max:100'],
+            'entry.*.changes.*.value.messages.*.id' => ['required', 'string', 'max:255'],
+            'entry.*.changes.*.value.messages.*.from' => ['required', 'regex:/^[0-9]{8,15}$/'],
+            'entry.*.changes.*.value.messages.*.timestamp' => ['required', 'integer', 'min:1'],
+            'entry.*.changes.*.value.messages.*.type' => ['required', 'string', 'max:32'],
+            'entry.*.changes.*.value.messages.*.text.body' => ['sometimes', 'string', 'max:4096'],
+            'entry.*.changes.*.value.messages.*.button.text' => ['sometimes', 'string', 'max:1000'],
+            'entry.*.changes.*.value.messages.*.interactive.button_reply.title' => ['sometimes', 'string', 'max:1000'],
+            'entry.*.changes.*.value.messages.*.interactive.list_reply.title' => ['sometimes', 'string', 'max:1000'],
+            'entry.*.changes.*.value.contacts' => ['sometimes', 'array', 'max:100'],
+            'entry.*.changes.*.value.contacts.*.wa_id' => ['sometimes', 'string'],
+            'entry.*.changes.*.value.contacts.*.profile.name' => ['sometimes', 'string'],
+            'entry.*.changes.*.value.statuses' => ['sometimes', 'array', 'max:100'],
+            'entry.*.changes.*.value.statuses.*.id' => ['required', 'string', 'max:255'],
+            'entry.*.changes.*.value.statuses.*.status' => ['required', 'string'],
+            'entry.*.changes.*.value.statuses.*.timestamp' => ['required', 'integer', 'min:1'],
+        ]);
+        $events = [];
+        foreach ($payload['entry'] as $entry) {
+            if ((string) $entry['id'] !== (string) $waba) {
+                return response()->json(['success' => false], 403);
+            }
+            foreach ($entry['changes'] as $change) {
+                $value = $change['value'];
+                if ((string) $value['metadata']['phone_number_id'] !== (string) $phone) {
+                    return response()->json(['success' => false], 403);
                 }
-
-                // 2. Process Inbound Messages from Prospects
-                if (!empty($value['messages'])) {
-                    foreach ($value['messages'] as $message) {
-                        $msgId = $message['id'] ?? null;
-                        if ($msgId) {
-                            if (!Cache::add("wa_webhook_msg:{$msgId}", true, now()->addHours(24))) {
-                                Log::info("[WhatsApp Webhook] Duplicate message skipped: {$msgId}");
-                                continue;
-                            }
-                        }
-                        $this->handleInboundMessage($message, $value['contacts'] ?? []);
-                    }
+                foreach ($value['messages'] ?? [] as $message) {
+                    $events[] = ['event_id' => hash('sha256', 'message:'.$message['id']), 'event_type' => 'message', 'payload' => ['message' => $message, 'contacts' => $value['contacts'] ?? []]];
+                }
+                foreach ($value['statuses'] ?? [] as $status) {
+                    $events[] = ['event_id' => hash('sha256', 'status:'.$status['id'].':'.$status['status'].':'.$status['timestamp']), 'event_type' => 'status', 'payload' => ['status' => $status]];
                 }
             }
         }
-
-        return response()->json(['status' => 'success'], 200);
-    }
-    protected function handleStatusUpdate(array $statusUpdate): void
-    {
-        $wamid = $statusUpdate['id'] ?? null;
-        $status = $statusUpdate['status'] ?? null; // 'sent', 'delivered', 'read', 'failed'
-
-        if (!$wamid || !$status) {
-            return;
-        }
-
-        $messageRecord = AiConversationMessage::where('provider_message_id', $wamid)->first();
-        if ($messageRecord) {
-            $updates = ['delivery_status' => $status];
-            if ($status === 'delivered') $updates['delivered_at'] = now();
-            if ($status === 'read') $updates['read_at'] = now();
-            if ($status === 'failed') {
-                $updates['error_message'] = $statusUpdate['errors'][0]['message'] ?? 'Meta Delivery Failure';
+        DB::transaction(function () use ($events): void {
+            foreach ($events as $data) {
+                $event = WebhookEvent::firstOrCreate(['provider' => 'whatsapp', 'event_id' => $data['event_id']], array_merge($data, ['signature_valid' => true]));
+                // Re-enqueue a received event if a previous queue submission failed. The job's
+                // atomic claim prevents concurrent deliveries from processing the event twice.
+                if ($event->status === WebhookEvent::RECEIVED) {
+                    ProcessWhatsAppWebhook::dispatch($event->id)->afterCommit();
+                }
             }
-            $messageRecord->update($updates);
-        }
-    }
+        });
 
-    protected function handleInboundMessage(array $message, array $contacts): void
-    {
-        $from = $message['from'] ?? null; // e.g. "919876543210"
-        $messageId = $message['id'] ?? null;
-        $type = $message['type'] ?? 'text';
-
-        if (!$from) {
-            return;
-        }
-
-        $cleanE164 = PhoneNormalizer::toE164($from) ?: ('+' . preg_replace('/\D/', '', $from));
-        $body = '';
-
-        if ($type === 'text') {
-            $body = $message['text']['body'] ?? '';
-        } elseif ($type === 'button') {
-            $body = $message['button']['text'] ?? '';
-        } elseif ($type === 'interactive') {
-            $interactive = $message['interactive'] ?? [];
-            $body = $interactive['button_reply']['title']
-                ?? $interactive['list_reply']['title']
-                ?? 'Option Selected';
-        } else {
-            $body = "[Media message received: {$type}]";
-        }
-
-        if (empty(trim($body))) {
-            return;
-        }
-
-        // Resolve or create Lead
-        $lead = Lead::where('mobile', $cleanE164)->first();
-        if (!$lead) {
-            $contactName = 'Unnamed Lead';
-            if (!empty($contacts[0]['profile']['name'])) {
-                $contactName = trim($contacts[0]['profile']['name']);
-            }
-
-            $lead = Lead::create([
-                'full_name' => $contactName,
-                'mobile' => $cleanE164,
-                'status' => 'NEW',
-                'communication_state' => 'CONSENT_PENDING',
-                'ai_score' => 20,
-                'ai_grade' => 'WARM',
-                'lead_score_explanation' => 'Prospect initiated direct WhatsApp inbound conversation.',
-                'country' => 'India',
-            ]);
-        }
-
-        // Delegate to AI WhatsApp Sales Assistant
-        $this->assistant->handleIncomingMessage($lead, $body, $messageId);
+        return response()->json(['success' => true], 200);
     }
 }

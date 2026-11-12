@@ -3,19 +3,19 @@
 namespace App\Domain\Ai;
 
 use App\Domain\Communications\WhatsAppService;
+use App\Domain\Crm\AutomationWorkflowEngine;
+use App\Domain\Crm\TrialLifecycleService;
 use App\Models\AiConversation;
 use App\Models\AiConversationMessage;
 use App\Models\Appointment;
 use App\Models\Employee;
-use App\Models\FreeTrial;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\Plan;
-use App\Models\PlanVersion;
 use App\Models\SuppressionRecord;
 use App\Models\Task;
 use Carbon\Carbon;
-use Exception;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -23,18 +23,14 @@ class AiWhatsAppSalesAssistant
 {
     public function __construct(
         protected WhatsAppService $whatsAppService
-    ) {
-    }
+    ) {}
 
     /**
      * Process an incoming prospect WhatsApp message through the conversational sales engine.
      *
-     * @param Lead $lead
-     * @param string $incomingText
-     * @param string|null $providerMessageId
      * @return array<string, mixed>
      */
-    public function handleIncomingMessage(Lead $lead, string $incomingText, ?string $providerMessageId = null): array
+    public function handleIncomingMessage(Lead $lead, string $incomingText, ?string $providerMessageId = null, ?CarbonInterface $receivedAt = null): array
     {
         $cleanText = trim($incomingText);
         if (empty($cleanText)) {
@@ -43,7 +39,7 @@ class AiWhatsAppSalesAssistant
 
         // 1. Update Lead's last received timestamp (opens the 24h customer service window)
         $lead->update([
-            'last_whatsapp_received_at' => now(),
+            'last_whatsapp_received_at' => $lead->last_whatsapp_received_at && $lead->last_whatsapp_received_at->gt($receivedAt ?? now()) ? $lead->last_whatsapp_received_at : ($receivedAt ?? now()),
         ]);
 
         // 2. Fetch or initialize active AI Conversation session
@@ -85,13 +81,13 @@ class AiWhatsAppSalesAssistant
         // If human agent has taken over or AI is paused, do NOT let AI respond
         if ($lead->is_ai_paused || $conversation->is_paused_for_human) {
             Log::info("[AI Sales Assistant] Message logged for Lead #{$lead->id}, but AI response skipped (Human agent takeover active).");
-            
+
             // Notify assigned agent via task/timeline
             LeadActivity::create([
                 'lead_id' => $lead->id,
                 'type' => 'note',
                 'actor_user_id' => null,
-                'summary' => 'Inbound WhatsApp message received while agent takeover active: "' . Str::limit($cleanText, 80) . '"',
+                'summary' => 'Inbound WhatsApp message received while agent takeover active: "'.Str::limit($cleanText, 80).'"',
                 'details' => ['full_message' => $cleanText, 'from' => $lead->mobile],
                 'occurred_at' => now(),
             ]);
@@ -100,6 +96,10 @@ class AiWhatsAppSalesAssistant
                 'status' => 'human_agent_active',
                 'message' => 'Message routed to assigned human agent.',
             ];
+        }
+
+        if (! config('services.whatsapp.automation_enabled', false)) {
+            return ['status' => 'automation_disabled'];
         }
 
         // 5. INTENT CLASSIFICATION & LANGUAGE DETECTION
@@ -141,7 +141,7 @@ class AiWhatsAppSalesAssistant
         $lead->update(['ai_conversation_state' => $nextState]);
 
         return [
-            'status' => 'replied',
+            'status' => $dispatchResult['success'] ? 'replied' : 'reply_failed',
             'intent' => $intent['intent'],
             'next_state' => $nextState,
             'reply_text' => $screenedText,
@@ -158,11 +158,11 @@ class AiWhatsAppSalesAssistant
         $optOutPatterns = [
             'stop', 'unsubscribe', 'quit', 'cancel', 'end',
             'बंद करो', 'मैसेज मत करो', 'आगे मैसेज मत भेजना', 'बंद कर दो',
-            'dont message', 'stop messaging', 'remove my number', 'dnd', 'no more messages'
+            'dont message', 'stop messaging', 'remove my number', 'dnd', 'no more messages',
         ];
 
         foreach ($optOutPatterns as $p) {
-            if ($normalized === $p || str_starts_with($normalized, $p . ' ') || str_ends_with($normalized, ' ' . $p)) {
+            if ($normalized === $p || str_starts_with($normalized, $p.' ') || str_ends_with($normalized, ' '.$p)) {
                 return true;
             }
         }
@@ -175,13 +175,15 @@ class AiWhatsAppSalesAssistant
      */
     protected function handleOptOut(Lead $lead, AiConversation $conversation, string $rawEvidence): array
     {
+        app(AutomationWorkflowEngine::class)->handleWorkflowOptOut($lead);
+
         // 1. Create permanent suppression record
         SuppressionRecord::create([
             'phone_e164' => $lead->mobile,
             'email' => $lead->email,
             'reason' => 'USER_OPT_OUT',
             'channel' => 'all',
-            'evidence_text' => 'Inbound WhatsApp request: "' . $rawEvidence . '"',
+            'evidence_text' => 'Inbound WhatsApp request: "'.$rawEvidence.'"',
             'source' => 'WHATSAPP_INBOUND',
             'suppressed_at' => now(),
         ]);
@@ -211,7 +213,7 @@ class AiWhatsAppSalesAssistant
         ]);
 
         // 4. Polite final confirmation
-        $ackText = "You have been successfully unsubscribed. We have updated your preferences and you will receive no further messages or calls from Expert Stocks Consultancy. Thank you.";
+        $ackText = 'You have been successfully unsubscribed. We have updated your preferences and you will receive no further messages or calls from Expert Stocks Consultancy. Thank you.';
         $this->whatsAppService->sendText($lead->mobile, $ackText, $lead, $conversation);
 
         return [
@@ -225,56 +227,13 @@ class AiWhatsAppSalesAssistant
      */
     protected function handleFreeDemoOption(Lead $lead, AiConversation $conversation, string $lang): array
     {
-        // Check if demo already active
-        $existingDemo = FreeTrial::where('lead_id', $lead->id)->whereIn('status', ['requested', 'approved', 'active'])->first();
-
-        if ($existingDemo) {
-            $reply = $lang === 'hi'
-                ? "नमस्ते! आपका 2-दिवसीय फ्री डेमो पहले से ही सक्रिय है (कोड: {$existingDemo->trial_code})। हमारी रिसर्च टीम आपको मार्केट ऑवर्स में अपडेट्स भेज रही है। किसी भी सवाल के लिए आप कभी भी यहाँ पूछ सकते हैं।"
-                : "Hello! You already have an active 2-day complimentary market demo (Ref: {$existingDemo->trial_code}). Our institutional research desk is sharing verified market commentary with you during trading hours.";
-
-            return [
-                'reply_text' => $reply,
-                'next_state' => 'DEMO_BOOKED',
-            ];
-        }
-
-        // Create 2-day demo trial
-        $demo = FreeTrial::create([
-            'trial_code' => 'DEMO-' . date('ymd') . '-' . strtoupper(Str::random(4)),
-            'lead_id' => $lead->id,
-            'employee_id' => $lead->assigned_employee_id,
-            'trial_type' => 'equity_options',
-            'scope_description' => '2-Day Observational Access to Expert Stocks Research Desk Bulletins & Pre-Market Briefs.',
-            'start_date' => now()->toDateString(),
-            'end_date' => now()->addDays(2)->toDateString(),
-            'status' => 'active',
-            'approved_at' => now(),
-        ]);
-
-        $lead->update([
-            'status' => 'FREE_TRIAL',
-            'demo_requested_at' => now(),
-            'ai_score' => max($lead->ai_score ?? 0, 75),
-            'ai_grade' => 'HOT',
-        ]);
-
-        LeadActivity::create([
-            'lead_id' => $lead->id,
-            'type' => 'status_changed',
-            'summary' => "AI Assistant provisioned 2-Day Research Demo (Code: {$demo->trial_code})",
-            'details' => ['demo_id' => $demo->id, 'trial_code' => $demo->trial_code],
-            'occurred_at' => now(),
-        ]);
-
+        $trial = app(TrialLifecycleService::class)->requestFromInbound($lead);
+        $active = $trial->status === 'active';
         $reply = $lang === 'hi'
-            ? "बधाई हो! आपका 2-दिवसीय कॉम्प्लिमेंटरी रिसर्च डेमो सफलतापूर्वक शुरू हो गया है (रिफरेंस कोड: {$demo->trial_code})।\n\nडेमो में शामिल हैं:\n1. प्री-मार्केट टेक्निकल लेवल्स और निफ्टी/बैंकनिफ्टी आउटलुक\n2. रिस्क-मैनेज्ड इक्विटी एवं F&O स्टडी नोट्स\n\nनोट: यह केवल शैक्षणिक एवं शोध अध्ययन उद्देश्यों के लिए है। बाजार निवेश जोखिमों के अधीन है।"
-            : "Congratulations! Your 2-Day Complimentary Research Demo has been activated (Reference Code: {$demo->trial_code}).\n\nWhat is included:\n1. Daily Pre-Market Technical Analysis & Sectoral Outlook\n2. Risk-Managed Institutional Research Bulletins\n\nStatutory Note: Research observations are for educational and analysis purposes only. Investments in securities market are subject to market risks.";
+            ? ($active ? "आपका डेमो सक्रिय है। संदर्भ: {$trial->trial_code}" : "आपका रिसर्च डेमो अनुरोध मिला है। टीम पात्रता और सक्रियण की पुष्टि करेगी। संदर्भ: {$trial->trial_code}")
+            : ($active ? "Your Complimentary Research Demo is active (Ref: {$trial->trial_code})." : "Your Complimentary Research Demo request has been received (Ref: {$trial->trial_code}). Our team will confirm eligibility and activation.");
 
-        return [
-            'reply_text' => $reply,
-            'next_state' => 'DEMO_BOOKED',
-        ];
+        return ['reply_text' => $reply, 'next_state' => $active ? 'DEMO_BOOKED' : 'DEMO_REQUESTED'];
     }
 
     /**
@@ -295,8 +254,8 @@ class AiWhatsAppSalesAssistant
             'appointment_type' => 'advisory_intro',
             'scheduled_start' => $slot->toDateTimeString(),
             'scheduled_end' => $slot->copy()->addMinutes(30)->toDateTimeString(),
-            'status' => 'confirmed',
-            'notes' => 'Booked automatically via WhatsApp AI Sales Assistant from prospect request: "' . Str::limit($text, 60) . '"',
+            'status' => 'requested',
+            'notes' => 'Requested via WhatsApp assistant, pending staff confirmation: "'.Str::limit($text, 60).'"',
         ]);
 
         $lead->update([
@@ -307,15 +266,15 @@ class AiWhatsAppSalesAssistant
             'next_followup_at' => $slot,
         ]);
 
-        $formattedSlot = $slot->format('d M Y, h:i A') . ' IST';
+        $formattedSlot = $slot->format('d M Y, h:i A').' IST';
 
         $reply = $lang === 'hi'
-            ? "धन्यवाद! आपका अपॉइंटमेंट हमारे सीनियर रिसर्च एडवाइजर के साथ बुक कर दिया गया है:\n\n📅 समय: {$formattedSlot}\n📋 रिफरेंस: {$appointment->appointment_code}\n\nहमारे सलाहकार तय समय पर आपसे संपर्क करेंगे। यदि आप समय बदलना चाहते हैं, तो बस अपना पसंदीदा समय यहाँ लिखें।"
-            : "Thank you! Your consultation appointment has been scheduled with our senior research specialist:\n\n📅 Slot: {$formattedSlot}\n📋 Ref: {$appointment->appointment_code}\n\nOur representative will connect with you at the confirmed time. If you wish to reschedule, simply reply with your preferred date and time.";
+            ? "धन्यवाद! आपका अपॉइंटमेंट अनुरोध मिला है। टीम इस प्रस्तावित समय की पुष्टि करेगी:\n\n📅 समय: {$formattedSlot}\n📋 रिफरेंस: {$appointment->appointment_code}\n\nटीम उपलब्धता की पुष्टि करेगी। यदि आप समय बदलना चाहते हैं, तो बस अपना पसंदीदा समय यहाँ लिखें।"
+            : "Thank you! Your consultation appointment request has been received; the proposed time is with our senior research specialist:\n\n📅 Slot: {$formattedSlot}\n📋 Ref: {$appointment->appointment_code}\n\nOur representative will connect with you after confirming availability. If you wish to reschedule, simply reply with your preferred date and time.";
 
         return [
             'reply_text' => $reply,
-            'next_state' => 'APPOINTMENT_BOOKED',
+            'next_state' => 'APPOINTMENT_REQUESTED',
         ];
     }
 
@@ -336,9 +295,9 @@ class AiWhatsAppSalesAssistant
             $planLines[] = "• *{$p->name}* ({$p->cycleLabel()}): ₹{$feeRs} + applicable statutory GST";
         }
 
-        $planListing = !empty($planLines) ? implode("\n", $planLines) : "• *Equity Momentum Advisory*: ₹9,999 / Monthly\n• *Derivative Masterclass & Advisory*: ₹19,999 / Quarterly";
+        $planListing = ! empty($planLines) ? implode("\n", $planLines) : "• *Equity Momentum Advisory*: ₹9,999 / Monthly\n• *Derivative Masterclass & Advisory*: ₹19,999 / Quarterly";
 
-        $paymentRef = 'PAY-ESC-' . strtoupper(Str::random(6));
+        $paymentRef = 'PAY-ESC-'.strtoupper(Str::random(6));
         $securePayLink = "https://expertstocks.in/portal/pay/{$lead->uuid}?ref={$paymentRef}";
 
         $lead->update([
@@ -421,12 +380,12 @@ class AiWhatsAppSalesAssistant
         // Check for specific compliance topics
         if (str_contains($normalized, 'sebi') || str_contains($normalized, 'register') || str_contains($normalized, 'license')) {
             $reply = $lang === 'hi'
-                ? "एक्सपर्ट स्टॉक्स कंसल्टेंसी संस्थागत इक्विटी एवं डेरिवेटिव्स रिसर्च डेस्क का संचालन करती है। हमारी सभी शोध रिपोर्टें SEBI (Research Analysts) Regulations, 2014 के नियामक मानकों के अनुसार तैयार की जाती हैं।"
-                : "Expert Stocks Consultancy operates a research desk adhering to SEBI (Research Analysts) Regulations, 2014 guidelines. Our official regulatory disclosures, policies, and grievance redressal mechanism are published transparently at https://expertstocks.in/compliance.";
+                ? 'एक्सपर्ट स्टॉक्स कंसल्टेंसी संस्थागत इक्विटी एवं डेरिवेटिव्स रिसर्च डेस्क का संचालन करती है। हमारी सभी शोध रिपोर्टें SEBI (Research Analysts) Regulations, 2014 के नियामक मानकों के अनुसार तैयार की जाती हैं।'
+                : 'Expert Stocks Consultancy operates a research desk adhering to SEBI (Research Analysts) Regulations, 2014 guidelines. Our official regulatory disclosures, policies, and grievance redressal mechanism are published transparently at https://expertstocks.in/compliance.';
         } elseif (str_contains($normalized, 'guarantee') || str_contains($normalized, 'sure') || str_contains($normalized, '100%') || str_contains($normalized, 'profit')) {
             $reply = $lang === 'hi'
                 ? "सेबी (SEBI) विनियमों के अनुसार, शेयर बाजार में किसी भी प्रकार के 'निश्चित रिटर्न' या 'गारंटीड मुनाफे' का वादा करना कानूनी रूप से प्रतिबंधित है। हम सटीक टेक्निकल रिसर्च एवं सख्त स्टॉप-लॉस/रिस्क मैनेजमेंट पर काम करते हैं।"
-                : "Under statutory SEBI regulations, promising guaranteed returns, fixed profits, or risk-free trading is strictly prohibited. Our research desk provides disciplined technical and fundamental trade ideas with defined stop-loss and risk-reward ratios.";
+                : 'Under statutory SEBI regulations, promising guaranteed returns, fixed profits, or risk-free trading is strictly prohibited. Our research desk provides disciplined technical and fundamental trade ideas with defined stop-loss and risk-reward ratios.';
         } else {
             $reply = $lang === 'hi'
                 ? "नमस्ते! मैं एक्सपर्ट स्टॉक्स कंसल्टेंसी का AI सेल्स असिस्टेंट हूँ। मैं आपकी किस प्रकार सहायता कर सकता हूँ?\n\n1. *फ्री 2-दिवसीय डेमो* ('डेमो' लिखें)\n2. *सलाहकार से अपॉइंटमेंट* ('कॉल' लिखें)\n3. *पैकेज एवं फीस जानकारी* ('प्लान' लिखें)\n4. *मानव प्रतिनिधि से बात* ('एजेंट' लिखें)\n\nआप किसी भी समय बंद करने के लिए 'STOP' लिख सकते हैं।"
@@ -457,8 +416,8 @@ class AiWhatsAppSalesAssistant
         ]);
 
         $reply = $lang === 'hi'
-            ? "धन्यवाद आपका समय देने के लिए। हमने आपकी प्राथमिकता दर्ज कर ली है। यदि भविष्य में आपको कभी भी रिसर्च सहायता की आवश्यकता हो, तो आप यहाँ पुनः संपर्क कर सकते हैं। शुभ दिन!"
-            : "Thank you for letting us know. We have recorded your preference and will not trouble you further. If your research requirements evolve in the future, feel free to reconnect anytime. Wishing you profitable trading!";
+            ? 'धन्यवाद आपका समय देने के लिए। हमने आपकी प्राथमिकता दर्ज कर ली है। यदि भविष्य में आपको कभी भी रिसर्च सहायता की आवश्यकता हो, तो आप यहाँ पुनः संपर्क कर सकते हैं। शुभ दिन!'
+            : 'Thank you for letting us know. We have recorded your preference and will not trouble you further. If your research requirements evolve in the future, feel free to reconnect anytime. Wishing you profitable trading!';
 
         return [
             'reply_text' => $reply,

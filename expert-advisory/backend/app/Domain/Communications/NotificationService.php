@@ -2,8 +2,8 @@
 
 namespace App\Domain\Communications;
 
+use App\Domain\Compliance\ConsentRecorder;
 use App\Models\Client;
-use App\Models\ConsentRecord;
 use App\Models\Lead;
 use App\Models\MessageLog;
 use App\Models\MessageTemplate;
@@ -19,16 +19,13 @@ class NotificationService
      * Send a templated message to a recipient, strictly enforcing template approval
      * and statutory consent verification under SEBI & IT rules.
      *
-     * @param string $templateKey
-     * @param string $recipientType 'client' | 'lead' | 'user'
-     * @param int $recipientId
-     * @param array<string, string> $data
-     * @return MessageLog
+     * @param  string  $recipientType  'client' | 'lead' | 'user'
+     * @param  array<string, string>  $data
      */
     public function send(string $templateKey, string $recipientType, int $recipientId, array $data = []): MessageLog
     {
         $template = MessageTemplate::where('key', $templateKey)->first();
-        if (!$template) {
+        if (! $template) {
             throw new InvalidArgumentException("Message template '{$templateKey}' not found.");
         }
 
@@ -43,7 +40,7 @@ class NotificationService
 
         if ($recipientType === 'client') {
             $client = Client::find($recipientId);
-            if (!$client) {
+            if (! $client) {
                 throw new InvalidArgumentException("Client #{$recipientId} not found.");
             }
             $email = $client->email;
@@ -51,15 +48,15 @@ class NotificationService
             $name = $client->full_name;
         } elseif ($recipientType === 'lead') {
             $lead = Lead::find($recipientId);
-            if (!$lead) {
+            if (! $lead) {
                 throw new InvalidArgumentException("Lead #{$recipientId} not found.");
             }
             $email = $lead->email;
             $phone = $lead->mobile;
-            $name = $lead->name;
+            $name = $lead->full_name;
         } elseif ($recipientType === 'user') {
             $user = User::find($recipientId);
-            if (!$user) {
+            if (! $user) {
                 throw new InvalidArgumentException("User #{$recipientId} not found.");
             }
             $email = $user->email;
@@ -68,7 +65,7 @@ class NotificationService
         }
 
         // Default name if not in data
-        if (!isset($data['name'])) {
+        if (! isset($data['name'])) {
             $data['name'] = $name;
         }
 
@@ -80,17 +77,8 @@ class NotificationService
             // Internal staff notifications do not require consumer consent
             $consentVerified = true;
         } else {
-            // Check active consent
-            $hasConsent = ConsentRecord::where('subject_type', $recipientType)
-                ->where('subject_id', $recipientId)
-                ->where('granted', true)
-                ->where(function ($q) use ($channel) {
-                    $q->where('channel', $channel)
-                      ->orWhere('purpose', 'like', "%{$channel}%");
-                })
-                ->exists();
-
-            $consentVerified = $hasConsent;
+            $purpose = $template->purpose ?: ($channel === 'whatsapp' ? 'whatsapp' : 'transactional_email');
+            $consentVerified = app(ConsentRecorder::class)->hasConsent($recipientType, $recipientId, $purpose);
         }
 
         // Render subject and body
@@ -98,14 +86,14 @@ class NotificationService
         $renderedBody = $template->body;
 
         foreach ($data as $k => $v) {
-            $placeholder = '{{' . $k . '}}';
+            $placeholder = '{{'.$k.'}}';
             if ($renderedSubject) {
                 $renderedSubject = str_replace($placeholder, (string) $v, $renderedSubject);
             }
             $renderedBody = str_replace($placeholder, (string) $v, $renderedBody);
         }
 
-        if (!$consentVerified) {
+        if (! $consentVerified) {
             // Log refusal and abort dispatch
             return MessageLog::create([
                 'channel' => $channel,
@@ -128,15 +116,21 @@ class NotificationService
         $errorMessage = null;
 
         try {
-            if ($channel === 'email' && !empty($email)) {
-                Mail::raw($renderedBody, function ($message) use ($email, $renderedSubject) {
+            if ($channel === 'email' && ! empty($email)) {
+                $sent = Mail::raw($renderedBody, function ($message) use ($email, $renderedSubject) {
                     $message->to($email)
                         ->subject($renderedSubject ?: 'Expert Stocks Notification');
                 });
-                $providerMessageId = 'mail-' . bin2hex(random_bytes(8));
-            } elseif ($channel === 'whatsapp' && !empty($phone)) {
-                // In production, invokes WhatsApp Business Cloud API / Provider
-                $providerMessageId = 'wa-' . bin2hex(random_bytes(8));
+                $providerMessageId = $sent?->getMessageId();
+            } elseif ($channel === 'whatsapp' && ! empty($phone)) {
+                $parameters = array_map(fn (string $variable): string => (string) ($data[$variable] ?? ''), $template->variables ?? []);
+                $result = app(WhatsAppService::class)->sendForRecipient($template, $recipientType, $recipientId, $parameters);
+                $providerMessageId = $result['provider_message_id'] ?? null;
+                $status = $result['status'];
+                $errorMessage = $result['error'] ?? null;
+                $consentVerified = ! in_array($status, ['consent_refused', 'suppressed'], true);
+            } else {
+                throw new RuntimeException('Recipient contact or supported channel is missing.');
             }
         } catch (Exception $e) {
             $status = 'failed';
@@ -152,10 +146,10 @@ class NotificationService
             'template_id' => $template->id,
             'rendered_subject' => $renderedSubject,
             'rendered_body' => $renderedBody,
-            'consent_verified' => true,
+            'consent_verified' => $consentVerified,
             'status' => $status,
             'provider_message_id' => $providerMessageId,
-            'sent_at' => $status === 'sent' ? now() : null,
+            'sent_at' => in_array($status, ['sent', 'accepted'], true) ? now() : null,
             'error_message' => $errorMessage,
         ]);
     }

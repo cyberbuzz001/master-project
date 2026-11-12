@@ -5,131 +5,82 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Crm\UniversalLeadImporter;
 use App\Http\Controllers\Controller;
 use App\Models\LeadImportBatch;
+use App\Models\LeadImportPreview;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 
 class UniversalImportController extends Controller
 {
-    public function __construct(
-        protected UniversalLeadImporter $importer
-    ) {
-    }
+    public function __construct(protected UniversalLeadImporter $importer) {}
 
-    /**
-     * Preview and pre-validate leads from text, spreadsheet, or screenshot.
-     */
     public function preview(Request $request): JsonResponse
     {
-        $parsedRows = [];
-        $formatDetected = 'auto_detected';
-
+        Gate::authorize('leads.import');
+        $request->validate([
+            'file' => ['nullable', 'file', 'max:4096', 'mimes:csv,txt,xlsx,png,jpg,jpeg,webp', 'extensions:csv,txt,xlsx,png,jpg,jpeg,webp', 'required_without:raw_text'],
+            'raw_text' => ['nullable', 'string', 'max:100000', 'required_without:file'],
+        ]);
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $ext = strtolower($file->getClientOriginalExtension());
-            $path = $file->getRealPath();
-
-            if (in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) {
-                $formatDetected = 'screenshot_ocr';
-                $parsedRows = $this->importer->parseImageScreenshot($path);
-            } else {
-                $formatDetected = in_array($ext, ['xlsx', 'xls']) ? 'excel' : 'csv';
-                $parsedRows = $this->importer->parseSpreadsheetFile($path, $ext);
-            }
-        } elseif ($request->filled('raw_text')) {
-            $formatDetected = 'raw_text';
-            $parsedRows = $this->importer->parseRawText($request->input('raw_text'));
+            $rows = in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)
+             ? $this->importer->parseImageScreenshot($file->getRealPath())
+             : $this->importer->parseSpreadsheetFile($file->getRealPath(), $ext);
         } else {
-            return response()->json([
-                'success' => false,
-                'error' => 'Please provide an uploaded file (XLSX, CSV, Image) or paste lead text.',
-            ], 422);
+            $rows = $this->importer->parseRawText($request->string('raw_text')->toString());
         }
+        $preview = $this->importer->createPreview($rows, $request->user());
+        $payload = $preview->payload;
+        $payload['rows'] = array_map(fn (array $row): array => Arr::except($row, ['existing_lead_id', 'existing_lead_name', 'existing_lead_status', 'existing_lead_has_richer_data']), $payload['rows']);
 
-        $vendorId = $request->input('vendor_id');
-        $previewResult = $this->importer->previewAndValidate($parsedRows, $vendorId ? (int) $vendorId : null);
-        $previewResult['format_detected'] = $formatDetected;
-
-        return response()->json([
-            'success' => true,
-            'data' => $previewResult,
-        ]);
+        return response()->json(['success' => true, 'data' => [
+            ...$payload, 'preview_id' => $preview->id, 'expires_at' => $preview->expires_at->toIso8601String(),
+        ]]);
     }
 
-    /**
-     * Execute the validated import batch.
-     */
     public function execute(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'preview_result' => 'required|array',
-            'preview_result.summary' => 'required|array',
-            'preview_result.rows' => 'required|array',
-            'options' => 'required|array',
-            'options.consent_basis' => 'required|string|min:10',
-            'options.consent_whatsapp' => 'nullable|boolean',
-            'options.consent_calls' => 'nullable|boolean',
-            'options.vendor_id' => 'nullable|integer',
-            'options.campaign_id' => 'nullable|integer',
-            'options.assign_to_employee_id' => 'nullable|integer',
-            'options.duplicate_strategy' => 'nullable|string|in:skip,update_empty_fields',
-            'options.original_filename' => 'nullable|string',
-            'options.import_format' => 'nullable|string',
+        Gate::authorize('leads.import');
+        $data = $request->validate([
+            'preview_id' => ['required', 'uuid'], 'options' => ['required', 'array'],
+            'preview_result' => ['prohibited'],
         ]);
+        $batch = $this->importer->commitPreview($data['preview_id'], $data['options'], $request->user());
 
-        $user = $request->user();
-        $batch = $this->importer->executeImport(
-            $validated['preview_result'],
-            $validated['options'],
-            $user
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => "Import complete. {$batch->accepted_count} leads successfully ingested into Batch {$batch->batch_code}.",
-            'batch' => $batch,
-        ], 201);
+        return response()->json(['success' => true, 'message' => "Import complete. {$batch->accepted_count} leads accepted.", 'batch' => $batch], 201);
     }
 
-    /**
-     * List all import batches with vendor attribution and performance stats.
-     */
-    public function batches(): JsonResponse
+    public function batches(Request $request): JsonResponse
     {
-        $batches = LeadImportBatch::with(['vendor', 'campaign', 'uploadedBy'])
-            ->latest('id')
-            ->paginate(20);
+        Gate::authorize('leads.import');
+        $query = LeadImportBatch::query()->with(['vendor', 'campaign', 'uploadedBy'])->latest('id');
+        if (! $request->user()->can('leads.view_all')) {
+            $query->where('uploaded_by_id', $request->user()->id);
+        }
 
-        return response()->json([
-            'success' => true,
-            'data' => $batches,
-        ]);
+        return response()->json(['success' => true, 'data' => $query->paginate(20)]);
     }
 
-    /**
-     * Get details of a single batch.
-     */
-    public function showBatch(int $id): JsonResponse
+    public function showBatch(Request $request, int $id): JsonResponse
     {
         $batch = LeadImportBatch::with(['vendor', 'campaign', 'uploadedBy'])->findOrFail($id);
+        Gate::authorize('view', $batch);
 
-        return response()->json([
-            'success' => true,
-            'data' => $batch,
-        ]);
+        return response()->json(['success' => true, 'data' => $batch]);
     }
 
-    /**
-     * Download CSV validation report for a batch.
-     */
     public function downloadReport(Request $request): Response
     {
-        $rows = $request->input('rows', []);
-        $csvText = $this->importer->generateValidationReportCsv($rows);
+        Gate::authorize('leads.import');
+        $data = $request->validate(['batch_id' => ['required', 'integer']]);
+        $batch = LeadImportBatch::findOrFail($data['batch_id']);
+        Gate::authorize('view', $batch);
+        $preview = LeadImportPreview::where('lead_import_batch_id', $batch->id)->first();
+        $csv = $this->importer->generateValidationReportCsv($preview?->payload['rows'] ?? $batch);
 
-        return response($csvText, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="lead_import_validation_report.csv"',
-        ]);
+        return response($csv, 200, ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="lead_import_validation_report.csv"']);
     }
 }

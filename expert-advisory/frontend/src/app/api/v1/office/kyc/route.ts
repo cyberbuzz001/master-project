@@ -1,10 +1,3 @@
-import { NextResponse } from "next/server";
-import { leadsStore } from "@/lib/leads-store";
+import { retiredCrmApi } from "@/lib/retired-crm-api";
 
-export async function GET() {
-  const kycRecords = leadsStore.getKycRecords();
-  return NextResponse.json({
-    success: true,
-    data: kycRecords,
-  });
-}
+export { retiredCrmApi as GET };

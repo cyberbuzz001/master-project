@@ -18,6 +18,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class AutomationWorkflowResource extends Resource
@@ -38,7 +39,22 @@ class AutomationWorkflowResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->canAny(['campaigns.view_all', 'leads.view_all']);
+        return auth()->user()->can('automation.manage');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('automation.manage');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('automation.manage');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
     }
 
     public static function getEloquentQuery(): Builder
@@ -77,7 +93,7 @@ class AutomationWorkflowResource extends Resource
                 ->label('Workflow Active')
                 ->default(true),
             Toggle::make('quiet_hours_enabled')
-                ->label('Enforce Quiet Hours (Meta / TRAI: 9 AM - 8 PM IST)')
+                ->label('Configured outreach hours apply to all automated sends')
                 ->default(true),
             TextInput::make('quiet_hours_start')
                 ->label('Quiet Hours Start (IST)')

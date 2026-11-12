@@ -1,12 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyBackend } from "@/lib/backend-proxy";
 
-export async function POST(_request: NextRequest) {
-  const response = NextResponse.json({
-    success: true,
-    data: { message: "Logged out successfully." },
-  });
-
-  response.cookies.delete("esc_session");
-  response.cookies.delete("XSRF-TOKEN");
-  return response;
+export function POST(request: NextRequest) {
+  return proxyBackend(request, "/api/v1/auth/logout");
 }

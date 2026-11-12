@@ -1,24 +1,17 @@
-import { NextResponse } from "next/server";
-import { autoLoginFyers, readStoredTokens } from "@/lib/fyers";
+import { NextRequest, NextResponse } from "next/server";
+import { readStoredTokens } from "@/lib/fyers";
+import { requireIntegrationAdmin } from "@/lib/integration-admin";
 
 export const dynamic = "force-dynamic";
-
-export async function GET() {
-  const currentTokens = readStoredTokens();
-  if (currentTokens?.accessToken) {
-    return NextResponse.json({
-      success: true,
-      authenticated: true,
-      message: "Fyers access token is currently active.",
-      updatedAt: currentTokens.updatedAt,
-    });
-  }
-
-  const result = await autoLoginFyers();
-  return NextResponse.json(result);
+export async function GET(request: NextRequest) {
+  const denied = await requireIntegrationAdmin(request);
+  if (denied) return denied;
+  const tokens = readStoredTokens();
+  return NextResponse.json({ success: true, token_present: Boolean(tokens?.accessToken), updatedAt: tokens?.updatedAt ?? null }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
-export async function POST() {
-  const result = await autoLoginFyers();
-  return NextResponse.json(result);
+// Administrative account linking uses the state-verified OAuth flow. Do not
+// expose a password/TOTP auto-login operation or return provider credentials.
+export function POST() {
+  return NextResponse.json({ success: false, message: "Use the broker authorization flow." }, { status: 410 });
 }

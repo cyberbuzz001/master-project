@@ -1,7 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "next build",
   "env": {
-    "NEXT_PUBLIC_SITE_URL": "https://expertstocks.in"
+    "NEXT_PUBLIC_SITE_URL": "https://www.expertstocks.in"
   }
 }

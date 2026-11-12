@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Client;
 
+use App\Domain\Research\ResearchAccessService;
 use App\Domain\Shared\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -9,7 +10,6 @@ use App\Models\Client;
 use App\Models\ResearchDistribution;
 use App\Models\ResearchReport;
 use App\Models\ResearchVersion;
-use App\Models\Subscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,22 +22,8 @@ final class ResearchController extends Controller
     {
         $client = $this->client($request);
 
-        // Verify client has an active subscription
-        $hasActiveSub = Subscription::query()
-            ->where('client_id', $client->id)
-            ->where('status', Subscription::ACTIVE)
-            ->where(function ($q) {
-                $q->whereNull('ends_on')->orWhere('ends_on', '>=', now()->toDateString());
-            })
-            ->exists();
-
-        if (! $hasActiveSub) {
-            return ApiResponse::success([
-                'active_subscription' => false,
-                'reports' => [],
-                'message' => 'An active advisory subscription is required to access research recommendations.',
-            ]);
-        }
+        $access = app(ResearchAccessService::class);
+        $hasActiveSub = $access->hasActiveSubscription($client);
 
         // Query published research reports distributed to this client
         $distributions = ResearchDistribution::query()
@@ -52,7 +38,7 @@ final class ResearchController extends Controller
             ->limit(50)
             ->get();
 
-        $reports = $distributions->map(function (ResearchDistribution $dist) {
+        $reports = $distributions->filter(fn (ResearchDistribution $dist) => $dist->version && $access->denialReason($client, $dist->version) === null)->map(function (ResearchDistribution $dist) {
             $version = $dist->version;
             $report = $version?->report;
 
@@ -84,7 +70,7 @@ final class ResearchController extends Controller
         })->filter(fn ($r) => $r['uuid'] !== null)->values();
 
         return ApiResponse::success([
-            'active_subscription' => true,
+            'active_subscription' => $hasActiveSub,
             'reports' => $reports,
         ]);
     }
@@ -118,7 +104,7 @@ final class ResearchController extends Controller
             ->where('delivery_status', ResearchDistribution::STATUS_DELIVERED)
             ->exists();
 
-        if (! $delivered) {
+        if (! $delivered || app(ResearchAccessService::class)->denialReason($client, $version) !== null) {
             throw ApiException::forbidden('This research report is not available for your current risk suitability profile or subscription tier.');
         }
 

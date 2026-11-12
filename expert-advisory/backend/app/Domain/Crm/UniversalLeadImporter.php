@@ -4,23 +4,24 @@ namespace App\Domain\Crm;
 
 use App\Domain\Audit\AuditLogger;
 use App\Domain\Compliance\ConsentRecorder;
-use App\Domain\Crm\AutomationWorkflowEngine;
-use App\Models\Campaign;
+use App\Domain\Shared\ApiException;
 use App\Models\Employee;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\LeadAttribution;
 use App\Models\LeadImportBatch;
+use App\Models\LeadImportPreview;
 use App\Models\LeadSource;
 use App\Models\LeadStatusHistory;
 use App\Models\SuppressionRecord;
 use App\Models\User;
-use App\Models\Vendor;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use OpenSpout\Reader\CSV\Reader as CsvReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 
@@ -34,7 +35,6 @@ class UniversalLeadImporter
      * 3. Format 3: Multi-column delimited (Name | Mobile | City | Source)
      * 4. Format 4: Vertical Key-Value alternating rows (Image 3: "fullName" | "...", "mobile" | "...")
      *
-     * @param string $rawText
      * @return array<int, array<string, mixed>>
      */
     public function parseRawText(string $rawText): array
@@ -72,7 +72,7 @@ class UniversalLeadImporter
         $firstParts = $this->splitLine($firstLine);
         $detectedHeader = $this->detectHeaderColumns($firstParts);
 
-        if (!empty($detectedHeader['mobile']) || !empty($detectedHeader['name'])) {
+        if (! empty($detectedHeader['mobile']) || ! empty($detectedHeader['name'])) {
             $hasHeader = true;
             $headerMap = $detectedHeader;
             array_shift($cleanLines);
@@ -101,8 +101,7 @@ class UniversalLeadImporter
     /**
      * Parse Excel (.xlsx, .xls) or CSV files using OpenSpout.
      *
-     * @param string $filePath Absolute path to file
-     * @param string|null $extension
+     * @param  string  $filePath  Absolute path to file
      * @return array<int, array<string, mixed>>
      */
     public function parseSpreadsheetFile(string $filePath, ?string $extension = null): array
@@ -113,18 +112,21 @@ class UniversalLeadImporter
             return $this->parseCsvFile($filePath);
         }
 
+        if ($extension !== 'xlsx') {
+            throw ValidationException::withMessages(['file' => 'Use CSV, TXT or XLSX. Legacy XLS is not supported.']);
+        }
+
         return $this->parseXlsxFile($filePath);
     }
 
     /**
      * Parse image / screenshot of lead lists using OCR or AI Vision.
      *
-     * @param string $filePath
      * @return array<int, array<string, mixed>>
      */
     public function parseImageScreenshot(string $filePath): array
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return [];
         }
 
@@ -139,7 +141,7 @@ class UniversalLeadImporter
                     'is_valid' => false,
                     'error_reason' => 'AI Vision OCR service requires an API key in .env',
                     'uncertain_ocr' => true,
-                ]
+                ],
             ];
         }
 
@@ -171,14 +173,14 @@ Output ONLY the raw JSON array without markdown formatting.';
                                 'inlineData' => [
                                     'mimeType' => $mimeType,
                                     'data' => $base64Data,
-                                ]
-                            ]
-                        ]
-                    ]
+                                ],
+                            ],
+                        ],
+                    ],
                 ],
                 'generationConfig' => [
                     'temperature' => 0.1,
-                ]
+                ],
             ]);
 
             if ($response->successful()) {
@@ -190,8 +192,8 @@ Output ONLY the raw JSON array without markdown formatting.';
                     $rows = [];
                     foreach ($decoded as $idx => $item) {
                         $rawPhone = (string) ($item['mobile'] ?? '');
-                        $confidence = (float) ($item['confidence'] ?? 0.95);
-                        $name = !empty($item['full_name']) ? trim($item['full_name']) : 'Unnamed Lead';
+                        $confidence = (float) ($item['confidence'] ?? 0.0);
+                        $name = ! empty($item['full_name']) ? trim($item['full_name']) : 'Unnamed Lead';
 
                         $normalized = PhoneNormalizer::toE164($rawPhone);
                         $isValid = $normalized !== null;
@@ -210,6 +212,7 @@ Output ONLY the raw JSON array without markdown formatting.';
                             'raw_line' => json_encode($item),
                         ];
                     }
+
                     return $rows;
                 }
             }
@@ -224,8 +227,7 @@ Output ONLY the raw JSON array without markdown formatting.';
      * Interactive Preview and Pre-Validation Analysis.
      * Evaluates valid numbers, duplicates in file, duplicates in CRM, richer records, and suppression.
      *
-     * @param array<int, array<string, mixed>> $parsedRows
-     * @param int|null $vendorId
+     * @param  array<int, array<string, mixed>>  $parsedRows
      * @return array<string, mixed>
      */
     public function previewAndValidate(array $parsedRows, ?int $vendorId = null): array
@@ -244,14 +246,14 @@ Output ONLY the raw JSON array without markdown formatting.';
         $allValidPhones = [];
 
         foreach ($parsedRows as $row) {
-            if (!empty($row['mobile_e164'])) {
+            if (! empty($row['mobile_e164'])) {
                 $allValidPhones[] = $row['mobile_e164'];
             }
         }
 
         // Bulk query existing leads in CRM
         $existingCrmLeads = [];
-        if (!empty($allValidPhones)) {
+        if (! empty($allValidPhones)) {
             // The approved duplicate policy is a rolling 90-day window. Older
             // records remain historical and may be re-imported as a fresh lead.
             $existingCrmLeads = Lead::query()
@@ -264,7 +266,7 @@ Output ONLY the raw JSON array without markdown formatting.';
 
         // Bulk query suppressions
         $suppressedPhones = [];
-        if (!empty($allValidPhones)) {
+        if (! empty($allValidPhones)) {
             $suppressedPhones = SuppressionRecord::query()
                 ->whereIn('phone_e164', $allValidPhones)
                 ->pluck('reason', 'phone_e164')
@@ -276,18 +278,28 @@ Output ONLY the raw JSON array without markdown formatting.';
         foreach ($parsedRows as $idx => $row) {
             $mobileE164 = $row['mobile_e164'] ?? null;
             $name = $row['full_name'] ?? 'Unnamed Lead';
-            $uncertainOcr = !empty($row['uncertain_ocr']);
+            $uncertainOcr = ! empty($row['uncertain_ocr']);
 
             if ($uncertainOcr) {
                 $uncertainOcrCount++;
             }
 
-            if (empty($mobileE164) || !$row['is_valid']) {
+            if ($uncertainOcr) {
+                $invalidCount++;
+                $row['validation_status'] = 'uncertain_ocr';
+                $row['action_recommended'] = 'correct_source_and_upload_again';
+                $row['error_reason'] = 'OCR digits require human verification before import.';
+                $analyzedRows[] = $row;
+
+                continue;
+            }
+            if (empty($mobileE164) || ! ($row['is_valid'] ?? false)) {
                 $invalidCount++;
                 $row['validation_status'] = 'invalid_phone';
                 $row['action_recommended'] = 'reject';
-                $row['error_reason'] = $row['error_reason'] ?: 'Invalid phone number format or length';
+                $row['error_reason'] = ($row['error_reason'] ?? null) ?: 'Invalid phone number format or length';
                 $analyzedRows[] = $row;
+
                 continue;
             }
 
@@ -296,8 +308,9 @@ Output ONLY the raw JSON array without markdown formatting.';
                 $suppressedCount++;
                 $row['validation_status'] = 'suppressed';
                 $row['action_recommended'] = 'skip_suppressed';
-                $row['error_reason'] = 'Contact has previously opted out or is on DND: ' . $suppressedPhones[$mobileE164];
+                $row['error_reason'] = 'Contact has previously opted out or is on DND: '.$suppressedPhones[$mobileE164];
                 $analyzedRows[] = $row;
+
                 continue;
             }
 
@@ -306,8 +319,9 @@ Output ONLY the raw JSON array without markdown formatting.';
                 $duplicateInFileCount++;
                 $row['validation_status'] = 'duplicate_in_file';
                 $row['action_recommended'] = 'skip_duplicate';
-                $row['error_reason'] = 'Duplicate phone number found in row ' . $seenInFile[$mobileE164];
+                $row['error_reason'] = 'Duplicate phone number found in row '.$seenInFile[$mobileE164];
                 $analyzedRows[] = $row;
+
                 continue;
             }
             $seenInFile[$mobileE164] = $row['row_number'] ?? ($idx + 1);
@@ -321,15 +335,16 @@ Output ONLY the raw JSON array without markdown formatting.';
                 $row['existing_lead_id'] = $existing->id;
                 $row['existing_lead_name'] = $existing->full_name;
                 $row['existing_lead_status'] = $existing->status;
-                $row['existing_lead_has_richer_data'] = !empty($existing->assigned_employee_id) || $existing->activities()->count() > 0;
+                $row['existing_lead_has_richer_data'] = ! empty($existing->assigned_employee_id) || $existing->activities()->count() > 0;
                 $row['error_reason'] = "Lead already exists in CRM (#{$existing->id}: {$existing->full_name}, Status: {$existing->status})";
                 $analyzedRows[] = $row;
+
                 continue;
             }
 
             // Valid New Record
             $validCount++;
-            if (!empty($row['phone_only'])) {
+            if (! empty($row['phone_only'])) {
                 $phoneOnlyCount++;
             } else {
                 $nameAndPhoneCount++;
@@ -360,207 +375,307 @@ Output ONLY the raw JSON array without markdown formatting.';
     /**
      * Execute Import with Transaction and Non-Destructive Deduplication.
      *
-     * @param array<string, mixed> $previewResult Output of previewAndValidate()
-     * @param array<string, mixed> $options
-     * @param User $user
+     * @param  array<string, mixed>  $previewResult  Output of previewAndValidate()
+     * @param  array<string, mixed>  $options
      * @return LeadImportBatch
      */
-    public function executeImport(array $previewResult, array $options, User $user): LeadImportBatch
+    public function createPreview(array $rows, User $user): LeadImportPreview
     {
-        return DB::transaction(function () use ($previewResult, $options, $user) {
-            $summary = $previewResult['summary'];
-            $rows = $previewResult['rows'];
+        if (! $user->can('leads.import')) {
+            throw ApiException::forbidden();
+        }
+        $payload = $this->previewAndValidate($this->normalizeRows($rows));
 
-            $vendorId = $options['vendor_id'] ?? null;
-            $campaignId = $options['campaign_id'] ?? null;
-            $consentBasis = $options['consent_basis'] ?? 'Direct Upload';
-            $consentWhatsapp = (bool) ($options['consent_whatsapp'] ?? false);
-            $consentCalls = (bool) ($options['consent_calls'] ?? false);
-            $duplicateStrategy = $options['duplicate_strategy'] ?? 'skip'; // 'skip' | 'update_empty_fields'
-            $assignEmployeeId = $options['assign_to_employee_id'] ?? null;
+        return LeadImportPreview::create([
+            'uploaded_by_id' => $user->id, 'payload' => $payload,
+            'source_hash' => hash('sha256', json_encode($payload['rows'], JSON_THROW_ON_ERROR)),
+            'expires_at' => now()->addMinutes(30),
+        ]);
+    }
 
-            // 1. Create LeadImportBatch record
-            $batch = LeadImportBatch::create([
-                'original_filename' => $options['original_filename'] ?? 'Universal_Import_' . date('Ymd_His'),
-                'import_format' => $options['import_format'] ?? 'auto_detected',
-                'vendor_id' => $vendorId,
-                'campaign_id' => $campaignId,
-                'uploaded_by_id' => $user->id,
-                'total_rows' => $summary['total_rows'],
-                'valid_count' => $summary['valid_count'],
-                'name_and_phone_count' => $summary['name_and_phone_count'],
-                'phone_only_count' => $summary['phone_only_count'],
-                'duplicate_count' => $summary['duplicate_in_crm_count'] + $summary['duplicate_in_file_count'],
-                'invalid_count' => $summary['invalid_count'],
-                'uncertain_ocr_count' => $summary['uncertain_ocr_count'],
-                'consent_verified_count' => $consentWhatsapp ? $summary['valid_count'] : 0,
-                'consent_basis' => $consentBasis,
-                'consent_whatsapp' => $consentWhatsapp,
-                'consent_calls' => $consentCalls,
-                'status' => 'completed',
-            ]);
+    public function commitPreview(string $id, array $options, User $user): LeadImportBatch
+    {
+        if (! $user->can('leads.import')) {
+            throw ApiException::forbidden();
+        }
 
-            $acceptedCount = 0;
-            $leadSourceId = LeadSource::query()->where('code', $vendorId ? 'vendor_feed' : 'bulk_import')->value('id')
-                ?? LeadSource::query()->first()?->id;
-
-            $consents = app(ConsentRecorder::class);
-
-            foreach ($rows as $row) {
-                $status = $row['validation_status'];
-                $mobile = $row['mobile_e164'] ?? null;
-                $name = $row['full_name'] ?? 'Unnamed Lead';
-
-                // Handle Duplicates in CRM
-                if ($status === 'duplicate_in_crm') {
-                    if ($duplicateStrategy === 'update_empty_fields' && !empty($row['existing_lead_id'])) {
-                        $existing = Lead::find($row['existing_lead_id']);
-                        if ($existing) {
-                            $updates = [];
-                            if ($existing->full_name === 'Unnamed Lead' && $name !== 'Unnamed Lead') {
-                                $updates['full_name'] = $name;
-                            }
-                            if (empty($existing->city) && !empty($row['city'])) {
-                                $updates['city'] = $row['city'];
-                            }
-                            if (empty($existing->email) && !empty($row['email'])) {
-                                $updates['email'] = $row['email'];
-                            }
-                            if (!empty($updates)) {
-                                $existing->update($updates);
-                                LeadActivity::create([
-                                    'lead_id' => $existing->id,
-                                    'type' => 'status_changed',
-                                    'actor_user_id' => $user->id,
-                                    'summary' => 'Enriched missing fields via Batch ' . $batch->batch_code,
-                                    'details' => $updates,
-                                    'occurred_at' => now(),
-                                ]);
-                            }
-                        }
-                    }
-                    continue;
-                }
-
-                // Skip Invalids, Suppressed, or In-File Duplicates
-                if ($status !== 'valid_new') {
-                    continue;
-                }
-
-                // Determine Initial Communication State
-                $commState = 'CONSENT_UNKNOWN';
-                if ($consentWhatsapp && $consentCalls) {
-                    $commState = 'CONSENT_VERIFIED';
-                } elseif ($consentWhatsapp) {
-                    $commState = 'ELIGIBLE_WHATSAPP';
-                } elseif ($consentCalls) {
-                    $commState = 'ELIGIBLE_PHONE';
-                }
-
-                // Calculate preliminary AI score based on data completeness
-                $initialScore = 15;
-                if ($name !== 'Unnamed Lead') $initialScore += 10;
-                if (!empty($row['email'])) $initialScore += 10;
-                if (!empty($row['city'])) $initialScore += 5;
-                if ($consentWhatsapp) $initialScore += 10;
-
-                // Create Lead
-                $lead = Lead::create([
-                    'full_name' => $name,
-                    'mobile' => $mobile,
-                    'email' => $row['email'] ?? null,
-                    'city' => $row['city'] ?? null,
-                    'state' => $row['state'] ?? null,
-                    'country' => 'India',
-                    'status' => 'NEW',
-                    'communication_state' => $commState,
-                    'ai_score' => $initialScore,
-                    'ai_grade' => $initialScore >= 40 ? 'WARM' : 'COLD',
-                    'lead_score_explanation' => 'Initial score assigned on import based on profile completeness and verified consent.',
-                    'preferred_language' => $row['preferred_language'] ?? 'en',
-                    'lead_source_id' => $leadSourceId,
-                    'vendor_id' => $vendorId,
-                    'campaign_id' => $campaignId,
-                    'lead_import_batch_id' => $batch->id,
-                    'assigned_employee_id' => $assignEmployeeId,
-                    'assigned_at' => $assignEmployeeId ? now() : null,
-                    'message' => $row['notes'] ?? null,
-                ]);
-
-                // Record Attribution
-                LeadAttribution::create([
-                    'lead_id' => $lead->id,
-                    'is_first_touch' => true,
-                    'form_key' => 'universal_import',
-                    'vendor_code' => $batch->vendor?->code,
-                    'utm_campaign' => $batch->campaign?->code,
-                    'captured_at' => now(),
-                ]);
-
-                // Record Timeline Activity
-                LeadActivity::create([
-                    'lead_id' => $lead->id,
-                    'type' => 'imported',
-                    'actor_user_id' => $user->id,
-                    'summary' => 'Imported via Batch ' . $batch->batch_code . ' (' . $batch->original_filename . ')',
-                    'details' => [
-                        'batch_id' => $batch->id,
-                        'batch_code' => $batch->batch_code,
-                        'phone_only' => !empty($row['phone_only']),
-                    ],
-                    'occurred_at' => now(),
-                ]);
-
-                // Record Lifecycle History
-                LeadStatusHistory::create([
-                    'lead_id' => $lead->id,
-                    'from_status' => null,
-                    'to_status' => 'NEW',
-                    'changed_by' => $user->id,
-                    'reason' => 'Ingested via Universal Lead Importer (Batch ' . $batch->batch_code . ')',
-                ]);
-
-                // Record Statutory Consent Evidence
-                $consents->record('lead', $lead->id, 'data_processing', true, 'import', $consentBasis);
-                $consents->record('lead', $lead->id, 'calls', $consentCalls, 'import', $consentBasis);
-                $consents->record('lead', $lead->id, 'whatsapp', $consentWhatsapp, 'import', $consentBasis);
-
-                // Auto-assignment if no manual employee specified
-                if (!$assignEmployeeId) {
-                    try {
-                        app(LeadAssignmentService::class)->autoAssign($lead);
-                    } catch (\Throwable $e) {
-                        Log::warning('[UniversalLeadImporter] Auto-assign fallback:', ['error' => $e->getMessage()]);
-                    }
-                }
-
-                // Trigger CRM Automation Workflow (Scoring & Initial Automated Nurturing)
-                try {
-                    app(AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
-                } catch (\Throwable $e) {
-                    Log::warning('[UniversalLeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
-                }
-
-                $acceptedCount++;
+        return DB::transaction(function () use ($id, $options, $user) {
+            $preview = LeadImportPreview::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($preview->uploaded_by_id !== $user->id) {
+                throw ApiException::forbidden();
             }
-
-            $batch->update(['accepted_count' => $acceptedCount]);
-
-            // Audit Log
-            app(AuditLogger::class)->record('lead_batch.imported', $batch, new: [
-                'batch_code' => $batch->batch_code,
-                'accepted' => $acceptedCount,
-                'total' => $summary['total_rows'],
-            ], actor: $user);
+            if ($preview->lead_import_batch_id) {
+                return LeadImportBatch::findOrFail($preview->lead_import_batch_id);
+            }
+            if ($preview->expires_at->isPast()) {
+                throw ApiException::unprocessable('PREVIEW_EXPIRED', 'Preview expired. Upload and review the file again.');
+            }
+            $batch = $this->executeImport($preview->payload, $options, $user);
+            $preview->update(['lead_import_batch_id' => $batch->id]);
 
             return $batch;
+        });
+    }
+
+    private function normalizeRows(array $rows): array
+    {
+        if (count($rows) > 500) {
+            throw ValidationException::withMessages(['file' => 'Use the queued CSV importer for more than 500 rows.']);
+        }
+
+        return array_map(function (array $row, int $index): array {
+            $normalized = $this->finalizeRow([
+                'mobile' => $row['raw_mobile'] ?? $row['mobile_e164'] ?? $row['mobile'] ?? '',
+                'full_name' => $row['full_name'] ?? 'Unnamed Lead',
+                'email' => $row['email'] ?? null, 'city' => $row['city'] ?? null, 'state' => $row['state'] ?? null,
+            ], $index + 1);
+            $normalized['uncertain_ocr'] = (bool) ($row['uncertain_ocr'] ?? false);
+            $invalid = Validator::make($normalized, [
+                'full_name' => 'required|string|max:120', 'email' => 'nullable|email|max:255',
+                'city' => 'nullable|string|max:80', 'state' => 'nullable|string|max:80',
+            ]);
+            if ($invalid->fails()) {
+                $normalized['is_valid'] = false;
+                $normalized['error_reason'] = $invalid->errors()->first();
+            }
+
+            return $normalized;
+        }, array_values($rows), array_keys(array_values($rows)));
+    }
+
+    private function validateOptions(array $options, User $user): array
+    {
+        $validated = Validator::make($options, [
+            'consent_basis' => 'required|string|min:10|max:1000',
+            'consent_whatsapp' => 'sometimes|boolean', 'consent_calls' => 'sometimes|boolean',
+            'vendor_id' => 'nullable|integer|exists:vendors,id', 'campaign_id' => 'nullable|integer|exists:campaigns,id',
+            'assign_to_employee_id' => 'nullable|integer|exists:employees,id',
+            'duplicate_strategy' => 'sometimes|in:skip,update_empty_fields',
+            'original_filename' => 'nullable|string|max:255', 'import_format' => 'nullable|string|max:48',
+        ])->validate();
+        if ($id = ($validated['assign_to_employee_id'] ?? null)) {
+            if (! $user->can('leads.assign') || ! app(LeadAssignmentService::class)->assignableEmployees($user)->contains('id', $id)) {
+                throw ApiException::forbidden('You cannot assign leads to that employee.');
+            }
+        }
+
+        return $validated;
+    }
+
+    public function executeImport(array $previewResult, array $options, User $user): LeadImportBatch
+    {
+        if (! $user->can('leads.import')) {
+            throw ApiException::forbidden();
+        }
+        $options = $this->validateOptions($options, $user);
+
+        return Cache::lock('crm:universal-lead-import', 120)->block(10, function () use ($previewResult, $options, $user) {
+            return DB::transaction(function () use ($previewResult, $options, $user) {
+                // Never trust submitted summary, validity flags, suppression or existing IDs.
+                $previewResult = $this->previewAndValidate($this->normalizeRows($previewResult['rows'] ?? []));
+                $summary = $previewResult['summary'];
+                $rows = $previewResult['rows'];
+
+                $vendorId = $options['vendor_id'] ?? null;
+                $campaignId = $options['campaign_id'] ?? null;
+                $consentBasis = $options['consent_basis'] ?? 'Direct Upload';
+                $consentWhatsapp = (bool) ($options['consent_whatsapp'] ?? false);
+                $consentCalls = (bool) ($options['consent_calls'] ?? false);
+                $duplicateStrategy = $options['duplicate_strategy'] ?? 'skip'; // 'skip' | 'update_empty_fields'
+                $assignEmployeeId = $options['assign_to_employee_id'] ?? null;
+
+                // 1. Create LeadImportBatch record
+                $batch = LeadImportBatch::create([
+                    'original_filename' => $options['original_filename'] ?? 'Universal_Import_'.date('Ymd_His'),
+                    'import_format' => $options['import_format'] ?? 'auto_detected',
+                    'vendor_id' => $vendorId,
+                    'campaign_id' => $campaignId,
+                    'uploaded_by_id' => $user->id,
+                    'total_rows' => $summary['total_rows'],
+                    'valid_count' => $summary['valid_count'],
+                    'name_and_phone_count' => $summary['name_and_phone_count'],
+                    'phone_only_count' => $summary['phone_only_count'],
+                    'duplicate_count' => $summary['duplicate_in_crm_count'] + $summary['duplicate_in_file_count'],
+                    'invalid_count' => $summary['invalid_count'],
+                    'uncertain_ocr_count' => $summary['uncertain_ocr_count'],
+                    'consent_verified_count' => $consentWhatsapp ? $summary['valid_count'] : 0,
+                    'consent_basis' => $consentBasis,
+                    'consent_whatsapp' => $consentWhatsapp,
+                    'consent_calls' => $consentCalls,
+                    'status' => 'completed',
+                ]);
+
+                $acceptedCount = 0;
+                $leadSourceId = LeadSource::query()->where('code', $vendorId ? 'vendor_feed' : 'bulk_import')->value('id')
+                    ?? LeadSource::query()->first()?->id;
+
+                $consents = app(ConsentRecorder::class);
+
+                foreach ($rows as $row) {
+                    $status = $row['validation_status'];
+                    $mobile = $row['mobile_e164'] ?? null;
+                    $name = $row['full_name'] ?? 'Unnamed Lead';
+
+                    // Handle Duplicates in CRM
+                    if ($status === 'duplicate_in_crm') {
+                        if ($duplicateStrategy === 'update_empty_fields' && ! empty($row['existing_lead_id'])) {
+                            $existing = Lead::find($row['existing_lead_id']);
+                            if ($existing && $user->can('update', $existing)) {
+                                $updates = [];
+                                if ($existing->full_name === 'Unnamed Lead' && $name !== 'Unnamed Lead') {
+                                    $updates['full_name'] = $name;
+                                }
+                                if (empty($existing->city) && ! empty($row['city'])) {
+                                    $updates['city'] = $row['city'];
+                                }
+                                if (empty($existing->email) && ! empty($row['email'])) {
+                                    $updates['email'] = $row['email'];
+                                }
+                                if (! empty($updates)) {
+                                    $existing->update($updates);
+                                    LeadActivity::create([
+                                        'lead_id' => $existing->id,
+                                        'type' => 'status_changed',
+                                        'actor_user_id' => $user->id,
+                                        'summary' => 'Enriched missing fields via Batch '.$batch->batch_code,
+                                        'details' => $updates,
+                                        'occurred_at' => now(),
+                                    ]);
+                                }
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    // Skip Invalids, Suppressed, or In-File Duplicates
+                    if ($status !== 'valid_new') {
+                        continue;
+                    }
+
+                    // Determine Initial Communication State
+                    $commState = 'CONSENT_UNKNOWN';
+                    if ($consentWhatsapp && $consentCalls) {
+                        $commState = 'CONSENT_VERIFIED';
+                    } elseif ($consentWhatsapp) {
+                        $commState = 'ELIGIBLE_WHATSAPP';
+                    } elseif ($consentCalls) {
+                        $commState = 'ELIGIBLE_PHONE';
+                    }
+
+                    // Calculate preliminary AI score based on data completeness
+                    $initialScore = 15;
+                    if ($name !== 'Unnamed Lead') {
+                        $initialScore += 10;
+                    }
+                    if (! empty($row['email'])) {
+                        $initialScore += 10;
+                    }
+                    if (! empty($row['city'])) {
+                        $initialScore += 5;
+                    }
+                    if ($consentWhatsapp) {
+                        $initialScore += 10;
+                    }
+
+                    // Create Lead
+                    $lead = Lead::create([
+                        'full_name' => $name,
+                        'mobile' => $mobile,
+                        'email' => $row['email'] ?? null,
+                        'city' => $row['city'] ?? null,
+                        'state' => $row['state'] ?? null,
+                        'country' => 'India',
+                        'status' => 'NEW',
+                        'communication_state' => $commState,
+                        'ai_score' => $initialScore,
+                        'ai_grade' => $initialScore >= 40 ? 'WARM' : 'COLD',
+                        'lead_score_explanation' => 'Initial score assigned on import based on profile completeness and verified consent.',
+                        'preferred_language' => $row['preferred_language'] ?? 'en',
+                        'lead_source_id' => $leadSourceId,
+                        'vendor_id' => $vendorId,
+                        'campaign_id' => $campaignId,
+                        'lead_import_batch_id' => $batch->id,
+                        'assigned_employee_id' => $assignEmployeeId,
+                        'assigned_at' => $assignEmployeeId ? now() : null,
+                        'message' => $row['notes'] ?? null,
+                    ]);
+
+                    // Record Attribution
+                    LeadAttribution::create([
+                        'lead_id' => $lead->id,
+                        'is_first_touch' => true,
+                        'form_key' => 'universal_import',
+                        'vendor_code' => $batch->vendor?->code,
+                        'utm_campaign' => $batch->campaign?->code,
+                        'captured_at' => now(),
+                    ]);
+
+                    // Record Timeline Activity
+                    LeadActivity::create([
+                        'lead_id' => $lead->id,
+                        'type' => 'imported',
+                        'actor_user_id' => $user->id,
+                        'summary' => 'Imported via Batch '.$batch->batch_code.' ('.$batch->original_filename.')',
+                        'details' => [
+                            'batch_id' => $batch->id,
+                            'batch_code' => $batch->batch_code,
+                            'phone_only' => ! empty($row['phone_only']),
+                        ],
+                        'occurred_at' => now(),
+                    ]);
+
+                    // Record Lifecycle History
+                    LeadStatusHistory::create([
+                        'lead_id' => $lead->id,
+                        'from_status' => null,
+                        'to_status' => 'NEW',
+                        'changed_by' => $user->id,
+                        'reason' => 'Ingested via Universal Lead Importer (Batch '.$batch->batch_code.')',
+                    ]);
+
+                    // Record Statutory Consent Evidence
+                    $consents->record('lead', $lead->id, 'data_processing', true, 'import', $consentBasis);
+                    $consents->record('lead', $lead->id, 'calls', $consentCalls, 'import', $consentBasis);
+                    $consents->record('lead', $lead->id, 'whatsapp', $consentWhatsapp, 'import', $consentBasis);
+
+                    // Auto-assignment if no manual employee specified
+                    if (! $assignEmployeeId) {
+                        try {
+                            app(LeadAssignmentService::class)->autoAssign($lead);
+                        } catch (\Throwable $e) {
+                            Log::warning('[UniversalLeadImporter] Auto-assign fallback:', ['error' => $e->getMessage()]);
+                        }
+                    }
+
+                    // Trigger CRM Automation Workflow (Scoring & Initial Automated Nurturing)
+                    try {
+                        app(AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
+                    } catch (\Throwable $e) {
+                        Log::warning('[UniversalLeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
+                    }
+
+                    $acceptedCount++;
+                }
+
+                $batch->update(['accepted_count' => $acceptedCount]);
+
+                // Audit Log
+                app(AuditLogger::class)->record('lead_batch.imported', $batch, new: [
+                    'batch_code' => $batch->batch_code,
+                    'accepted' => $acceptedCount,
+                    'total' => $summary['total_rows'],
+                ], actor: $user);
+
+                return $batch;
+            });
         });
     }
 
     /**
      * Generate downloadable CSV validation report.
      *
-     * @param array<int, array<string, mixed>>|LeadImportBatch $source
+     * @param  array<int, array<string, mixed>>|LeadImportBatch  $source
      * @return string CSV text
      */
     public function generateValidationReportCsv(array|LeadImportBatch $source): string
@@ -568,10 +683,10 @@ Output ONLY the raw JSON array without markdown formatting.';
         $fp = fopen('php://temp', 'r+');
 
         if ($source instanceof LeadImportBatch) {
-            fputcsv($fp, ['Lead ID', 'Full Name', 'Mobile', 'Email', 'City', 'Status', 'Communication State', 'AI Score', 'AI Grade', 'Created At']);
+            $this->writeCsvRow($fp, ['Lead ID', 'Full Name', 'Mobile', 'Email', 'City', 'Status', 'Communication State', 'AI Score', 'AI Grade', 'Created At']);
             $leads = $source->leads()->get();
             foreach ($leads as $l) {
-                fputcsv($fp, [
+                $this->writeCsvRow($fp, [
                     $l->id,
                     $l->full_name,
                     $l->mobile,
@@ -585,9 +700,9 @@ Output ONLY the raw JSON array without markdown formatting.';
                 ]);
             }
         } else {
-            fputcsv($fp, ['Row Number', 'Full Name', 'Raw Phone', 'Normalized E164', 'Validation Status', 'Action Recommended', 'Reason / Error']);
+            $this->writeCsvRow($fp, ['Row Number', 'Full Name', 'Raw Phone', 'Normalized E164', 'Validation Status', 'Action Recommended', 'Reason / Error']);
             foreach ($source as $r) {
-                fputcsv($fp, [
+                $this->writeCsvRow($fp, [
                     $r['row_number'] ?? '',
                     $r['full_name'] ?? 'Unnamed Lead',
                     $r['raw_mobile'] ?? '',
@@ -604,6 +719,11 @@ Output ONLY the raw JSON array without markdown formatting.';
         fclose($fp);
 
         return $csvContent ?: '';
+    }
+
+    private function writeCsvRow($stream, array $values): void
+    {
+        fputcsv($stream, array_map(fn ($value) => is_string($value) && preg_match('/^[\s]*[=+@-]/', $value) ? "'".$value : $value, $values), ',', '"', '');
     }
 
     // -------------------------------------------------------------------------
@@ -633,21 +753,32 @@ Output ONLY the raw JSON array without markdown formatting.';
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             $parts = preg_split('/[,:\t|]/', $line, 2);
-            if (count($parts) < 2) continue;
+            if (count($parts) < 2) {
+                continue;
+            }
 
             $key = strtolower(trim(str_replace(['"', "'"], '', $parts[0])));
             $val = trim(str_replace(['"', "'", ','], '', $parts[1]));
 
             $normKey = null;
-            if (str_contains($key, 'fullname') || str_contains($key, 'name')) $normKey = 'full_name';
-            elseif (str_contains($key, 'mobile') || str_contains($key, 'phone') || str_contains($key, 'contact')) $normKey = 'mobile';
-            elseif (str_contains($key, 'email')) $normKey = 'email';
-            elseif (str_contains($key, 'city') || str_contains($key, 'location')) $normKey = 'city';
+            if (str_contains($key, 'fullname') || str_contains($key, 'name')) {
+                $normKey = 'full_name';
+            } elseif (str_contains($key, 'mobile') || str_contains($key, 'phone') || str_contains($key, 'contact')) {
+                $normKey = 'mobile';
+            } elseif (str_contains($key, 'email')) {
+                $normKey = 'email';
+            } elseif (str_contains($key, 'city') || str_contains($key, 'location')) {
+                $normKey = 'city';
+            }
 
-            if (!$normKey) continue;
+            if (! $normKey) {
+                continue;
+            }
 
             // When a key repeats (e.g. new "fullName"), flush buffer into new lead
             if (isset($currentLead[$normKey])) {
@@ -657,7 +788,7 @@ Output ONLY the raw JSON array without markdown formatting.';
             $currentLead[$normKey] = $val;
         }
 
-        if (!empty($currentLead)) {
+        if (! empty($currentLead)) {
             $leads[] = $this->finalizeRow($currentLead, $rowCounter++);
         }
 
@@ -687,7 +818,7 @@ Output ONLY the raw JSON array without markdown formatting.';
     {
         $map = [];
         foreach ($parts as $idx => $p) {
-            $clean = strtolower(trim($p));
+            $clean = str_replace('_', ' ', strtolower(trim(ltrim($p, "\xEF\xBB\xBF"))));
             if (in_array($clean, ['mobile', 'phone', 'contact', 'number', 'whatsapp', 'telephone', 'mobile number', 'phone number'])) {
                 $map['mobile'] = $idx;
             } elseif (in_array($clean, ['name', 'full name', 'customer name', 'client name', 'fullname'])) {
@@ -700,6 +831,7 @@ Output ONLY the raw JSON array without markdown formatting.';
                 $map['state'] = $idx;
             }
         }
+
         return $map;
     }
 
@@ -804,10 +936,10 @@ Output ONLY the raw JSON array without markdown formatting.';
             'full_name' => $name,
             'raw_mobile' => $rawMobile,
             'mobile_e164' => $mobileE164,
-            'email' => !empty($data['email']) ? mb_strtolower(trim($data['email'])) : null,
-            'city' => !empty($data['city']) ? trim($data['city']) : null,
-            'state' => !empty($data['state']) ? trim($data['state']) : null,
-            'phone_only' => !empty($data['phone_only']) || $name === 'Unnamed Lead',
+            'email' => ! empty($data['email']) ? mb_strtolower(trim($data['email'])) : null,
+            'city' => ! empty($data['city']) ? trim($data['city']) : null,
+            'state' => ! empty($data['state']) ? trim($data['state']) : null,
+            'phone_only' => ! empty($data['phone_only']) || $name === 'Unnamed Lead',
             'is_valid' => $isValid,
             'error_reason' => $isValid ? null : 'Invalid phone number format or length',
             'uncertain_ocr' => false,
@@ -816,7 +948,7 @@ Output ONLY the raw JSON array without markdown formatting.';
 
     private function parseCsvFile(string $filePath): array
     {
-        $reader = new CsvReader();
+        $reader = new CsvReader;
         $reader->open($filePath);
 
         $parsed = [];
@@ -826,17 +958,22 @@ Output ONLY the raw JSON array without markdown formatting.';
         foreach ($reader->getSheetIterator() as $sheet) {
             foreach ($sheet->getRowIterator() as $row) {
                 $cells = array_map(fn ($c) => trim((string) $c), $row->toArray());
-                if (empty(array_filter($cells))) continue;
+                if (empty(array_filter($cells))) {
+                    continue;
+                }
 
                 $rowNum++;
+                if ($rowNum > 501) {
+                    throw ValidationException::withMessages(['file' => 'Use the queued CSV importer for more than 500 rows.']);
+                }
                 if ($rowNum === 1) {
                     $headerMap = $this->detectHeaderColumns($cells);
-                    if (!empty($headerMap['mobile']) || !empty($headerMap['name'])) {
+                    if (isset($headerMap['mobile']) || isset($headerMap['name'])) {
                         continue;
                     }
                 }
 
-                if (!empty($headerMap)) {
+                if (! empty($headerMap)) {
                     $p = $this->mapRowUsingHeader($cells, $headerMap, $rowNum);
                 } else {
                     $p = $this->inferRowStructure($cells, $rowNum);
@@ -849,12 +986,13 @@ Output ONLY the raw JSON array without markdown formatting.';
         }
 
         $reader->close();
+
         return $parsed;
     }
 
     private function parseXlsxFile(string $filePath): array
     {
-        $reader = new XlsxReader();
+        $reader = new XlsxReader;
         $reader->open($filePath);
 
         $parsed = [];
@@ -864,17 +1002,22 @@ Output ONLY the raw JSON array without markdown formatting.';
         foreach ($reader->getSheetIterator() as $sheet) {
             foreach ($sheet->getRowIterator() as $row) {
                 $cells = array_map(fn ($c) => trim((string) $c), $row->toArray());
-                if (empty(array_filter($cells))) continue;
+                if (empty(array_filter($cells))) {
+                    continue;
+                }
 
                 $rowNum++;
+                if ($rowNum > 501) {
+                    throw ValidationException::withMessages(['file' => 'Use the queued CSV importer for more than 500 rows.']);
+                }
                 if ($rowNum === 1) {
                     $headerMap = $this->detectHeaderColumns($cells);
-                    if (!empty($headerMap['mobile']) || !empty($headerMap['name'])) {
+                    if (isset($headerMap['mobile']) || isset($headerMap['name'])) {
                         continue;
                     }
                 }
 
-                if (!empty($headerMap)) {
+                if (! empty($headerMap)) {
                     $p = $this->mapRowUsingHeader($cells, $headerMap, $rowNum);
                 } else {
                     $p = $this->inferRowStructure($cells, $rowNum);
@@ -887,6 +1030,7 @@ Output ONLY the raw JSON array without markdown formatting.';
         }
 
         $reader->close();
+
         return $parsed;
     }
 }

@@ -5,8 +5,9 @@ namespace App\Filament\Resources\ResearchReports\Pages;
 use App\Domain\Research\ResearchWorkflowService;
 use App\Filament\Resources\ResearchReports\ResearchReportResource;
 use App\Models\MarketDataSnapshot;
-use App\Models\ResearchRecommendation;
+use App\Models\MessageTemplate;
 use App\Models\ResearchReport;
+use App\Models\Service;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -51,6 +52,9 @@ class CreateResearchReport extends CreateRecord
                                 ->label('Valid Until')
                                 ->minDate(now()),
                         ]),
+                        Select::make('eligible_service_ids')->label('Eligible paid services')->multiple()->options(fn () => Service::query()->pluck('name', 'id'))->searchable()->helperText('Select the services entitled to this report. An empty selection grants no paid access.'),
+                        Select::make('eligible_trial_types')->label('Eligible trial types')->multiple()->options(['equity' => 'Equity', 'index_options' => 'Index options', 'commodity' => 'Commodity', 'combo' => 'Combo'])->helperText('Only active approved trials matching these types receive access.'),
+                        Select::make('whatsapp_template_key')->label('WhatsApp publication notification')->options(fn () => MessageTemplate::where('channel', 'whatsapp')->where('status', 'approved')->whereIn('purpose', ['research_communication', 'educational_content'])->pluck('name', 'key'))->searchable()->helperText('Optional. Uses name, report_title and portal_link variables. A document-header template must point to the reviewed material for this version. Sending requires current Meta approval, entitlement and consent.'),
                         Textarea::make('summary')
                             ->label('Executive Summary')
                             ->rows(3)

@@ -44,7 +44,7 @@ class CommunicationsTest extends TestCase
             'full_name' => 'Rajesh Sharma',
         ]);
 
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('UNAPPROVED_TEMPLATE');
@@ -79,7 +79,7 @@ class CommunicationsTest extends TestCase
         ]);
 
         // No consent record exists!
-        $service = new NotificationService();
+        $service = new NotificationService;
         $log = $service->send('invoice_alert', 'client', $client->id, ['invoice_number' => 'INV-2026-001']);
 
         $this->assertInstanceOf(MessageLog::class, $log);
@@ -131,7 +131,7 @@ class CommunicationsTest extends TestCase
             'captured_at' => now(),
         ]);
 
-        $service = new NotificationService();
+        $service = new NotificationService;
         $log = $service->send('welcome_onboarding', 'client', $client->id, [
             'portal_link' => 'https://expertstocks.in/portal/onboarding',
         ]);
@@ -142,6 +142,6 @@ class CommunicationsTest extends TestCase
         $this->assertStringContainsString('Welcome Vikram Patel to Expert Stocks', $log->rendered_subject);
         $this->assertStringContainsString('https://expertstocks.in/portal/onboarding', $log->rendered_body);
         $this->assertNotNull($log->sent_at);
-        $this->assertNotEmpty($log->provider_message_id);
+        $this->assertNull($log->provider_message_id);
     }
 }
