@@ -45,7 +45,7 @@ export class OptionChainBroadcasterService extends EventEmitter {
   private intervalTimer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
   private isBroadcasting: boolean = false;
-  private intervalMs: number = 4000;
+  private intervalMs: number = 1500;
 
   /** Subscriber count per distinct view key. A view is computed only while watched. */
   private viewRefCount: Map<string, number> = new Map();

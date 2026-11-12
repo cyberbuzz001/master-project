@@ -75,7 +75,7 @@ export class OptionChainEngine {
 
     const cacheKey = `${underlying}_${params.expiry || 'DEFAULT'}_${params.strikeRange || '5'}_${params.spotPrice || 0}`;
     const cached = OptionChainEngine.responseCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 2000) {
+    if (cached && Date.now() - cached.timestamp < 800) {
       return cached.data;
     }
 
@@ -303,58 +303,13 @@ export class OptionChainEngine {
 
           const filteredAngelChain = filterAndSanitizeChain(angelChain, liveSpot, liveAtmStrike);
 
-          // Proactively subscribe and broadcast all active strike tokens
+          // Proactively register active strike tokens with market data engine
           try {
             const mde = MarketDataEngine.getInstance();
             const visibleTokens: string[] = [];
             filteredAngelChain.forEach(item => {
               if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
               if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
-
-              if (item.ce?.instrumentToken && item.ce.ltp > 0) {
-                mde.broadcastTick({
-                  instrumentToken: item.ce.instrumentToken,
-                  exchange,
-                  symbol: `${underlying} ${item.strikePrice} CE`,
-                  tradingSymbol: item.ce.tradingSymbol || item.ce.instrumentToken,
-                  ltp: item.ce.ltp,
-                  open: item.ce.ltp,
-                  high: item.ce.ltp,
-                  low: item.ce.ltp,
-                  close: item.ce.ltp,
-                  bid: item.ce.bid || item.ce.ltp,
-                  ask: item.ce.ask || item.ce.ltp,
-                  bidQty: 0,
-                  askQty: 0,
-                  volume: item.ce.volume || 0,
-                  change: item.ce.change || 0,
-                  changePercent: item.ce.changePercent || 0,
-                  timestamp: Date.now(),
-                  source: 'live'
-                });
-              }
-              if (item.pe?.instrumentToken && item.pe.ltp > 0) {
-                mde.broadcastTick({
-                  instrumentToken: item.pe.instrumentToken,
-                  exchange,
-                  symbol: `${underlying} ${item.strikePrice} PE`,
-                  tradingSymbol: item.pe.tradingSymbol || item.pe.instrumentToken,
-                  ltp: item.pe.ltp,
-                  open: item.pe.ltp,
-                  high: item.pe.ltp,
-                  low: item.pe.ltp,
-                  close: item.pe.ltp,
-                  bid: item.pe.bid || item.pe.ltp,
-                  ask: item.pe.ask || item.pe.ltp,
-                  bidQty: 0,
-                  askQty: 0,
-                  volume: item.pe.volume || 0,
-                  change: item.pe.change || 0,
-                  changePercent: item.pe.changePercent || 0,
-                  timestamp: Date.now(),
-                  source: 'live'
-                });
-              }
             });
             if (visibleTokens.length > 0) {
               mde.subscribe(visibleTokens);

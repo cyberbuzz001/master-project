@@ -21,6 +21,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
   private optionChainData: any = null;
   private chainFilePath: string = '';
   private lastTickTime: number = 0;
+  private lastChainTimestamp: number = 0;
 
   public isHealthy(): boolean {
     return this.healthy && this.lastTickTime > 0 && (Date.now() - this.lastTickTime < 25000);
@@ -162,12 +163,52 @@ export class AngelOneAdapter implements IMarketDataProvider {
             const raw = await fs.promises.readFile(this.chainFilePath, 'utf-8');
             if (raw) {
               const parsed = JSON.parse(raw);
-              this.optionChainData = parsed;
-              this.processOptionChainTicks(parsed);
+              if (parsed?.timestamp && parsed.timestamp !== this.lastChainTimestamp) {
+                this.lastChainTimestamp = parsed.timestamp;
+                this.optionChainData = parsed;
+                this.processOptionChainTicks(parsed);
+
+                // Publish snapshot to Redis so all worker replicas get it instantly
+                try {
+                  const { redis } = require('../db/redis');
+                  if (redis) {
+                    redis.set('angel:option_chain:snapshot', raw, 60).catch(() => {});
+                    redis.publish('angel:option_chain:update', raw).catch(() => {});
+                  }
+                } catch (_) {}
+              }
             }
           } catch (_) {}
         }
       }, 500);
+
+      // Listen on Redis pub/sub for option chain updates (active on all replicas)
+      try {
+        const { redis } = require('../db/redis');
+        if (redis) {
+          redis.subscribe('angel:option_chain:update', (msg: string) => {
+            try {
+              const parsed = JSON.parse(msg);
+              if (parsed?.timestamp && parsed.timestamp !== this.lastChainTimestamp) {
+                this.lastChainTimestamp = parsed.timestamp;
+                this.optionChainData = parsed;
+                this.processOptionChainTicks(parsed);
+              }
+            } catch (_) {}
+          });
+
+          // Preload latest snapshot from Redis if available
+          redis.get('angel:option_chain:snapshot').then((raw: string | null) => {
+            if (raw && !this.optionChainData) {
+              try {
+                const parsed = JSON.parse(raw);
+                this.lastChainTimestamp = parsed.timestamp || 0;
+                this.optionChainData = parsed;
+              } catch (_) {}
+            }
+          }).catch(() => {});
+        }
+      } catch (_) {}
 
       // ── Start NSE OI fetcher (OI, PCR, Max Pain every 60s) ─────────────
       nseOptionChainService.start();
@@ -178,9 +219,11 @@ export class AngelOneAdapter implements IMarketDataProvider {
     }
   }
 
-  public subscribe(instrumentTokens: string[], callback: TickCallback): void {
+  public subscribe(instrumentTokens: string[], callback?: TickCallback): void {
     SafetyLock.assertSimulationOnly('AngelOneAdapter.subscribe');
-    this.callbacks.add(callback);
+    if (callback && !this.callbacks.has(callback)) {
+      this.callbacks.add(callback);
+    }
     try {
       const { redis } = require('../db/redis');
       if (redis && instrumentTokens && instrumentTokens.length > 0) {
@@ -268,6 +311,18 @@ export class AngelOneAdapter implements IMarketDataProvider {
       : (niftyTick?.ltp   || 24500);
 
     // ── If live option chain data is available, use it ──────────────────────
+    if (!this.optionChainData) {
+      try {
+        const { redis } = require('../db/redis');
+        if (redis) {
+          const raw = await redis.get('angel:option_chain:snapshot');
+          if (raw) {
+            this.optionChainData = JSON.parse(raw);
+          }
+        }
+      } catch (_) {}
+    }
+
     const symChains = this.optionChainData?.chains?.[sym];
     let matchedExp = expiry ? expiry.slice(0, 10) : '';
     if (symChains) {
@@ -404,7 +459,11 @@ export class AngelOneAdapter implements IMarketDataProvider {
           if (row.ce && row.ce.token && row.ce.ltp > 0) {
             const tokenStr = String(row.ce.token);
             const ltp = parseFloat(row.ce.ltp);
+            const vol = parseInt(row.ce.volume || '0', 10);
             const tsSym = row.ce.tradingSymbol || `${sym}${strike}CE`;
+            const prevTick = this.tickCache.get(tokenStr);
+            const priceChanged = !prevTick || prevTick.ltp !== ltp || prevTick.volume !== vol;
+
             const tick: MarketTick = {
               instrumentToken: `${segment}_${tokenStr}`,
               exchange: segment,
@@ -414,7 +473,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
               high: ltp,
               low: ltp,
               close: ltp,
-              volume: parseInt(row.ce.volume || '0', 10),
+              volume: vol,
               change: parseFloat(row.ce.change || '0'),
               changePercent: parseFloat(row.ce.changePercent ?? row.ce.change ?? '0'),
               bid: row.ce.bid || Number((ltp * 0.998).toFixed(2)),
@@ -430,14 +489,20 @@ export class AngelOneAdapter implements IMarketDataProvider {
             this.tickCache.set(`${segment}_${sym}_${strike}_CE`, tick);
             this.tickCache.set(tsSym, tick);
 
-            this.callbacks.forEach(cb => cb(tick));
+            if (priceChanged && this.callbacks.size > 0) {
+              this.callbacks.forEach(cb => cb(tick));
+            }
           }
 
           // PE
           if (row.pe && row.pe.token && row.pe.ltp > 0) {
             const tokenStr = String(row.pe.token);
             const ltp = parseFloat(row.pe.ltp);
+            const vol = parseInt(row.pe.volume || '0', 10);
             const tsSym = row.pe.tradingSymbol || `${sym}${strike}PE`;
+            const prevTick = this.tickCache.get(tokenStr);
+            const priceChanged = !prevTick || prevTick.ltp !== ltp || prevTick.volume !== vol;
+
             const tick: MarketTick = {
               instrumentToken: `${segment}_${tokenStr}`,
               exchange: segment,
@@ -447,7 +512,7 @@ export class AngelOneAdapter implements IMarketDataProvider {
               high: ltp,
               low: ltp,
               close: ltp,
-              volume: parseInt(row.pe.volume || '0', 10),
+              volume: vol,
               change: parseFloat(row.pe.change || '0'),
               changePercent: parseFloat(row.pe.changePercent ?? row.pe.change ?? '0'),
               bid: row.pe.bid || Number((ltp * 0.998).toFixed(2)),
@@ -463,7 +528,9 @@ export class AngelOneAdapter implements IMarketDataProvider {
             this.tickCache.set(`${segment}_${sym}_${strike}_PE`, tick);
             this.tickCache.set(tsSym, tick);
 
-            this.callbacks.forEach(cb => cb(tick));
+            if (priceChanged && this.callbacks.size > 0) {
+              this.callbacks.forEach(cb => cb(tick));
+            }
           }
         }
       }

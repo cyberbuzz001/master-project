@@ -410,6 +410,8 @@ class AngelOptionWorker:
 
         self.load_instruments()
 
+        chains_output = {}
+
         while True:
             try:
                 # Re-login once every 12 hours
@@ -418,34 +420,36 @@ class AngelOptionWorker:
 
                 t0 = time.time()
                 full_ticks_update = {}
-                chains_output = {}
 
                 for sym in ['NIFTY', 'BANKNIFTY', 'SENSEX']:
                     chain_res = self.process_underlying(sym, full_ticks_update)
-                    if chain_res:
+                    if chain_res and chain_res.get('rows'):
                         exp = chain_res['expiry']
                         if sym not in chains_output:
                             chains_output[sym] = {}
                         chains_output[sym][exp] = chain_res
+                    # Rate limit pause between broker API calls (max 3 req/sec)
+                    time.sleep(0.35)
 
-                # Write angel_option_chain.json atomically
-                payload = {
-                    'timestamp': int(time.time() * 1000),
-                    'chains': chains_output,
-                    'expiries': self.all_expiries_by_sym
-                }
-                tmp_chain = CHAIN_FILE + '.tmp'
-                with open(tmp_chain, 'w') as f:
-                    json.dump(payload, f)
-                os.replace(tmp_chain, CHAIN_FILE)
+                if chains_output:
+                    # Write angel_option_chain.json atomically with PID to avoid collision
+                    payload = {
+                        'timestamp': int(time.time() * 1000),
+                        'chains': chains_output,
+                        'expiries': self.all_expiries_by_sym
+                    }
+                    tmp_chain = f"{CHAIN_FILE}.{os.getpid()}.tmp"
+                    with open(tmp_chain, 'w') as f:
+                        json.dump(payload, f)
+                    os.replace(tmp_chain, CHAIN_FILE)
 
-                # Merge ticks into angel_ticks.json
+                # Merge ticks into angel_ticks.json atomically
                 if full_ticks_update and os.path.exists(TICKS_FILE):
                     try:
                         with open(TICKS_FILE, 'r') as f:
                             existing_ticks = json.load(f)
                         existing_ticks.update(full_ticks_update)
-                        tmp_ticks = TICKS_FILE + '.tmp'
+                        tmp_ticks = f"{TICKS_FILE}.{os.getpid()}.tmp"
                         with open(tmp_ticks, 'w') as f:
                             json.dump(existing_ticks, f)
                         os.replace(tmp_ticks, TICKS_FILE)

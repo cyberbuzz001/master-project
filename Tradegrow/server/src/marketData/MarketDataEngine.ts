@@ -27,6 +27,12 @@ export class MarketDataEngine {
   private failoverTimer: NodeJS.Timeout | null = null;
   private configuredProviderName: string = 'ANGEL_ONE';
 
+  private handleProviderTick = (tick: MarketTick): void => {
+    this.lastTickTime = Date.now();
+    this.failoverActive = false;
+    this.broadcastTick(tick);
+  };
+
   private constructor() {
     this.mockProvider = new MockMarketDataProvider();
     this.angelOneProvider = new AngelOneAdapter();
@@ -175,11 +181,7 @@ export class MarketDataEngine {
         setDhanAdapterRef(this.dhanProvider);
       }
 
-      this.activeProvider.subscribe(Array.from(this.subscribedTokens), (tick) => {
-        this.lastTickTime = Date.now();
-        this.failoverActive = false;
-        this.broadcastTick(tick);
-      });
+      this.activeProvider.subscribe(Array.from(this.subscribedTokens), this.handleProviderTick);
 
       await this.activeProvider.initialize();
 
@@ -427,20 +429,27 @@ export class MarketDataEngine {
 
   public subscribe(tokens: string[]): void {
     if (!tokens || tokens.length === 0) return;
-    tokens.forEach(t => this.subscribedTokens.add(t));
+    const newTokens: string[] = [];
+    for (const t of tokens) {
+      if (!this.subscribedTokens.has(t)) {
+        this.subscribedTokens.add(t);
+        newTokens.push(t);
+      }
+    }
 
     const isWorker = process.env.PROCESS_ROLE === 'worker';
     if (isWorker && process.env.CLUSTER_MODE === 'true') {
-      redis.publish('market:subscriptions', JSON.stringify(tokens)).catch(() => {});
+      if (newTokens.length > 0) {
+        redis.publish('market:subscriptions', JSON.stringify(newTokens)).catch(() => {});
+      }
       return;
     }
 
-    try {
-      this.activeProvider.subscribe(tokens, (tick: MarketTick) => {
-        this.lastTickTime = Date.now();
-        this.broadcastTick(tick);
-      });
-    } catch (_) {}
+    if (newTokens.length > 0) {
+      try {
+        this.activeProvider.subscribe(newTokens, this.handleProviderTick);
+      } catch (_) {}
+    }
   }
 
   public unsubscribe(tokens: string[]): void {
