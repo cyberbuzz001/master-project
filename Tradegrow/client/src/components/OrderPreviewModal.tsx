@@ -350,7 +350,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
       <div className="flex items-center gap-2">
         <Badge variant={isBuy ? 'gain' : 'loss'}>ORDER PREVIEW ({side})</Badge>
         <span className="text-[10px] text-[var(--text-muted)] font-bold">{details.exchange}</span>
-        <Badge variant="info">SIMULATED</Badge>
+        <Badge variant="info">MARKET ORDER</Badge>
       </div>
     );
     body = (
@@ -446,7 +446,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[var(--border-color)]">
                 <div className="bg-[var(--bg-surface)] p-2 rounded-xl border border-[var(--info)]/30 flex flex-col justify-between shadow-sm">
-                  <span className="text-[9px] text-[var(--info)] font-bold uppercase tracking-tight flex items-center gap-1"><Wallet size={12} /> Virtual Margin</span>
+                  <span className="text-[9px] text-[var(--info)] font-bold uppercase tracking-tight flex items-center gap-1"><Wallet size={12} /> Available Margin</span>
                   <span className="text-xs font-extrabold text-[var(--info)] mt-1">₹{availableFunds.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className={`bg-[var(--bg-surface)] p-2 rounded-xl border flex flex-col justify-between shadow-sm ${isMarginSufficient ? 'border-[var(--gain)]/30' : 'border-[var(--loss)]/40'}`}>
@@ -463,7 +463,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                 </span>
               </div>
               <div className="text-[10px] text-center text-[var(--text-muted)] font-medium">
-                ⚡ Simulated execution using real-time market quotes · No real capital risk
+                ⚡ Instant execution using real-time market quotes · Institutional RMS
               </div>
               {!isMarginSufficient && (
                 <button type="button" onClick={goToFunds} className="w-full text-center py-1.5 text-[10px] font-bold text-[var(--primary)] hover:underline">
@@ -479,7 +479,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
       <div className="flex items-center justify-between gap-2 w-full">
         <Button variant="secondary" onClick={handleClose}>CANCEL</Button>
         <Button variant={isBuy ? 'primary' : 'destructive'} className="flex-1 justify-center" leftIcon={<Send size={14} />} disabled={!canSubmit} onClick={handleConfirm}>
-          {isRestricted ? 'RESTRICTED' : `CONFIRM SIMULATED ${side}`}
+          {isRestricted ? 'RESTRICTED' : `CONFIRM ${side}`}
         </Button>
       </div>
     );

@@ -1,5 +1,5 @@
 // TradeGrow High-Performance Service Worker
-const CACHE_NAME = 'tradegrow-shell-v7-core';
+const CACHE_NAME = 'tradegrow-shell-v8-live';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

@@ -31,12 +31,12 @@ export async function seedDatabase(): Promise<void> {
     await client.query(
       `INSERT INTO users (id, username, email, password_hash, role, status)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [adminId, 'admin', 'admin@broker.sim', adminPasswordHash, 'SUPER_ADMIN', 'ACTIVE']
+      [adminId, 'admin', 'admin@tradegrowx.in', adminPasswordHash, 'SUPER_ADMIN', 'ACTIVE']
     );
     await client.query(
       `INSERT INTO users (id, username, email, password_hash, role, status)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [userId, 'trader1', 'user@broker.sim', userPasswordHash, 'USER', 'ACTIVE']
+      [userId, 'trader1', 'trader1@tradegrowx.in', userPasswordHash, 'USER', 'ACTIVE']
     );
 
     // 2. Seed virtual wallets

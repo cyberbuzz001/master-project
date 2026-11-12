@@ -600,7 +600,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
             <div>
               <h3 className="text-xs sm:text-sm font-black text-[var(--text-main)]">Ready for your first trade?</h3>
               <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-snug">
-                Zero brokerage on equity delivery. Explore live market opportunities or test strategies in paper trading mode.
+                Zero brokerage on equity delivery. Explore live market opportunities and execute trades in real time.
               </p>
             </div>
           </div>

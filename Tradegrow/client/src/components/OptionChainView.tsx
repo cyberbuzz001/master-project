@@ -457,9 +457,22 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                 onChange={(e) => setExpiry(e.target.value)}
                 className="px-2 sm:px-3 py-1 sm:py-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] rounded-lg sm:rounded-xl font-bold text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500 cursor-pointer min-h-[34px] sm:min-h-[44px]"
               >
-                {expiries.map(exp => (
-                  <option key={exp} value={exp}>{exp} W</option>
-                ))}
+                {expiries.map(exp => {
+                  let label = `${exp} W`;
+                  try {
+                    const parts = exp.split('-');
+                    if (parts.length === 3) {
+                      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                      const day = d.getDate();
+                      const month = d.toLocaleString('en-US', { month: 'short' });
+                      const year = d.getFullYear();
+                      label = `${day} ${month} ${year} W`;
+                    }
+                  } catch (_) {}
+                  return (
+                    <option key={exp} value={exp}>{label}</option>
+                  );
+                })}
               </select>
             </div>
 
