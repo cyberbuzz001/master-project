@@ -318,12 +318,12 @@ export class WhatsAppAutomationService {
     // PROVIDER: META CLOUD API (Official WhatsApp Business Cloud)
     // ─────────────────────────────────────────────────────────────
     else if (provider === 'META_CLOUD') {
-      const apiToken = process.env.WHATSAPP_API_TOKEN;
-      const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+      const apiToken = (await this.getSystemConfig('META_WA_ACCESS_TOKEN')) || process.env.WHATSAPP_API_TOKEN;
+      const phoneId = (await this.getSystemConfig('META_WA_PHONE_NUMBER_ID')) || process.env.WHATSAPP_PHONE_NUMBER_ID;
 
       if (apiToken && phoneId) {
         try {
-          const response = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
+          const response = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiToken}`,
@@ -335,6 +335,7 @@ export class WhatsAppAutomationService {
               type: 'text',
               text: { body: finalizedBody },
             }),
+            signal: AbortSignal.timeout(10000),
           });
 
           const data: any = await response.json();
@@ -363,8 +364,11 @@ export class WhatsAppAutomationService {
     try {
       await query(
         `INSERT INTO warroom.whatsapp_messages (
-           provider, message_id, phone_e164, direction, template_name, status, error_code, idempotency_key
-         ) VALUES ($1, $2, $3, 'OUTBOUND', $4, $5, $6, $7)`,
+           provider, message_id, phone_e164, direction, template_name, status,
+           error_code, idempotency_key, message_body, sender_name
+         ) VALUES ($1, $2, $3, 'OUTBOUND', $4, $5, $6, $7, $8, 'TradeGrow Support')
+         ON CONFLICT (idempotency_key) DO UPDATE
+         SET message_body = EXCLUDED.message_body, status = EXCLUDED.status`,
         [
           provider,
           externalMsgId,
@@ -373,6 +377,7 @@ export class WhatsAppAutomationService {
           isDelivered ? 'SENT' : 'FAILED',
           errorMessage || null,
           idempotencyKey,
+          finalizedBody,
         ]
       );
 
@@ -468,7 +473,13 @@ export class WhatsAppAutomationService {
   /**
    * Inbound Webhook: Handle user replies (e.g. STOP to opt-out, HELP to request support)
    */
-  public async handleInboundMessage(fromPhoneE164: string, bodyText: string, messageId: string): Promise<{ acknowledged: boolean; optOutTriggered?: boolean }> {
+  public async handleInboundMessage(
+    fromPhoneE164: string,
+    bodyText: string,
+    messageId: string,
+    senderName?: string,
+    provider: string = 'EVOLUTION_API'
+  ): Promise<{ acknowledged: boolean; optOutTriggered?: boolean }> {
     const cleanText = bodyText.trim().toUpperCase();
 
     // Check opt-out keywords
@@ -489,14 +500,25 @@ export class WhatsAppAutomationService {
       return { acknowledged: true, optOutTriggered: true };
     }
 
-    // Log inbound message into DB
+    // Log inbound message into DB with message_body & sender_name
     try {
       await query(
         `INSERT INTO warroom.whatsapp_messages (
-           provider, message_id, phone_e164, direction, template_name, status, idempotency_key
-         ) VALUES ('INBOUND', $1, $2, 'INBOUND', 'INBOUND_REPLY', 'DELIVERED', $3)
-         ON CONFLICT (idempotency_key) DO NOTHING`,
-        [messageId, fromPhoneE164, `inbound_${messageId}`]
+           provider, message_id, phone_e164, direction, template_name, status,
+           idempotency_key, message_body, sender_name, delivered_at
+         ) VALUES ($1, $2, $3, 'INBOUND', 'INBOUND_REPLY', 'DELIVERED', $4, $5, $6, clock_timestamp())
+         ON CONFLICT (idempotency_key) DO UPDATE
+         SET message_body = EXCLUDED.message_body,
+             sender_name = COALESCE(EXCLUDED.sender_name, warroom.whatsapp_messages.sender_name)`,
+        [provider, messageId, fromPhoneE164, `inbound_${messageId}`, bodyText, senderName || fromPhoneE164]
+      );
+
+      // Record contact engagement timestamp
+      await query(
+        `INSERT INTO warroom.whatsapp_contacts (phone_e164, last_message_at)
+         VALUES ($1, clock_timestamp())
+         ON CONFLICT (phone_e164) DO UPDATE SET last_message_at = clock_timestamp()`,
+        [fromPhoneE164]
       );
     } catch (err: any) {
       console.warn(`[WhatsApp] Failed to log inbound message: ${err.message}`);
@@ -654,5 +676,464 @@ export class WhatsAppAutomationService {
       optedOutCount: optedOut,
       businessHoursActive: this.isWithinBusinessHours(),
     };
+  }
+
+  /**
+   * Helper: System Configuration Key-Value Store
+   */
+  public async getSystemConfig(key: string): Promise<string | null> {
+    try {
+      const row = await queryOne<{ value: string }>('SELECT value FROM system_config WHERE key = $1', [key]);
+      return row?.value || null;
+    } catch {
+      return null;
+    }
+  }
+
+  public async setSystemConfig(key: string, value: string): Promise<void> {
+    await query(
+      `INSERT INTO system_config (key, value, updated_at)
+       VALUES ($1, $2, clock_timestamp())
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = clock_timestamp()`,
+      [key, value]
+    );
+  }
+
+  /**
+   * Helper: Meta Cloud API Configuration
+   */
+  public async getMetaConfig(): Promise<{
+    phoneNumberId: string;
+    wabaId: string;
+    hasToken: boolean;
+    tokenMasked: string;
+    verifyToken: string;
+    hasAppSecret: boolean;
+    activeProvider: string;
+    webhookUrl: string;
+  }> {
+    const phoneId = (await this.getSystemConfig('META_WA_PHONE_NUMBER_ID')) || process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    const wabaId = (await this.getSystemConfig('META_WA_BUSINESS_ACCOUNT_ID')) || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '';
+    const token = (await this.getSystemConfig('META_WA_ACCESS_TOKEN')) || process.env.WHATSAPP_API_TOKEN || '';
+    const verifyToken = (await this.getSystemConfig('META_WA_VERIFY_TOKEN')) || process.env.WHATSAPP_VERIFY_TOKEN || 'tradegrow_meta_secret_verify_token';
+    const appSecret = (await this.getSystemConfig('META_WA_APP_SECRET')) || process.env.WHATSAPP_APP_SECRET || '';
+    const activeProvider = (await this.getSystemConfig('WHATSAPP_ACTIVE_PROVIDER')) || 'EVOLUTION_API';
+
+    return {
+      phoneNumberId: phoneId,
+      wabaId: wabaId,
+      hasToken: Boolean(token),
+      tokenMasked: token ? `${token.slice(0, 8)}...${token.slice(-6)}` : '',
+      verifyToken: verifyToken,
+      hasAppSecret: Boolean(appSecret),
+      activeProvider,
+      webhookUrl: 'https://tradegrowx.in/api/v1/webhooks/whatsapp',
+    };
+  }
+
+  public async saveMetaConfig(config: {
+    phoneNumberId?: string;
+    wabaId?: string;
+    accessToken?: string;
+    verifyToken?: string;
+    appSecret?: string;
+    activeProvider?: string;
+  }): Promise<void> {
+    if (config.phoneNumberId !== undefined) await this.setSystemConfig('META_WA_PHONE_NUMBER_ID', config.phoneNumberId.trim());
+    if (config.wabaId !== undefined) await this.setSystemConfig('META_WA_BUSINESS_ACCOUNT_ID', config.wabaId.trim());
+    if (config.accessToken !== undefined && config.accessToken.trim()) await this.setSystemConfig('META_WA_ACCESS_TOKEN', config.accessToken.trim());
+    if (config.verifyToken !== undefined) await this.setSystemConfig('META_WA_VERIFY_TOKEN', config.verifyToken.trim());
+    if (config.appSecret !== undefined && config.appSecret.trim()) await this.setSystemConfig('META_WA_APP_SECRET', config.appSecret.trim());
+    if (config.activeProvider !== undefined) await this.setSystemConfig('WHATSAPP_ACTIVE_PROVIDER', config.activeProvider.trim());
+  }
+
+  /**
+   * Comprehensive Providers Status: Evolution API + Meta Cloud API
+   */
+  public async getProvidersStatus(): Promise<any> {
+    const evoUrl = this.getEvoBaseUrl();
+    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
+
+    let evoData: any = { state: 'unreachable', instance: evoInstance };
+    try {
+      const res = await fetch(`${evoUrl}/instance/fetchInstances`, {
+        headers: { 'apikey': evoKey },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const instances: any[] = await res.json();
+        const found = instances.find((i: any) => i.name === evoInstance) || instances[0];
+        if (found) {
+          evoData = {
+            id: found.id,
+            instance: found.name,
+            state: found.connectionStatus || 'open',
+            ownerJid: found.ownerJid,
+            phoneNumber: found.ownerJid ? `+${found.ownerJid.replace(/\D/g, '')}` : null,
+            profileName: found.profileName,
+            profilePicUrl: found.profilePicUrl,
+            counts: found._count || { Message: 0, Contact: 0, Chat: 0 },
+            updatedAt: found.updatedAt,
+          };
+        }
+      }
+    } catch (_) {}
+
+    const metaConfig = await this.getMetaConfig();
+    const metrics = await this.getMetrics();
+
+    return {
+      evolution: evoData,
+      meta: {
+        configured: Boolean(metaConfig.phoneNumberId && metaConfig.hasToken),
+        phoneNumberId: metaConfig.phoneNumberId,
+        wabaId: metaConfig.wabaId,
+        hasToken: metaConfig.hasToken,
+        tokenMasked: metaConfig.tokenMasked,
+        verifyToken: metaConfig.verifyToken,
+        webhookUrl: metaConfig.webhookUrl,
+      },
+      activeProvider: metaConfig.activeProvider,
+      metrics,
+    };
+  }
+
+  /**
+   * Conversation Live Feed: Aggregates active chats from Evolution API & DB
+   */
+  public async getConversations(): Promise<any[]> {
+    const evoUrl = this.getEvoBaseUrl();
+    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
+
+    const conversationsMap = new Map<string, any>();
+
+    // 1. Fetch live chats from Evolution API
+    try {
+      const res = await fetch(`${evoUrl}/chat/findChats/${evoInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evoKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const chats: any[] = await res.json();
+        if (Array.isArray(chats)) {
+          for (const c of chats) {
+            const remoteJid = String(c.remoteJid || '');
+            if (!remoteJid || remoteJid.includes('@broadcast')) continue;
+
+            const isGroup = remoteJid.includes('@g.us');
+            const cleanPhone = remoteJid.replace(/@.*$/, '');
+            const phoneE164 = isGroup ? cleanPhone : this.normalizePhoneE164(cleanPhone);
+            const lastMsg =
+              c.lastMessage?.message?.conversation ||
+              c.lastMessage?.message?.extendedTextMessage?.text ||
+              c.lastMessage?.message?.imageMessage?.caption ||
+              (c.lastMessage?.message?.imageMessage ? '📷 Image' : '') ||
+              (c.lastMessage?.messageType ? `[${c.lastMessage.messageType}]` : 'Message');
+
+            const msgTimestamp = c.lastMessage?.messageTimestamp
+              ? (c.lastMessage.messageTimestamp > 1e11 ? c.lastMessage.messageTimestamp : c.lastMessage.messageTimestamp * 1000)
+              : new Date(c.updatedAt || Date.now()).getTime();
+
+            const displayName = c.pushName || c.name || (isGroup ? 'WhatsApp Group' : phoneE164);
+
+            conversationsMap.set(phoneE164, {
+              jid: remoteJid,
+              phone: phoneE164,
+              name: displayName,
+              profilePicUrl: c.profilePicUrl || null,
+              unreadCount: c.unreadCount || 0,
+              lastMessage: lastMsg,
+              lastMessageDirection: c.lastMessage?.key?.fromMe ? 'OUTBOUND' : 'INBOUND',
+              lastMessageTimestamp: msgTimestamp,
+              provider: 'EVOLUTION_API',
+              isGroup,
+            });
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('[WhatsApp] Error fetching chats from Evolution API:', err.message);
+    }
+
+    // 2. Enrich and combine with Postgres database messages
+    try {
+      const dbRows = await query<any>(
+        `SELECT DISTINCT ON (phone_e164)
+           phone_e164, direction, template_name, message_body, sender_name,
+           status, sent_at, provider
+         FROM warroom.whatsapp_messages
+         ORDER BY phone_e164, sent_at DESC
+         LIMIT 200`
+      );
+
+      for (const r of dbRows) {
+        const phone = r.phone_e164;
+        const sentTime = new Date(r.sent_at).getTime();
+        const existing = conversationsMap.get(phone);
+        const lastMsg = r.message_body || r.template_name || 'Message';
+
+        if (!existing) {
+          conversationsMap.set(phone, {
+            jid: `${phone.replace(/\D/g, '')}@s.whatsapp.net`,
+            phone: phone,
+            name: r.sender_name || phone,
+            profilePicUrl: null,
+            unreadCount: 0,
+            lastMessage: lastMsg,
+            lastMessageDirection: r.direction,
+            lastMessageTimestamp: sentTime,
+            provider: r.provider || 'DATABASE',
+            isGroup: false,
+          });
+        } else if (sentTime > existing.lastMessageTimestamp) {
+          existing.lastMessage = lastMsg;
+          existing.lastMessageDirection = r.direction;
+          existing.lastMessageTimestamp = sentTime;
+          if (r.sender_name && existing.name === phone) {
+            existing.name = r.sender_name;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('[WhatsApp] Error querying DB conversations:', err.message);
+    }
+
+    return Array.from(conversationsMap.values()).sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+  }
+
+  /**
+   * Conversation Message Thread: Fetches chronological messages for one contact
+   */
+  public async getConversationMessages(phoneOrJid: string): Promise<any[]> {
+    const evoUrl = this.getEvoBaseUrl();
+    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
+
+    const cleanNum = phoneOrJid.replace(/\D/g, '');
+    const remoteJid = phoneOrJid.includes('@') ? phoneOrJid : `${cleanNum}@s.whatsapp.net`;
+    const phoneE164 = phoneOrJid.includes('@g.us') ? phoneOrJid : this.normalizePhoneE164(cleanNum);
+
+    const messagesMap = new Map<string, any>();
+
+    // 1. Fetch from Evolution API
+    try {
+      const res = await fetch(`${evoUrl}/chat/findMessages/${evoInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evoKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          where: {
+            key: {
+              remoteJid: remoteJid,
+            },
+          },
+          limit: 150,
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+
+      if (res.ok) {
+        const data: any = await res.json();
+        const records = data?.messages?.records || data?.records || (Array.isArray(data) ? data : []);
+        for (const rec of records) {
+          const id = rec.id || rec.key?.id;
+          const fromMe = Boolean(rec.key?.fromMe);
+          const body =
+            rec.message?.conversation ||
+            rec.message?.extendedTextMessage?.text ||
+            rec.message?.imageMessage?.caption ||
+            rec.message?.templateMessage?.hydratedTemplate?.imageMessage?.caption ||
+            rec.message?.buttonsResponseMessage?.selectedDisplayText ||
+            (rec.message?.imageMessage ? '📷 [Image attachment]' : '') ||
+            (rec.messageType ? `[${rec.messageType}]` : '');
+
+          const ts = rec.messageTimestamp
+            ? (rec.messageTimestamp > 1e11 ? rec.messageTimestamp : rec.messageTimestamp * 1000)
+            : Date.now();
+
+          const rawStatus = rec.status || (fromMe ? 'DELIVERED' : 'READ');
+
+          if (id && body) {
+            messagesMap.set(id, {
+              id,
+              fromMe,
+              direction: fromMe ? 'OUTBOUND' : 'INBOUND',
+              senderName: rec.pushName || (fromMe ? 'TradeGrow Support' : phoneE164),
+              phone: phoneE164,
+              body,
+              timestamp: ts,
+              status: rawStatus,
+              source: 'EVOLUTION_API',
+            });
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('[WhatsApp] Error fetching messages from Evolution:', err.message);
+    }
+
+    // 2. Fetch and merge from PostgreSQL
+    try {
+      const dbMsgs = await query<any>(
+        `SELECT id, provider, message_id, phone_e164, direction, template_name,
+                status, error_code, sent_at, delivered_at, read_at, message_body, sender_name
+         FROM warroom.whatsapp_messages
+         WHERE phone_e164 = $1 OR phone_e164 = $2 OR phone_e164 = $3
+         ORDER BY sent_at ASC`,
+        [phoneE164, `+${cleanNum}`, cleanNum]
+      );
+
+      for (const m of dbMsgs) {
+        const id = m.message_id || `db_${m.id}`;
+        const fromMe = m.direction === 'OUTBOUND';
+        const ts = new Date(m.sent_at).getTime();
+        const existing = messagesMap.get(id);
+
+        if (!existing) {
+          messagesMap.set(id, {
+            id,
+            fromMe,
+            direction: m.direction,
+            senderName: m.sender_name || (fromMe ? 'TradeGrow Support' : phoneE164),
+            phone: phoneE164,
+            body: m.message_body || m.template_name || '',
+            timestamp: ts,
+            status: m.status,
+            source: m.provider || 'DATABASE',
+          });
+        } else if (!existing.body && m.message_body) {
+          existing.body = m.message_body;
+        }
+      }
+    } catch (err: any) {
+      console.warn('[WhatsApp] Error querying DB messages:', err.message);
+    }
+
+    return Array.from(messagesMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  /**
+   * Direct Chat Response Dispatcher: Sends custom text to a client
+   */
+  public async sendDirectMessage(params: {
+    phone: string;
+    text: string;
+    provider?: 'EVOLUTION_API' | 'META_CLOUD';
+    senderName?: string;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const { phone, text, provider: requestedProvider, senderName = 'TradeGrow Support' } = params;
+    const phoneE164 = this.normalizePhoneE164(phone);
+    const cleanNum = phoneE164.replace(/\D/g, '');
+
+    let activeProvider = requestedProvider;
+    if (!activeProvider) {
+      const configProvider = await this.getSystemConfig('WHATSAPP_ACTIVE_PROVIDER');
+      activeProvider = (configProvider === 'META_CLOUD') ? 'META_CLOUD' : 'EVOLUTION_API';
+    }
+
+    let messageId = `wa_${crypto.randomUUID()}`;
+    let isDelivered = false;
+    let errorMessage: string | undefined;
+
+    // 1. Evolution API
+    if (activeProvider === 'EVOLUTION_API') {
+      const evoUrl = this.getEvoBaseUrl();
+      const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+      const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
+
+      try {
+        const res = await fetch(`${evoUrl}/message/sendText/${evoInstance}`, {
+          method: 'POST',
+          headers: { 'apikey': evoKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            number: cleanNum,
+            options: {
+              delay: 800,
+              presence: 'composing',
+              linkPreview: true,
+            },
+            text: text,
+          }),
+          signal: AbortSignal.timeout(8000),
+        });
+
+        const data: any = await res.json();
+        if (res.ok && (data?.key?.id || data?.id)) {
+          messageId = data.key?.id || data.id;
+          isDelivered = true;
+        } else {
+          errorMessage = data?.message || data?.error || 'Evolution API rejected message';
+        }
+      } catch (err: any) {
+        errorMessage = err.message;
+      }
+    }
+
+    // 2. Meta Cloud API
+    else if (activeProvider === 'META_CLOUD') {
+      const phoneId = (await this.getSystemConfig('META_WA_PHONE_NUMBER_ID')) || process.env.WHATSAPP_PHONE_NUMBER_ID;
+      const token = (await this.getSystemConfig('META_WA_ACCESS_TOKEN')) || process.env.WHATSAPP_API_TOKEN;
+
+      if (!phoneId || !token) {
+        return { success: false, error: 'Meta WhatsApp API credentials not configured. Please enter Phone Number ID and Access Token in Settings.' };
+      }
+
+      try {
+        const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: cleanNum,
+            type: 'text',
+            text: { body: text },
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        const data: any = await res.json();
+        if (res.ok && data?.messages?.[0]?.id) {
+          messageId = data.messages[0].id;
+          isDelivered = true;
+        } else {
+          errorMessage = data?.error?.message || 'Meta Cloud API rejected message';
+        }
+      } catch (err: any) {
+        errorMessage = err.message;
+      }
+    }
+
+    // Persist into database with message_body & sender_name
+    try {
+      await query(
+        `INSERT INTO warroom.whatsapp_messages (
+           provider, message_id, phone_e164, direction, template_name, status,
+           error_code, idempotency_key, message_body, sender_name
+         ) VALUES ($1, $2, $3, 'OUTBOUND', 'DIRECT_CHAT', $4, $5, $6, $7, $8)
+         ON CONFLICT (idempotency_key) DO UPDATE
+         SET message_body = EXCLUDED.message_body, status = EXCLUDED.status`,
+        [
+          activeProvider,
+          messageId,
+          phoneE164,
+          isDelivered ? 'SENT' : 'FAILED',
+          errorMessage || null,
+          `direct_${messageId}`,
+          text,
+          senderName,
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[WhatsApp] Error saving direct message to DB:', err.message);
+    }
+
+    return { success: isDelivered, messageId, error: errorMessage };
   }
 }

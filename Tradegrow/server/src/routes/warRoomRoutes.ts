@@ -1075,9 +1075,10 @@ warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => 
 
               const fromPhone = `+${msg.from}`;
               const text = msg.text?.body || msg.button?.text || '';
+              const senderName = value?.contacts?.[0]?.profile?.name || '';
 
               console.log(`[WhatsApp Webhook] Inbound from ${fromPhone}: "${text}"`);
-              await waService.handleInboundMessage(fromPhone, text, msgId);
+              await waService.handleInboundMessage(fromPhone, text, msgId, senderName, 'META_CLOUD');
             }
           }
 
@@ -1149,9 +1150,10 @@ warRoomRouter.post('/webhooks/whatsapp/evolution', async (req: Request, res: Res
           data.message?.buttonsResponseMessage?.selectedDisplayText ||
           data.message?.templateButtonReplyMessage?.selectedId ||
           '';
+        const senderName = data.pushName || '';
 
         console.log(`[Evolution API Webhook] Inbound from ${phoneE164}: "${bodyText}"`);
-        await waService.handleInboundMessage(phoneE164, bodyText, msgId);
+        await waService.handleInboundMessage(phoneE164, bodyText, msgId, senderName, 'EVOLUTION_API');
       }
     }
 
@@ -1512,14 +1514,14 @@ warRoomRouter.post('/warroom/whatsapp/test-send', async (req: Request, res: Resp
 
 /**
  * GET /api/v1/warroom/whatsapp/messages
- * View WhatsApp ledger & delivery analytics
+ * View WhatsApp ledger & delivery analytics with message body
  */
 warRoomRouter.get('/warroom/whatsapp/messages', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
     const phone = req.query.phone as string;
 
-    let sql = `SELECT id, provider, message_id, phone_e164, direction, template_name, status, error_code, sent_at, delivered_at, read_at
+    let sql = `SELECT id, provider, message_id, phone_e164, direction, template_name, status, error_code, sent_at, delivered_at, read_at, message_body, sender_name
                FROM warroom.whatsapp_messages`;
     const params: any[] = [];
 
@@ -1536,6 +1538,117 @@ warRoomRouter.get('/warroom/whatsapp/messages', async (req: Request, res: Respon
   } catch (err: any) {
     console.error('[WarRoom API] WhatsApp messages query error:', err);
     return res.status(500).json({ success: false, error: { message: 'Failed to fetch WhatsApp logs' } });
+  }
+});
+
+/**
+ * GET /api/v1/warroom/whatsapp/conversations
+ * Live Conversation Feed: Returns all client chats with recent messages, avatars, and unread counts
+ */
+warRoomRouter.get('/warroom/whatsapp/conversations', async (_req: Request, res: Response) => {
+  try {
+    const conversations = await waService.getConversations();
+    return res.json({ success: true, data: conversations });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error fetching WhatsApp conversations:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to fetch conversations' } });
+  }
+});
+
+/**
+ * GET /api/v1/warroom/whatsapp/conversations/:phone
+ * Returns chronological message thread for a single client/contact
+ */
+warRoomRouter.get('/warroom/whatsapp/conversations/:phone', async (req: Request, res: Response) => {
+  try {
+    const phone = String(req.params.phone);
+    const messages = await waService.getConversationMessages(phone);
+    return res.json({ success: true, data: messages });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error fetching conversation messages:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to fetch messages' } });
+  }
+});
+
+/**
+ * POST /api/v1/warroom/whatsapp/conversations/:phone/send
+ * Sends a direct message/reply to a client on WhatsApp
+ */
+warRoomRouter.post('/warroom/whatsapp/conversations/:phone/send', async (req: Request, res: Response) => {
+  try {
+    const phone = String(req.params.phone);
+    const { message, provider, senderName } = req.body;
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ success: false, error: { message: 'Message text is required' } });
+    }
+
+    const result = await waService.sendDirectMessage({
+      phone,
+      text: message.trim(),
+      provider,
+      senderName: senderName || 'TradeGrow Support'
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ success: false, error: { message: result.error || 'Failed to dispatch message' } });
+    }
+
+    return res.json({ success: true, data: result });
+  } catch (err: any) {
+    console.error('[WarRoom API] Direct message send error:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Internal server error' } });
+  }
+});
+
+/**
+ * GET /api/v1/warroom/whatsapp/providers
+ * Returns live connectivity & health for Evolution API and Meta WhatsApp API
+ */
+warRoomRouter.get('/warroom/whatsapp/providers', async (_req: Request, res: Response) => {
+  try {
+    const providers = await waService.getProvidersStatus();
+    return res.json({ success: true, data: providers });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error checking providers:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to check providers' } });
+  }
+});
+
+/**
+ * GET /api/v1/warroom/whatsapp/meta-config
+ * Gets current Meta WhatsApp API configuration
+ */
+warRoomRouter.get('/warroom/whatsapp/meta-config', async (_req: Request, res: Response) => {
+  try {
+    const config = await waService.getMetaConfig();
+    return res.json({ success: true, data: config });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: { message: err.message } });
+  }
+});
+
+/**
+ * POST /api/v1/warroom/whatsapp/meta-config
+ * Updates Meta WhatsApp API credentials in system_config
+ */
+warRoomRouter.post('/warroom/whatsapp/meta-config', async (req: Request, res: Response) => {
+  try {
+    const { phoneNumberId, wabaId, accessToken, verifyToken, appSecret, activeProvider } = req.body;
+    await waService.saveMetaConfig({
+      phoneNumberId,
+      wabaId,
+      accessToken,
+      verifyToken,
+      appSecret,
+      activeProvider
+    });
+
+    const updated = await waService.getMetaConfig();
+    return res.json({ success: true, message: 'Meta WhatsApp configuration saved successfully', data: updated });
+  } catch (err: any) {
+    console.error('[WarRoom API] Error saving Meta config:', err);
+    return res.status(500).json({ success: false, error: { message: err.message || 'Failed to save configuration' } });
   }
 });
 

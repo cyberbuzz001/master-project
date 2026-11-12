@@ -27,8 +27,9 @@ import { LiveChat } from './admin/LiveChat';
 import { NotificationSoundAdmin } from './admin/NotificationSoundAdmin';
 import { EmailAdmin } from './admin/EmailAdmin';
 import { WarRoomDashboard } from './admin/WarRoomDashboard';
+import { WhatsAppConsoleDashboard } from './admin/WhatsAppConsoleDashboard';
 import { StaffDeskSwitcher } from './admin/StaffDeskSwitcher';
-import { QrCode as QrCodeIcon, ShieldCheck, Landmark, Volume2, Mail, Target } from 'lucide-react';
+import { QrCode as QrCodeIcon, ShieldCheck, Landmark, Volume2, Mail, Target, MessageSquare } from 'lucide-react';
 
 interface AdminPanelProps {
   token: string;
@@ -38,7 +39,7 @@ interface AdminPanelProps {
 
 type AdminPage =
   | 'WAR_ROOM' | 'DASHBOARD' | 'CUSTOMERS' | 'CUSTOMER_360' | 'PERMISSIONS' | 'KYC' | 'ORDERS'
-  | 'RISK' | 'KILL_SWITCH' | 'BROKER' | 'FUNDS' | 'BANK_MANAGEMENT' | 'LEDGER' | 'SYSTEM' | 'AUDIT' | 'MARKET_DATA' | 'SUPPORT' | 'MANAGERS' | 'LIVE_CHAT' | 'SOUND_ADMIN' | 'EMAIL_ADMIN';
+  | 'RISK' | 'KILL_SWITCH' | 'BROKER' | 'FUNDS' | 'BANK_MANAGEMENT' | 'LEDGER' | 'SYSTEM' | 'AUDIT' | 'MARKET_DATA' | 'SUPPORT' | 'MANAGERS' | 'LIVE_CHAT' | 'WHATSAPP_CONSOLE' | 'SOUND_ADMIN' | 'EMAIL_ADMIN';
 
 interface NavItem {
   key: AdminPage;
@@ -85,6 +86,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ token, theme, onToggleTh
     { key: 'DASHBOARD', label: 'Executive Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, section: 'OVERVIEW' },
 
     // DAILY OPERATIONS (Always expanded)
+    { key: 'WHATSAPP_CONSOLE', label: 'WhatsApp Console', icon: <MessageSquare className="w-4 h-4 text-emerald-400" />, section: 'DAILY OPERATIONS', badge: 'LIVE' },
     { key: 'CUSTOMERS', label: 'Customers', icon: <Users className="w-4 h-4" />, section: 'DAILY OPERATIONS' },
     { key: 'ORDERS', label: 'Order Monitor', icon: <Activity className="w-4 h-4" />, section: 'DAILY OPERATIONS' },
     { key: 'KYC', label: 'KYC Queue', icon: <FileCheck className="w-4 h-4" />, section: 'DAILY OPERATIONS' },
@@ -138,6 +140,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ token, theme, onToggleTh
       case 'KYC': return <KYCQueue token={token} onOpenCustomer360={handleSelectCustomer} />;
       case 'SUPPORT': return <SupportTickets token={token} onOpenCustomer360={handleSelectCustomer} />;
       case 'LIVE_CHAT': return <LiveChat token={token} />;
+      case 'WHATSAPP_CONSOLE': return <WhatsAppConsoleDashboard token={token} />;
       case 'MANAGERS': return <ManagerManagement token={token} />;
       case 'ORDERS': return <OrderMonitor token={token} onOpenCustomer360={handleSelectCustomer} />;
       case 'RISK': return <RiskCommandCenter token={token} onOpenCustomer360={handleSelectCustomer} />;
