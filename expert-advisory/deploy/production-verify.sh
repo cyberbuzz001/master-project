@@ -2,19 +2,21 @@
 # ==============================================================================
 # Expert Stocks Consultancy — Production Verification & Health Check Script
 # Validates live endpoints, TLS, headers, supervisor processes, and database.
-# Usage: ./deploy/production-verify.sh [domain_or_ip]
-# Default target: https://expertstocks.in
+# Usage: ./deploy/production-verify.sh [web_target] [api_target]
+# Defaults: https://www.expertstocks.in and https://api.expertstocks.in
 # ==============================================================================
 
 set -euo pipefail
 
-TARGET="${1:-https://expertstocks.in}"
+WEB_TARGET="${1:-https://www.expertstocks.in}"
+API_TARGET="${2:-https://api.expertstocks.in}"
 PASSED=0
 FAILED=0
 
 echo "=========================================================="
 echo " 🔍 EXPERT STOCKS PRODUCTION READINESS & HEALTH VERIFIER"
-echo " Target: ${TARGET}"
+echo " Web target: ${WEB_TARGET}"
+echo " API target: ${API_TARGET}"
 echo " Time:   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "=========================================================="
 echo ""
@@ -34,39 +36,39 @@ report() {
 }
 
 # 1. API Health Check Endpoint
-HTTP_HEALTH=$(curl -s -k -o /dev/null -w "%{http_code}" "${TARGET}/api/v1/health" || echo "000")
+HTTP_HEALTH=$(curl -s -k -o /dev/null -w "%{http_code}" "${API_TARGET}/api/v1/health" || echo "000")
 if [ "$HTTP_HEALTH" = "200" ]; then
-    report "REST API Liveness" "true" "HTTP ${HTTP_HEALTH} at ${TARGET}/api/v1/health"
+    report "REST API Liveness" "true" "HTTP ${HTTP_HEALTH} at ${API_TARGET}/api/v1/health"
 else
     report "REST API Liveness" "false" "Received HTTP ${HTTP_HEALTH}"
 fi
 
 # 2. Public Homepage
-HTTP_HOME=$(curl -s -k -o /dev/null -w "%{http_code}" "${TARGET}/" || echo "000")
+HTTP_HOME=$(curl -s -k -o /dev/null -w "%{http_code}" "${WEB_TARGET}/" || echo "000")
 if [ "$HTTP_HOME" = "200" ]; then
-    report "Public Website" "true" "HTTP ${HTTP_HOME} at ${TARGET}/"
+    report "Public Website" "true" "HTTP ${HTTP_HOME} at ${WEB_TARGET}/"
 else
     report "Public Website" "false" "Received HTTP ${HTTP_HOME}"
 fi
 
 # 3. Trust Center
-HTTP_TRUST=$(curl -s -k -o /dev/null -w "%{http_code}" "${TARGET}/trust-center" || echo "000")
+HTTP_TRUST=$(curl -s -k -o /dev/null -w "%{http_code}" "${WEB_TARGET}/trust-center" || echo "000")
 if [ "$HTTP_TRUST" = "200" ]; then
-    report "Trust Center" "true" "HTTP ${HTTP_TRUST} at ${TARGET}/trust-center"
+    report "Trust Center" "true" "HTTP ${HTTP_TRUST} at ${WEB_TARGET}/trust-center"
 else
     report "Trust Center" "false" "Received HTTP ${HTTP_TRUST}"
 fi
 
 # 4. Sign-in Page
-HTTP_LOGIN=$(curl -s -k -o /dev/null -w "%{http_code}" "${TARGET}/login" || echo "000")
+HTTP_LOGIN=$(curl -s -k -o /dev/null -w "%{http_code}" "${WEB_TARGET}/login" || echo "000")
 if [ "$HTTP_LOGIN" = "200" ]; then
-    report "Authentication Page" "true" "HTTP ${HTTP_LOGIN} at ${TARGET}/login"
+    report "Authentication Page" "true" "HTTP ${HTTP_LOGIN} at ${WEB_TARGET}/login"
 else
     report "Authentication Page" "false" "Received HTTP ${HTTP_LOGIN}"
 fi
 
 # 5. Security Headers Check
-HEADERS=$(curl -s -k -I "${TARGET}/")
+HEADERS=$(curl -s -k -I "${WEB_TARGET}/")
 if echo "$HEADERS" | grep -iq "Strict-Transport-Security"; then
     report "HSTS Header" "true" "Present with max-age directive"
 else
@@ -83,7 +85,7 @@ fi
 if command -v supervisorctl &> /dev/null; then
     WORKER_STATUS=$(supervisorctl status 2>/dev/null || echo "FAILED")
     if echo "$WORKER_STATUS" | grep -q "RUNNING"; then
-        report "Supervisor Workers" "true" "Queue workers and Next.js are RUNNING"
+        report "Supervisor Workers" "true" "Laravel queue workers and scheduler are RUNNING"
     else
         report "Supervisor Workers" "false" "Workers not running or degraded: ${WORKER_STATUS}"
     fi
