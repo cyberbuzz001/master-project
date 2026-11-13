@@ -14,6 +14,14 @@ export async function proxyBackend(request: NextRequest, path: string): Promise<
     if (value) headers.set(name, value);
   }
   headers.set("accept", "application/json");
+
+  // Pass host and forwarding headers so Laravel identifies stateful origins
+  const host = request.headers.get("host") || "www.expertstocks.in";
+  headers.set("x-forwarded-host", host);
+  headers.set("x-forwarded-proto", "https");
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
+
   try {
     const upstream = await fetch(`${backend.replace(/\/$/, "")}${path}${request.nextUrl.search}`, {
       method: request.method,
@@ -28,6 +36,11 @@ export async function proxyBackend(request: NextRequest, path: string): Promise<
       const value = upstream.headers.get(name);
       if (value) responseHeaders.set(name, value);
     }
+
+    // Purge host-only legacy cookies so wildcard domain (.expertstocks.in) cookies take precedence
+    responseHeaders.append("set-cookie", "esc_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
+    responseHeaders.append("set-cookie", "XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Secure; SameSite=Lax");
+
     for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append("set-cookie", cookie);
     if (upstream.status >= 300 && upstream.status < 400) {
       return NextResponse.json({ success: false, message: "The API returned an unexpected redirect." }, { status: 502 });

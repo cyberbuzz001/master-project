@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
@@ -30,7 +31,7 @@ class WhatsAppWebhookController extends Controller
     public function handle(Request $request): JsonResponse
     {
         $rawContent = $request->getContent();
-        \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK POST RECEIVED', [
+        Log::info('WHATSAPP WEBHOOK POST RECEIVED', [
             'raw_payload' => json_decode($rawContent, true),
             'signature' => $request->header('X-Hub-Signature-256'),
         ]);
@@ -68,29 +69,28 @@ class WhatsAppWebhookController extends Controller
             'entry.*.changes.*.value.statuses.*.timestamp' => ['required', 'integer', 'min:1'],
         ]);
         $events = [];
+        $allowedWabas = array_filter(array_map('trim', explode(',', (string) $waba)));
         foreach ($payload['entry'] as $entry) {
-            \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK ENTRY', [
+            Log::info('WHATSAPP WEBHOOK ENTRY', [
                 'entry_id' => $entry['id'] ?? null,
                 'expected_waba' => $waba,
                 'changes_count' => count($entry['changes'] ?? []),
             ]);
-            if ((string) $entry['id'] !== (string) $waba) {
-                \Illuminate\Support\Facades\Log::warning('WHATSAPP WEBHOOK WABA MISMATCH - verifying by phone_number_id and HMAC signature', [
-                    'received_entry_id' => $entry['id'],
-                    'configured_waba' => $waba,
-                ]);
+            if (! in_array((string) $entry['id'], $allowedWabas, true)) {
+                return response()->json(['success' => false, 'message' => 'Unknown business account.'], 403);
             }
             foreach ($entry['changes'] as $change) {
                 $value = $change['value'];
-                \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK CHANGE', [
+                Log::info('WHATSAPP WEBHOOK CHANGE', [
                     'phone_number_id' => $value['metadata']['phone_number_id'] ?? null,
                     'configured_phone' => $phone,
                 ]);
                 if ((string) $value['metadata']['phone_number_id'] !== (string) $phone) {
-                    \Illuminate\Support\Facades\Log::warning('WHATSAPP WEBHOOK PHONE MISMATCH', [
+                    Log::warning('WHATSAPP WEBHOOK PHONE MISMATCH', [
                         'received_phone_id' => $value['metadata']['phone_number_id'] ?? null,
                         'configured_phone' => $phone,
                     ]);
+
                     return response()->json(['success' => false], 403);
                 }
                 foreach ($value['messages'] ?? [] as $message) {

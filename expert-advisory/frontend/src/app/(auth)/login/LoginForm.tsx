@@ -22,9 +22,9 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [useRecovery, setUseRecovery] = useState(false);
 
-  // Pre-warm Sanctum CSRF cookie and purge any legacy mock cookies
+  // Pre-warm Sanctum CSRF cookie on login page load
   useEffect(() => {
-    ensureCsrf().catch(() => {});
+    ensureCsrf(true).catch(() => {});
   }, []);
 
   // Automatic SSO Ticket Exchange from TradeGrow Brokerage Desk

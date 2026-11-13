@@ -21,6 +21,7 @@
         <!-- PDF rendering (risk reports, later invoices) needs more than the CLI default of 128M. -->
         <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:u/nE5H8GzU2X/p+Fh8t0Yh6K8q3+qJ6z1W9s8M7v5E4="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
