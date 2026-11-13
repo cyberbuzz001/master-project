@@ -29,6 +29,12 @@ class WhatsAppWebhookController extends Controller
 
     public function handle(Request $request): JsonResponse
     {
+        $rawContent = $request->getContent();
+        \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK POST RECEIVED', [
+            'raw_payload' => json_decode($rawContent, true),
+            'signature' => $request->header('X-Hub-Signature-256'),
+        ]);
+
         $secret = config('services.whatsapp.app_secret');
         $waba = config('services.whatsapp.business_account_id');
         $phone = config('services.whatsapp.phone_number_id');
@@ -63,12 +69,28 @@ class WhatsAppWebhookController extends Controller
         ]);
         $events = [];
         foreach ($payload['entry'] as $entry) {
+            \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK ENTRY', [
+                'entry_id' => $entry['id'] ?? null,
+                'expected_waba' => $waba,
+                'changes_count' => count($entry['changes'] ?? []),
+            ]);
             if ((string) $entry['id'] !== (string) $waba) {
-                return response()->json(['success' => false], 403);
+                \Illuminate\Support\Facades\Log::warning('WHATSAPP WEBHOOK WABA MISMATCH - verifying by phone_number_id and HMAC signature', [
+                    'received_entry_id' => $entry['id'],
+                    'configured_waba' => $waba,
+                ]);
             }
             foreach ($entry['changes'] as $change) {
                 $value = $change['value'];
+                \Illuminate\Support\Facades\Log::info('WHATSAPP WEBHOOK CHANGE', [
+                    'phone_number_id' => $value['metadata']['phone_number_id'] ?? null,
+                    'configured_phone' => $phone,
+                ]);
                 if ((string) $value['metadata']['phone_number_id'] !== (string) $phone) {
+                    \Illuminate\Support\Facades\Log::warning('WHATSAPP WEBHOOK PHONE MISMATCH', [
+                        'received_phone_id' => $value['metadata']['phone_number_id'] ?? null,
+                        'configured_phone' => $phone,
+                    ]);
                     return response()->json(['success' => false], 403);
                 }
                 foreach ($value['messages'] ?? [] as $message) {
