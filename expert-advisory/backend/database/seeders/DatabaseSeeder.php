@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PolicyDocumentSeeder::class,
             OnboardingSeeder::class,
             BootstrapSuperAdminSeeder::class,
+            MessageTemplateSeeder::class,
         ]);
 
         if (config('platform.demo_mode') && ! app()->isProduction()) {
