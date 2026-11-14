@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PolicyDocumentSeeder::class,
             OnboardingSeeder::class,
             BootstrapSuperAdminSeeder::class,
+            ObjectionLibrarySeeder::class,
             MessageTemplateSeeder::class,
         ]);
 
