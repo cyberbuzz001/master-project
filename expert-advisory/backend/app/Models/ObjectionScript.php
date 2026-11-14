@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'category', 'objection', 'exact_client_statement', 'tag', 'response',
     'response_ba', 'response_sba', 'likely_concern_hypothesis',
     'required_evidence_documentation', 'suggested_followup_action',
-    'escalation_condition', 'approved_template', 'status',
+    'escalation_condition', 'approved_template', 'objection_hi', 'response_hi', 'response_ba_hi', 'response_sba_hi', 'approved_template_hi', 'status',
     'approved_by', 'approved_at', 'is_demo',
 ])]
 class ObjectionScript extends Model
@@ -33,7 +33,7 @@ class ObjectionScript extends Model
     protected static function booted(): void
     {
         static::updating(function (ObjectionScript $script): void {
-            if ($script->getOriginal('status') === self::APPROVED && $script->isDirty(['objection', 'response'])) {
+            if ($script->getOriginal('status') === self::APPROVED && $script->isDirty(['objection', 'response', 'objection_hi', 'response_hi', 'response_ba_hi', 'response_sba_hi', 'approved_template_hi'])) {
                 $script->status = self::DRAFT;
                 $script->approved_by = null;
                 $script->approved_at = null;

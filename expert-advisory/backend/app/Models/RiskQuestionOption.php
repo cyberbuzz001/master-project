@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['risk_question_id', 'label', 'value', 'score', 'suitability_flags', 'sort_order'])]
+#[Fillable(['risk_question_id', 'label', 'label_hi', 'value', 'score', 'suitability_flags', 'sort_order'])]
 class RiskQuestionOption extends Model
 {
     public $timestamps = false;

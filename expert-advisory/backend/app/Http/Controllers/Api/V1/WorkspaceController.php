@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Crm\LeadIntakeService;
+use App\Domain\Crm\PhoneNormalizer;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\FreeTrial;
@@ -13,12 +15,15 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Employee workspace and client portal read models. All queries are scoped to the signed-in user.
  */
 final class WorkspaceController extends Controller
 {
+    public function __construct(private readonly LeadIntakeService $leadIntake) {}
+
     public function employeeDashboard(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -120,6 +125,82 @@ final class WorkspaceController extends Controller
             'next_followup_at' => $lead->next_followup_at?->toIso8601String(),
             'created_at' => $lead->created_at?->toIso8601String(),
         ]);
+    }
+
+    public function storeEmployeeLead(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('leads.create'), 403);
+        $data = $request->validate([
+            'full_name' => ['nullable', 'string', 'max:120'],
+            'mobile' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email:rfc', 'max:255'],
+            'city' => ['nullable', 'string', 'max:80'],
+            'capital_range' => ['nullable', 'string', 'max:24'],
+            'preferred_segments' => ['nullable', 'array', 'max:4'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'consent_channel' => ['nullable', 'string', 'max:32'],
+            'consent_calls' => ['nullable', 'boolean'],
+            'consent_whatsapp' => ['nullable', 'boolean'],
+        ]);
+        $lead = $this->leadIntake->createByStaff($request->user(), $data);
+
+        return ApiResponse::success($this->leadPayload($lead), status: 201);
+    }
+
+    public function updateEmployeeLead(Request $request, string $lead): JsonResponse
+    {
+        $record = $this->resolveLead($lead);
+        abort_unless($request->user()->can('update', $record), 403);
+        $data = $request->validate([
+            'full_name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'mobile' => ['sometimes', 'required', 'string', 'max:20'],
+            'email' => ['sometimes', 'nullable', 'email:rfc', 'max:255'],
+            'city' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'capital_range' => ['sometimes', 'nullable', 'string', 'max:24'],
+            'preferred_segments' => ['sometimes', 'nullable', 'array', 'max:4'],
+            'message' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'status' => ['sometimes', Rule::in(Lead::STATUSES)],
+        ]);
+        if (array_key_exists('mobile', $data)) {
+            $data['mobile'] = PhoneNormalizer::toE164($data['mobile']);
+            $duplicate = Lead::query()->where('mobile', $data['mobile'])->where('id', '!=', $record->getKey())->exists();
+            if ($duplicate) {
+                throw ValidationException::withMessages(['mobile' => ['This mobile number already belongs to another lead.']]);
+            }
+        }
+        $record->fill($data)->save();
+
+        return ApiResponse::success($this->leadPayload($record->fresh()));
+    }
+
+    public function deleteEmployeeLead(Request $request, string $lead): JsonResponse
+    {
+        $record = $this->resolveLead($lead);
+        abort_unless($request->user()->can('delete', $record), 403);
+        $record->delete();
+
+        return ApiResponse::success(['deleted' => true]);
+    }
+
+    private function resolveLead(string $identifier): Lead
+    {
+        return Lead::query()->where('uuid', $identifier)->orWhereKey($identifier)->firstOrFail();
+    }
+
+    /** @return array<string, mixed> */
+    private function leadPayload(Lead $lead): array
+    {
+        return [
+            'id' => $lead->uuid,
+            'full_name' => $lead->full_name,
+            'mobile' => $lead->mobile,
+            'email' => $lead->email,
+            'city' => $lead->city,
+            'status' => $lead->status,
+            'segments' => $lead->preferred_segments ?? [],
+            'possible_duplicate' => $lead->duplicate_of_lead_id !== null,
+            'created_at' => $lead->created_at?->toIso8601String(),
+        ];
     }
 
     public function clientDashboard(Request $request): JsonResponse

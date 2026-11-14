@@ -33,7 +33,7 @@ class LeadForm
             Section::make('Contact')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('full_name')->required()->minLength(2)->maxLength(120),
+                    TextInput::make('full_name')->label('Full name (optional)')->maxLength(120),
                     TextInput::make('mobile')
                         ->tel()
                         ->required()

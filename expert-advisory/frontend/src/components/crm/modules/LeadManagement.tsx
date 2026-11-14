@@ -175,7 +175,6 @@ export function LeadManagement({
   // Client-Side Validation for Create Lead
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    if (!newLeadForm.name.trim()) errors.name = "Full name is required.";
     const cleanPhone = newLeadForm.mobile.replace(/\D/g, "");
     if (!cleanPhone || cleanPhone.length < 10) {
       errors.mobile = "A valid 10-digit mobile number is required.";
@@ -195,7 +194,7 @@ export function LeadManagement({
     setIsSubmitting(true);
     try {
       const payload = {
-        name: newLeadForm.name.trim(),
+        full_name: newLeadForm.name.trim() || null,
         mobile: newLeadForm.mobile.trim(),
         email: newLeadForm.email.trim(),
         city: newLeadForm.city,
@@ -214,7 +213,7 @@ export function LeadManagement({
 
       const json = await res.json();
       if (res.ok && json.success) {
-        const createdLead: CrmLead = json.data;
+        const createdLead = json.data as CrmLead & { full_name?: string };
         if (onAddLead) onAddLead(createdLead);
         setShowAddModal(false);
         setNewLeadForm({
@@ -229,7 +228,7 @@ export function LeadManagement({
           notes: "",
         });
         setFormErrors({});
-        showToast(`Lead ${createdLead.name} (${createdLead.id}) created successfully!`);
+        showToast(`Lead ${createdLead.name || createdLead.full_name || "record"} (${createdLead.id}) created successfully!`);
       } else {
         showToast(json.message || "Failed to create lead", "error");
       }
@@ -253,7 +252,7 @@ export function LeadManagement({
         body: JSON.stringify({
           id: editingLead.id,
           updates: {
-            name: editingLead.name,
+            full_name: editingLead.name,
             mobile: editingLead.mobile,
             email: editingLead.email,
             city: editingLead.city,
@@ -1485,11 +1484,10 @@ export function LeadManagement({
             <form onSubmit={handleSaveLead} className="space-y-4 text-xs">
               <div>
                 <label className="block text-ink-300 font-semibold mb-1">
-                  Full Name <span className="text-red-400">*</span>
+                  Full Name <span className="text-ink-500">(optional)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Rajesh Kumar"
                   value={newLeadForm.name}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, name: e.target.value })}
@@ -1676,7 +1674,6 @@ export function LeadManagement({
                   <label className="block text-ink-300 font-semibold mb-1">Full Name</label>
                   <input
                     type="text"
-                    required
                     value={editingLead.name}
                     onChange={(e) => setEditingLead({ ...editingLead, name: e.target.value })}
                     className="w-full rounded-xl border border-[#1E293B] bg-[#0E1624] p-2.5 text-white focus:border-brand-500 focus:outline-none"

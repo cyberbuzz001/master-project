@@ -35,7 +35,14 @@ class OnboardingSeeder extends Seeder
             ['title' => 'Investor suitability and risk profile', 'description' => 'Captures experience, objectives, horizon and capacity for loss.'],
         );
 
+        $questionnaire->forceFill([
+            'title_hi' => 'निवेशक उपयुक्तता और जोखिम प्रोफ़ाइल',
+            'description_hi' => 'अनुभव, उद्देश्य, निवेश अवधि और नुकसान सहने की क्षमता दर्ज करता है।',
+        ])->save();
+
         if ($questionnaire->versions()->exists()) {
+            $this->applyHindi($questionnaire->versions()->latest('version')->first());
+
             return;
         }
 
@@ -113,6 +120,35 @@ class OnboardingSeeder extends Seeder
                     'suitability_flags' => $option['flags'] ?? null,
                     'sort_order' => $optionOrder++,
                 ]);
+            }
+        }
+
+        $this->applyHindi($version);
+    }
+
+    private function applyHindi(?RiskQuestionnaireVersion $version): void
+    {
+        if ($version === null) {
+            return;
+        }
+
+        $questions = [
+            'experience' => ['text_hi' => 'आप कितने समय से बाजार में निवेश या ट्रेडिंग कर रहे हैं?', 'options' => ['lt_1y' => 'एक वर्ष से कम', '1_3y' => '1 से 3 वर्ष', '3_7y' => '3 से 7 वर्ष', 'gt_7y' => '7 वर्ष से अधिक']],
+            'horizon' => ['text_hi' => 'आप इस धन की आवश्यकता के बिना कितने समय तक निवेशित रह सकते हैं?', 'options' => ['lt_1y' => '1 वर्ष से कम', '1_3y' => '1 से 3 वर्ष', '3_5y' => '3 से 5 वर्ष', 'gt_5y' => '5 वर्ष से अधिक']],
+            'loss_tolerance' => ['text_hi' => 'यदि तीन महीनों में आपका पोर्टफोलियो 20% गिर जाए तो आप क्या करेंगे?', 'options' => ['exit' => 'तुरंत सब कुछ बेच दूंगा', 'reduce' => 'जोखिम घटाकर प्रतीक्षा करूंगा', 'hold' => 'होल्ड करके योजना की समीक्षा करूंगा', 'add' => 'कम स्तर पर और निवेश करूंगा']],
+            'income_stability' => ['text_hi' => 'आपके खर्चों की तुलना में आपकी आय कितनी स्थिर है?', 'options' => ['unstable' => 'अनियमित; खर्च पूरे करना कठिन है', 'stable' => 'स्थिर; हर महीने थोड़ी बचत होती है', 'strong' => 'बहुत स्थिर; हर महीने पर्याप्त बचत होती है']],
+            'capital_share' => ['text_hi' => 'आपकी कुल बचत का कितना हिस्सा यह पूंजी होगी?', 'options' => ['most' => 'मेरी अधिकांश बचत', 'half' => 'लगभग आधी', 'small' => 'छोटा हिस्सा']],
+            'instruments' => ['text_hi' => 'आपने पहले किन साधनों में वास्तव में ट्रेडिंग की है?', 'options' => ['equity' => 'इक्विटी डिलीवरी', 'mf' => 'म्यूचुअल फंड', 'fno' => 'फ्यूचर्स और ऑप्शंस', 'commodity' => 'कमोडिटी या करेंसी']],
+        ];
+
+        foreach ($questions as $code => $translation) {
+            $question = $version->questions()->where('code', $code)->first();
+            if ($question === null) {
+                continue;
+            }
+            $question->forceFill(['text_hi' => $translation['text_hi']])->save();
+            foreach ($translation['options'] as $value => $label) {
+                $question->options()->where('value', $value)->update(['label_hi' => $label]);
             }
         }
     }

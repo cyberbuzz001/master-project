@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'title', 'description', 'is_active'])]
+#[Fillable(['code', 'title', 'title_hi', 'description', 'description_hi', 'is_active'])]
 class RiskQuestionnaire extends Model
 {
     protected function casts(): array

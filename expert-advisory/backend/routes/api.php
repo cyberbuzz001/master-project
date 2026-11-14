@@ -178,6 +178,9 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('dashboard', [WorkspaceController::class, 'employeeDashboard'])->middleware('can:dashboard.employee.view');
                 Route::get('leads', [WorkspaceController::class, 'employeeLeads'])
                     ->middleware('can:viewAnyLeads');
+                Route::post('leads', [WorkspaceController::class, 'storeEmployeeLead'])->middleware('can:leads.create');
+                Route::patch('leads/{lead}', [WorkspaceController::class, 'updateEmployeeLead']);
+                Route::delete('leads/{lead}', [WorkspaceController::class, 'deleteEmployeeLead'])->middleware('can:leads.delete');
             });
 
             // ---- Client portal ----------------------------------------------------------------

@@ -94,15 +94,18 @@ final class OnboardingController extends Controller
 
         return ApiResponse::success([
             'title' => $version->questionnaire->title,
+            'title_hi' => $version->questionnaire->title_hi,
             'methodology_version' => $version->methodology_version,
             'questions' => $version->questions->map(fn (RiskQuestion $question) => [
                 'code' => $question->code,
                 'text' => $question->text,
+                'text_hi' => $question->text_hi,
                 'help_text' => $question->help_text,
                 'type' => $question->type,
                 'options' => $question->options->map(fn ($option) => [
                     'value' => $option->value,
                     'label' => $option->label,
+                    'label_hi' => $option->label_hi,
                 ])->values(),
             ])->values(),
         ]);

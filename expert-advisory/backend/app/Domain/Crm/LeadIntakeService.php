@@ -6,13 +6,13 @@ use App\Domain\Audit\AuditLogger;
 use App\Domain\Compliance\ConsentRecorder;
 use App\Domain\Platform\RequestContext;
 use App\Domain\Shared\ApiException;
-use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\LeadAttribution;
 use App\Models\LeadSource;
 use App\Models\LeadStatusHistory;
+use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Support\Facades\DB;
 
@@ -42,6 +42,10 @@ final class LeadIntakeService
         return DB::transaction(function () use ($data): Lead {
             $mobile = PhoneNormalizer::toE164($data['mobile'] ?? null);
             $email = isset($data['email']) ? mb_strtolower(trim($data['email'])) : null;
+            $duplicate = $this->findDuplicate($mobile, $email);
+            if ($duplicate !== null) {
+                return $duplicate;
+            }
             $attribution = $data['attribution'] ?? [];
 
             $vendor = empty($attribution['vendor_code']) ? null : Vendor::query()->where('code', $attribution['vendor_code'])->first();
@@ -66,7 +70,7 @@ final class LeadIntakeService
                 'campaign_id' => $campaign?->id,
                 'vendor_id' => $vendor?->id ?? $campaign?->vendor_id,
                 'referral_code' => $attribution['referral_code'] ?? null,
-                'duplicate_of_lead_id' => $this->findDuplicate($mobile, $email)?->id,
+                'duplicate_of_lead_id' => null,
                 'message' => $data['message'] ?? null,
             ]);
 
@@ -143,11 +147,16 @@ final class LeadIntakeService
 
         return DB::transaction(function () use ($actor, $data, $mobile): Lead {
             $email = filled($data['email'] ?? null) ? mb_strtolower(trim($data['email'])) : null;
+            if ($this->findDuplicate($mobile, $email) !== null) {
+                throw ApiException::unprocessable('DUPLICATE_LEAD', 'A lead with this mobile number or email already exists.', [
+                    'mobile' => ['This lead already exists in the CRM.'],
+                ]);
+            }
             $segments = array_values(array_intersect($data['preferred_segments'] ?? [], ['equity', 'options', 'futures', 'commodity']));
             $campaign = filled($data['campaign_id'] ?? null) ? Campaign::query()->find($data['campaign_id']) : null;
 
             $lead = Lead::create([
-                'full_name' => trim($data['full_name']),
+                'full_name' => filled($data['full_name'] ?? null) ? trim($data['full_name']) : null,
                 'mobile' => $mobile,
                 'email' => $email,
                 'city' => $data['city'] ?? null,
@@ -162,7 +171,7 @@ final class LeadIntakeService
                 'lead_source_id' => $data['lead_source_id'] ?? LeadSource::query()->where('code', 'website_form')->value('id'),
                 'campaign_id' => $campaign?->id,
                 'vendor_id' => $data['vendor_id'] ?? $campaign?->vendor_id,
-                'duplicate_of_lead_id' => $this->findDuplicate($mobile, $email)?->id,
+                'duplicate_of_lead_id' => null,
                 'message' => $data['message'] ?? null,
             ]);
 
@@ -211,8 +220,6 @@ final class LeadIntakeService
         }
 
         return Lead::query()
-            ->whereNull('duplicate_of_lead_id')
-            ->where('created_at', '>=', now()->subDays((int) config('platform.leads.duplicate_window_days')))
             ->where(function ($query) use ($mobile, $email): void {
                 if ($mobile !== null) {
                     $query->orWhere('mobile', $mobile);

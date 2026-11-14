@@ -251,13 +251,11 @@ Output ONLY the raw JSON array without markdown formatting.';
             }
         }
 
-        // Bulk query existing leads in CRM
+        // Bulk query all existing leads in CRM. A mobile number identifies a lead permanently;
+        // historical records must not be re-imported as fresh leads after a time window.
         $existingCrmLeads = [];
         if (! empty($allValidPhones)) {
-            // The approved duplicate policy is a rolling 90-day window. Older
-            // records remain historical and may be re-imported as a fresh lead.
             $existingCrmLeads = Lead::query()
-                ->where('created_at', '>=', now()->subDays(90))
                 ->whereIn('mobile', $allValidPhones)
                 ->get()
                 ->keyBy('mobile')

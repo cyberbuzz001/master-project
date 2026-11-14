@@ -268,10 +268,34 @@ class ObjectionLibrarySeeder extends Seeder
             ],
         ];
 
+        $hindi = [
+            'trust_verification' => ['objection_hi' => 'क्या आपकी कंपनी भरोसेमंद है?', 'response_hi' => 'हमारी कंपनी के आधिकारिक विवरण और वैधानिक जानकारी हमारी Trust Center वेबसाइट पर सत्यापित की जा सकती है।', 'approved_template_hi' => 'नमस्ते {{name}}, Expert Stocks Consultancy की आधिकारिक जानकारी और वैधानिक विवरण यहां सत्यापित करें: https://expertstocks.in/trust-center'],
+            'regulatory_status' => ['objection_hi' => 'आपकी नियामकीय स्थिति क्या है?', 'response_hi' => 'हम पारदर्शी, जोखिम-प्रकटीकरण आधारित शोध सेवा प्रदान करते हैं। कृपया हमारी प्रकाशित अनुपालन जानकारी देखें।', 'approved_template_hi' => 'प्रिय {{name}}, हमारी अनुपालन जानकारी और Investor Charter यहां देखें: https://expertstocks.in/legal/investor-charter'],
+            'analyst_credentials' => ['objection_hi' => 'शोध कौन तैयार करता है?', 'response_hi' => 'शोध डेस्क प्रत्येक रिपोर्ट के साथ पद्धति, जोखिम और विश्लेषक प्रकटीकरण साझा करता है।', 'approved_template_hi' => 'नमस्ते {{name}}, हमारी शोध पद्धति और प्रकटीकरण यहां देखें: https://expertstocks.in/research'],
+            'advance_fee' => ['objection_hi' => 'भुगतान पहले क्यों करना है?', 'response_hi' => 'सेवा शुल्क स्पष्ट और निश्चित है। हम लाभ की गारंटी या लाभ-साझेदारी का वादा नहीं करते।', 'approved_template_hi' => 'प्रिय {{name}}, हमारी सेवा निश्चित शुल्क और आधिकारिक टैक्स इनवॉइस के साथ प्रदान की जाती है।'],
+            'account_mismatch' => ['objection_hi' => 'भुगतान खाते का नाम अलग क्यों है?', 'response_hi' => 'भुगतान केवल हमारे सत्यापित कॉर्पोरेट खाते या आधिकारिक भुगतान पोर्टल पर करें। व्यक्तिगत खाते में भुगतान न करें।', 'approved_template_hi' => 'आधिकारिक भुगतान पोर्टल का उपयोग करें: https://expertstocks.in/portal/billing। व्यक्तिगत खाते में भुगतान न करें।'],
+            'agreement_receipt' => ['objection_hi' => 'क्या मुझे समझौता और रसीद मिलेगी?', 'response_hi' => 'भुगतान की पुष्टि के बाद आधिकारिक सेवा समझौता और टैक्स इनवॉइस पोर्टल में उपलब्ध होंगे।', 'approved_template_hi' => 'प्रिय {{name}}, आपका डिजिटल समझौता और GST इनवॉइस सदस्यता की पुष्टि के बाद पोर्टल में उपलब्ध होगा।'],
+            'business_verification' => ['objection_hi' => 'मैं आपके व्यवसाय की पुष्टि कैसे करूं?', 'response_hi' => 'आप हमारी वेबसाइट, पंजीकृत कार्यालय विवरण और प्रकाशित वैधानिक दस्तावेजों से सत्यापन कर सकते हैं।', 'approved_template_hi' => 'नमस्ते {{name}}, हमारा कार्यालय और सत्यापन विवरण यहां देखें: https://expertstocks.in/trust-center'],
+            'family_decision' => ['objection_hi' => 'मुझे परिवार से चर्चा करनी है।', 'response_hi' => 'यह उचित है। हम सेवा का दायरा, शुल्क और जोखिम जानकारी साझा करेंगे ताकि आप परिवार के साथ निर्णय ले सकें।', 'approved_template_hi' => 'नमस्ते {{name}}, परिवार के साथ साझा करने के लिए सेवा विवरण यहां देखें: https://expertstocks.in/services'],
+            'deliberation' => ['objection_hi' => 'मैं इस पर सोचूंगा।', 'response_hi' => 'बिल्कुल, आप समय लेकर निर्णय लें। हम बिना दबाव के आपके प्रश्नों का उत्तर देने के लिए उपलब्ध हैं।', 'approved_template_hi' => 'नमस्ते {{name}}, आपके विचार के लिए सेवा और जोखिम विवरण यहां उपलब्ध हैं: https://expertstocks.in/methodology'],
+            'risk_recovery' => ['objection_hi' => 'मुझे पहले बाजार में नुकसान हुआ है।', 'response_hi' => 'हमें आपके अनुभव का खेद है। शोध सेवा जोखिम कम करने की जानकारी देती है, लेकिन नुकसान या लाभ की गारंटी नहीं देती।', 'approved_template_hi' => 'प्रिय {{name}}, जोखिम प्रबंधन और स्टॉप-लॉस अनुशासन पर हमारा मार्गदर्शक यहां देखें: https://expertstocks.in/resources/risk-management'],
+            'free_trial' => ['objection_hi' => 'क्या मुझे निःशुल्क ट्रायल मिल सकता है?', 'response_hi' => 'यदि आप पात्र हैं, तो सीमित अवधि का ट्रायल सेवा की शर्तों और जोखिम प्रकटीकरण के अनुसार सक्रिय किया जा सकता है।', 'approved_template_hi' => 'नमस्ते {{name}}, आपका सीमित शोध ट्रायल सक्रिय है। कृपया साझा की गई शर्तों और जोखिम प्रकटीकरण को पढ़ें।'],
+            'trial_conversion' => ['objection_hi' => 'डेमो के बाद भुगतान क्यों करूं?', 'response_hi' => 'ट्रायल केवल सेवा को समझने के लिए है। सदस्यता लेने का निर्णय आपकी स्वतंत्र सहमति और जोखिम समझ पर निर्भर है।', 'approved_template_hi' => 'प्रिय {{name}}, सदस्यता विकल्प और शुल्क यहां पारदर्शी रूप से देखें: https://expertstocks.in/portal/billing'],
+            'installment_recovery' => ['objection_hi' => 'मैं अभी बाकी भुगतान नहीं कर सकता।', 'response_hi' => 'हम आपके खाते की शर्तें जांचकर उपलब्ध भुगतान विकल्प समझाएंगे। भुगतान केवल आधिकारिक पोर्टल से करें।', 'approved_template_hi' => 'नमस्ते {{name}}, आपके खाते की भुगतान जानकारी यहां देखें: https://expertstocks.in/portal/billing'],
+            'pricing_mismatch' => ['objection_hi' => 'पैकेज बहुत महंगा है।', 'response_hi' => 'हम शुल्क, सेवा का दायरा और अवधि स्पष्ट रूप से साझा करेंगे। कृपया वही विकल्प चुनें जो आपके बजट और जोखिम क्षमता के अनुकूल हो।', 'approved_template_hi' => 'नमस्ते {{name}}, उपलब्ध सेवा विकल्प और शुल्क यहां देखें: https://expertstocks.in/pricing'],
+            'support_escalation' => ['objection_hi' => 'मुझे पर्याप्त सहायता नहीं मिल रही।', 'response_hi' => 'हम आपकी शिकायत दर्ज करके संबंध प्रबंधक से प्राथमिकता के आधार पर संपर्क करवाएंगे।', 'approved_template_hi' => 'प्रिय {{name}}, आपका सहायता अनुरोध {{ticket}} दर्ज हो गया है। हमारी टीम {{rm_name}} समय पर संपर्क करेगी।'],
+            'performance_dissatisfaction' => ['objection_hi' => 'आपकी सलाह से परिणाम नहीं आया।', 'response_hi' => 'बाजार में परिणाम निश्चित नहीं होते। हम आपके प्रश्न, जोखिम प्रकटीकरण और उपलब्ध शोध रिकॉर्ड की समीक्षा करेंगे।', 'approved_template_hi' => 'प्रिय {{name}}, बाजार जोखिम के कारण परिणाम की गारंटी नहीं होती। कृपया हमारे जोखिम प्रकटीकरण की समीक्षा करें।'],
+            'grievance_redressal' => ['objection_hi' => 'मैं शिकायत दर्ज करना चाहता हूं।', 'response_hi' => 'आपकी शिकायत को आधिकारिक ट्रैकिंग नंबर के साथ दर्ज किया जाएगा और अनुपालन टीम समयबद्ध उत्तर देगी।', 'approved_template_hi' => 'प्रिय {{name}}, आपकी शिकायत {{tracking_number}} दर्ज हो गई है। स्थिति यहां देखें: https://expertstocks.in/grievances/{{tracking_number}}'],
+            'dnd_optout' => ['objection_hi' => 'मुझे कॉल और संदेश बंद करवाने हैं।', 'response_hi' => 'हम आपकी गोपनीयता का सम्मान करते हैं और आपके नंबर को DND सूची में तुरंत दर्ज करेंगे।', 'approved_template_hi' => 'प्रिय {{name}}, आपके अनुरोध पर आपका नंबर DND सूची में जोड़ दिया गया है।'],
+        ];
+
         foreach ($scripts as $s) {
+            $translation = $hindi[$s['tag']] ?? [];
             ObjectionScript::updateOrCreate(
                 ['objection' => $s['objection']],
-                array_merge($s, [
+                array_merge($s, $translation, [
+                    'response_ba_hi' => $translation['response_hi'] ?? null,
+                    'response_sba_hi' => $translation['response_hi'] ?? null,
                     'status' => ObjectionScript::APPROVED,
                     'created_by' => $adminId,
                     'approved_by' => $adminId,

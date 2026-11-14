@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Campaign;
 use App\Models\ConsentRecord;
 use App\Models\Lead;
+use App\Models\Vendor;
 use Database\Seeders\LeadSourceSeeder;
 use Tests\TestCase;
 
@@ -85,16 +86,15 @@ class LeadIntakeTest extends TestCase
         $this->assertSame(0, Lead::query()->count());
     }
 
-    public function test_duplicate_is_linked_and_response_does_not_reveal_it(): void
+    public function test_duplicate_is_not_inserted_and_response_does_not_reveal_it(): void
     {
         $first = $this->postJson('/api/v1/public/leads', $this->payload())->assertCreated();
         $second = $this->postJson('/api/v1/public/leads', $this->payload(['email' => 'other@example.test', 'mobile' => '+91 98765-43210']))->assertCreated();
 
         $this->assertSame($first->json('data'), $second->json('data'));
 
-        [$original, $duplicate] = Lead::query()->orderBy('id')->get()->all();
-        $this->assertNull($original->duplicate_of_lead_id);
-        $this->assertSame($original->id, $duplicate->duplicate_of_lead_id);
+        $this->assertSame(1, Lead::query()->count());
+        $this->assertNull(Lead::query()->firstOrFail()->duplicate_of_lead_id);
     }
 
     public function test_public_form_is_rate_limited(): void
@@ -108,7 +108,7 @@ class LeadIntakeTest extends TestCase
 
     public function test_vendor_code_sets_vendor_source(): void
     {
-        \App\Models\Vendor::create(['code' => 'vendor-a', 'name' => 'Vendor A']);
+        Vendor::create(['code' => 'vendor-a', 'name' => 'Vendor A']);
 
         $this->postJson('/api/v1/public/leads', $this->payload(['attribution' => ['vendor_code' => 'vendor-a']]))->assertCreated();
 

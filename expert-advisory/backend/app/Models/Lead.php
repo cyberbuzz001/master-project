@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Crm\PhoneNormalizer;
 use App\Models\Concerns\HasDemoFlag;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 #[Fillable([
     'full_name', 'mobile', 'email', 'city', 'state', 'country', 'trading_experience', 'demat_status', 'broker',
@@ -92,6 +94,13 @@ class Lead extends Model
         static::creating(function (Lead $lead): void {
             $lead->uuid ??= (string) Str::uuid7();
             $lead->status ??= 'NEW';
+
+            $lead->mobile = PhoneNormalizer::toE164($lead->mobile);
+            if ($lead->mobile !== null && static::query()->where('mobile', $lead->mobile)->exists()) {
+                throw ValidationException::withMessages([
+                    'mobile' => 'A lead with this mobile number already exists.',
+                ]);
+            }
         });
     }
 

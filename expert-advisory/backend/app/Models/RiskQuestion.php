@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['risk_questionnaire_version_id', 'code', 'text', 'help_text', 'type', 'weight', 'sort_order', 'is_required'])]
+#[Fillable(['risk_questionnaire_version_id', 'code', 'text', 'text_hi', 'help_text', 'help_text_hi', 'type', 'weight', 'sort_order', 'is_required'])]
 class RiskQuestion extends Model
 {
     public const SINGLE = 'single_choice';

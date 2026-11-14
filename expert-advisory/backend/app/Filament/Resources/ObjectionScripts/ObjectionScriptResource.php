@@ -69,16 +69,21 @@ class ObjectionScriptResource extends Resource
         return $schema->components([
             TextInput::make('category')->label('Category')->default('general')->required()->maxLength(64),
             TextInput::make('objection')->label('Client objection title')->required()->maxLength(255),
+            TextInput::make('objection_hi')->label('Client objection title (Hindi)')->maxLength(255),
             Textarea::make('exact_client_statement')->label('Exact client statement')->rows(2)->maxLength(1000),
             TextInput::make('tag')->required()->maxLength(48),
             Textarea::make('response')->label('General response')->required()->rows(3),
+            Textarea::make('response_hi')->label('General response (Hindi)')->rows(3),
             Textarea::make('response_ba')->label('Approved BA response')->rows(4),
+            Textarea::make('response_ba_hi')->label('Approved BA response (Hindi)')->rows(4),
             Textarea::make('response_sba')->label('Approved SBA response')->rows(4),
+            Textarea::make('response_sba_hi')->label('Approved SBA response (Hindi)')->rows(4),
             Textarea::make('likely_concern_hypothesis')->label('Likely underlying concern (Hypothesis)')->rows(2),
             TextInput::make('required_evidence_documentation')->label('Required evidence / documents'),
             TextInput::make('suggested_followup_action')->label('Suggested follow-up action'),
             TextInput::make('escalation_condition')->label('Escalation condition'),
             Textarea::make('approved_template')->label('Approved WhatsApp/Email template')->rows(3),
+            Textarea::make('approved_template_hi')->label('Approved WhatsApp/Email template (Hindi)')->rows(3),
         ]);
     }
 

@@ -12,12 +12,14 @@ import { ApiError } from "@/lib/api-types";
 type Question = {
   code: string;
   text: string;
+  text_hi: string | null;
   help_text: string | null;
+  help_text_hi: string | null;
   type: "single_choice" | "multi_choice";
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; label_hi: string | null }[];
 };
 
-type Questionnaire = { title: string; methodology_version: string; questions: Question[] };
+type Questionnaire = { title: string; title_hi: string | null; methodology_version: string; questions: Question[] };
 
 export default function RiskProfilePage() {
   const questionnaire = useApiGet<Questionnaire>("/client/risk-questionnaire");
@@ -31,7 +33,7 @@ export default function RiskProfilePage() {
   if (questionnaire.error) return <ApiErrorView error={questionnaire.error} />;
   if (!questionnaire.data) return null;
 
-  const { title, methodology_version: methodology, questions } = questionnaire.data;
+  const { title, title_hi: titleHindi, methodology_version: methodology, questions } = questionnaire.data;
 
   const setSingle = (code: string, value: string) => setAnswers((current) => ({ ...current, [code]: value }));
 
@@ -64,7 +66,7 @@ export default function RiskProfilePage() {
     <>
       <PageTitle
         title={title}
-        description="Your answers are scored by a fixed rule set — the same answers always produce the same result. Nothing here is investment advice."
+        description={`${titleHindi ? `${titleHindi} · ` : ""}Your answers are scored by a fixed rule set — the same answers always produce the same result. Nothing here is investment advice.`}
       />
 
       {error && <p className="mb-4 rounded-xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 text-sm text-rose-300">{error}</p>}
@@ -79,8 +81,9 @@ export default function RiskProfilePage() {
               <fieldset>
                 <legend className="text-base font-semibold text-[#F5F7FA]">
                   {index + 1}. {question.text}
+                  {question.text_hi && <span className="block mt-1 text-sm font-normal text-cyan-200">हिंदी: {question.text_hi}</span>}
                 </legend>
-                {question.help_text && <p className="mt-1 text-sm text-slate-400">{question.help_text}</p>}
+                {(question.help_text || question.help_text_hi) && <p className="mt-1 text-sm text-slate-400">{question.help_text}{question.help_text_hi ? ` · ${question.help_text_hi}` : ""}</p>}
                 {question.type === "multi_choice" && <p className="mt-1.5 text-xs text-cyan-400 font-mono">Choose all that apply.</p>}
                 <div className="mt-4 space-y-2.5">
                   {question.options.map((option) => {
@@ -100,7 +103,7 @@ export default function RiskProfilePage() {
                           onChange={() => (isMulti ? toggleMulti(question.code, option.value) : setSingle(question.code, option.value))}
                           className="size-4 accent-cyan-400 cursor-pointer"
                         />
-                        <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">{option.label}</span>
+                        <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">{option.label}{option.label_hi && <span className="block text-cyan-200">{option.label_hi}</span>}</span>
                       </label>
                     );
                   })}

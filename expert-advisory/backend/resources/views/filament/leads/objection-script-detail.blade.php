@@ -2,6 +2,9 @@
     <div class="rounded-lg bg-slate-50 p-3 border border-slate-200">
         <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Client's Exact Statement</span>
         <p class="mt-1 font-semibold text-slate-900 text-base italic">“{{ $script->exact_client_statement ?? $script->objection }}”</p>
+        @if($script->objection_hi)
+            <p class="mt-1 text-slate-700">हिंदी: {{ $script->objection_hi }}</p>
+        @endif
     </div>
 
     @if($script->likely_concern_hypothesis)
@@ -17,6 +20,7 @@
                 <span class="text-xs font-bold uppercase tracking-wider text-blue-700">BA Script (Business Associate)</span>
             </div>
             <p class="text-blue-950 whitespace-pre-line leading-relaxed">{{ $script->response_ba ?? $script->response }}</p>
+            @if($script->response_ba_hi)<p class="mt-2 text-blue-900 whitespace-pre-line leading-relaxed">हिंदी: {{ $script->response_ba_hi }}</p>@endif
         </div>
 
         <div class="rounded-lg bg-indigo-50 p-3.5 border border-indigo-200">
@@ -24,6 +28,7 @@
                 <span class="text-xs font-bold uppercase tracking-wider text-indigo-700">SBA Script (Senior Associate / Closer)</span>
             </div>
             <p class="text-indigo-950 whitespace-pre-line leading-relaxed">{{ $script->response_sba ?? $script->response }}</p>
+            @if($script->response_sba_hi)<p class="mt-2 text-indigo-900 whitespace-pre-line leading-relaxed">हिंदी: {{ $script->response_sba_hi }}</p>@endif
         </div>
     </div>
 
@@ -52,6 +57,7 @@
             </div>
             <div class="bg-white p-2.5 rounded border border-emerald-200 font-mono text-xs text-emerald-950 select-all">
                 {{ $script->approved_template }}
+                @if($script->approved_template_hi)<div class="mt-2 border-t border-emerald-100 pt-2">हिंदी: {{ $script->approved_template_hi }}</div>@endif
             </div>
         </div>
     @endif
