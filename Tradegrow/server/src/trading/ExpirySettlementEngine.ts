@@ -201,7 +201,7 @@ export class ExpirySettlementEngine {
             await client.query(
               `UPDATE orders 
                SET status = 'CANCELLED', updated_at = NOW() 
-               WHERE user_id = $1 AND symbol = $2 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'EXECUTING')`,
+               WHERE user_id = $1 AND symbol = $2 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED', 'EXECUTING')`,
               [pos.user_id, pos.symbol]
             );
 

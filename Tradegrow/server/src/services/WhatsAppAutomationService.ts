@@ -528,17 +528,23 @@ export class WhatsAppAutomationService {
   }
 
   /**
-   * Handle delivery status updates
+   * Handle delivery status updates with monotonic state progression guard
+   * (Prevents out-of-order webhooks from downgrading READ back to DELIVERED)
    */
   public async handleStatusUpdate(messageId: string, status: 'DELIVERED' | 'READ' | 'FAILED', errorCode?: string): Promise<boolean> {
     try {
-      const updateField = status === 'DELIVERED' ? 'delivered_at = clock_timestamp()' : status === 'READ' ? 'read_at = clock_timestamp()' : '';
+      const updateField = status === 'DELIVERED'
+        ? 'delivered_at = COALESCE(delivered_at, clock_timestamp())'
+        : status === 'READ'
+        ? 'delivered_at = COALESCE(delivered_at, clock_timestamp()), read_at = clock_timestamp()'
+        : '';
       const setClause = updateField ? `status = $2, ${updateField}, error_code = $3` : `status = $2, error_code = $3`;
 
+      // Monotonic guard: do not downgrade from READ to DELIVERED
       await query(
         `UPDATE warroom.whatsapp_messages 
          SET ${setClause}
-         WHERE message_id = $1`,
+         WHERE message_id = $1 AND (status != 'READ' OR $2 = 'READ')`,
         [messageId, status, errorCode || null]
       );
       return true;

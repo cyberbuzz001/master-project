@@ -199,8 +199,15 @@ export class GttEngine {
 
             if (orderResult.success && orderResult.orderId) {
               await execute(
-                `UPDATE gtt_orders SET executed_order_id = $1 WHERE id = $2`,
+                `UPDATE gtt_orders SET executed_order_id = $1, updated_at = NOW() WHERE id = $2`,
                 [orderResult.orderId, gtt.id]
+              );
+            } else {
+              const reason = orderResult.error || 'Triggered order submission failed';
+              console.warn(`[GttEngine] GTT ${gtt.trigger_id} triggered but order failed: ${reason}`);
+              await execute(
+                `UPDATE gtt_orders SET status = 'REJECTED', rejection_reason = $1, updated_at = NOW() WHERE id = $2`,
+                [reason, gtt.id]
               );
             }
           }

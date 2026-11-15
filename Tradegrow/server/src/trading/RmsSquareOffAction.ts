@@ -120,7 +120,7 @@ export async function executeSquareOff(
   const exitQty = Math.abs(netQty);
 
   const restingOrders = await query<any>(
-    `SELECT order_id FROM orders WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND status IN ('ACCEPTED','PENDING','EXECUTING')`,
+    `SELECT order_id FROM orders WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND status IN ('ACCEPTED','PENDING','EXECUTING','PARTIALLY_FILLED')`,
     [pos.user_id, pos.symbol, pos.product_type]
   );
 

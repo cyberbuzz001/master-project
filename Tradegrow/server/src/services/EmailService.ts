@@ -895,6 +895,145 @@ export class EmailService {
   // ============================================================
   // Responsive TradeGrow Branded Email Layout
   // ============================================================
+  public async sendResearchReportEmail(
+    toEmail: string,
+    fullName: string,
+    report: {
+      title: string;
+      category: string;
+      summary: string;
+      sentiment: string;
+      timeframe?: string;
+      complianceId: string;
+      publishedAt: string;
+      metrics?: Array<{ label: string; value: string }>;
+      technicalLevels?: Record<string, string>;
+      keyObservations?: string[];
+      actionableTakeaway?: string;
+      reportUrl?: string;
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    const sentimentColor =
+      report.sentiment === 'Bullish' ? '#10B981' :
+      report.sentiment === 'Bearish' ? '#EF4444' :
+      report.sentiment === 'High Alert' ? '#F59E0B' : '#64748B';
+
+    let metricsRows = '';
+    if (report.metrics && report.metrics.length > 0) {
+      metricsRows = `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0; border-collapse: collapse; background-color: #0F172A; border-radius: 8px; border: 1px solid #1E293B;">
+          <tr>
+            ${report.metrics.map(m => `
+              <td style="padding: 12px; border-right: 1px solid #1E293B; text-align: center;">
+                <div style="font-size: 11px; color: #94A3B8; text-transform: uppercase;">${m.label}</div>
+                <div style="font-size: 14px; font-weight: 700; color: #F8FAFC; margin-top: 4px;">${m.value}</div>
+              </td>
+            `).join('')}
+          </tr>
+        </table>
+      `;
+    }
+
+    let levelsTable = '';
+    if (report.technicalLevels && Object.keys(report.technicalLevels).length > 0) {
+      const lvls = report.technicalLevels;
+      levelsTable = `
+        <div style="margin: 20px 0;">
+          <h4 style="color: #38BDF8; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Key Quantitative Levels</h4>
+          <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 13px; color: #E2E8F0; background-color: #0B1120; border: 1px solid #1E293B; border-radius: 6px;">
+            <tr style="background-color: #1E293B; color: #94A3B8; font-size: 11px;">
+              <th align="left" style="padding: 8px;">Pivot</th>
+              <th align="left" style="padding: 8px;">Support (S1 / S2)</th>
+              <th align="left" style="padding: 8px;">Resistance (R1 / R2)</th>
+              ${lvls.stopLoss ? '<th align="left" style="padding: 8px;">Stop Loss</th>' : ''}
+              ${lvls.target1 ? '<th align="left" style="padding: 8px;">Target</th>' : ''}
+            </tr>
+            <tr>
+              <td style="padding: 8px; font-weight: bold; color: #F8FAFC;">₹${lvls.pivot || '-'}</td>
+              <td style="padding: 8px; color: #10B981;">₹${lvls.support1 || '-'} / ₹${lvls.support2 || '-'}</td>
+              <td style="padding: 8px; color: #EF4444;">₹${lvls.resistance1 || '-'} / ₹${lvls.resistance2 || '-'}</td>
+              ${lvls.stopLoss ? `<td style="padding: 8px; color: #F59E0B;">₹${lvls.stopLoss}</td>` : ''}
+              ${lvls.target1 ? `<td style="padding: 8px; color: #38BDF8;">₹${lvls.target1}</td>` : ''}
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+
+    let observationsList = '';
+    if (report.keyObservations && report.keyObservations.length > 0) {
+      observationsList = `
+        <div style="margin: 16px 0;">
+          <h4 style="color: #F8FAFC; margin: 0 0 8px; font-size: 13px;">Key Observations:</h4>
+          <ul style="margin: 0; padding-left: 20px; color: #CBD5E1; font-size: 13px; line-height: 1.6;">
+            ${report.keyObservations.map(obs => `<li style="margin-bottom: 6px;">${obs}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    const bodyHtml = `
+      <div style="margin-bottom: 16px;">
+        <span style="display: inline-block; padding: 4px 10px; background-color: #1E293B; color: #38BDF8; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+          ${report.category}
+        </span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: ${sentimentColor}20; color: ${sentimentColor}; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 6px;">
+          ${report.sentiment}
+        </span>
+      </div>
+
+      <p style="color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
+        ${report.summary}
+      </p>
+
+      ${metricsRows}
+      ${levelsTable}
+      ${observationsList}
+
+      ${report.actionableTakeaway ? `
+        <div style="background-color: #1E293B; border-left: 4px solid #10B981; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
+          <strong style="color: #10B981; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 4px;">Actionable Strategy</strong>
+          <span style="color: #F8FAFC; font-size: 13px; line-height: 1.5;">${report.actionableTakeaway}</span>
+        </div>
+      ` : ''}
+
+      ${report.reportUrl ? `
+        <div style="text-align: center; margin: 28px 0 12px;">
+          <a href="${report.reportUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; display: inline-block;">
+            View Full Report in Terminal &rarr;
+          </a>
+        </div>
+      ` : ''}
+
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #1E293B; font-size: 11px; color: #64748B; line-height: 1.4;">
+        <strong>SEBI Compliance ID:</strong> ${report.complianceId} | <strong>Published:</strong> ${report.publishedAt}<br/>
+        <em>Statutory Disclaimer: Investment in securities market are subject to market risks. Read all related documents carefully before investing. TradeGrow / Expert Stocks does not guarantee returns.</em>
+      </div>
+    `;
+
+    const html = this.buildBaseEmailLayout({
+      title: report.title,
+      badge: report.category,
+      badgeColor: '#38BDF8',
+      userName: fullName,
+      bodyHtml
+    });
+
+    try {
+      this.sendMailAsync({
+        to: toEmail,
+        subject: `[TradeGrow Research] ${report.title}`,
+        html,
+        priority: 'NORMAL',
+        templateType: 'RESEARCH_REPORT'
+      });
+      return { success: true };
+    } catch (err: any) {
+      console.warn(`[EmailService] Failed to queue research report email to ${toEmail}:`, err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
   private buildBaseEmailLayout(params: {
     title: string;
     badge?: string;

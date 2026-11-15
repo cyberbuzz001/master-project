@@ -663,16 +663,17 @@ export class AdvisoryWhatsAppService {
     try {
       const updateField =
         status === 'DELIVERED'
-          ? 'delivered_at = clock_timestamp()'
+          ? 'delivered_at = COALESCE(delivered_at, clock_timestamp())'
           : status === 'READ'
-          ? 'read_at = clock_timestamp()'
+          ? 'delivered_at = COALESCE(delivered_at, clock_timestamp()), read_at = clock_timestamp()'
           : '';
       const setClause = updateField
         ? `status = $2, ${updateField}, error_code = $3`
         : `status = $2, error_code = $3`;
 
+      // Monotonic guard: do not allow late DELIVERED webhooks to overwrite READ state
       await query(
-        `UPDATE advisory.whatsapp_messages SET ${setClause} WHERE message_id = $1`,
+        `UPDATE advisory.whatsapp_messages SET ${setClause} WHERE message_id = $1 AND (status != 'READ' OR $2 = 'READ')`,
         [messageId, status, errorCode || null]
       );
       return true;

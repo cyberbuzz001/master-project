@@ -206,7 +206,7 @@ export class ExecutionEngine {
           try {
             const claimed = await queryOne<any>(
               `UPDATE orders SET status = 'EXECUTING', updated_at = NOW() 
-               WHERE id = $1 AND (status IN ('ACCEPTED', 'PENDING') OR (status = 'EXECUTING' AND updated_at < NOW() - INTERVAL '3 seconds')) 
+               WHERE id = $1 AND (status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED') OR (status = 'EXECUTING' AND updated_at < NOW() - INTERVAL '3 seconds')) 
                RETURNING id`,
               [order.id]
             );
@@ -217,6 +217,11 @@ export class ExecutionEngine {
           } catch (err: any) {
             order.isEvaluating = false;
             this.registerPendingOrder(order);
+            const fallbackStatus = (order.status && ['ACCEPTED', 'PENDING', 'PARTIALLY_FILLED'].includes(order.status)) ? order.status : 'ACCEPTED';
+            await execute(
+              `UPDATE orders SET status = $2, updated_at = NOW() WHERE id = $1 AND status = 'EXECUTING'`,
+              [order.id, fallbackStatus]
+            ).catch(() => {});
           }
         });
       }
@@ -227,7 +232,7 @@ export class ExecutionEngine {
     try {
       const pendingOrders = await query<any>(
         `SELECT * FROM orders 
-         WHERE status IN ('ACCEPTED', 'PENDING') 
+         WHERE status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED') 
             OR (status = 'EXECUTING' AND updated_at < NOW() - INTERVAL '3 seconds') 
          ORDER BY created_at ASC LIMIT 50`
       );
@@ -359,7 +364,7 @@ export class ExecutionEngine {
           try {
             claimed = await queryOne<any>(
               `UPDATE orders SET status = 'EXECUTING', updated_at = NOW() 
-               WHERE id = $1 AND (status IN ('ACCEPTED', 'PENDING') OR (status = 'EXECUTING' AND updated_at < NOW() - INTERVAL '3 seconds')) 
+               WHERE id = $1 AND (status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED') OR (status = 'EXECUTING' AND updated_at < NOW() - INTERVAL '3 seconds')) 
                RETURNING id`,
               [order.id]
             );
@@ -396,7 +401,8 @@ export class ExecutionEngine {
             if (process.env.DEBUG_ORDER_ENGINE === 'true') {
               console.error(`[ExecutionEngine] Failed to execute order ${order.order_id}:`, err.message);
             }
-            await execute(`UPDATE orders SET status = 'ACCEPTED', updated_at = NOW() WHERE id = $1`, [order.id]).catch(() => {});
+            const fallbackStatus = (order.status && ['ACCEPTED', 'PENDING', 'PARTIALLY_FILLED'].includes(order.status)) ? order.status : 'ACCEPTED';
+            await execute(`UPDATE orders SET status = $2, updated_at = NOW() WHERE id = $1 AND status = 'EXECUTING'`, [order.id, fallbackStatus]).catch(() => {});
           }
         }
       }
@@ -575,7 +581,7 @@ export class ExecutionEngine {
       // only one caller's UPDATE can match status IN (...) and return a row.
       const statusUpd = await client.query(
         `UPDATE orders SET status = 'FILLED', filled_quantity = quantity, average_price = $1, updated_at = NOW()
-         WHERE id = $2 AND status IN ('ACCEPTED', 'PENDING', 'EXECUTING')
+         WHERE id = $2 AND status IN ('ACCEPTED', 'PENDING', 'EXECUTING', 'PARTIALLY_FILLED')
            AND quantity = $3 AND price = $4 AND COALESCE(trigger_price, 0) = $5
          RETURNING id`,
         [price, order.id, qty, Number(order.price || 0), Number(order.trigger_price || 0)]
@@ -615,10 +621,11 @@ export class ExecutionEngine {
       // 3. Record order event audit trail
       await client.query(
         `INSERT INTO order_events (id, order_id, from_status, to_status, reason, actor, metadata)
-         VALUES ($1, $2, 'ACCEPTED', 'FILLED', $3, 'EXECUTION_ENGINE', $4)`,
+         VALUES ($1, $2, $3, 'FILLED', $4, 'EXECUTION_ENGINE', $5)`,
         [
           'evt_' + generateUUID(),
           order.id,
+          order.status || 'EXECUTING',
           `Execution fill @ ₹${price.toFixed(2)} (${exitReason}) [Freshness: ${provenance?.freshnessTag || 'live'}]`,
           JSON.stringify({ 
             fillPrice: price, 

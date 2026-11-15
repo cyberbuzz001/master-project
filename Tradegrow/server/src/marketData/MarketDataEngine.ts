@@ -176,10 +176,11 @@ export class MarketDataEngine {
 
     // Connect to configured primary broker feed
     try {
-      if (this.configuredProviderName === 'DHAN') {
+      // Ensure Dhan adapter is registered with token refresher so option chain queries remain authenticated
+      try {
         const { setDhanAdapterRef } = require('../utils/dhanTokenRefresh');
         setDhanAdapterRef(this.dhanProvider);
-      }
+      } catch (_) {}
 
       this.activeProvider.subscribe(Array.from(this.subscribedTokens), this.handleProviderTick);
 
@@ -269,10 +270,12 @@ export class MarketDataEngine {
     const now = Date.now();
     const activeName = this.getActiveProviderName();
     return {
-      mode: `${activeName}_PRIMARY`,
+      mode: 'HYBRID_ANGEL_STOCKS_COMMODITY_DHAN_OPTIONS',
+      stocksAndCommoditiesProvider: activeName,
+      optionChainProvider: 'DHAN',
       primaryLiveStream: activeName,
       historicalCandlesProvider: activeName,
-      optionGreeksProvider: `${activeName} / OptionChainEngine`,
+      optionGreeksProvider: 'DHAN / OptionChainEngine',
       failoverActive: false,
       lastTickMsAgo: this.lastTickTime > 0 ? now - this.lastTickTime : -1,
       subscribedTokenCount: this.subscribedTokens.size
@@ -477,17 +480,38 @@ export class MarketDataEngine {
   }
 
   /**
-   * Option Chain — dispatched via active provider
+   * Option Chain — routed primarily to Dhan HQ API with fallback to Angel One
    */
   public async getOptionChain(symbol: string, expiry: string): Promise<OptionChainItem[]> {
+    // 1. Primary: Use Dhan HQ API for Option Chain
+    try {
+      const dhanChain = await this.dhanProvider.getOptionChain(symbol, expiry);
+      if (dhanChain && dhanChain.length > 0) return dhanChain;
+    } catch (err: any) {
+      console.warn('[MarketDataEngine] Dhan getOptionChain fallback:', err.message);
+    }
+
+    // 2. Fallback: Angel One Option Chain
+    try {
+      const angelChain = await this.angelOneProvider.getOptionChain(symbol, expiry);
+      if (angelChain && angelChain.length > 0) return angelChain;
+    } catch (_) {}
+
+    // 3. Fallback: Active Provider
     try {
       const chain = await this.activeProvider.getOptionChain(symbol, expiry);
       if (chain && chain.length > 0) return chain;
     } catch (_) {}
+
     return [];
   }
 
   public getOptionExpiries(symbol: string): string[] {
+    try {
+      const dhanExpiries = this.dhanProvider.getOptionExpiries(symbol);
+      if (dhanExpiries && dhanExpiries.length > 0) return dhanExpiries;
+    } catch (_) {}
+
     const prov = this.activeProvider as any;
     if (typeof prov.getOptionExpiries === 'function') {
       return prov.getOptionExpiries(symbol);

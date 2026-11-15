@@ -23,8 +23,23 @@ export class PriceAlertEngine {
     return PriceAlertEngine.instance;
   }
 
+  public async expireStaleAlerts(daysOld: number = 30): Promise<number> {
+    try {
+      const expiredCount = await execute(
+        `UPDATE alerts SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND created_at < NOW() - (INTERVAL '1 day' * $1)`,
+        [daysOld]
+      );
+      return expiredCount;
+    } catch (err: any) {
+      console.warn('[PriceAlertEngine] Failed to expire stale alerts:', err.message);
+      return 0;
+    }
+  }
+
   public async initialize(): Promise<void> {
     try {
+      await this.expireStaleAlerts(30);
+
       const rows = await query<{ instrument_token: string; symbol: string }>(
         `SELECT DISTINCT instrument_token, symbol FROM alerts WHERE status = 'ACTIVE'`
       );

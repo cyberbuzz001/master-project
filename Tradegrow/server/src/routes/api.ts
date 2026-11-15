@@ -33,6 +33,7 @@ import { DiditService } from '../services/diditService';
 import { gttEngine } from '../trading/GttEngine';
 import { priceAlertEngine } from '../trading/PriceAlertEngine';
 import { calculateHedgedPortfolioMargin } from '../trading/MarginMath';
+import { KycSyncService } from '../services/KycSyncService';
 import { updateFyersToken, setFyersAdapterRef, generateFyersAuthUrl, exchangeAuthCodeForToken } from '../utils/fyersTokenRefresh';
 
 import { RedisStore } from 'rate-limit-redis';
@@ -1666,7 +1667,7 @@ router.post('/orders/cancel-all', authenticateToken, async (req: AuthenticatedRe
   try {
     const userId = req.user!.userId;
     const pendingOrders = await query<any>(
-      `SELECT order_id FROM orders WHERE user_id = $1 AND status IN ('PENDING', 'TRIGGER_PENDING', 'AMO_PENDING')`,
+      `SELECT order_id FROM orders WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
       [userId]
     );
     const cancelled: string[] = [];
@@ -1685,7 +1686,7 @@ router.post('/portfolio/panic-square-off', authenticateToken, async (req: Authen
     const userId = req.user!.userId;
     // 1. Cancel all pending orders first
     await execute(
-      `UPDATE orders SET status = 'CANCELLED', updated_at = NOW() WHERE user_id = $1 AND status IN ('PENDING', 'TRIGGER_PENDING', 'AMO_PENDING')`,
+      `UPDATE orders SET status = 'CANCELLED', updated_at = NOW() WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
       [userId]
     );
     // 2. Fetch all open positions
@@ -2669,7 +2670,7 @@ router.post('/funds/reset-margin', authenticateToken, async (req: AuthenticatedR
     // figures without ever closing it. Block the reset while anything is open.
     const [openPosition, pendingOrder] = await Promise.all([
       queryOne<any>('SELECT id FROM positions WHERE user_id = $1 AND net_qty != 0 LIMIT 1', [userId]),
-      queryOne<any>(`SELECT id FROM orders WHERE user_id = $1 AND status IN ('ACCEPTED','PENDING','EXECUTING') LIMIT 1`, [userId]),
+      queryOne<any>(`SELECT id FROM orders WHERE user_id = $1 AND status IN ('ACCEPTED','PENDING','EXECUTING','PARTIALLY_FILLED') LIMIT 1`, [userId]),
     ]);
     if (openPosition || pendingOrder) {
       res.status(409).json({
@@ -2943,7 +2944,7 @@ router.delete('/watchlists/items/:id', authenticateToken, async (req: Authentica
 router.get('/admin/dashboard', authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RISK_MANAGER']), async (req: AuthenticatedRequest, res) => {
   const [totalUsersRow, activeOrdersRow, totalExecRow, capitalRow] = await Promise.all([
     queryOne<any>('SELECT COUNT(*) as c FROM users'),
-    queryOne<any>(`SELECT COUNT(*) as c FROM orders WHERE status IN ('ACCEPTED','PENDING')`),
+    queryOne<any>(`SELECT COUNT(*) as c FROM orders WHERE status IN ('ACCEPTED','PENDING','PARTIALLY_FILLED')`),
     queryOne<any>('SELECT COUNT(*) as c FROM executions'),
     queryOne<any>('SELECT SUM(cash_balance) as s FROM virtual_wallets')
   ]);
@@ -3244,13 +3245,17 @@ router.post(
         );
       }
 
-      // Also save bank details to user record if provided
-      if (bankAccountNumber && bankIfsc) {
-        await execute(
-          `UPDATE users SET bank_name = $1, bank_account_number = $2, bank_account_name = $3, bank_ifsc = $4 WHERE id = $5`,
-          [bankName || '', bankAccountNumber, bankAccountName || '', bankIfsc.toUpperCase(), req.user!.userId]
-        );
-      }
+      // Authoritatively sync across kyc_applications, kyc_records, and users via KycSyncService
+      await KycSyncService.syncKycStatus({
+        userId: req.user!.userId,
+        status: 'SUBMITTED',
+        bankDetails: {
+          bankAccountName: bankAccountName || '',
+          bankAccountNumber: bankAccountNumber || '',
+          bankIfsc: (bankIfsc || '').toUpperCase(),
+          bankName: bankName || ''
+        }
+      });
 
       // Record uploaded document entries
       if (files) {

@@ -4,7 +4,7 @@ import { PortfolioService } from './PortfolioService';
 import { marginForLeg, resolveSpotPrice, resolveOrderReferencePrice, resolveOptionDetails, getMarginParams, ZERO_CHARGES } from './MarginMath';
 
 /** Statuses that still hold a live margin reservation — a filled/cancelled/rejected order no longer does. */
-const PENDING_ORDER_STATUSES = ['ACCEPTED', 'PENDING', 'EXECUTING'];
+const PENDING_ORDER_STATUSES = ['ACCEPTED', 'PENDING', 'EXECUTING', 'PARTIALLY_FILLED'];
 
 export interface WalletState {
   userId: string;
@@ -147,7 +147,7 @@ export class VirtualWalletLedger {
       [userId]
     );
     const pendingOrders = await run(
-      `SELECT symbol, exchange, product_type, side, quantity, price, instrument_token
+      `SELECT symbol, exchange, product_type, side, quantity, filled_quantity, price, instrument_token
        FROM orders WHERE user_id = $1 AND status = ANY($2::text[])`,
       [userId, PENDING_ORDER_STATUSES]
     );
@@ -211,8 +211,10 @@ export class VirtualWalletLedger {
     }
 
     for (const order of pendingOrders) {
-      const quantity = parseInt(order.quantity, 10);
-      if (!quantity || quantity <= 0) continue;
+      const totalQty = parseInt(order.quantity, 10);
+      const filledQty = parseInt(order.filled_quantity || '0', 10);
+      const remainingQty = Math.max(0, totalQty - filledQty);
+      if (remainingQty <= 0) continue;
 
       // Mirrors RMS's square-off & flip logic: a pending order that reduces an
       // existing opposite-sign position reserves no additional margin for the
@@ -222,13 +224,13 @@ export class VirtualWalletLedger {
       const existingNetQty = existingPos ? parseInt(existingPos.net_qty, 10) : 0;
       const isOpposite = (existingNetQty > 0 && order.side === 'SELL') || (existingNetQty < 0 && order.side === 'BUY');
 
-      let effectiveQty = quantity;
+      let effectiveQty = remainingQty;
       if (isOpposite) {
         const absExisting = Math.abs(existingNetQty);
-        if (quantity <= absExisting) {
+        if (remainingQty <= absExisting) {
           continue; // Pure position reduction / square-off: reserves 0 margin
         }
-        effectiveQty = quantity - absExisting; // Position flip: reserve margin on new exposure
+        effectiveQty = remainingQty - absExisting; // Position flip: reserve margin on new exposure
       }
 
       const instrumentRow = order.instrument_token ? instrumentsByToken.get(order.instrument_token) : null;

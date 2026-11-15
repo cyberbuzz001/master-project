@@ -1204,6 +1204,17 @@ export class DhanAdapter implements IMarketDataProvider {
     return fetchPromise;
   }
 
+  public getOptionExpiries(symbol: string): string[] {
+    const cleanSym = (symbol || 'NIFTY').toUpperCase().replace(/^(NSE_|BSE_)/, '');
+    const cached = DhanAdapter.expiryListCache.get(cleanSym);
+    if (cached && cached.expiries.length > 0) {
+      return cached.expiries;
+    }
+    // Pre-warm cache in background if not already cached
+    this.getExpiryList(cleanSym).catch(() => {});
+    return [];
+  }
+
   private static optionChainCache: Map<string, { timestamp: number; rows: OptionChainItem[] }> = new Map();
   private static pendingOptionChainRequests: Map<string, Promise<OptionChainItem[]>> = new Map();
   private static optionChainFailureCooldown: Map<string, number> = new Map();

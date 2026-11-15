@@ -375,6 +375,18 @@ export function setupWebSocketServer(httpServer: Server): WebSocketServer {
  * Gracefully close all open WebSocket sessions and terminate the server.
  * Sends close frame 1001 ("Going Away") to every connected client.
  */
+export function broadcastToAllClients(payload: object): void {
+  if (!wssInstance) return;
+  const msg = JSON.stringify(payload);
+  wssInstance.clients.forEach((client: ExtendedWebSocket) => {
+    if (client.readyState === WebSocket.OPEN) {
+      try {
+        client.send(msg);
+      } catch (_) {}
+    }
+  });
+}
+
 export async function shutdownWebSocketServer(): Promise<void> {
   if (!wssInstance) return;
   console.log(`[WebSocket] Gracefully disconnecting ${wssInstance.clients.size} active clients...`);

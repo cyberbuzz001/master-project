@@ -82,6 +82,30 @@ export interface WarRoomDashboardData {
   }>;
 }
 
+export const CANONICAL_LEAD_STAGES = [
+  'NEW',
+  'CONTACTED',
+  'KYC_STARTED',
+  'KYC_SUBMITTED',
+  'ACTIVATED',
+  'TRADING_ACTIVE',
+  'CHURNED',
+  'DISQUALIFIED'
+] as const;
+
+export type CanonicalLeadStage = typeof CANONICAL_LEAD_STAGES[number];
+
+export const ALLOWED_STAGE_TRANSITIONS: Record<string, string[]> = {
+  NEW: ['CONTACTED', 'KYC_STARTED', 'KYC_SUBMITTED', 'DISQUALIFIED', 'CHURNED'],
+  CONTACTED: ['KYC_STARTED', 'KYC_SUBMITTED', 'DISQUALIFIED', 'CHURNED'],
+  KYC_STARTED: ['KYC_SUBMITTED', 'CONTACTED', 'DISQUALIFIED', 'CHURNED'],
+  KYC_SUBMITTED: ['ACTIVATED', 'KYC_STARTED', 'DISQUALIFIED', 'CHURNED'],
+  ACTIVATED: ['TRADING_ACTIVE', 'CHURNED'],
+  TRADING_ACTIVE: ['CHURNED'],
+  CHURNED: ['NEW', 'CONTACTED'],
+  DISQUALIFIED: ['NEW', 'CONTACTED']
+};
+
 export class WarRoomService {
   private static instance: WarRoomService;
 
@@ -696,19 +720,31 @@ export class WarRoomService {
       const current = await client.query(`SELECT stage FROM warroom.leads WHERE id = $1 LIMIT 1`, [leadId]);
       if (current.rows.length === 0) throw new Error('Lead not found');
       const fromStage = current.rows[0].stage;
+      const normToStage = toStage.toUpperCase().trim();
+
+      if (!CANONICAL_LEAD_STAGES.includes(normToStage as any)) {
+        throw new Error(`Invalid lead stage: '${toStage}'. Allowed: ${CANONICAL_LEAD_STAGES.join(', ')}`);
+      }
+
+      if (fromStage !== normToStage) {
+        const allowedNext = ALLOWED_STAGE_TRANSITIONS[fromStage] || [];
+        if (!allowedNext.includes(normToStage) && !['ADMIN', 'SUPER_ADMIN', 'SYSTEM'].includes(actor)) {
+          throw new Error(`Invalid stage transition from '${fromStage}' to '${normToStage}'`);
+        }
+      }
 
       await client.query(
         `UPDATE warroom.leads SET stage = $1, updated_at = clock_timestamp() WHERE id = $2`,
-        [toStage, leadId]
+        [normToStage, leadId]
       );
 
       await client.query(
         `INSERT INTO warroom.lead_events (lead_id, from_stage, to_stage, actor, notes)
          VALUES ($1, $2, $3, $4, $5)`,
-        [leadId, fromStage, toStage, actor, notes || `Stage updated from ${fromStage} to ${toStage}`]
+        [leadId, fromStage, normToStage, actor, notes || `Stage updated from ${fromStage} to ${normToStage}`]
       );
 
-      return { success: true, leadId, fromStage, toStage };
+      return { success: true, leadId, fromStage, toStage: normToStage };
     });
   }
 

@@ -22,6 +22,9 @@ let tokenExpiryCheckInterval: NodeJS.Timeout | null = null;
 let morningReminderTimeout: NodeJS.Timeout | null = null;
 let fyersRenewalInterval: NodeJS.Timeout | null = null;
 let misSquareOffTimeout: NodeJS.Timeout | null = null;
+let alertExpiryInterval: NodeJS.Timeout | null = null;
+let preMarketReportTimeout: NodeJS.Timeout | null = null;
+let postMarketReportTimeout: NodeJS.Timeout | null = null;
 
 /**
  * Checks and auto-renews Fyers Access Token automatically in the background
@@ -354,6 +357,102 @@ export function startExpirySettlementJob() {
 }
 
 /**
+ * Start the daily price alert expiry job (transitions alerts older than 30 days to EXPIRED).
+ */
+export function startAlertExpiryJob() {
+  const sweep = async () => {
+    try {
+      const { priceAlertEngine } = await import('../trading/PriceAlertEngine');
+      const count = await priceAlertEngine.expireStaleAlerts(30);
+      if (count > 0) {
+        console.log(`[CronJobs] ⏰ Expired ${count} stale price alerts (>30 days old).`);
+      }
+    } catch (err: any) {
+      console.warn('[CronJobs] Price alert expiry sweep failed:', err.message);
+    }
+  };
+
+  setTimeout(sweep, 60 * 1000);
+  alertExpiryInterval = setInterval(sweep, 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Schedule automated Pre-Market AI Research Report (08:30 AM IST Mon-Fri).
+ */
+function schedulePreMarketResearchJob() {
+  const msUntilRun = getMsUntilISTTime(8, 30);
+  console.log(`[CronJobs] 📊 Scheduled Pre-Market AI Research Briefing in ${(msUntilRun / 1000 / 60 / 60).toFixed(1)}h (08:30 IST next trading day).`);
+
+  preMarketReportTimeout = setTimeout(async () => {
+    try {
+      const toggle = await queryOne<any>(`SELECT value FROM system_settings WHERE key = 'AI_RESEARCH_AUTO_SCHEDULE_ENABLED'`);
+      if (toggle && toggle.value === 'false') {
+        console.log('[CronJobs] ℹ️  AI Research Report generation skipped (disabled in system settings).');
+      } else {
+        console.log('[CronJobs] 🤖 Generating automated Pre-Market Research Report...');
+        const { aiResearchEngine } = await import('../services/AiResearchEngine');
+        const { researchDistributionService } = await import('../services/ResearchDistributionService');
+
+        const report = await aiResearchEngine.generateReport({
+          category: 'Pre-market report',
+          symbol: 'NIFTY',
+          exchange: 'NSE',
+          autoPublish: true
+        });
+
+        console.log(`[CronJobs] 🚀 Distributing Pre-Market Report [${report.reportCode}] to clients...`);
+        await researchDistributionService.distributeReport(report.id);
+      }
+    } catch (err: any) {
+      console.error('[CronJobs] Pre-Market Research Report generation failed:', err.message);
+    }
+    schedulePreMarketResearchJob();
+  }, msUntilRun);
+}
+
+/**
+ * Schedule automated Post-Market Daily Closing Wrap AI Report (16:00 PM IST Mon-Fri).
+ */
+function schedulePostMarketResearchJob() {
+  const msUntilRun = getMsUntilISTTime(16, 0);
+  console.log(`[CronJobs] 📊 Scheduled Post-Market AI Research Wrap in ${(msUntilRun / 1000 / 60 / 60).toFixed(1)}h (16:00 IST next trading day).`);
+
+  postMarketReportTimeout = setTimeout(async () => {
+    try {
+      const toggle = await queryOne<any>(`SELECT value FROM system_settings WHERE key = 'AI_RESEARCH_AUTO_SCHEDULE_ENABLED'`);
+      if (toggle && toggle.value === 'false') {
+        console.log('[CronJobs] ℹ️  AI Research Report generation skipped (disabled in system settings).');
+      } else {
+        console.log('[CronJobs] 🤖 Generating automated Post-Market Closing Wrap Report...');
+        const { aiResearchEngine } = await import('../services/AiResearchEngine');
+        const { researchDistributionService } = await import('../services/ResearchDistributionService');
+
+        const report = await aiResearchEngine.generateReport({
+          category: 'Post-market report',
+          symbol: 'NIFTY',
+          exchange: 'NSE',
+          autoPublish: true
+        });
+
+        console.log(`[CronJobs] 🚀 Distributing Post-Market Report [${report.reportCode}] to clients...`);
+        await researchDistributionService.distributeReport(report.id);
+      }
+    } catch (err: any) {
+      console.error('[CronJobs] Post-Market Research Report generation failed:', err.message);
+    }
+    schedulePostMarketResearchJob();
+  }, msUntilRun);
+}
+
+/**
+ * Start the daily AI Research Report generator and distribution scheduler.
+ */
+export function startAiResearchSchedulerJob() {
+  schedulePreMarketResearchJob();
+  schedulePostMarketResearchJob();
+}
+
+/**
  * Gracefully stop all cron jobs (for clean server shutdown).
  */
 export function stopCronJobs() {
@@ -364,6 +463,9 @@ export function stopCronJobs() {
   if (commodityMisSquareOffTimeout) clearTimeout(commodityMisSquareOffTimeout);
   if (expirySettlementTimeout) clearTimeout(expirySettlementTimeout);
   if (expirySettlementInterval) clearInterval(expirySettlementInterval);
+  if (alertExpiryInterval) clearInterval(alertExpiryInterval);
+  if (preMarketReportTimeout) clearTimeout(preMarketReportTimeout);
+  if (postMarketReportTimeout) clearTimeout(postMarketReportTimeout);
   console.log('[CronJobs] 🛑 All cron jobs stopped.');
 }
 

@@ -21,6 +21,7 @@ import { createAdminNotification } from '../utils/adminNotifications';
 import { recordChatMessage, getChatHistory, markChatReadByStaff } from '../utils/chatMessages';
 import { deliverToUser } from '../websocket/server';
 import { RmsAutoSquareOffEngine } from '../trading/RmsAutoSquareOffEngine';
+import { KycSyncService } from '../services/KycSyncService';
 
 
 function getClientIp(req: Request): string {
@@ -870,10 +871,14 @@ router.get('/kyc/queue', authenticateToken, checkPermission('KYC_QUEUE_VIEW'), a
 router.post('/kyc/:id/approve', authenticateToken, checkPermission('KYC_VERIFY_APPROVE'), async (req: AuthenticatedRequest, res: Response) => {
   const { notes } = req.body;
   const kycId = req.params.id as string;
-  await execute(
-    "UPDATE kyc_records SET kyc_status = 'APPROVED', verification_status = 'VERIFIED', verified_by = $1, verified_at = NOW(), notes = $2, updated_at = NOW() WHERE id = $3",
-    [req.user!.userId, notes || '', kycId]
-  );
+  const rec = await queryOne<any>('SELECT customer_id FROM kyc_records WHERE id = $1', [kycId]);
+  const targetUserId = rec ? rec.customer_id : kycId;
+  await KycSyncService.syncKycStatus({
+    userId: targetUserId,
+    status: 'APPROVED',
+    reviewerId: req.user!.userId,
+    notes: notes || ''
+  });
   await logAuditAction(req.user!.userId, req.user!.role, 'APPROVE_KYC', 'KYC', kycId, null, { notes }, getClientIp(req));
   res.json({ success: true, message: 'KYC approved' });
 });
@@ -881,10 +886,14 @@ router.post('/kyc/:id/approve', authenticateToken, checkPermission('KYC_VERIFY_A
 router.post('/kyc/:id/reject', authenticateToken, checkPermission('KYC_VERIFY_APPROVE'), async (req: AuthenticatedRequest, res: Response) => {
   const { reason } = req.body;
   const kycId = req.params.id as string;
-  await execute(
-    "UPDATE kyc_records SET kyc_status = 'REJECTED', verification_status = 'FAILED', verified_by = $1, verified_at = NOW(), notes = $2, updated_at = NOW() WHERE id = $3",
-    [req.user!.userId, reason || '', kycId]
-  );
+  const rec = await queryOne<any>('SELECT customer_id FROM kyc_records WHERE id = $1', [kycId]);
+  const targetUserId = rec ? rec.customer_id : kycId;
+  await KycSyncService.syncKycStatus({
+    userId: targetUserId,
+    status: 'REJECTED',
+    reviewerId: req.user!.userId,
+    rejectionReason: reason || ''
+  });
   await logAuditAction(req.user!.userId, req.user!.role, 'REJECT_KYC', 'KYC', kycId, null, { reason }, getClientIp(req));
   res.json({ success: true, message: 'KYC rejected' });
 });
@@ -1011,7 +1020,7 @@ router.post('/risk/clients/:id/resolve', authenticateToken, checkPermission('RIS
     if (cancelOrders) {
       const pendingOrders = await query<any>(
         `SELECT id, order_id, symbol, status FROM orders 
-         WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING')`,
+         WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
         [customerId]
       );
 
@@ -1020,7 +1029,7 @@ router.post('/risk/clients/:id/resolve', authenticateToken, checkPermission('RIS
         await withTransaction(async (client: any) => {
           const upd = await client.query(
             `UPDATE orders SET status = 'CANCELLED', updated_at = NOW()
-             WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING')
+             WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')
              RETURNING id`,
             [ord.id]
           );
@@ -1118,7 +1127,7 @@ router.post('/risk/clients/:id/cancel-orders', authenticateToken, checkPermissio
     const customerId = req.params.id as string;
     const pendingOrders = await query<any>(
       `SELECT id, status FROM orders 
-       WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING')`,
+       WHERE user_id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
       [customerId]
     );
 
@@ -1128,7 +1137,7 @@ router.post('/risk/clients/:id/cancel-orders', authenticateToken, checkPermissio
       await withTransaction(async (client: any) => {
         const upd = await client.query(
           `UPDATE orders SET status = 'CANCELLED', updated_at = NOW()
-           WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING')
+           WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')
            RETURNING id`,
           [ord.id]
         );
@@ -1965,28 +1974,29 @@ router.post('/kyc/review', authenticateToken, checkPermission('KYC_REJECT'), asy
 
     const newStatus = action === 'APPROVE' ? 'APPROVED' : action === 'REJECT' ? 'REJECTED' : 'RESUBMISSION_REQUIRED';
 
-    await execute(
-      `UPDATE kyc_applications
-       SET status = $1, rejection_reason = $2, rejection_category = $3, reviewed_at = NOW(), reviewed_by = $4, updated_at = NOW()
-       WHERE id = $5`,
-      [newStatus, rejectionReason || null, rejectionCategory || null, req.user!.userId, applicationId]
-    );
+    const appRecord = await queryOne<any>('SELECT user_id, bank_account_name, bank_account_number, bank_ifsc, bank_name FROM kyc_applications WHERE id = $1', [applicationId]);
+    if (!appRecord) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'KYC application not found' } });
+      return;
+    }
+
+    // Authoritative atomic synchronization across kyc_applications, kyc_records, users, and warroom
+    await KycSyncService.syncKycStatus({
+      userId: appRecord.user_id,
+      status: newStatus as any,
+      reviewerId: req.user!.userId,
+      rejectionReason: rejectionReason || null,
+      rejectionCategory: rejectionCategory || null,
+      bankDetails: {
+        bankAccountName: appRecord.bank_account_name,
+        bankAccountNumber: appRecord.bank_account_number,
+        bankIfsc: appRecord.bank_ifsc,
+        bankName: appRecord.bank_name
+      }
+    });
 
     await logAuditAction(req.user!.userId, req.user!.role, `KYC_${action}`, 'KYC_APPLICATION', applicationId, null, { action, rejectionReason, rejectionCategory }, getClientIp(req));
-
-        // Sync user KYC status & bank info
-    const appRecord = await queryOne<any>('SELECT user_id, bank_account_name, bank_account_number, bank_ifsc, bank_name FROM kyc_applications WHERE id = $1', [applicationId]);
-    if (appRecord) {
-      if (action === 'APPROVE') {
-        await execute(
-          'UPDATE users SET is_kyc_completed = true, bank_account_name = COALESCE($1, bank_account_name), bank_account_number = COALESCE($2, bank_account_number), bank_ifsc = COALESCE($3, bank_ifsc), bank_name = COALESCE($4, bank_name) WHERE id = $5',
-          [appRecord.bank_account_name, appRecord.bank_account_number, appRecord.bank_ifsc, appRecord.bank_name, appRecord.user_id]
-        );
-      } else if (action === 'REJECT') {
-        await execute('UPDATE users SET is_kyc_completed = false WHERE id = $1', [appRecord.user_id]);
-      }
-    }
-res.json({ success: true, message: `KYC Application ${applicationId} has been ${newStatus}.` });
+    res.json({ success: true, message: `KYC Application ${applicationId} has been ${newStatus}.` });
 
 // Admin Client Search for KYC modal
 router.get('/kyc/clients-search', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: AuthenticatedRequest, res: Response) => {
@@ -2412,7 +2422,7 @@ router.post('/orders/:orderId/cancel', authenticateToken, checkPermission('ORDER
       return;
     }
 
-    if (!['ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING'].includes(order.status)) {
+    if (!['ACCEPTED', 'PENDING'].includes(order.status)) {
       res.status(400).json({ success: false, error: { code: 'INVALID_STATUS', message: `Order is already ${order.status}` } });
       return;
     }
@@ -2426,7 +2436,7 @@ router.post('/orders/:orderId/cancel', authenticateToken, checkPermission('ORDER
     await withTransaction(async (client: any) => {
       const upd = await client.query(
         `UPDATE orders SET status = 'CANCELLED', updated_at = NOW()
-         WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING')
+         WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')
          RETURNING id`,
         [order.id]
       );
@@ -2466,7 +2476,7 @@ router.post('/orders/:orderId/execute', authenticateToken, checkPermission('ORDE
       return;
     }
 
-    if (!['ACCEPTED', 'PENDING'].includes(order.status)) {
+    if (!['ACCEPTED', 'PENDING', 'PARTIALLY_FILLED'].includes(order.status)) {
       res.status(400).json({ success: false, error: { code: 'INVALID_STATUS', message: `Order is already ${order.status}` } });
       return;
     }
@@ -2494,7 +2504,7 @@ router.post('/orders/:orderId/reject', authenticateToken, checkPermission('ORDER
       return;
     }
 
-    if (!['ACCEPTED', 'PENDING'].includes(order.status)) {
+    if (!['ACCEPTED', 'PENDING', 'PARTIALLY_FILLED'].includes(order.status)) {
       res.status(400).json({ success: false, error: { code: 'INVALID_STATUS', message: `Order is already ${order.status}` } });
       return;
     }
@@ -2504,7 +2514,7 @@ router.post('/orders/:orderId/reject', authenticateToken, checkPermission('ORDER
     await withTransaction(async (client: any) => {
       const upd = await client.query(
         `UPDATE orders SET status = 'REJECTED', updated_at = NOW()
-         WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING')
+         WHERE id = $1 AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')
          RETURNING id`,
         [order.id]
       );
@@ -3412,6 +3422,10 @@ router.post('/customers/:id/suspend', authenticateToken, checkPermission('CUSTOM
       `UPDATE users SET status = 'SUSPENDED', suspended_reason = $1, suspended_by = $2, suspended_at = NOW(), suspended_until = $3, updated_at = NOW() WHERE id = $4`,
       [reason.trim(), req.user!.userId, suspendUntil || null, customerId]
     );
+    await execute(
+      `UPDATE virtual_wallets SET status = 'SUSPENDED', updated_at = NOW() WHERE user_id = $1`,
+      [customerId]
+    ).catch(() => {});
 
     await logAuditAction(
       req.user!.userId, req.user!.role,
@@ -3458,6 +3472,10 @@ router.post('/customers/:id/activate', authenticateToken, checkPermission('CUSTO
        suspended_until = NULL, locked_reason = NULL, locked_by = NULL, locked_at = NULL, updated_at = NOW() WHERE id = $1`,
       [customerId]
     );
+    await execute(
+      `UPDATE virtual_wallets SET status = 'ACTIVE', updated_at = NOW() WHERE user_id = $1`,
+      [customerId]
+    ).catch(() => {});
 
     await logAuditAction(
       req.user!.userId, req.user!.role,
@@ -3498,6 +3516,10 @@ router.post('/customers/:id/lock', authenticateToken, checkPermission('CUSTOMERS
       `UPDATE users SET status = 'LOCKED', locked_reason = $1, locked_by = $2, locked_at = NOW(), updated_at = NOW() WHERE id = $3`,
       [reason.trim(), req.user!.userId, customerId]
     );
+    await execute(
+      `UPDATE virtual_wallets SET status = 'FROZEN', updated_at = NOW() WHERE user_id = $1`,
+      [customerId]
+    ).catch(() => {});
 
     await logAuditAction(
       req.user!.userId, req.user!.role,
@@ -3643,6 +3665,10 @@ router.post('/customers/:id/close', authenticateToken, checkPermission('CUSTOMER
       `UPDATE users SET status = 'CLOSED', closed_reason = $1, closed_by = $2, closed_at = NOW(), updated_at = NOW() WHERE id = $3`,
       [reason.trim(), req.user!.userId, customerId]
     );
+    await execute(
+      `UPDATE virtual_wallets SET status = 'SUSPENDED', updated_at = NOW() WHERE user_id = $1`,
+      [customerId]
+    ).catch(() => {});
 
     await logAuditAction(
       req.user!.userId, req.user!.role,

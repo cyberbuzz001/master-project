@@ -1,6 +1,7 @@
 import { query, queryOne, execute } from '../db/schema';
 import { generateUUID } from '../utils/crypto';
 import { logAuditAction } from '../middleware/audit';
+import { KycSyncService } from './KycSyncService';
 
 const DIDIT_API_BASE = 'https://verification.didit.me/v3';
 const DEFAULT_WORKFLOW_ID = '2fd48ae3-8d28-42a4-a5a8-658beb28f1bc'; // Live Free KYC workflow with OCR + Liveness + Face Match + IP Analysis
@@ -215,21 +216,17 @@ export class DiditService {
         internalStatus = 'RESUBMISSION_REQUIRED';
       }
 
-      // Update database
-      await execute(
-        `UPDATE kyc_applications SET
-          didit_session_status = $1,
-          didit_decision_data = $2,
-          status = $3,
-          reviewed_at = ${rawStatus === 'Approved' ? 'NOW()' : 'reviewed_at'},
-          updated_at = NOW()
-        WHERE id = $4`,
-        [rawStatus, JSON.stringify(decision), internalStatus, kycApp.id]
-      );
-
-      if (isCompleted) {
-        await execute('UPDATE users SET is_kyc_completed = TRUE WHERE id = $1', [userId]);
-      }
+      // Update database atomically via unified KycSyncService
+      await KycSyncService.syncKycStatus({
+        userId,
+        status: internalStatus as any,
+        reviewerId: 'DIDIT_GATEWAY',
+        diditSession: {
+          sessionId,
+          sessionStatus: rawStatus,
+          decisionData: decision
+        }
+      });
 
       return {
         success: true,

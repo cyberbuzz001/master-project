@@ -162,9 +162,9 @@ export class RMS {
     let uncoveredNetQty = absCurrentNetQty;
     if (isOppositeSide && uncoveredNetQty > 0) {
       const resting = await queryOne<any>(
-        `SELECT COALESCE(SUM(quantity), 0) AS total_qty FROM orders
+        `SELECT COALESCE(SUM(quantity - COALESCE(filled_quantity, 0)), 0) AS total_qty FROM orders
          WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND side = $4
-           AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+           AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
         [order.userId, order.symbol, order.productType, order.side]
       );
       const restingQty = parseInt(resting?.total_qty || '0', 10);

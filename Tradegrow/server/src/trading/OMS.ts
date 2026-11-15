@@ -259,7 +259,7 @@ export class OMS {
       return { success: false, error: 'Order not found' };
     }
 
-    if (!['ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING'].includes(order.status)) {
+    if (!['ACCEPTED', 'PENDING', 'PARTIALLY_FILLED'].includes(order.status)) {
       return { success: false, error: `Order cannot be cancelled in state ${order.status}` };
     }
 
@@ -303,7 +303,7 @@ export class OMS {
     const resting = await runner.query(
       `SELECT id, order_id, status FROM orders 
        WHERE user_id = $1 AND symbol = $2 AND product_type = $3 
-         AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+         AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
       [userId, symbol, productType]
     );
 
@@ -320,7 +320,7 @@ export class OMS {
       `UPDATE orders 
        SET status = 'CANCELLED', rejection_reason = 'Position squared off / closed', updated_at = NOW() 
        WHERE user_id = $1 AND symbol = $2 AND product_type = $3 
-         AND status IN ('ACCEPTED', 'PENDING', 'TRIGGER_PENDING')`,
+         AND status IN ('ACCEPTED', 'PENDING', 'PARTIALLY_FILLED')`,
       [userId, symbol, productType]
     );
 
@@ -347,8 +347,13 @@ export class OMS {
       return { success: false, error: 'Order not found' };
     }
 
-    if (order.status !== 'ACCEPTED' && order.status !== 'PENDING') {
+    if (order.status !== 'ACCEPTED' && order.status !== 'PENDING' && order.status !== 'PARTIALLY_FILLED') {
       return { success: false, error: `Order cannot be modified in state ${order.status}` };
+    }
+
+    const filledQty = parseInt(order.filled_quantity || '0', 10);
+    if (newQuantity !== undefined && newQuantity < filledQty) {
+      return { success: false, error: `New quantity (${newQuantity}) cannot be less than already filled quantity (${filledQty})` };
     }
 
     const price = newPrice > 0 ? newPrice : parseFloat(order.price);

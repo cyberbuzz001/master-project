@@ -86,6 +86,10 @@ async function suspendAccount(userId: string, reasonDetail: string, mode: 'SIMUL
     `UPDATE users SET status = 'SUSPENDED', suspended_reason = $1, suspended_by = 'SYSTEM', suspended_at = NOW(), updated_at = NOW() WHERE id = $2`,
     [reasonDetail, userId]
   );
+  await execute(
+    `UPDATE virtual_wallets SET status = 'SUSPENDED', updated_at = NOW() WHERE user_id = $1`,
+    [userId]
+  ).catch(() => {});
   await logAuditAction('SYSTEM', 'SYSTEM', 'RMS_HARD_BREACH_SUSPEND_EXECUTED', 'USER', userId, null, { reasonDetail }, '127.0.0.1');
   adminEventBus.emitUserEvent('USER_STATUS_UPDATED', userId, { status: 'SUSPENDED', reason: reasonDetail, suspendedBy: 'SYSTEM' });
   await createAdminNotification('RMS_HARD_BREACH_SUSPEND', userId, { reasonDetail, severity: 'CRITICAL' });
@@ -93,7 +97,7 @@ async function suspendAccount(userId: string, reasonDetail: string, mode: 'SIMUL
 
 async function cancelAllOtherOrders(userId: string, exceptSymbol: string, exceptProductType: string): Promise<void> {
   const orders = await query<any>(
-    `SELECT order_id FROM orders WHERE user_id = $1 AND status IN ('ACCEPTED','PENDING','EXECUTING') AND NOT (symbol = $2 AND product_type = $3)`,
+    `SELECT order_id FROM orders WHERE user_id = $1 AND status IN ('ACCEPTED','PENDING','EXECUTING','PARTIALLY_FILLED') AND NOT (symbol = $2 AND product_type = $3)`,
     [userId, exceptSymbol, exceptProductType]
   );
   for (const o of orders) {
@@ -208,7 +212,7 @@ export async function runCycle(): Promise<void> {
       }
 
       const pendingRmsOrder = await queryOne<any>(
-        `SELECT id FROM orders WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND source = 'RMS' AND status IN ('ACCEPTED','PENDING','EXECUTING') LIMIT 1`,
+        `SELECT id FROM orders WHERE user_id = $1 AND symbol = $2 AND product_type = $3 AND source = 'RMS' AND status IN ('ACCEPTED','PENDING','EXECUTING','PARTIALLY_FILLED') LIMIT 1`,
         [pos.user_id, pos.symbol, pos.product_type]
       );
       if (pendingRmsOrder) {
