@@ -226,7 +226,7 @@ class CrmWorkflowTest extends TestCase
         $manager = $this->makeStaff('sales_manager');
         $advisor = $this->makeStaff('business_advisor');
         $vendor = Vendor::create(['code' => 'acme', 'name' => 'Acme Leads', 'consent_basis' => 'Opt-in form with call consent']);
-        $existing = $this->leadFor($advisor, ['mobile' => '+919876500001']);
+        $existing = $this->leadFor($advisor, ['mobile' => '+919876500001', 'email' => 'asha@example.test']);
 
         $import = Import::create(['file_name' => 'acme.csv', 'file_path' => 'x', 'importer' => LeadImporter::class, 'total_rows' => 2, 'user_id' => $manager->id]);
         $options = ['vendor_id' => $vendor->id, 'consent_basis' => 'Acme webinar sign-up, 10 Sep 2026', 'consent_calls' => true, 'confirm' => true];
@@ -234,14 +234,14 @@ class CrmWorkflowTest extends TestCase
 
         $this->actingAs($manager);
         $importer = new LeadImporter($import, $map, $options);
-        $importer(['name' => 'Asha Rao', 'phone' => '98765 00001', 'email' => 'asha@example.test', 'segments' => 'equity, options']);
+        $importer(['name' => 'Asha Rao', 'phone' => '98765 00003', 'email' => 'asha@example.test', 'segments' => 'equity, options']);
         $importer = new LeadImporter($import, $map, $options);
         $importer(['name' => 'Vikram Shah', 'phone' => '98765 00002', 'email' => '', 'segments' => 'commodity']);
 
         $asha = Lead::query()->where('full_name', 'Asha Rao')->sole();
         $vikram = Lead::query()->where('full_name', 'Vikram Shah')->sole();
 
-        $this->assertSame('+919876500001', $asha->mobile);
+        $this->assertSame('+919876500003', $asha->mobile);
         $this->assertSame($existing->id, $asha->duplicate_of_lead_id);
         $this->assertSame(['equity', 'options'], $asha->preferred_segments);
         $this->assertSame($vendor->id, $asha->vendor_id);
