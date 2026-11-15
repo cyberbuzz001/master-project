@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { once } from 'node:events';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -171,7 +172,8 @@ test('authentication, routing and communication boundaries', { timeout: 180000 }
       }
     });
     await t.test('browser rejects a forged session on the client portal', async () => {
-      const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
+      const execPath = process.env.CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+      const browser = await chromium.launch({ ...(execPath ? { executablePath: execPath } : {}), headless: true, args: ['--no-sandbox'] });
       try {
         const page = await browser.newPage();
         await page.context().addCookies([{ name: 'esc_session', value: Buffer.from('{"permissions":["*"]}').toString('base64'), url: origin }]);
@@ -181,7 +183,8 @@ test('authentication, routing and communication boundaries', { timeout: 180000 }
       } finally { await browser.close(); }
     });
     await t.test('client overview shows only the authenticated account data', async () => {
-      const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
+      const execPath = process.env.CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+      const browser = await chromium.launch({ ...(execPath ? { executablePath: execPath } : {}), headless: true, args: ['--no-sandbox'] });
       try {
         const page = await browser.newPage();
         await page.context().addCookies([{ name: 'esc_session', value: 'verified-client', url: origin }]);
