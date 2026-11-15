@@ -344,7 +344,8 @@ warRoomRouter.post('/public/leads', async (req: Request, res: Response) => {
     if (source !== 'EXPERT_STOCKS_SITE') {
       try {
         const webhookUrl = process.env.EXPERT_STOCKS_WEBHOOK_URL || 'https://expertstocks.in/api/v1/webhooks/tradegrow-leads';
-        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET || 'tg_webhook_shared_secret_2026';
+        const webhookSecret = process.env.WEBHOOK_BRIDGE_SECRET?.trim();
+        if (!webhookSecret) throw new Error('WEBHOOK_BRIDGE_SECRET is not configured');
         WebhookBridge.getInstance().deliverEvent({
           url: webhookUrl,
           secret: webhookSecret,
@@ -1017,12 +1018,18 @@ warRoomRouter.get('/warroom/content-ideas', async (req: Request, res: Response) 
  * GET /api/v1/webhooks/whatsapp
  * Meta Cloud API Webhook Challenge Verification
  */
-warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
+warRoomRouter.get('/webhooks/whatsapp', async (req: Request, res: Response) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  let expectedToken: string;
+  try {
+    const config = await waService.getMetaConfig();
+    expectedToken = config.verifyToken || process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || '';
+  } catch {
+    return res.status(503).send('Webhook verification configuration unavailable');
+  }
   if (!expectedToken) {
     console.error('[WhatsApp Webhook] WHATSAPP_WEBHOOK_VERIFY_TOKEN is not configured.');
     return res.status(500).send('Server misconfiguration: Webhook verify token not set');
@@ -1043,7 +1050,7 @@ warRoomRouter.get('/webhooks/whatsapp', (req: Request, res: Response) => {
  */
 warRoomRouter.post('/webhooks/whatsapp', async (req: Request, res: Response) => {
   try {
-    const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
+    const appSecret = (await waService.getSystemConfig('META_WA_APP_SECRET')) || process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
     const signature = req.headers['x-hub-signature-256'] as string;
     const rawBody = (req as any).rawBody;
 
@@ -1667,7 +1674,10 @@ warRoomRouter.get('/advisory/order-preview', (req: Request, res: Response) => {
       });
     }
 
-    const secret = process.env.ADVISORY_SHARED_SECRET || 'advisory_shared_secret_2026';
+    const secret = process.env.ADVISORY_SHARED_SECRET?.trim();
+    if (!secret) {
+      return res.status(503).json({ success: false, error: { code: 'NOT_CONFIGURED', message: 'Advisory integration is not configured.' } });
+    }
     let decoded: any;
     try {
       decoded = jwt.verify(token, secret);
@@ -1714,7 +1724,10 @@ warRoomRouter.post('/auth/sso/ticket', async (req: Request, res: Response) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const jwtSecret = process.env.JWT_SECRET || 'stocksharp_jwt_s3cr3t_2026_virtual_trading_platform_secure_key_minimum_32_chars';
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(503).json({ success: false, error: { message: 'SSO is not configured' } });
+    }
     let user: any;
     try {
       user = jwt.verify(token, jwtSecret);
@@ -1764,7 +1777,10 @@ warRoomRouter.post('/auth/sso/verify', (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: { message: 'Ticket string is required' } });
     }
 
-    const ssoSecret = process.env.SSO_SHARED_SECRET || process.env.JWT_SECRET || 'stocksharp_jwt_s3cr3t_2026_virtual_trading_platform_secure_key_minimum_32_chars';
+    const ssoSecret = process.env.SSO_SHARED_SECRET || process.env.JWT_SECRET;
+    if (!ssoSecret) {
+      return res.status(503).json({ success: false, error: { message: 'SSO is not configured' } });
+    }
     let decoded: any;
     try {
       decoded = jwt.verify(ticket, ssoSecret);

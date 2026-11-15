@@ -576,8 +576,9 @@ export class ExecutionEngine {
       const statusUpd = await client.query(
         `UPDATE orders SET status = 'FILLED', filled_quantity = quantity, average_price = $1, updated_at = NOW()
          WHERE id = $2 AND status IN ('ACCEPTED', 'PENDING', 'EXECUTING')
+           AND quantity = $3 AND price = $4 AND COALESCE(trigger_price, 0) = $5
          RETURNING id`,
-        [price, order.id]
+        [price, order.id, qty, Number(order.price || 0), Number(order.trigger_price || 0)]
       );
       if (statusUpd.rows.length === 0) {
         return null;

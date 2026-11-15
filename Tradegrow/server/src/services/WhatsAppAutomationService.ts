@@ -259,7 +259,7 @@ export class WhatsAppAutomationService {
     // ─────────────────────────────────────────────────────────────
     if (provider === 'EVOLUTION_API' || provider === 'OPEN_WA') {
       const evoUrl = this.getEvoBaseUrl();
-      const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+      const evoKey = process.env.WHATSAPP_API_KEY || '';
       const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
       const cleanNumber = phoneE164.replace(/\D/g, '');
 
@@ -443,7 +443,7 @@ export class WhatsAppAutomationService {
   public async triggerAccountApprovedActivation(phone: string, userId: string, fullName?: string): Promise<WhatsAppMessageResult> {
     const phoneE164 = this.normalizePhoneE164(phone);
     const greeting = fullName ? `{Congratulations|Great news} ${fullName}` : `{Congratulations|Great news}`;
-    const textBody = `${greeting}! Your Trade Grow trading account has been VERIFIED and APPROVED.\n\nLog in now to access real-time option chains and experience simulation paper trading:\nhttps://tradegrowx.in/terminal\n\nWelcome to modern, transparent trading!`;
+    const textBody = `${greeting}! Your Trade Grow trading account has been VERIFIED and APPROVED.\n\nLog in now to access real-time option chains and your trading terminal:\nhttps://tradegrowx.in/terminal\n\nWelcome to modern, transparent market access!`;
 
     return this.sendMessage({
       phoneE164,
@@ -562,7 +562,7 @@ export class WhatsAppAutomationService {
    */
   public async getConnectionState(): Promise<{ state: string; instance: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {
@@ -581,7 +581,7 @@ export class WhatsAppAutomationService {
    */
   public async getQRCode(): Promise<{ qrcode?: string; base64?: string; state?: string; pairingCode?: string; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {
@@ -606,7 +606,7 @@ export class WhatsAppAutomationService {
    */
   public async getPairingCode(phone: string): Promise<{ pairingCode?: string; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
     const cleanNumber = phone.replace(/\D/g, '');
 
@@ -626,7 +626,7 @@ export class WhatsAppAutomationService {
    */
   public async restartInstance(): Promise<{ success: boolean; error?: string }> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     try {
@@ -715,7 +715,7 @@ export class WhatsAppAutomationService {
     const phoneId = (await this.getSystemConfig('META_WA_PHONE_NUMBER_ID')) || process.env.WHATSAPP_PHONE_NUMBER_ID || '';
     const wabaId = (await this.getSystemConfig('META_WA_BUSINESS_ACCOUNT_ID')) || process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '';
     const token = (await this.getSystemConfig('META_WA_ACCESS_TOKEN')) || process.env.WHATSAPP_API_TOKEN || '';
-    const verifyToken = (await this.getSystemConfig('META_WA_VERIFY_TOKEN')) || process.env.WHATSAPP_VERIFY_TOKEN || 'tradegrow_meta_secret_verify_token';
+    const verifyToken = (await this.getSystemConfig('META_WA_VERIFY_TOKEN')) || process.env.WHATSAPP_VERIFY_TOKEN || '';
     const appSecret = (await this.getSystemConfig('META_WA_APP_SECRET')) || process.env.WHATSAPP_APP_SECRET || '';
     const activeProvider = (await this.getSystemConfig('WHATSAPP_ACTIVE_PROVIDER')) || 'EVOLUTION_API';
 
@@ -752,7 +752,7 @@ export class WhatsAppAutomationService {
    */
   public async getProvidersStatus(): Promise<any> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     let evoData: any = { state: 'unreachable', instance: evoInstance };
@@ -804,7 +804,7 @@ export class WhatsAppAutomationService {
    */
   public async getConversations(): Promise<any[]> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     const conversationsMap = new Map<string, any>();
@@ -910,7 +910,7 @@ export class WhatsAppAutomationService {
    */
   public async getConversationMessages(phoneOrJid: string): Promise<any[]> {
     const evoUrl = this.getEvoBaseUrl();
-    const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+    const evoKey = process.env.WHATSAPP_API_KEY || '';
     const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
     const cleanNum = phoneOrJid.replace(/\D/g, '');
@@ -1041,7 +1041,7 @@ export class WhatsAppAutomationService {
     // 1. Evolution API
     if (activeProvider === 'EVOLUTION_API') {
       const evoUrl = this.getEvoBaseUrl();
-      const evoKey = process.env.WHATSAPP_API_KEY || 'shreesvarn_evolution_secret_token';
+      const evoKey = process.env.WHATSAPP_API_KEY || '';
       const evoInstance = process.env.WHATSAPP_INSTANCE_NAME || 'shreesvarn';
 
       try {

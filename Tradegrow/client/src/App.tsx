@@ -288,10 +288,11 @@ function AuthenticatedApp({
             onOpenSearch={() => setIsSearchOpen(true)}
             onOpenWalletModal={() => setIsAddFundsOpen(true)}
             isTerminalMode={location.pathname === '/terminal'}
+            navigationPinned={isSearchOpen || isMobileOrderModalOpen || isAddFundsOpen || isOnboardingOpen || Boolean(mobileWatchlistChart)}
             onToggleTerminal={() => (location.pathname === '/terminal' ? navigate(-1) : navigate('/terminal'))}
           />
 
-          <div className="flex-1 w-full max-w-full">
+          <div className="tg-mobile-content flex-1 w-full max-w-full">
             <Suspense fallback={routeSuspenseFallback}>
               <Routes>
                 <Route path="/" element={

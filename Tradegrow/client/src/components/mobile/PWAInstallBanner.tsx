@@ -75,7 +75,7 @@ export function PWAInstallBanner() {
     <>
       {/* Floating Installation Banner (Mobile & Desktop) */}
       {!isDismissed && (
-        <div className="fixed bottom-20 md:bottom-6 right-3 left-3 md:left-auto md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="tg-install-position fixed md:bottom-6 right-3 left-3 md:left-auto md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className="relative overflow-hidden rounded-2xl bg-[#131722]/95 backdrop-blur-xl border border-emerald-500/40 shadow-2xl shadow-emerald-950/50 p-3.5 flex items-center justify-between gap-3 text-left">
             
             {/* Ambient Glow */}

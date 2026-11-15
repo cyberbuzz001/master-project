@@ -88,7 +88,7 @@ export class VirtualWalletLedger {
       }
     } catch (_) {}
 
-    const buyingPower   = Math.max(0, cashBalance - usedMargin);
+    const buyingPower   = cashBalance - usedMargin;
     const floatingLoss  = Math.min(0, unrealizedPnl);
     const withdrawableBalance = Math.max(0, cashBalance - usedMargin + floatingLoss);
     const totalPnl      = realizedPnl + unrealizedPnl;
@@ -391,21 +391,18 @@ export class VirtualWalletLedger {
       [userId]
     );
 
-    if (walletRow.rows.length === 0) return;
+    if (walletRow.rows.length === 0) throw new Error('Wallet not found during settlement');
 
     const wallet = walletRow.rows[0];
-    const cashBalance = parseFloat(wallet.cash_balance);
-    const realizedPnl = parseFloat(wallet.realized_pnl);
-
-    // 1. Realized P&L increases or decreases cash balance directly (safeguarded against negative cash constraint)
-    const newCash = Math.max(0.00, cashBalance + realizedPnlDelta);
-    const newRealizedPnl = realizedPnl + realizedPnlDelta;
-
-    await client.query(
-      `UPDATE virtual_wallets SET cash_balance = $1, realized_pnl = $2, updated_at = NOW()
-       WHERE user_id = $3`,
-      [newCash, newRealizedPnl, userId]
+    if (!Number.isFinite(realizedPnlDelta)) throw new Error('Invalid settlement P&L');
+    // Use the same NUMERIC delta for both columns; never forgive a deficit.
+    const updated = await client.query(
+      `UPDATE virtual_wallets SET cash_balance = cash_balance + $1::numeric,
+       realized_pnl = realized_pnl + $1::numeric, updated_at = NOW()
+       WHERE user_id = $2 RETURNING cash_balance, realized_pnl`,
+      [realizedPnlDelta, userId]
     );
+    const newCash = updated.rows[0].cash_balance;
 
     // 2. Recompute used_margin from the position this fill just updated (the
     // caller runs this after PortfolioService.recordExecutionInTransaction,
@@ -419,7 +416,7 @@ export class VirtualWalletLedger {
        VALUES ($1, $2, $3, 'PNL_SETTLEMENT', $4, $5, $6, $7, 'SIMULATED_EXECUTION', $8)`,
       [
         'led_' + generateUUID(), generateUUID(), userId,
-        tradeAmount, cashBalance, newCash, referenceId,
+        realizedPnlDelta, wallet.cash_balance, newCash, referenceId,
         JSON.stringify({ tradeType, realizedPnlDelta, releasedPositionCapital, newCash, newUsedMargin })
       ]
     );
@@ -453,14 +450,12 @@ export class VirtualWalletLedger {
 
       const wallet = walletRow.rows[0];
       const cashBalance = parseFloat(wallet.cash_balance);
-      const newCash = cashBalance + amount;
-
-      if (newCash < 0) throw new Error('Admin adjustment would result in negative balance');
-
-      await client.query(
-        'UPDATE virtual_wallets SET cash_balance = $1, updated_at = NOW() WHERE user_id = $2',
-        [newCash, userId]
+      if (!Number.isFinite(amount)) throw new Error('Invalid adjustment amount');
+      const updated = await client.query(
+        'UPDATE virtual_wallets SET cash_balance = cash_balance + $1::numeric, updated_at = NOW() WHERE user_id = $2 RETURNING cash_balance',
+        [amount, userId]
       );
+      const newCash = updated.rows[0].cash_balance;
 
       await client.query(
         `INSERT INTO wallet_ledger (id, transaction_id, user_id, transaction_type, amount, balance_before, balance_after, reference_id, created_by, metadata)

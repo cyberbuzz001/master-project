@@ -221,7 +221,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
   const totalUnrealizedPnl = positions.reduce((acc, p) => acc + (p.unrealizedPnl || 0), 0);
   const totalRealizedPnl = positions.reduce((acc, p) => acc + (p.realizedPnl || 0), 0);
   const todaysPnl = totalUnrealizedPnl + totalRealizedPnl;
-  const availableMargin = wallet ? wallet.cashBalance : 0;
+  const availableMargin = wallet ? wallet.buyingPower : 0;
   const usedMargin = wallet ? wallet.usedMargin : 0;
   const totalBalance = availableMargin + usedMargin;
   const portfolioValue = availableMargin + todaysPnl;

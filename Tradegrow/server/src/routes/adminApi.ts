@@ -1800,10 +1800,10 @@ router.get('/market-data/config', authenticateToken, checkPermission('MARKET_DAT
       activeProvider,
       availableProviders: ['DHAN', 'FYERS', 'ANGELONE', 'MOCK_ENGINE'],
       keys: {
-        DHAN_CLIENT_ID: configs.DHAN_CLIENT_ID || process.env.DHAN_CLIENT_ID || '1113019677',
+        DHAN_CLIENT_ID: configs.DHAN_CLIENT_ID || process.env.DHAN_CLIENT_ID || '',
         DHAN_ACCESS_TOKEN: configs.DHAN_ACCESS_TOKEN || process.env.DHAN_ACCESS_TOKEN || '',
-        DHAN_API_KEY: configs.DHAN_API_KEY || process.env.DHAN_API_KEY || '21483ef7',
-        DHAN_API_SECRET: configs.DHAN_API_SECRET || process.env.DHAN_API_SECRET || 'e9730aa4-682c-4e75-a944-94f703449b09',
+        DHAN_API_KEY: configs.DHAN_API_KEY || process.env.DHAN_API_KEY || '',
+        DHAN_API_SECRET: configs.DHAN_API_SECRET || process.env.DHAN_API_SECRET || '',
         FYERS_APP_ID: configs.FYERS_APP_ID || process.env.FYERS_APP_ID || '',
         FYERS_SECRET_KEY: configs.FYERS_SECRET_KEY || process.env.FYERS_SECRET_KEY || '',
         FYERS_ACCESS_TOKEN: configs.FYERS_ACCESS_TOKEN || process.env.FYERS_ACCESS_TOKEN || '',
@@ -2349,7 +2349,7 @@ router.post('/orders/:orderId/price', authenticateToken, checkPermission('ORDERS
     const { price } = req.body;
     const newPrice = parseFloat(price);
 
-    if (isNaN(newPrice) || newPrice <= 0) {
+    if (!Number.isFinite(newPrice) || newPrice <= 0) {
       res.status(400).json({ success: false, error: { code: 'INVALID_PRICE', message: 'Price must be greater than 0' } });
       return;
     }
@@ -2365,12 +2365,33 @@ router.post('/orders/:orderId/price', authenticateToken, checkPermission('ORDERS
       return;
     }
 
-    await execute('UPDATE orders SET price = $1, updated_at = NOW() WHERE id = $2', [newPrice, order.id]);
-    await execute(
-      `INSERT INTO order_events (id, order_id, from_status, to_status, reason, actor)
-       VALUES ($1, $2, $3, $3, $4, 'ADMIN')`,
-      ['evt_' + generateUUID(), order.id, order.status, `Admin modified price from ₹${order.price} to ₹${newPrice}`]
-    );
+    const amended = await withTransaction(async (client) => {
+      const before = await client.query('SELECT price FROM orders WHERE id = $1 FOR UPDATE', [order.id]);
+      const result = await client.query(
+        `UPDATE orders SET price = $1, updated_at = NOW()
+         WHERE id = $2 AND status IN ('ACCEPTED', 'PENDING') RETURNING *`,
+        [newPrice, order.id]
+      );
+      if (!result.rows.length) return null;
+      // Administrators may override funding limits, but the reservation must
+      // still reflect the amended order and expose any negative availability.
+      await VirtualWalletLedger.recomputeUsedMarginForUser(order.user_id, client);
+      await client.query(
+        `INSERT INTO order_events (id, order_id, from_status, to_status, reason, actor, metadata)
+         VALUES ($1, $2, $3, $3, $4, 'ADMIN', $5)`,
+        ['evt_' + generateUUID(), order.id, result.rows[0].status,
+          `Admin modified price to ₹${newPrice}`,
+          JSON.stringify({ adminUserId: req.user!.userId, previousPrice: before.rows[0].price, price: newPrice })]
+      );
+      return result.rows[0];
+    });
+    if (!amended) {
+      return res.status(409).json({ success: false, error: { code: 'ORDER_STATE_CHANGED', message: 'Order was processed while the amendment was being submitted. Refresh and retry.' } });
+    }
+    const { ExecutionEngine } = await import('../trading/ExecutionEngine');
+    ExecutionEngine.registerPendingOrder(amended);
+    emitAdminOrderEvent(order.user_id, 'ORDER_UPDATED', amended);
+    emitAdminFundsUpdate(order.user_id, null);
 
     await logAuditAction(req.user!.userId, req.user!.role, 'ADMIN_MODIFY_ORDER_PRICE', 'ORDER', order.id, null, { oldPrice: order.price, newPrice }, getClientIp(req));
 

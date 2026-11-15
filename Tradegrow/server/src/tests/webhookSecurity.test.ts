@@ -36,6 +36,17 @@ describe('Webhook Security & Authenticity Verification', () => {
     expect(isValid).toBe(false);
   });
 
+  test('rejects missing secret even with an empty-key HMAC', () => {
+    const header = `sha256=${crypto.createHmac('sha256', '').update(testPayload).digest('hex')}`;
+    expect(verifyMetaSignature(testPayload, header, '')).toBe(false);
+  });
+
+  test('rejects signatures with trailing garbage or extra hex digits', () => {
+    const digest = crypto.createHmac('sha256', testSecret).update(testPayload).digest('hex');
+    expect(verifyMetaSignature(testPayload, `sha256=${digest}zz`, testSecret)).toBe(false);
+    expect(verifyMetaSignature(testPayload, `sha256=${digest}a`, testSecret)).toBe(false);
+  });
+
   test('rejects missing or malformed signature header', () => {
     const rawBuffer = Buffer.from(testPayload, 'utf8');
     expect(verifyMetaSignature(rawBuffer, undefined, testSecret)).toBe(false);

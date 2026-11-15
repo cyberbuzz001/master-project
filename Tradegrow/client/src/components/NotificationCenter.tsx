@@ -188,7 +188,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ token })
   const displayed = notifications.filter(n => filter === 'UNREAD' ? !n.is_read : true);
 
   const panel = isOpen ? createPortal(
-    <div ref={drawerPanelRef} style={panelStyle} className="flex flex-col bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div ref={drawerPanelRef} data-navigation-lock style={panelStyle} className="flex flex-col bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
       {/* Header */}
       <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-surface-elevated)] flex items-center justify-between flex-shrink-0">
         <div>
@@ -320,7 +320,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ token })
           setIsOpen(prev => !prev);
           if (!isOpen) { fetchNotifications(); fetchAlerts(); }
         }}
-        className="relative p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)] transition-colors focus:outline-none"
+        className="relative min-h-11 min-w-11 md:min-h-0 md:min-w-0 p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)] transition-colors focus:outline-none"
         title="Notifications &amp; Alerts"
         aria-label="Notifications &amp; Alerts"
       >

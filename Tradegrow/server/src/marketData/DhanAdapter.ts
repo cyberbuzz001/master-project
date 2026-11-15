@@ -155,10 +155,10 @@ export class DhanAdapter implements IMarketDataProvider {
   }
 
   constructor() {
-    this.clientId = process.env.DHAN_CLIENT_ID || '1113019677';
-    this.accessToken = process.env.DHAN_ACCESS_TOKEN || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzg3Mjg4NTAwLCJpYXQiOjE3ODcyMDIxMDAsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTEzMDE5Njc3In0.v8SJgFEJQnYgh5W92wbdYl2JrjvBFrkqvpRBVEFtXLWJaqwW1mFPY8zJTJTObZBzsVcX07ekuoXzSzHM-L2_AA';
-    this.apiKey = process.env.DHAN_API_KEY || '21483ef7';
-    this.apiSecret = process.env.DHAN_API_SECRET || 'e9730aa4-682c-4e75-a944-94f703449b09';
+    this.clientId = process.env.DHAN_CLIENT_ID || '';
+    this.accessToken = process.env.DHAN_ACCESS_TOKEN || '';
+    this.apiKey = process.env.DHAN_API_KEY || '';
+    this.apiSecret = process.env.DHAN_API_SECRET || '';
   }
 
   private optionChainData: any = null;

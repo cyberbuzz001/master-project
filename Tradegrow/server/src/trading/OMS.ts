@@ -263,17 +263,22 @@ export class OMS {
       return { success: false, error: `Order cannot be cancelled in state ${order.status}` };
     }
 
-    // Unregister from in-memory matching index immediately
-    ExecutionEngine.unregisterPendingOrder(order.id);
-
-    await withTransaction(async (client) => {
-      await client.query(`UPDATE orders SET status = 'CANCELLED', updated_at = NOW() WHERE id = $1`, [order.id]);
+    const cancelled = await withTransaction(async (client) => {
+      const result = await client.query(
+        `UPDATE orders SET status = 'CANCELLED', updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 AND status IN ('ACCEPTED', 'PENDING', 'OPEN', 'TRIGGER_PENDING') RETURNING id`,
+        [order.id, userId]
+      );
+      if (result.rows.length === 0) return false;
       // The cancelled order no longer matches the pending-status filter, so
       // it naturally drops out of the recomputed sum — no separate release
       // amount to calculate (that hand-computed amount is what used to go
       // out of sync with what was actually blocked).
       await VirtualWalletLedger.recomputeUsedMarginForUser(userId, client);
+      return true;
     });
+    if (!cancelled) return { success: false, error: 'Order state changed before cancellation' };
+    ExecutionEngine.unregisterPendingOrder(order.id);
 
     await this.recordOrderEvent(order.id, order.status, 'CANCELLED', 'User cancelled order');
     emitAdminOrderEvent(userId, 'ORDER_UPDATED', { ...order, status: 'CANCELLED' });
@@ -354,7 +359,12 @@ export class OMS {
     // trusting the original acceptance to still cover it.
     try {
       await withTransaction(async (client) => {
-        await client.query(`UPDATE orders SET price = $1, quantity = $2, updated_at = NOW() WHERE id = $3`, [price, quantity, order.id]);
+        const result = await client.query(
+          `UPDATE orders SET price = $1, quantity = $2, updated_at = NOW()
+           WHERE id = $3 AND user_id = $4 AND status IN ('ACCEPTED', 'PENDING') RETURNING id`,
+          [price, quantity, order.id, userId]
+        );
+        if (result.rows.length === 0) throw new Error('MODIFY_REJECTED: Order state changed before modification');
 
         const newUsedMargin = await VirtualWalletLedger.recomputeUsedMarginForUser(userId, client);
         const walletRow = await client.query('SELECT cash_balance FROM virtual_wallets WHERE user_id = $1', [userId]);

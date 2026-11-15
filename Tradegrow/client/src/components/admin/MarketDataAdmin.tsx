@@ -291,7 +291,7 @@ export const MarketDataAdmin: React.FC<MarketDataAdminProps> = ({ token }) => {
                 { id: 'DHAN', name: 'Dhan HQ API v2', desc: 'Live Market Feed & High-Speed WebSocket', badge: 'Dhan Active' },
                 { id: 'FYERS', name: 'Fyers API v3', desc: 'Live Market Feed, History & Data Sockets', badge: 'Fyers Active' },
                 { id: 'ANGELONE', name: 'Angel One SmartAPI', desc: 'Indian Stock & Derivatives Broker Feed', badge: 'SmartAPI' },
-                { id: 'MOCK_ENGINE', name: 'Mock Simulation Engine', desc: 'High-frequency Synthetic Data Engine', badge: 'Simulation' }
+                { id: 'MOCK_ENGINE', name: 'Fallback Data Provider', desc: 'Synthetic feed for controlled testing only', badge: 'Fallback' }
               ].map(p => (
                 <div
                   key={p.id}

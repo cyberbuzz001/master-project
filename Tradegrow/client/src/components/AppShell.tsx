@@ -11,6 +11,8 @@ import { Badge } from './ui/Badge';
 import { LivePriceCell } from './ui/LivePriceCell';
 import { ChatWidget } from './ChatWidget';
 import { NotificationCenter } from './NotificationCenter';
+import { MobileHeader } from './MobileHeader';
+import { LiquidGlassTabBar } from './LiquidGlassTabBar';
 
 export interface AppShellNavItem {
   path: string;
@@ -31,6 +33,7 @@ export interface AppShellProps {
   /** Desktop-only utility toggle, kept out of the 5 primary nav items per .design/client-panel-redesign/TASKS.md. */
   isTerminalMode?: boolean;
   onToggleTerminal?: () => void;
+  navigationPinned?: boolean;
 }
 
 const NAV_ITEMS: AppShellNavItem[] = [
@@ -65,10 +68,12 @@ export function AppShell({
   onOpenWalletModal,
   isTerminalMode = false,
   onToggleTerminal,
+  navigationPinned = false,
 }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const socket = useMarketSocket();
+  const [chatOpen, setChatOpen] = useState(false);
   const ticks = propTicks || socket.ticks;
   const [selectedIndexModal, setSelectedIndexModal] = useState<{ symbol: string; token: string; exchange: string } | null>(null);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
@@ -134,120 +139,11 @@ export function AppShell({
     { label: 'FIN NIFTY', token: 'NSE_FINNIFTY', exchange: 'NSE', tick: getFinNifty() },
   ];
 
-  const MOBILE_NAV_ITEMS: AppShellNavItem[] = [
-    { path: '/', matchPrefix: '/', label: 'Home', icon: <Home className="w-5 h-5" /> },
-    { path: '/watchlist', matchPrefix: '/watchlist', label: 'Watchlist', icon: <Bookmark className="w-5 h-5" /> },
-    { path: '#trade', matchPrefix: '/terminal', label: 'Trade', icon: <SlidersHorizontal className="w-5 h-5" /> },
-    { path: '/portfolio/positions', matchPrefix: '/portfolio', label: 'Portfolio', icon: <Briefcase className="w-5 h-5" /> },
-    { path: '/profile/account', matchPrefix: '/profile', label: 'Account', icon: <UserIcon className="w-5 h-5" /> },
-  ];
-
   return (
     <>
-      {/* ── MOBILE TOP HEADER BAR ───────────────────────────────────────── */}
-      {!isTerminalMode && (
-        <header className="md:hidden sticky top-0 z-40 bg-[var(--bg-glass)] backdrop-blur-xl border-b border-[var(--border-color)] px-3 h-13 flex items-center justify-between gap-2 shadow-xs">
-          {/* Left: Brand Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="w-8 h-8 rounded-xl bg-[var(--bg-surface)] border border-emerald-500/40 flex items-center justify-center shadow-xs">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 18 L10 10 L14 14 L20 6" stroke="#22C55E" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points="16,6 20,6 20,10" stroke="#22C55E" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="font-headline font-extrabold text-base tracking-tight text-[var(--text-main)]">
-              Trade<span className="text-[var(--gain)]">Grow</span>
-            </span>
-          </Link>
-
-          {/* Center: Available Margin Quick Pill */}
-          <button
-            onClick={onOpenWalletModal}
-            className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-emerald-500/30 px-2 py-1 rounded-xl text-left shadow-xs"
-            title="Available Trading Margin. Click to manage funds."
-          >
-            <Wallet className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-wider leading-none">Available Margin</span>
-              <span className="text-[11px] font-bold text-[var(--text-main)] num-font leading-tight">
-                ₹{walletBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            <Plus className="w-3 text-emerald-500 flex-shrink-0" />
-          </button>
-
-          {/* Right Action Icons: Search, Theme, Install, Avatar */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onOpenSearch}
-              aria-label="Search"
-              className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-lg hover:bg-[var(--bg-surface-elevated)]"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={onToggleTheme}
-              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)]"
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-            </button>
-
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-pwa-install-modal'))}
-              className="p-1.5 text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 rounded-lg border border-emerald-500/30"
-              title="Install App"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-
-            <NotificationCenter token={token} />
-
-            <button
-              onClick={() => navigate('/profile/account')}
-              aria-label="Profile"
-              className="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center cursor-pointer shadow-xs ml-0.5"
-            >
-              {(user.username || 'T').charAt(0).toUpperCase()}
-            </button>
-          </div>
-        </header>
-      )}
-
-      {/* ── MOBILE HORIZONTAL INDICES TICKER STRIP ──────────────────────── */}
-      {!isTerminalMode && (
-        <div className="md:hidden flex items-center gap-2 overflow-x-auto scrollbar-none px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-surface)] font-mono text-xs tabular-nums">
-          {indices.map((idx) => {
-            const chg = formatChange(idx.tick);
-            const ltp = idx.tick?.ltp;
-            return (
-              <button
-                key={idx.token}
-                onClick={() => setSelectedIndexModal({ symbol: idx.label, token: idx.token, exchange: idx.exchange })}
-                className="flex items-center gap-1.5 flex-shrink-0 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)]/60 px-2 py-0.5 rounded-lg"
-              >
-                <span className="font-bold text-[var(--text-muted)] text-[10px]">{idx.label}</span>
-                {ltp ? (
-                  <LivePriceCell
-                    value={ltp}
-                    prefix=""
-                    decimals={2}
-                    className="!text-[11px] !font-bold !text-[var(--text-main)] !p-0 !bg-transparent"
-                  />
-                ) : (
-                  <span className="text-[11px] text-[var(--text-muted)] font-mono animate-pulse">--</span>
-                )}
-                {idx.tick && chg.text ? (
-                  <span className={`text-[10px] font-bold ${chg.isPos ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {chg.isPos ? '+' : ''}{chg.text.split(' ')[1] || ''}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {!isTerminalMode && <MobileHeader name={user.fullName || user.username} token={token}
+        connected={socket.status === 'CONNECTED'} indices={indices} onSearch={onOpenSearch}
+        onIndex={idx => setSelectedIndexModal({ symbol: idx.label, token: idx.token, exchange: idx.exchange })} />}
 
       {/* ── DESKTOP TOP BAR ─────────────────────────────────────────────── */}
       <header className="hidden md:flex sticky top-0 z-40 bg-[var(--bg-glass)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 lg:px-6 h-16 items-center justify-between gap-3 overflow-x-auto scrollbar-none">
@@ -433,40 +329,8 @@ export function AppShell({
         />
       )}
 
-      {/* ── MOBILE BOTTOM TAB BAR ───────────────────────────────────────── */}
-      <nav
-        aria-label="Primary"
-        className="md:hidden mobile-nav-glass fixed bottom-0 left-0 right-0 z-50 px-2 pt-1 min-h-[64px] flex items-center justify-around pb-[env(safe-area-inset-bottom,4px)]"
-      >
-        {MOBILE_NAV_ITEMS.map((item) => {
-          const isTrade = item.path === '#trade';
-          const active = isTrade ? isMobileMoreOpen : isActive(location.pathname, item);
-          return (
-            <Link
-              key={item.path}
-              to={isTrade ? location.pathname : item.path}
-              onClick={(event) => {
-                if (isTrade) {
-                  event.preventDefault();
-                  setIsMobileMoreOpen(true);
-                }
-                navigator.vibrate?.(15);
-              }}
-              aria-current={!isTrade && active ? 'page' : undefined}
-              aria-expanded={isTrade ? isMobileMoreOpen : undefined}
-              aria-label={item.label}
-              className={`flex flex-1 min-w-0 max-w-[80px] sm:max-w-[88px] flex-col items-center justify-center gap-0.5 sm:gap-1 min-h-[48px] sm:min-h-[52px] py-1 px-0.5 sm:px-1 rounded-xl active:scale-[0.97] transition-all ${
-                active ? 'text-[var(--primary)] font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text-main)] font-medium'
-              }`}
-            >
-              <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-[var(--primary-light)] text-[var(--primary)] shadow-xs' : 'text-[var(--text-muted)]'}`}>
-                {item.icon}
-              </div>
-              <span className="text-[11px] leading-tight tracking-tight">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <LiquidGlassTabBar onTrade={() => setIsMobileMoreOpen(true)} tradeOpen={isMobileMoreOpen}
+        pinned={navigationPinned || isMobileMoreOpen || Boolean(selectedIndexModal) || chatOpen} />
 
       {isMobileMoreOpen && (
         <div
@@ -572,7 +436,7 @@ export function AppShell({
         </div>
       )}
 
-      {!isStaff && <ChatWidget token={token} />}
+      {!isStaff && <ChatWidget token={token} onOpenChange={setChatOpen} />}
     </>
   );
 }

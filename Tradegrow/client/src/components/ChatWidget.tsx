@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Bot } from 'lucide-react';
 import { useMarketSocket } from '../hooks/useMarketSocket';
 import { AI_BOT_USER_ID } from '../utils/supportBot';
 
-interface ChatWidgetProps { token: string; }
+interface ChatWidgetProps { token: string; onOpenChange?: (open: boolean) => void; }
 
 interface ChatMessage {
   id: string;
@@ -18,8 +18,9 @@ interface ChatMessage {
  * items from Phase F1's gap analysis. A floating bubble in the corner of every
  * client-panel page, distinct from the async ticketing system under Profile.
  */
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ token }) => {
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ token, onOpenChange }) => {
   const [open, setOpen] = useState(false);
+  useEffect(() => { onOpenChange?.(open); return () => onOpenChange?.(false); }, [open, onOpenChange]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [unread, setUnread] = useState(0);
@@ -59,7 +60,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ token }) => {
   };
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
+    <div className="tg-support-position fixed md:bottom-6 right-4 md:right-6 z-40" data-navigation-lock={open ? '' : undefined}>
       {open && (
         <div className="mb-3 w-[calc(100vw-2rem)] max-w-sm h-[420px] bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--primary)] text-[var(--text-on-accent)]">

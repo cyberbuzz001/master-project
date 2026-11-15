@@ -20,6 +20,8 @@ export function verifyMetaSignature(
   }
 
   const clientSignature = parts[1].trim().toLowerCase();
+  // Buffer.from(hex) silently truncates invalid trailing characters.
+  if (!/^[0-9a-f]{64}$/.test(clientSignature)) return false;
   const hmac = crypto.createHmac('sha256', appSecret);
   const payloadBuffer = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody, 'utf8');
   const expectedSignature = hmac.update(payloadBuffer).digest('hex').toLowerCase();

@@ -25,7 +25,7 @@ export class MarketDataEngine {
   private lastTickTime: number = 0;
   private failoverActive: boolean = false;
   private failoverTimer: NodeJS.Timeout | null = null;
-  private configuredProviderName: string = 'ANGEL_ONE';
+  private configuredProviderName: string = 'DHAN';
 
   private handleProviderTick = (tick: MarketTick): void => {
     this.lastTickTime = Date.now();
@@ -52,7 +52,7 @@ export class MarketDataEngine {
     this.providers.set(this.mockProvider.name, this.mockProvider);
     this.providers.set('MOCK', this.mockProvider);
 
-    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGELONE').toUpperCase();
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'DHAN').toUpperCase();
     if (configured.includes('ANGEL')) {
       this.configuredProviderName = 'ANGEL_ONE';
       this.activeProvider = this.angelOneProvider;
@@ -75,7 +75,7 @@ export class MarketDataEngine {
           this.lastTickTime = Date.now();
           this.failoverActive = false;
           const tick: MarketTick = payload;
-          this.setCachedTick(tick);
+          if (!this.setCachedTick(tick)) return;
           this.globalCallbacks.forEach(cb => cb(tick));
         } catch (_) {}
       });
@@ -127,7 +127,7 @@ export class MarketDataEngine {
   }
 
   public async initialize(): Promise<void> {
-    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGELONE').toUpperCase();
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'DHAN').toUpperCase();
     if (configured.includes('ANGEL')) {
       this.configuredProviderName = 'ANGEL_ONE';
       this.activeProvider = this.angelOneProvider;
@@ -206,7 +206,7 @@ export class MarketDataEngine {
    * Redis pipeline writes to 250ms per token to prevent TCP socket buffer saturation and memory leaks.
    */
   public broadcastTick(tick: MarketTick): void {
-    this.setCachedTick(tick);
+    if (!this.setCachedTick(tick)) return;
     this.globalCallbacks.forEach(cb => cb(tick));
 
     const now = Date.now();
@@ -376,11 +376,11 @@ export class MarketDataEngine {
     if (keys.DHAN_API_SECRET) process.env.DHAN_API_SECRET = keys.DHAN_API_SECRET;
   }
 
-  public setCachedTick(tick: MarketTick): void {
-    if (!tick || !tick.instrumentToken) return;
+  public setCachedTick(tick: MarketTick): boolean {
+    if (!tick || !tick.instrumentToken || !Number.isFinite(tick.timestamp) || !Number.isFinite(tick.ltp) || tick.ltp <= 0) return false;
     const existing = this.tickCache.get(tick.instrumentToken);
     if (existing && existing.timestamp && tick.timestamp && tick.timestamp < existing.timestamp) {
-      return; // Reject out-of-order stale tick
+      return false; // Reject out-of-order stale tick
     }
     this.tickCache.set(tick.instrumentToken, tick);
     try {
@@ -390,6 +390,7 @@ export class MarketDataEngine {
         this.tickCache.set(alias, tick);
       }
     } catch (_) {}
+    return true;
   }
 
   public getCachedTick(instrumentToken: string): MarketTick | undefined {

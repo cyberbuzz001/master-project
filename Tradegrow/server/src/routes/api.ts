@@ -213,7 +213,10 @@ router.get('/auth/fyers/login', (req: Request, res: Response) => {
 router.get('/auth/fyers/callback', async (req: Request, res: Response) => {
   const authCode = String(req.query.auth_code || req.query.code || '');
   const appId = String(process.env.FYERS_APP_ID || 'P3U524USN6-100');
-  const appSecret = String(process.env.FYERS_SECRET_KEY || 'SJULLJNM11');
+  const appSecret = String(process.env.FYERS_SECRET_KEY || '').trim();
+  if (!appSecret) {
+    return res.status(503).json({ success: false, error: { code: 'NOT_CONFIGURED', message: 'Market data authentication is not configured.' } });
+  }
 
   if (!authCode) {
     const loginUrl = '/api/v1/auth/fyers/login';

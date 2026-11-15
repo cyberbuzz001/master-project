@@ -518,7 +518,7 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
 
   const walletCash = parseFloat(data.wallet?.cash_balance || 0);
   const walletUsed = parseFloat(data.wallet?.used_margin || 0);
-  const walletAvail = Math.max(0, walletCash - walletUsed);
+  const walletAvail = walletCash - walletUsed;
 
   const ledgerColumns: DataTableColumn<any>[] = [
     { key: 'txnId', header: 'Txn ID', mobileHidden: true, render: (l: any) => <span className="font-mono text-[10px] text-[var(--text-tertiary)]">{l.transaction_id?.slice(0, 8)}</span> },

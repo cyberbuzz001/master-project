@@ -476,7 +476,7 @@ export const OrderMonitor: React.FC<OrderMonitorProps> = ({ token, onOpenCustome
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[var(--text-main)]">Simulated Fill Provenance Evidence</h3>
+                  <h3 className="text-sm font-bold text-[var(--text-main)]">Execution Audit Evidence</h3>
                   <p className="text-[10px] text-[var(--text-muted)]">Cryptographic audit trail of market price at fill time</p>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export const OrderMonitor: React.FC<OrderMonitorProps> = ({ token, onOpenCustome
               </div>
 
               <div className="bg-[var(--bg-body)] p-3 rounded-xl border border-[var(--border-color)] space-y-1.5">
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Simulated Fill Price:</span><span className="text-[var(--primary)] font-bold">₹{parseFloat(selectedFill.price).toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Recorded Fill Price:</span><span className="text-[var(--primary)] font-bold">₹{parseFloat(selectedFill.price).toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-[var(--text-muted)]">Live Market LTP:</span><span className="text-[var(--text-main)]">₹{parseFloat(selectedFill.tick_ltp || selectedFill.price).toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-[var(--text-muted)]">Bid / Ask Spread:</span><span className="text-[var(--text-muted)]">₹{parseFloat(selectedFill.tick_bid || selectedFill.price).toFixed(2)} / ₹{parseFloat(selectedFill.tick_ask || selectedFill.price).toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-[var(--text-muted)]">Freshness Tag:</span><span className="text-[var(--warning)] font-bold uppercase">{selectedFill.freshness_tag || 'live'}</span></div>

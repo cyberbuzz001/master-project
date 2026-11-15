@@ -175,7 +175,7 @@ async function startServer() {
             method: 'POST',
             headers: {
               'access-token': process.env.DHAN_ACCESS_TOKEN,
-              'client-id': process.env.DHAN_CLIENT_ID || '1113019677',
+              'client-id': process.env.DHAN_CLIENT_ID || '',
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ IDX_I: [13] }),
