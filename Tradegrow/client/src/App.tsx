@@ -278,7 +278,7 @@ function AuthenticatedApp({
   if (isMobileScreen) {
     return (
       <MarketSocketProvider userToken={token}>
-        <div className="min-h-screen bg-[var(--bg-body)] text-[var(--text-main)] font-sans flex flex-col w-full max-w-full overflow-x-hidden">
+        <div style={location.pathname === '/terminal' ? { background: '#0a0e17' } : undefined} className="min-h-screen bg-[var(--bg-body)] text-[var(--text-main)] font-sans flex flex-col w-full max-w-full overflow-x-clip">
           <AppShell
             user={user}
             token={token || ''}
@@ -292,7 +292,7 @@ function AuthenticatedApp({
             onToggleTerminal={() => (location.pathname === '/terminal' ? navigate(-1) : navigate('/terminal'))}
           />
 
-          <div className="tg-mobile-content flex-1 w-full max-w-full">
+          <div className={`${location.pathname === '/terminal' ? '' : 'tg-mobile-content'} flex-1 w-full max-w-full`}>
             <Suspense fallback={routeSuspenseFallback}>
               <Routes>
                 <Route path="/" element={
@@ -310,7 +310,7 @@ function AuthenticatedApp({
                 } />
 
                 <Route path="/terminal" element={
-                  <div className="w-full pb-16">
+                  <div className="w-full">
                     <TerminalRoute token={token} wallet={wallet} onRefreshWallet={fetchWallet} theme={theme} onToggleTheme={toggleTheme} />
                   </div>
                 } />
@@ -627,6 +627,7 @@ function TerminalRoute(props: {
 
   return (
     <GrowwTerminalView
+      key={`${initialToken || initialSymbol}:${initialExchange || 'NSE'}`}
       token={props.token}
       wallet={props.wallet}
       onRefreshWallet={props.onRefreshWallet}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, ColorType, LineStyle } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, IPriceLine, ColorType, LineStyle } from 'lightweight-charts';
 import { ChartType, Timeframe, CandleData, IndicatorConfig, OrderMarker, PositionMarker } from './TradingChart.types';
 import { normalizeAndSortCandles, aggregateTickToCandle } from './TradingChart.utils';
 import { IndicatorEngine } from './IndicatorEngine';
@@ -20,6 +20,7 @@ interface TradingChartProps {
   theme?: 'dark' | 'light';
   onBuyClick?: (symbol: string, price: number) => void;
   onSellClick?: (symbol: string, price: number) => void;
+  showInstrumentHeader?: boolean;
 }
 
 export const TradingChart: React.FC<TradingChartProps> = ({
@@ -32,11 +33,13 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   theme = 'dark',
   onBuyClick,
   onSellClick,
+  showInstrumentHeader = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ISeriesApi<any> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const priceLevels = useRef<IPriceLine[]>([]);
 
   const activeIndicatorSeriesMap = useRef<Map<string, ISeriesApi<any>[]>>(new Map());
 
@@ -46,6 +49,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const [showTradeMarkers, setShowTradeMarkers] = useState<boolean>(true);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [historyError, setHistoryError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [rawCandles, setRawCandles] = useState<CandleData[]>([]);
   const currentCandleRef = useRef<CandleData | null>(null);
@@ -96,7 +101,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({
         borderColor: isDark ? '#1e293b' : '#cbd5e1',
         timeVisible: true,
         secondsVisible: false,
+        tickMarkFormatter: (time: any, type: number) => typeof time === 'number' ? new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', ...(type >= 3 ? { hour: '2-digit', minute: '2-digit', hour12: false } : { day: '2-digit', month: 'short' }) }).format(new Date(time * 1000)) : String(time),
       },
+      localization: { timeFormatter: (time: any) => typeof time === 'number' ? new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(time * 1000)) : String(time) },
       handleScroll: {
         vertTouchDrag: false,
         horzTouchDrag: true,
@@ -150,12 +157,13 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       mainSeriesRef.current = null;
       volumeSeriesRef.current = null;
       activeIndicatorSeriesMap.current.clear();
+      priceLevels.current = [];
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
       }
     };
-  }, [theme, isFullScreen]);
+  }, [theme]);
 
   // Helper to switch main series
   const createMainSeries = (chart: IChartApi, type: ChartType) => {
@@ -205,39 +213,32 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   // candles after the fact.
   const fetchHistoricalData = (isCancelled: () => boolean) => {
     setLoading(true);
+    setHistoryError(false);
+    setRawCandles([]);
+    currentCandleRef.current = null;
+    mainSeriesRef.current?.setData([]);
+    volumeSeriesRef.current?.setData([]);
     firstTickApplied.current = false;
-    fetch(`/api/v1/market/candles?token=${token}&timeframe=${timeframe}&count=120`)
-      .then(res => res.json())
+    fetch(`/api/v1/market/candles?token=${encodeURIComponent(token)}&timeframe=${timeframe}&count=240`)
+      .then(res => { if (!res.ok) throw new Error('History unavailable'); return res.json(); })
       .then(data => {
         if (isCancelled()) return;
         if (data.success && Array.isArray(data.candles)) {
           let sorted = normalizeAndSortCandles(data.candles);
 
-          // Use the server-snapshotted LTP to anchor the active candle.
-          const anchorLtp: number | null = data.currentLtp ?? null;
-          const nowSec = Math.floor(Date.now() / 1000);
-          const intervalSec = timeframe === '1D' ? 86400 : timeframe === '1h' ? 3600 : timeframe === '15m' ? 900 : timeframe === '5m' ? 300 : 60;
-          if (anchorLtp && anchorLtp > 0 && sorted.length > 0) {
-            const last = sorted[sorted.length - 1];
-            if (nowSec - Number(last.time) <= intervalSec * 2) {
-              sorted[sorted.length - 1] = {
-                ...last,
-                close: anchorLtp,
-                high: Math.max(last.high, anchorLtp),
-                low: Math.min(last.low, anchorLtp),
-              };
-            }
-          }
 
           setRawCandles(sorted);
           if (sorted.length > 0) {
             currentCandleRef.current = sorted[sorted.length - 1];
           }
           updateChartData(sorted);
+          chartRef.current?.timeScale().fitContent();
+        } else {
+          setHistoryError(true);
         }
         setLoading(false);
       })
-      .catch(() => { if (!isCancelled()) setLoading(false); });
+      .catch(() => { if (!isCancelled()) { setLoading(false); setHistoryError(true); } });
   };
 
   const firstTickApplied = useRef(false);
@@ -246,11 +247,11 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     let cancelled = false;
     fetchHistoricalData(() => cancelled);
     return () => { cancelled = true; };
-  }, [token, timeframe]);
+  }, [token, timeframe, reloadKey, theme]);
 
   // Update chart data & indicators
   const updateChartData = (candles: CandleData[]) => {
-    if (!mainSeriesRef.current || candles.length === 0) return;
+    if (!mainSeriesRef.current) return;
 
     if (chartType === 'Candlestick' || chartType === 'Bar') {
       mainSeriesRef.current.setData(candles as any);
@@ -262,7 +263,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     if (volumeSeriesRef.current && showVolume) {
       const volumeData = candles.map(c => ({
         time: c.time,
-        value: c.volume || 100,
+        value: c.volume || 0,
         color: c.close >= c.open ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
       }));
       volumeSeriesRef.current.setData(volumeData as any);
@@ -359,33 +360,19 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   useEffect(() => {
     renderMarkers();
   }, [showTradeMarkers, orderMarkers, positionMarkers]);
+  useEffect(() => { renderIndicators(rawCandles); }, [indicators]);
+  useEffect(() => { volumeSeriesRef.current?.applyOptions({ visible: showVolume }); }, [showVolume]);
 
   // Imperative Real-Time Tick Update via WebSocket (Bypasses React Re-renders per Tick)
   useEffect(() => {
-    if (!activeTick || !mainSeriesRef.current) return;
+    if (loading || !activeTick || !mainSeriesRef.current || !Number.isFinite(activeTick.ltp) || activeTick.ltp <= 0 || !Number.isFinite(activeTick.timestamp)) return;
 
     const intervalSec = timeframeSecondsMap[timeframe] || 300;
     const tickTimeSec = Math.floor((activeTick.timestamp || Date.now()) / 1000);
 
     let baseCandle = currentCandleRef.current ?? (rawCandles.length > 0 ? rawCandles[rawCandles.length - 1] : null);
+    if (baseCandle && tickTimeSec < baseCandle.time) return;
 
-    // On FIRST tick after historical load, anchor the current candle without price jumps
-    if (!firstTickApplied.current && baseCandle && rawCandles.length > 0) {
-      firstTickApplied.current = true;
-      const patchedLast: CandleData = {
-        ...baseCandle,
-        close: activeTick.ltp,
-        high: Math.max(baseCandle.high, activeTick.ltp),
-        low: Math.min(baseCandle.low, activeTick.ltp),
-      };
-      if (chartType === 'Candlestick' || chartType === 'Bar') {
-        mainSeriesRef.current.update(patchedLast as any);
-      } else {
-        mainSeriesRef.current.update({ time: patchedLast.time, value: patchedLast.close } as any);
-      }
-      currentCandleRef.current = patchedLast;
-      return;
-    }
 
     const { candle } = aggregateTickToCandle(baseCandle, activeTick.ltp, tickTimeSec, intervalSec);
     currentCandleRef.current = candle;
@@ -399,19 +386,19 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     if (volumeSeriesRef.current && showVolume) {
       volumeSeriesRef.current.update({
         time: candle.time,
-        value: candle.volume || 100,
+        value: candle.volume || 0,
         color: candle.close >= candle.open ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
       } as any);
     }
-  }, [activeTick]);
+  }, [activeTick, timeframe, loading]);
 
   return (
-    <div className={`flex flex-col bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 h-full shadow-sm ${isFullScreen ? 'fixed inset-0 z-50 rounded-none p-6' : ''}`}>
+    <div className={`flex min-h-0 flex-col bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-2 sm:p-4 h-full shadow-sm ${isFullScreen ? 'fixed inset-0 z-[1100] rounded-none p-3' : ''}`}>
       {/* 1. CHART HEADER CONTROL TOOLBAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-2 border-b border-[var(--border-light)] overflow-hidden">
+      <div className="flex flex-col gap-1 pb-2 mb-1 border-b border-[var(--border-light)] overflow-hidden">
         {/* Symbol, Source Badge & Price Summary */}
-        <div className="flex items-center justify-between sm:justify-start gap-3">
-          <div className="flex items-center gap-2">
+        {showInstrumentHeader && <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="font-extrabold text-base sm:text-lg text-[var(--text-main)]">{symbol}</span>
             <span className="text-[10px] sm:text-xs bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border border-[var(--border-color)] px-1.5 py-0.5 rounded font-mono font-bold">{exchange}</span>
             <PriceBadge
@@ -430,10 +417,22 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               </span>
             </div>
           )}
-        </div>
+        </div>}
 
+        <div aria-label="Chart timeframe" className="flex gap-1 overflow-x-auto scrollbar-none shrink-0">{(['1m', '3m', '5m', '15m', '30m', '1h', '1D'] as Timeframe[]).map(tf => <button type="button" key={tf} onClick={() => setTimeframe(tf)} aria-pressed={timeframe === tf} className={`min-h-11 min-w-11 shrink-0 rounded-lg px-2 text-xs font-semibold ${timeframe === tf ? 'bg-emerald-500/15 text-emerald-400' : 'text-[var(--text-muted)]'}`}>{tf}</button>)}</div>
         {/* Chart Controls & Indicator Selector (Scrollable Strip on Mobile) */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 max-w-full">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 max-w-full [&_button]:min-h-11 [&_button]:shrink-0">
+          <button type="button" onClick={() => chartRef.current?.timeScale().scrollToRealTime()} aria-label="Go to latest candle" className="px-3 text-xs font-semibold text-emerald-400">Latest</button>
+          <button type="button" onClick={() => chartRef.current?.timeScale().fitContent()} aria-label="Fit chart to data" className="px-3 text-xs font-semibold">Fit</button>
+          <button type="button" onClick={() => setReloadKey(key => key + 1)} aria-label="Reload chart history" className="px-3 text-xs"><RefreshCw size={16} /></button>
+          <button type="button" aria-pressed={showVolume} onClick={() => setShowVolume(value => !value)} className="px-3 text-xs">Volume</button>
+          <button type="button" onClick={() => {
+            const input = window.prompt('Horizontal price level (₹)', activeTick?.ltp ? String(activeTick.ltp) : '');
+            if (input === null) return;
+            const price = Number(input);
+            if (Number.isFinite(price) && price > 0 && mainSeriesRef.current) priceLevels.current.push(mainSeriesRef.current.createPriceLine({ price, color: '#f59e0b', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: 'Level' }));
+          }} className="px-3 text-xs whitespace-nowrap">Add level</button>
+          <button type="button" onClick={() => { priceLevels.current.forEach(line => { try { mainSeriesRef.current?.removePriceLine(line); } catch {} }); priceLevels.current = []; }} className="px-3 text-xs whitespace-nowrap">Clear levels</button>
           {/* Indicator Toolbar */}
           <IndicatorToolbar
             indicators={indicators}
@@ -468,36 +467,6 @@ export const TradingChart: React.FC<TradingChartProps> = ({
             ))}
           </div>
 
-          {/* Timeframe Selector */}
-          <div className="flex bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] p-1 rounded-xl gap-0.5 text-xs font-bold shrink-0">
-            {(['1m', '5m', '15m', '1h', '1D'] as Timeframe[]).map(tf => (
-              <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all whitespace-nowrap ${timeframe === tf ? 'bg-[#00439D] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'}`}
-              >
-                {tf}
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Buy/Sell Triggers */}
-          {onBuyClick && (
-            <button
-              onClick={() => onBuyClick(symbol, activeTick?.ltp || 100)}
-              className="bg-[#0BA860] hover:bg-emerald-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all shrink-0 active:scale-95"
-            >
-              BUY
-            </button>
-          )}
-          {onSellClick && (
-            <button
-              onClick={() => onSellClick(symbol, activeTick?.ltp || 100)}
-              className="bg-[#E5484D] hover:bg-rose-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all shrink-0 active:scale-95"
-            >
-              SELL
-            </button>
-          )}
 
           {/* Fullscreen Toggle */}
           <button
@@ -511,7 +480,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       </div>
 
       {/* 2. CHART CANVAS CONTAINER */}
-      <div className="relative flex-1 min-h-[380px]" ref={containerRef}>
+      <div className="relative flex-1 min-h-[240px] sm:min-h-[380px]" ref={containerRef}>
+        {!loading && (historyError || rawCandles.length === 0) && <div role="status" className="pointer-events-none absolute inset-x-0 top-12 z-10 px-4 text-center text-xs text-[var(--text-muted)]">{historyError ? 'Chart history unavailable. Use Reload to retry.' : 'No historical candles available for this instrument.'}</div>}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-surface)]/80 z-10 text-[var(--text-muted)] text-sm font-semibold">
             <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Loading Chart data...
@@ -519,6 +489,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
         )}
       </div>
 
+      {(onBuyClick || onSellClick) && <div className="grid grid-cols-2 gap-2 py-2 shrink-0">{onBuyClick && <button type="button" disabled={!activeTick || activeTick.ltp <= 0} onClick={() => { if (activeTick && activeTick.ltp > 0) onBuyClick(symbol, activeTick.ltp); }} className="min-h-11 rounded-xl bg-emerald-500 text-xs font-bold text-white disabled:opacity-40">BUY</button>}{onSellClick && <button type="button" disabled={!activeTick || activeTick.ltp <= 0} onClick={() => { if (activeTick && activeTick.ltp > 0) onSellClick(symbol, activeTick.ltp); }} className="min-h-11 rounded-xl bg-rose-500 text-xs font-bold text-white disabled:opacity-40">SELL</button>}</div>}
       {/* 3. TRADINGVIEW ATTRIBUTION NOTICE */}
       <div className="flex items-center justify-between text-[10px] text-[var(--text-tertiary)] pt-2 border-t border-[var(--border-light)] font-semibold">
         <span>Powered by <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">TradingView Lightweight Charts™</a></span>

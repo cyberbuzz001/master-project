@@ -436,7 +436,7 @@ export function AppShell({
         </div>
       )}
 
-      {!isStaff && <ChatWidget token={token} onOpenChange={setChatOpen} />}
+      {!isStaff && location.pathname !== '/terminal' && <ChatWidget token={token} onOpenChange={setChatOpen} />}
     </>
   );
 }

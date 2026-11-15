@@ -37,7 +37,7 @@ export function MobileHeader({ name, token, connected, indices, onSearch, onInde
       </div>
     </div>
     <div className="tg-category-scroll" aria-label="Trading sections">
-      <div className="relative grid min-w-[360px] grid-cols-5">
+      <div className="relative grid grid-cols-5">
         {active >= 0 && <span className="tg-category-indicator" aria-hidden="true" style={{ transform: `translate3d(${active * 100}%,0,0)` }} />}
         {categories.map((label, i) => <button key={label} type="button" aria-pressed={active === i} onClick={() => {
           if (i === 2) { setExpanded(value => !value); return; }

@@ -1,0 +1,62 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium' });
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const errors = [];
+    const histories = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.route('**/api/**', async route => {
+      const url = route.request().url();
+      if (url.includes('/candles?')) histories.push(url);
+      const time = Math.floor(Date.now() / 60000) * 60 - 180;
+      await route.fulfill({ json: { success: true, messages: [], candles: [0, 60, 120].map(offset => ({ time: time + offset, open: 100, high: 110, low: 95, close: 105, volume: 50 })) } });
+    });
+    await page.route('**/chart-fixture', route => route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><div id="root"></div>' }));
+    await page.goto('http://127.0.0.1:3000/chart-fixture');
+    await page.addScriptTag({ type: 'module', content: `import RefreshRuntime from '/@react-refresh'; RefreshRuntime.injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;` });
+    await page.waitForFunction(() => window.__vite_plugin_react_preamble_installed__);
+    const transformed = await (await page.request.get('http://127.0.0.1:3000/src/components/charts/TradingChart/TradingChart.tsx')).text();
+    const socketModule = transformed.match(/"(\/src\/hooks\/useMarketSocket\.ts[^\"]*)"/)[1];
+    await page.addScriptTag({ type: 'module', content: `
+      import React from '/node_modules/.vite/deps/react.js';
+      import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js';
+      import {MarketSocketProvider} from '${socketModule}';
+      import {OptionStrikeChartModal} from '/src/components/OptionStrikeChartModal.tsx';
+      import {TradingChart} from '/src/components/charts/TradingChart/TradingChart.tsx';
+      import {ChatWidget} from '/src/components/ChatWidget.tsx';
+      import '/src/index.css';
+      window.showFixture = (options) => root.render(React.createElement(MarketSocketProvider, {userToken:'fixture'}, options ? React.createElement(OptionStrikeChartModal, {isOpen:true,onClose:()=>window.showFixture(false),contract:{symbol:'NIFTY 24000 CE',underlying:'NIFTY',strike:24000,optionType:'CE',expiry:'2026-11-19',exchange:'NFO',instrumentToken:'NFO_NIFTY_24000_CE',lotSize:65},onOpenOrderModal:()=>{throw new Error('Trade without quote')}}) : React.createElement('div',{style:{height:'100dvh'}},React.createElement(TradingChart,{exchange:'NSE',symbol:'RELIANCE',token:'NSE_RELIANCE'}),React.createElement(ChatWidget,{token:'fixture'}))));
+      const root=ReactDOM.createRoot(document.getElementById('root')); window.showFixture(false);
+    ` });
+    await page.getByRole('button', { name: 'Fit chart to data' }).waitFor().catch(error => { throw new Error(error.message + '\nBrowser errors: ' + JSON.stringify(errors)); });
+    await page.getByRole('button', { name: '5m', exact: true }).click();
+    await page.getByRole('button', { name: 'Toggle Fullscreen Chart' }).click();
+    await page.getByRole('button', { name: 'Toggle Fullscreen Chart' }).click();
+    await page.waitForFunction(() => document.querySelector('button[aria-pressed="true"]') !== null);
+    await page.getByRole('button', { name: /Indicators/ }).click();
+    const indicators = page.getByRole('dialog', { name: 'Technical indicators' });
+    await indicators.waitFor();
+    const box = await indicators.boundingBox();
+    assert.ok(box.width <= 390);
+    await page.getByRole('button', { name: 'Close indicators' }).click();
+    await page.getByRole('button', { name: 'Open support chat' }).click();
+    const draft = page.getByRole('textbox', { name: 'Support message' });
+    await draft.fill('Please help with my chart');
+    await draft.press('Enter');
+    assert.equal(await draft.inputValue(), 'Please help with my chart');
+    assert.equal(await page.getByRole('button', { name: 'Send message', exact: true }).isDisabled(), true);
+    await page.getByRole('button', { name: 'Close chat', exact: true }).click();
+    await page.evaluate(() => window.showFixture(true));
+    await page.getByRole('dialog', { name: /Option chart:/ }).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'BUY', exact: true }).isDisabled(), true);
+    await page.getByRole('button', { name: '15m', exact: true }).click();
+    await page.waitForTimeout(300);
+    assert.ok(histories.some(url => url.includes('NFO_NIFTY_24000_CE') && url.includes('timeframe=15m')));
+    await page.getByRole('button', { name: 'Close option chart' }).click();
+    await page.getByRole('button', { name: 'Fit chart to data' }).waitFor();
+    assert.deepEqual(errors, []);
+    console.log('PASS: stock/option chart lifecycle, exact contract history, timeframe controls, indicator dialog, offline chat draft, no fallback trades');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

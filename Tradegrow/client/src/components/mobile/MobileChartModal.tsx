@@ -28,9 +28,8 @@ export const MobileChartModal: React.FC<MobileChartModalProps> = ({
   onOpenOptionChain,
   onOpenOrderModal,
 }) => {
-  if (!isOpen) return null;
-
   const freshness = useTickFreshness(token);
+  if (!isOpen) return null;
   const activeTick = latestTick || freshness.tick;
 
   const isIndex = symbol.includes('NIFTY') || symbol.includes('SENSEX');
@@ -43,7 +42,7 @@ export const MobileChartModal: React.FC<MobileChartModalProps> = ({
     : 'NIFTY';
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-[var(--bg-body)] flex flex-col h-full w-full overflow-hidden animate-in fade-in duration-200 text-[var(--text-main)]">
+    <div role="dialog" aria-modal="true" aria-label={`${symbol} chart`} className="fixed inset-0 z-[1000] bg-[var(--bg-body)] flex flex-col h-[100dvh] w-full overflow-hidden animate-in fade-in duration-200 text-[var(--text-main)]">
       
       {/* 1. MOBILE CHART HEADER */}
       <div className="h-14 bg-[var(--bg-surface)] border-b border-[var(--border-color)] px-4 flex items-center justify-between shrink-0 shadow-xs">
@@ -82,6 +81,7 @@ export const MobileChartModal: React.FC<MobileChartModalProps> = ({
           {/* Close Button */}
           <button
             onClick={onClose}
+            aria-label="Close stock chart"
             className="p-2 rounded-xl bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
           >
             <X size={18} />
@@ -97,22 +97,22 @@ export const MobileChartModal: React.FC<MobileChartModalProps> = ({
           token={token}
           latestTick={activeTick}
           theme={theme}
-          onBuyClick={(sym, p) => onOpenOrderModal?.('BUY', p)}
-          onSellClick={(sym, p) => onOpenOrderModal?.('SELL', p)}
         />
       </div>
 
       {/* 3. FOOTER BUY / SELL ACTION BUTTONS */}
       <div className="p-3 bg-[var(--bg-surface)] border-t border-[var(--border-color)] grid grid-cols-2 gap-3 shrink-0 pb-[env(safe-area-inset-bottom,12px)]">
         <button
-          onClick={() => onOpenOrderModal?.('BUY', activeTick?.ltp || 100)}
+          disabled={!activeTick || activeTick.ltp <= 0 || !onOpenOrderModal}
+          onClick={() => { if (activeTick && activeTick.ltp > 0) onOpenOrderModal?.('BUY', activeTick.ltp); }}
           className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
         >
           <ShoppingCart size={14} /> BUY {symbol}
         </button>
 
         <button
-          onClick={() => onOpenOrderModal?.('SELL', activeTick?.ltp || 100)}
+          disabled={!activeTick || activeTick.ltp <= 0 || !onOpenOrderModal}
+          onClick={() => { if (activeTick && activeTick.ltp > 0) onOpenOrderModal?.('SELL', activeTick.ltp); }}
           className="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
         >
           <ShoppingCart size={14} /> SELL {symbol}

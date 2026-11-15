@@ -12,6 +12,7 @@ import { MobileChartModal } from './mobile/MobileChartModal';
 import { FoHubView } from './FoHubView';
 import { Card, CardTitle, Badge, Tabs, DataTable, DataTableColumn, LivePriceCell, Skeleton } from './ui';
 import { pnlColorClass, formatPnl, formatPnlPct } from '../utils/pnl';
+import { useTickFreshness } from '../hooks/useTickFreshness';
 
 type Category = 'STOCKS' | 'FO';
 
@@ -76,6 +77,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { ticks: socketTicks } = useMarketSocket();
+  const marketFreshness = useTickFreshness('NSE_NIFTY50');
   const ticks = socketTicks.size > 0 ? socketTicks : (propsTicks ?? new Map<string, MarketTick>());
   const [searchParams, setSearchParams] = useSearchParams();
   const category = (searchParams.get('category')?.toUpperCase() as Category) || 'STOCKS';
@@ -183,36 +185,8 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
       .catch(() => {});
   }, [token]);
 
-  const defaultMostTradedOptions: TradedContractRow[] = [
-    { symbol: 'NIFTY 24600 CE', displaySymbol: 'NIFTY 24600 CALL', underlying: 'NIFTY', strike: 24600, optionType: 'CE', token: 'NSE_NIFTY50', price: 142.50, change: 18.20, changePercent: 14.64, volume: '85.2L', isAtm: true, logo: 'CE' },
-    { symbol: 'NIFTY 24600 PE', displaySymbol: 'NIFTY 24600 PUT', underlying: 'NIFTY', strike: 24600, optionType: 'PE', token: 'NSE_NIFTY50', price: 98.40, change: -24.10, changePercent: -19.67, volume: '78.9L', isAtm: true, logo: 'PE' },
-    { symbol: 'BANKNIFTY 52100 CE', displaySymbol: 'BANKNIFTY 52100 CALL', underlying: 'BANKNIFTY', strike: 52100, optionType: 'CE', token: 'NSE_BANKNIFTY', price: 345.80, change: 52.40, changePercent: 17.86, volume: '49.2L', isAtm: true, logo: 'CE' },
-    { symbol: 'BANKNIFTY 52100 PE', displaySymbol: 'BANKNIFTY 52100 PUT', underlying: 'BANKNIFTY', strike: 52100, optionType: 'PE', token: 'NSE_BANKNIFTY', price: 215.20, change: -48.30, changePercent: -18.33, volume: '43.1L', isAtm: true, logo: 'PE' },
-  ];
-
-  const defaultMostTradedStocks: TradedContractRow[] = [
-    { symbol: 'NSE_RELIANCE', name: 'Reliance Industries', price: 3014.20, change: 68.40, changePercent: 2.32, logo: 'RE' },
-    { symbol: 'NSE_TCS', name: 'Tata Consultancy', price: 4210.50, change: 92.10, changePercent: 2.24, logo: 'TC' },
-    { symbol: 'NSE_INFY', name: 'Infosys Limited', price: 1890.30, change: -12.40, changePercent: -0.65, logo: 'IN' },
-    { symbol: 'NSE_HDFCBANK', name: 'HDFC Bank', price: 1642.80, change: 14.30, changePercent: 0.88, logo: 'HD' },
-  ];
-
-  const activeTradedList: TradedContractRow[] = tradedTab === 'OPTIONS'
-    ? (serverTraded.options.length > 0 ? serverTraded.options.slice(0, 4) : defaultMostTradedOptions)
-    : (serverTraded.stocks.length > 0 ? serverTraded.stocks.slice(0, 4) : defaultMostTradedStocks);
-
-  const defaultMovers: MoverRow[] = [
-    { symbol: 'NSE_HAL', name: 'Hindustan Aeronaut.', price: 4886.70, change: 241.70, changePercent: 5.20, volume: 2818585, logo: 'HA' },
-    { symbol: 'NSE_RELIANCE', name: 'Reliance Industries', price: 3014.20, change: 68.40, changePercent: 2.32, volume: 4521102, logo: 'RE' },
-    { symbol: 'NSE_TCS', name: 'Tata Consultancy', price: 4210.50, change: 92.10, changePercent: 2.24, volume: 1840920, logo: 'TC' },
-    { symbol: 'NSE_INFY', name: 'Infosys Limited', price: 1890.30, change: -12.40, changePercent: -0.65, volume: 3210400, logo: 'IN' },
-  ];
-
-  const activeMoversList: MoverRow[] = moverTab === 'GAINERS'
-    ? (serverMovers.gainers.length > 0 ? serverMovers.gainers : defaultMovers)
-    : moverTab === 'LOSERS'
-    ? (serverMovers.losers.length > 0 ? serverMovers.losers : defaultMovers)
-    : (serverMovers.volumeShockers.length > 0 ? serverMovers.volumeShockers : defaultMovers);
+  const activeTradedList: TradedContractRow[] = (tradedTab === 'OPTIONS' ? serverTraded.options : serverTraded.stocks).slice(0, 4);
+  const activeMoversList: MoverRow[] = moverTab === 'GAINERS' ? serverMovers.gainers : moverTab === 'LOSERS' ? serverMovers.losers : serverMovers.volumeShockers;
 
   const activePositions = positions.filter((p) => p.netQty !== 0);
   const openPositionsCount = activePositions.length;
@@ -329,7 +303,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
   ];
 
   return (
-    <div className="space-y-3.5 sm:space-y-6 pb-28 md:pb-12 font-body text-[var(--text-main)]">
+    <div className="space-y-3.5 sm:space-y-6 md:pb-12 font-body text-[var(--text-main)]">
       {/* CATEGORY FILTER — belongs on this page per the IA, not the shell.
           Always rendered regardless of category, so switching back from
           Commodities is always possible (a real dead-end bug in an early
@@ -401,10 +375,10 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
               <span className="text-[10px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Today's P&amp;L</span>
             </div>
             <Badge variant={todaysPnl >= 0 ? 'gain' : 'loss'} dot className="text-[9px] sm:text-[10px] py-0.2 sm:py-0.5 px-1.5 sm:px-2">
-              LIVE
+              P&amp;L
             </Badge>
           </div>
-          <div className="mt-0.5 flex flex-row md:flex-col items-baseline md:items-start justify-between gap-1">
+          <div className="mt-0.5 flex flex-row flex-wrap md:flex-col items-baseline md:items-start justify-between gap-1">
             <div className={`text-lg sm:text-2xl md:text-3xl font-black font-mono tabular-nums ${pnlColorClass(todaysPnl)}`}>
               <LivePriceCell
                 value={todaysPnl}
@@ -490,8 +464,8 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Market Indices</span>
-          <span className="flex items-center gap-1 text-[10px] font-mono text-[var(--gain)] font-bold">
-            <span className="live-dot w-1.5 h-1.5 rounded-full bg-[var(--gain)] inline-block" /> REAL-TIME
+          <span role="status" className={`flex items-center gap-1 text-[10px] font-mono font-bold ${marketFreshness.state === 'LIVE' ? 'text-[var(--gain)]' : 'text-[var(--text-muted)]'}`}>
+            {marketFreshness.state === 'LIVE' ? '● LIVE' : marketFreshness.state === 'MARKET_CLOSED' ? 'MARKET CLOSED' : 'AWAITING LIVE DATA'}
           </span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -635,6 +609,7 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              {activeTradedList.length === 0 && <p role="status" className="col-span-full py-4 text-center text-xs text-[var(--text-muted)]">Market activity is unavailable. Open the option chain to browse contracts.</p>}
               {activeTradedList.map((item) => {
                 const liveTick = ticks?.get(item.token || item.symbol);
                 const price = liveTick && liveTick.ltp > 0 ? liveTick.ltp : item.price;
@@ -701,12 +676,19 @@ export const GrowwExploreView: React.FC<GrowwExploreViewProps> = ({
                 ]}
               />
             </div>
-            <DataTable
+            <div className="md:hidden divide-y divide-[var(--border-color)]">
+              {activeMoversList.length === 0 && <p role="status" className="py-4 text-center text-xs text-[var(--text-muted)]">No market movers available.</p>}
+              {activeMoversList.map(m => <button key={m.symbol} type="button" onClick={() => handleSelectRow(m.name, m.price)} className="flex min-h-[60px] w-full items-center justify-between gap-3 py-2 text-left">
+                <span className="min-w-0"><span className="block truncate text-xs font-semibold">{m.name}</span><span className="text-[10px] text-[var(--text-muted)] tabular-nums">Vol {m.volume?.toLocaleString('en-IN') ?? '—'}</span></span>
+                <span className="shrink-0 text-right tabular-nums"><span className="block text-xs font-bold">₹{m.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`text-[10px] ${(m.changePercent ?? 0) >= 0 ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}>{(m.changePercent ?? 0) >= 0 ? '+' : ''}{(m.changePercent ?? 0).toFixed(2)}%</span></span>
+              </button>)}
+            </div>
+            <div className="hidden md:block"><DataTable
               columns={moverColumns}
               rows={activeMoversList}
               rowKey={(m) => m.symbol}
               onRowClick={(m) => handleSelectRow(m.name, m.price)}
-            />
+            /></div>
           </Card>
         </div>
 

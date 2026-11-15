@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { IndicatorConfig } from './TradingChart.types';
 import { Sliders, Search, Check, Plus, Trash2, X } from 'lucide-react';
 
@@ -51,11 +52,12 @@ export const IndicatorToolbar: React.FC<IndicatorToolbarProps> = ({
         <Sliders className="w-3.5 h-3.5 text-emerald-400" /> Indicators ({indicators.filter(i => i.enabled).length})
       </button>
 
-      {isOpen && (
-        <div className="absolute left-0 top-10 z-50 w-72 sm:w-80 max-w-[calc(100vw-32px)] bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl p-3.5 sm:p-4 flex flex-col gap-3">
+      {isOpen && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="Technical indicators" className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4" onClick={() => setIsOpen(false)}>
+        <div className="w-full max-w-sm max-h-[80dvh] overflow-y-auto bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl p-4 flex flex-col gap-3" onClick={event => event.stopPropagation()}>
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <span className="font-bold text-sm text-white">Technical Indicators</span>
-            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white">
+            <button aria-label="Close indicators" onClick={() => setIsOpen(false)} className="h-11 w-11 flex items-center justify-center text-slate-400 hover:text-white">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -118,7 +120,7 @@ export const IndicatorToolbar: React.FC<IndicatorToolbarProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </div></div>, document.body
       )}
     </div>
   );

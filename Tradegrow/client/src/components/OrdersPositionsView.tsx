@@ -1028,15 +1028,15 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4 pb-28 md:pb-0 font-body text-[var(--text-main)]">
+    <div className="flex flex-col gap-4 font-body text-[var(--text-main)]">
 
       {/* ════════════════════════════════════════════════════════════════════════
           1. MOBILE INTERFACE (MATCHING EXACT BROKER SCREENSHOT)
          ════════════════════════════════════════════════════════════════════════ */}
-      <div className="md:hidden space-y-2.5 pb-28 sm:pb-32">
+      <div className="md:hidden space-y-2.5">
         {/* ── Top Header Navigation Bar (Positions, Orders, History, Holdings, Analytics, Journal) ── */}
-        <div className="flex items-center justify-between pb-1 pt-1 border-b border-[var(--border-color)]">
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 max-w-[calc(100vw-85px)]">
+        <div className="flex items-center justify-between gap-2 pb-1 pt-1 border-b border-[var(--border-color)] [&_button]:min-h-11">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-none py-1 [&_button]:shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -1116,7 +1116,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
             </button>
           </div>
 
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0 [&_button]:min-w-11">
             <button
               type="button"
               onClick={() => setIsSearchOpen(!isSearchOpen)}

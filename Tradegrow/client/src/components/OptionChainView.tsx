@@ -61,41 +61,25 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
   const [activeLtpKey, setActiveLtpKey] = useState<string | null>(null);
 
-  const INDEX_FALLBACKS: Record<string, { price: number; change: number; pct: number; atm: number }> = useMemo(() => ({
-    NIFTY: { price: 25240.00, change: 110.00, pct: 0.44, atm: 25250 },
-    SENSEX: { price: 81850.00, change: 420.00, pct: 0.52, atm: 81800 },
-    BANKNIFTY: { price: 60800.00, change: 290.00, pct: 0.48, atm: 60800 },
-    FINNIFTY: { price: 27670.00, change: 95.00, pct: 0.35, atm: 27650 },
-    MIDCPNIFTY: { price: 14160.00, change: 45.00, pct: 0.32, atm: 14150 },
-  }), []);
-
-  const cleanSym = symbol.toUpperCase().replace(/^(NSE_|BSE_)/, '');
-  const initialFallback = INDEX_FALLBACKS[cleanSym] || INDEX_FALLBACKS.NIFTY;
-
   const [chain, setChain] = useState<OptionChainItem[]>([]);
-  const [spotPrice, setSpotPrice] = useState<number>(() => initialFallback.price);
-  const [spotChange, setSpotChange] = useState<number>(() => initialFallback.change);
-  const [spotChangePct, setSpotChangePct] = useState<number>(() => initialFallback.pct);
-  const [atmStrike, setAtmStrike] = useState<number>(() => initialFallback.atm);
-  const [lotSize, setLotSize] = useState<number>(() => getLotSizeForSymbol(symbol));
-  const [pcrRatio, setPcrRatio] = useState<number>(1.0);
+  const [spotPrice, setSpotPrice] = useState(0);
+  const [spotChange, setSpotChange] = useState(0);
+  const [spotChangePct, setSpotChangePct] = useState(0);
+  const [atmStrike, setAtmStrike] = useState(0);
+  const [lotSize, setLotSize] = useState(() => getLotSizeForSymbol(symbol));
+  const [pcrRatio, setPcrRatio] = useState(1);
   const [maxPainStrike, setMaxPainStrike] = useState<number | null>(null);
-  const [totalCallOI, setTotalCallOI] = useState<number>(0);
-  const [totalPutOI, setTotalPutOI] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [totalCallOI, setTotalCallOI] = useState(0);
+  const [totalPutOI, setTotalPutOI] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Sync state on symbol switch
   useEffect(() => {
-    const sym = symbol.toUpperCase().replace(/^(NSE_|BSE_)/, '');
-    const fallback = INDEX_FALLBACKS[sym] || INDEX_FALLBACKS.NIFTY;
     setLotSize(getLotSizeForSymbol(symbol));
-    setSpotPrice(fallback.price);
-    setSpotChange(fallback.change);
-    setSpotChangePct(fallback.pct);
-    setAtmStrike(fallback.atm);
-    setChain([]);
+    setSpotPrice(0); setSpotChange(0); setSpotChangePct(0); setAtmStrike(0);
+    setExpiries([]); setExpiry(''); setChain([]);
+    setTotalCallOI(0); setTotalPutOI(0); setPcrRatio(1); setMaxPainStrike(null);
     setLoading(true);
-  }, [symbol, INDEX_FALLBACKS]);
+  }, [symbol]);
 
   // Strike Chart Modal State
   const [selectedChartContract, setSelectedChartContract] = useState<SelectedOptionContract | null>(null);
@@ -163,10 +147,11 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   }, [liveSpotLtp, chain]);
 
   // Fetch Expiries
-  const fetchExpiries = useCallback(() => {
-    fetch(`/api/v1/market/option-expiries?symbol=${symbol}`)
+  const fetchExpiries = useCallback((signal?: AbortSignal) => {
+    fetch(`/api/v1/market/option-expiries?symbol=${symbol}`, { signal })
       .then(r => r.json())
       .then(data => {
+        if (signal?.aborted) return;
         if (data.success && Array.isArray(data.expiries) && data.expiries.length > 0) {
           setExpiries(data.expiries);
           if (expiryType === 'NEAREST' && data.nearestExpiry) {
@@ -184,7 +169,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   }, [symbol, expiryType, expiry]);
 
   useEffect(() => {
-    fetchExpiries();
+    const controller = new AbortController();
+    fetchExpiries(controller.signal);
+    return () => controller.abort();
   }, [symbol, expiryType]);
 
   // Apply option chain data payload
@@ -213,14 +200,14 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
   }, [symbol]);
 
   // Fetch Option Chain Data
-  const fetchOptionChain = useCallback(() => {
+  const fetchOptionChain = useCallback((signal?: AbortSignal) => {
     const queryParams = new URLSearchParams({ symbol, strikeRange });
     if (expiry) queryParams.append('expiry', expiry);
 
-    fetch(`/api/v1/market/option-chain?${queryParams.toString()}`)
+    fetch(`/api/v1/market/option-chain?${queryParams.toString()}`, { signal })
       .then(r => r.json())
-      .then(data => applyOptionChainData(data))
-      .catch(() => setLoading(false));
+      .then(data => { if (!signal?.aborted) applyOptionChainData(data); })
+      .catch(() => { if (!signal?.aborted) setLoading(false); });
   }, [symbol, expiry, strikeRange, applyOptionChainData]);
 
   const computedOI = useMemo(() => {
@@ -247,7 +234,12 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
   // Load option chain and stream real-time updates via SSE (1.5s push) with 2s polling fallback
   useEffect(() => {
-    fetchOptionChain();
+    const controller = new AbortController();
+    const refresh = () => fetchOptionChain(controller.signal);
+    setChain([]);
+    setLoading(true);
+    setActiveLtpKey(null);
+    refresh();
 
     // 1. Server-Sent Events (SSE) Stream for real-time live streaming (~1500ms server push)
     let eventSource: EventSource | null = null;
@@ -280,19 +272,20 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
     // 2. High-speed fallback polling (2000ms) ensuring continuous updates even if SSE is interrupted
     const interval = setInterval(() => {
       if (!sseActive) {
-        fetchOptionChain();
+        refresh();
       }
     }, 2000);
 
     // 3. Instant refresh on tab focus / document visibility
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        fetchOptionChain();
+        refresh();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      controller.abort();
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
       if (eventSource) {
@@ -379,7 +372,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                     navigator.vibrate?.(20);
                     setSymbol(item.id);
                   }}
-                  className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[32px] sm:min-h-[40px] flex-shrink-0 border ${
+                  className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs transition-all cursor-pointer min-h-[44px] sm:min-h-[40px] flex-shrink-0 border ${
                     isActive
                       ? 'bg-[var(--bg-surface-inset)] text-[var(--text-main)] border-blue-500 shadow-xs ring-1 ring-blue-500/50'
                       : 'bg-[var(--bg-surface-inset)] text-[var(--text-muted)] border-[var(--border-color)] hover:border-[var(--border-color)] hover:text-[var(--text-main)]'
@@ -418,16 +411,18 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
           <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-3 w-full md:w-auto">
 
             {/* Basket Mode Toggle */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl min-h-[30px] sm:min-h-[40px]">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl min-h-[44px] sm:min-h-[40px]">
               <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--call-accent)]" />
               <span className="text-[10px] sm:text-xs font-semibold text-[var(--text-main)] hidden sm:inline">Basket</span>
               <button
                 type="button"
                 onClick={() => setBasketMode(!basketMode)}
-                className={`w-7 h-4 sm:w-9 sm:h-5 rounded-full p-0.5 transition-colors cursor-pointer ${basketMode ? 'bg-blue-600' : 'bg-[var(--bg-surface-elevated)]'
-                  }`}
+                role="switch"
+                aria-checked={basketMode}
+                aria-label="Basket trading mode"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
               >
-                <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white transition-transform ${basketMode ? 'translate-x-3 sm:translate-x-4' : 'translate-x-0'}`} />
+                <span className={`block w-9 h-5 rounded-full p-0.5 transition-colors ${basketMode ? 'bg-blue-600' : 'bg-[var(--bg-surface-elevated)]'}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${basketMode ? 'translate-x-4' : 'translate-x-0'}`} /></span>
               </button>
             </div>
 
@@ -435,7 +430,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             <button
               type="button"
               onClick={() => setIsStrategyBuilderOpen(!isStrategyBuilderOpen)}
-              className="flex items-center gap-1 sm:gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] sm:text-xs px-2 py-1 sm:px-3.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all min-h-[30px] sm:min-h-[40px]"
+              className="flex items-center gap-1 sm:gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] sm:text-xs px-2 py-1 sm:px-3.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all min-h-[44px] sm:min-h-[40px]"
             >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">CREATE </span><span>STRATEGY</span>
@@ -454,9 +449,12 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
               <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--call-accent)] flex-shrink-0" />
               <select
                 value={expiry}
+                aria-label="Contract expiry"
+                disabled={expiries.length === 0}
                 onChange={(e) => setExpiry(e.target.value)}
-                className="px-2 sm:px-3 py-1 sm:py-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] rounded-lg sm:rounded-xl font-bold text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500 cursor-pointer min-h-[34px] sm:min-h-[44px]"
+                className="px-2 sm:px-3 py-1 sm:py-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] rounded-lg sm:rounded-xl font-bold text-xs text-[var(--text-main)] focus:outline-none focus:border-blue-500 cursor-pointer min-h-[44px] sm:min-h-[44px]"
               >
+                {expiries.length === 0 && <option value="">No expiries available</option>}
                 {expiries.map(exp => {
                   let label = `${exp} W`;
                   try {
@@ -484,7 +482,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
                 placeholder="Search Strike"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 sm:pl-8 pr-2.5 sm:pr-3 py-1 sm:py-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] rounded-lg sm:rounded-xl text-xs font-semibold text-[var(--text-main)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-blue-500 min-h-[34px] sm:min-h-[44px] w-28 sm:w-40"
+                className="pl-7 sm:pl-8 pr-2.5 sm:pr-3 py-1 sm:py-2 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] rounded-lg sm:rounded-xl text-xs font-semibold text-[var(--text-main)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-blue-500 min-h-[44px] sm:min-h-[44px] w-28 sm:w-40"
               />
               {searchQuery && (
                 <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search" className="absolute right-2 text-[var(--text-muted)] hover:text-[var(--text-main)]">
@@ -502,9 +500,9 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
             {/* Dynamic PCR & Sentiment Badge */}
             <div className="flex items-center gap-1.5 bg-[var(--bg-surface-inset)] border border-[var(--border-color)] px-2.5 py-1.5 rounded-xl font-mono text-xs">
               <span className="text-[var(--text-muted)]">PCR:</span>
-              <span className="font-bold text-[var(--text-main)]">{computedOI.pcr.toFixed(2)}</span>
+              <span className="font-bold text-[var(--text-main)]">{computedOI.total > 0 ? computedOI.pcr.toFixed(2) : '—'}</span>
               <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${computedOI.sentimentColor}`}>
-                {computedOI.sentiment}
+                {computedOI.total > 0 ? computedOI.sentiment : 'Unavailable'}
               </span>
             </div>
 
@@ -611,6 +609,7 @@ export const OptionChainView: React.FC<OptionChainProps> = ({ token, onRefreshWa
 
       {/* ── MAIN OPTION CHAIN TABLE ─────────────────────────────────── */}
       <div ref={tableRef} className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+        {filteredChain.length === 0 && <p role="status" className="px-4 py-5 text-center text-xs text-[var(--text-muted)]">{loading ? 'Loading option contracts…' : chain.length > 0 ? 'No contracts match your filters.' : 'Option contracts are currently unavailable. Please refresh or choose another index.'}</p>}
         <div className="overflow-x-auto">
 
           {/* DESKTOP TABLE VIEW */}

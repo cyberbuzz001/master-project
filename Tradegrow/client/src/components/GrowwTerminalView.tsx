@@ -14,6 +14,8 @@ import { getLotSizeForSymbol } from '../utils/lotSize';
 import { useToast } from '../context/ToastContext';
 import { soundManager } from '../utils/soundManager';
 import { LivePriceCell } from './ui/LivePriceCell';
+import { useTickFreshness } from '../hooks/useTickFreshness';
+import { PriceBadge } from './PriceBadge';
 
 interface GrowwTerminalViewProps {
   token: string | null;
@@ -63,6 +65,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     (initialSymbol === 'NIFTY 50' ? 'NSE_NIFTY50' : (initialSymbol === 'SENSEX' ? 'BSE_SENSEX' : `NSE_${initialSymbol}`))
   );
   const [exchange, setExchange] = useState<'NSE' | 'BSE' | 'MCX'>(initialExchange);
+  const freshness = useTickFreshness(selectedToken);
 
   const [lotSize, setLotSize] = useState<number>(() => getLotSizeForSymbol(initialSymbol));
   const [lots, setLots] = useState<number>(1);
@@ -218,25 +221,28 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
   useEffect(() => {
     if (!selectedToken) return;
-    fetch(`/api/v1/market/quote/${selectedToken}`)
+    const controller = new AbortController();
+    setSelectedQuote(null);
+    fetch(`/api/v1/market/quote/${encodeURIComponent(selectedToken)}`, { signal: controller.signal })
       .then(r => r.json())
       .then(d => {
-        if (d.success && d.tick) setSelectedQuote(d.tick);
+        if (!controller.signal.aborted && d.success && d.tick) setSelectedQuote({ ...d.tick, instrumentToken: selectedToken });
       })
       .catch(() => {});
+    return () => controller.abort();
   }, [selectedToken]);
 
   const getTick = (tok: string, sym: string): MarketTick | undefined => {
     return ticks.get(tok) || ticks.get(`NSE_${sym}`) || ticks.get(sym) || ticks.get(`BSE_${sym}`) || ticks.get(`MCX_${sym}`) || (sym === 'SENSEX' ? ticks.get('BSE_SENSEX') : undefined);
   };
 
-  const currentTick = getTick(selectedToken, selectedSymbol) || selectedQuote || undefined;
+  const currentTick = getTick(selectedToken, selectedSymbol) || (selectedQuote?.instrumentToken === selectedToken ? selectedQuote : undefined);
   const currentLtp = currentTick?.ltp || 0;
   const currentChange = currentTick?.change ?? 0;
   const currentChangePct = currentTick?.changePercent ?? 0;
-  const currentHigh = currentTick?.high || (currentLtp > 0 ? currentLtp * 1.015 : 0);
-  const currentLow = currentTick?.low || (currentLtp > 0 ? currentLtp * 0.985 : 0);
-  const currentOpen = currentTick?.open || (currentLtp > 0 ? currentLtp * 0.995 : 0);
+  const currentHigh = currentTick?.high || 0;
+  const currentLow = currentTick?.low || 0;
+  const currentOpen = currentTick?.open || 0;
   const currentVolume = currentTick?.volume || 0;
   const isGain = currentChangePct >= 0;
 
@@ -265,6 +271,14 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
 
   // Keep quantity in sync with lotSize & lots
   useEffect(() => {
+    if (currentLtp > 0) {
+      setPriceInput(previous => Number(previous) > 0 ? previous : currentLtp.toFixed(2));
+      setTriggerPriceInput(previous => Number(previous) > 0 ? previous : (currentLtp * (orderSide === 'BUY' ? 0.98 : 1.02)).toFixed(2));
+    }
+  }, [currentLtp, orderSide]);
+
+  // Keep quantity in sync with lotSize & lots
+  useEffect(() => {
     setQuantity(lotSize * lots);
   }, [lotSize, lots]);
 
@@ -278,10 +292,8 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     setLots(1);
     setQuantity(newLotSize);
     const tick = getTick(item.token, item.symbol);
-    const newPrice = tick?.ltp || item.fallbackPrice || 0;
-    if (newPrice > 0) {
-      setPriceInput(newPrice.toFixed(2));
-    }
+    const newPrice = tick?.ltp || 0;
+    setPriceInput(newPrice > 0 ? newPrice.toFixed(2) : '');
     setOrderFeedback(null);
     if (isMobileViewport) {
       setMobileWorkspaceTab('CHART');
@@ -299,7 +311,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
     ? orderValue / 5
     : orderValue;
 
-  const availableFunds = wallet?.cashBalance ?? 0;
+  const availableFunds = wallet?.buyingPower ?? 0;
   const isMarginSufficient = availableFunds >= requiredMargin;
 
   // Order Execution - STAYS ON TERMINAL, NO REDIRECT
@@ -875,12 +887,23 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
   );
 
   return (
-    <div className="h-[calc(100vh-60px)] md:h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col bg-[#0b0e14] text-slate-100 font-sans select-none">
+    <div className="tg-terminal w-full overflow-hidden flex flex-col bg-[#0a0e17] text-slate-100 font-sans">
+      <header className="lg:hidden shrink-0 border-b border-slate-800 bg-[#111622] px-3 pt-[max(8px,env(safe-area-inset-top))] pb-2">
+        <div className="flex min-h-11 items-center justify-between gap-2">
+          <button type="button" aria-label="Exit terminal" onClick={() => navigate('/')} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-800/50"><ArrowLeft size={18} /></button>
+          <div className="min-w-0 flex-1"><h1 className="truncate text-sm font-bold">{selectedSymbol}</h1><div className="flex items-center gap-2 text-[10px] text-slate-400"><span>{exchange}</span><PriceBadge state={freshness.state} timeSinceLastTick={freshness.timeSinceLastTick} size="sm" /></div></div>
+          <button type="button" onClick={() => navigate('/profile/support')} className="min-h-11 px-2 text-xs text-slate-400">Help</button>
+        </div>
+        <div className="mt-1 grid grid-cols-2 gap-2 text-xs tabular-nums">
+          <div className="min-w-0 rounded-lg bg-[#0a0e17] px-3 py-2"><span className="block text-[9px] uppercase tracking-wide text-slate-400">Last price</span><span className={`block truncate font-semibold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>{currentLtp > 0 ? '₹' + currentLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Awaiting quote'}</span></div>
+          <button type="button" onClick={() => navigate('/profile/funds')} className="min-w-0 rounded-lg bg-[#0a0e17] px-3 py-2 text-left"><span className="block text-[9px] uppercase tracking-wide text-slate-400">Available margin</span><span className={`block truncate font-semibold ${availableFunds >= 0 ? 'text-slate-100' : 'text-rose-400'}`}>₹{availableFunds.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></button>
+        </div>
+      </header>
       
       {/* ============================================================ */}
       {/* 1. TOP PRO TERMINAL HEADER BAR */}
       {/* ============================================================ */}
-      <nav className="h-13 min-h-[52px] flex items-center justify-between px-3 md:px-4 bg-[#131722] border-b border-slate-800 shrink-0 z-30">
+      <nav className="hidden lg:flex min-h-[52px] items-center justify-between px-4 bg-[#131722] border-b border-slate-800 shrink-0 z-30">
         
         {/* Left: Active Symbol Overview & OHLC Strip */}
         <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-1">
@@ -970,7 +993,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
           <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs">
             <span className="text-slate-400 hidden sm:inline">Margin:</span>
             <span className="font-extrabold text-emerald-400 tabular-nums">
-              ₹{wallet ? wallet.cashBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'}
+              ₹{availableFunds.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </span>
           </div>
 
@@ -999,7 +1022,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
               { id: 'CHART', label: 'Chart', icon: TrendingUp },
               { id: 'WATCHLIST', label: 'Watchlist', icon: List },
               { id: 'TRADE', label: 'Order Pad', icon: Zap },
-              { id: 'POSITIONS', label: `Positions (${openPositions.length})`, icon: Briefcase },
+              { id: 'POSITIONS', label: openPositions.length ? `Positions (${openPositions.length})` : 'Positions', icon: Briefcase },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = mobileWorkspaceTab === tab.id;
@@ -1010,14 +1033,14 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
                   aria-selected={isActive}
                   aria-controls={`terminal-panel-${tab.id.toLowerCase()}`}
                   onClick={() => setMobileWorkspaceTab(tab.id as any)}
-                  className={`flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.98] transition-all ${
+                  className={`flex min-w-0 flex-1 flex-col sm:flex-row items-center justify-center gap-1 min-h-[44px] px-1 py-2 rounded-xl text-[10px] sm:text-xs font-bold active:scale-[0.98] transition-all ${
                     isActive
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               );
             })}
@@ -1028,7 +1051,7 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
       {/* ============================================================ */}
       {/* 2. MAIN WORKSPACE (WATCHLIST | CHART | ORDER PAD | MOBILE CONSOLE) */}
       {/* ============================================================ */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="min-h-0 flex-1 flex overflow-hidden relative">
         
         {/* PANE 1: LEFT WATCHLIST & LIVE SCRIP SEARCH */}
         <div className={`${isMobileViewport ? (mobileWorkspaceTab === 'WATCHLIST' ? 'flex flex-1 w-full h-full' : 'hidden') : 'w-72 md:w-80 flex-shrink-0 flex'} bg-[#131722] border-r border-slate-800 flex-col z-20`}>
@@ -1154,13 +1177,14 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
         </div>
 
         {/* PANE 2: CENTER TRADINGVIEW CHART ENGINE */}
-        <div className={`${isMobileViewport ? (mobileWorkspaceTab === 'CHART' ? 'flex flex-1 w-full h-full' : 'hidden') : 'flex-1 flex'} flex-col min-w-0 lg:min-w-[380px] bg-[#0b0e14] relative z-10 overflow-hidden`}>
+        <div className={`${isMobileViewport ? (mobileWorkspaceTab === 'CHART' ? 'flex flex-1 w-full h-full' : 'hidden') : 'flex-1 flex'} flex-col min-w-0 min-h-0 lg:min-w-[380px] bg-[#0b0e14] relative z-10 overflow-y-auto`}>
           <TradingChart
             exchange={exchange}
             symbol={selectedSymbol}
             token={selectedToken}
             latestTick={currentTick}
-            theme={theme}
+            theme="dark"
+            showInstrumentHeader={false}
             onBuyClick={(sym, p) => {
               setOrderSide('BUY');
               setPriceInput(p.toFixed(2));
@@ -1173,31 +1197,6 @@ export const GrowwTerminalView: React.FC<GrowwTerminalViewProps> = ({
             }}
           />
 
-          {/* Mobile Quick BUY/SELL floating action bar on chart */}
-          {isMobileViewport && (
-            <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setOrderSide('BUY');
-                  setMobileWorkspaceTab('TRADE');
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span>BUY</span>
-                <span className="font-mono text-xs font-extrabold opacity-90">₹{currentLtp.toFixed(2)}</span>
-              </button>
-              <button
-                onClick={() => {
-                  setOrderSide('SELL');
-                  setMobileWorkspaceTab('TRADE');
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span>SELL</span>
-                <span className="font-mono text-xs font-extrabold opacity-90">₹{currentLtp.toFixed(2)}</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* PANE 3: RIGHT ORDER ENTRY & 5-LEVEL DEPTH */}

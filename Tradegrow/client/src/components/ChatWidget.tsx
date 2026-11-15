@@ -25,12 +25,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ token, onOpenChange }) =
   const [input, setInput] = useState('');
   const [unread, setUnread] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
-  const { onAdminEvent, sendChatMessage } = useMarketSocket();
+  const { onAdminEvent, sendChatMessage, status } = useMarketSocket();
 
   const fetchHistory = useCallback(() => {
     fetch('/api/v1/chat/messages', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(d => { if (d.success) setMessages(d.messages); })
+      .then(d => { if (d.success && Array.isArray(d.messages)) setMessages(previous => {
+        const merged = new Map<string, ChatMessage>();
+        [...d.messages, ...previous].forEach(message => merged.set(message.id, message));
+        return Array.from(merged.values()).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+      }); })
       .catch(() => {});
   }, [token]);
 
@@ -55,18 +59,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ token, onOpenChange }) =
 
   const handleSend = () => {
     if (!input.trim()) return;
-    sendChatMessage(input.trim());
-    setInput('');
+    if (sendChatMessage(input.trim())) setInput('');
   };
 
   return (
     <div className="tg-support-position fixed md:bottom-6 right-4 md:right-6 z-40" data-navigation-lock={open ? '' : undefined}>
       {open && (
-        <div className="mb-3 w-[calc(100vw-2rem)] max-w-sm h-[420px] bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div role="dialog" aria-label="Support chat" className="mb-3 w-[calc(100vw-2rem)] max-w-sm h-[420px] max-h-[calc(100dvh-220px)] bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--primary)] text-[var(--text-on-accent)]">
             <div>
               <div className="text-sm font-bold">Chat with Support</div>
-              <div className="text-[10px] opacity-80">Instant AI answers, our team can jump in anytime</div>
+              <div role="status" className="text-[10px] opacity-80">{status === 'CONNECTED' ? 'Connected to support' : 'Reconnecting — your draft is kept'}</div>
             </div>
             <button onClick={() => setOpen(false)} className="p-1 hover:bg-white/10 rounded-lg transition cursor-pointer" aria-label="Close chat">
               <X className="w-4 h-4" />
@@ -93,7 +96,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ token, onOpenChange }) =
                           <Bot className="w-3 h-3" />TradeGrow AI
                         </div>
                       )}
-                      {m.message}
+                      <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.message}</span>
                       <div className={`text-[9px] mt-1 opacity-70`}>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   </div>
@@ -107,13 +110,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ token, onOpenChange }) =
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && status === 'CONNECTED') handleSend(); }}
+              aria-label="Support message"
               placeholder="Type a message..."
-              className="flex-1 bg-[var(--bg-body)] border border-[var(--border-color)] rounded-full px-4 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+              className="min-w-0 min-h-11 flex-1 bg-[var(--bg-body)] border border-[var(--border-color)] rounded-full px-4 py-2 text-xs text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || status !== 'CONNECTED'}
               className="p-2 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-40 text-[var(--text-on-accent)] transition cursor-pointer"
               aria-label="Send message"
             >

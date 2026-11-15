@@ -326,7 +326,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-6 w-full font-body text-[var(--text-main)] pb-20 sm:pb-0">
+    <div className="flex flex-col gap-3 sm:gap-6 w-full font-body text-[var(--text-main)]">
       {/* Top Header & Search Card */}
       <Card padding="none" className="p-3 sm:p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
         <div className="w-full md:w-auto flex items-center justify-between md:block">
@@ -348,13 +348,14 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search scrip or option to add..."
-              className="w-full pl-9 pr-8 py-1.5 sm:py-2 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl text-xs font-bold placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-all"
+              aria-label="Search instruments to add to watchlist"
+              className="min-h-11 w-full pl-9 pr-12 py-1.5 sm:py-2 bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] rounded-xl text-xs font-bold placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 aria-label="Clear search"
-                className="absolute right-2.5 p-1 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                className="absolute right-0 flex h-11 w-11 items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -369,7 +370,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
                 <button
                   key={item.token}
                   onClick={() => handleAddSymbol(item)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[var(--primary-light)] text-left transition-colors cursor-pointer"
+                  className="min-h-11 w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[var(--primary-light)] text-left transition-colors cursor-pointer"
                 >
                   <div className="flex flex-col">
                     <span className="text-xs font-bold">{item.symbol}</span>
@@ -396,7 +397,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all whitespace-nowrap ${isActive
+                className={`min-h-11 shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all whitespace-nowrap ${isActive
                   ? 'bg-[var(--primary)] text-white shadow-xs'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-elevated)]'
                   }`}
@@ -419,7 +420,7 @@ export const GrowwWatchlistView: React.FC<GrowwWatchlistViewProps> = ({
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${activeFilter === filter
+              className={`min-h-11 shrink-0 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${activeFilter === filter
                 ? 'bg-[var(--bg-surface-elevated)] text-[var(--primary)] border border-[var(--primary)]/30'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 }`}

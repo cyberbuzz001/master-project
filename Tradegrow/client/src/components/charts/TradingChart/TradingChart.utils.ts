@@ -16,6 +16,7 @@ export function normalizeAndSortCandles(rawCandles: any[]): CandleData[] {
     const rawLow = Number(c.low || open);
     const close = Number(c.close || open);
     const volume = Math.max(0, Number(c.volume || 0));
+    if (![timeNum, open, rawHigh, rawLow, close, volume].every(Number.isFinite) || open <= 0 || close <= 0 || rawHigh <= 0 || rawLow <= 0) continue;
 
     // Enforce strict OHLC invariants: High >= max(Open, Close, Low), Low <= min(Open, Close, High)
     const high = Math.max(rawHigh, open, close, rawLow);
@@ -46,6 +47,7 @@ export function aggregateTickToCandle(
   tickTime: number,
   intervalSeconds: number
 ): { candle: CandleData; isNewCandle: boolean } {
+  if (existingCandle && tickTime < existingCandle.time) return { candle: existingCandle, isNewCandle: false };
   const currentIntervalStart = Math.floor(tickTime / intervalSeconds) * intervalSeconds;
 
   if (!existingCandle || existingCandle.time < currentIntervalStart) {
@@ -56,7 +58,7 @@ export function aggregateTickToCandle(
         high: tickPrice,
         low: tickPrice,
         close: tickPrice,
-        volume: 10
+        volume: 0
       },
       isNewCandle: true
     };
@@ -72,7 +74,7 @@ export function aggregateTickToCandle(
       high,
       low,
       close: tickPrice,
-      volume: (existingCandle.volume || 0) + 1
+      volume: existingCandle.volume || 0
     },
     isNewCandle: false
   };

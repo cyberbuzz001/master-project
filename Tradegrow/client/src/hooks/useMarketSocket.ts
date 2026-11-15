@@ -38,7 +38,7 @@ export interface MarketSocketContextType {
   adminUnsubscribeAll: () => void;
   /** Send a live-chat message. Customers omit toUserId (implicitly targets support);
    *  staff must supply the customer's userId they're replying to. */
-  sendChatMessage: (text: string, toUserId?: string) => void;
+  sendChatMessage: (text: string, toUserId?: string) => boolean;
 }
 
 const MarketSocketContext = createContext<MarketSocketContextType | null>(null);
@@ -225,10 +225,12 @@ export const MarketSocketProvider: React.FC<MarketSocketProviderProps> = ({ chil
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       try {
         wsRef.current.send(JSON.stringify({ action, ...extra }));
+        return true;
       } catch (err) {
         console.error(`[MarketSocket] Failed to send ${action}`, err);
       }
     }
+    return false;
   }, []);
 
   const onAdminEvent = useCallback((callback: (event: AdminSocketEvent) => void, type?: AdminEventType) => {
@@ -266,8 +268,8 @@ export const MarketSocketProvider: React.FC<MarketSocketProviderProps> = ({ chil
   }, [sendAdminAction]);
 
   const sendChatMessage = useCallback((text: string, toUserId?: string) => {
-    if (!text.trim()) return;
-    sendAdminAction('CHAT_SEND', toUserId ? { text, toUserId } : { text });
+    if (!text.trim()) return false;
+    return sendAdminAction('CHAT_SEND', toUserId ? { text, toUserId } : { text });
   }, [sendAdminAction]);
 
   // Public subscribe method with ref-counting

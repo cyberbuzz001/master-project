@@ -23,11 +23,10 @@ export function PWAInstallBanner() {
         // Reshow after 3 days on mobile if user hasn't installed
         if (timeDiff < 3 * 24 * 60 * 60 * 1000) {
           setIsDismissed(true);
-          return;
         }
       }
       // Proactively show on mobile or when installable
-      setIsDismissed(false);
+      if (!dismissedAt || Date.now() - Number(dismissedAt) >= 3 * 24 * 60 * 60 * 1000) setIsDismissed(false);
     } catch (_) {
       setIsDismissed(false);
     }
@@ -74,7 +73,7 @@ export function PWAInstallBanner() {
   return (
     <>
       {/* Floating Installation Banner (Mobile & Desktop) */}
-      {!isDismissed && (
+      {!isDismissed && canInstall && (
         <div className="tg-install-position fixed md:bottom-6 right-3 left-3 md:left-auto md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className="relative overflow-hidden rounded-2xl bg-[#131722]/95 backdrop-blur-xl border border-emerald-500/40 shadow-2xl shadow-emerald-950/50 p-3.5 flex items-center justify-between gap-3 text-left">
             

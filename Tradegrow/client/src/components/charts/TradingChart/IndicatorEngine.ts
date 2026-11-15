@@ -222,10 +222,14 @@ export class IndicatorEngine {
     const points: LinePoint[] = [];
     let cumVolume = 0;
     let cumPriceVolume = 0;
+    let sessionDay = -1;
 
     for (const c of candles) {
+      const day = Math.floor((c.time + 19800) / 86400);
+      if (day !== sessionDay) { sessionDay = day; cumVolume = 0; cumPriceVolume = 0; }
       const typicalPrice = (c.high + c.low + c.close) / 3;
-      const vol = c.volume || 100;
+      const vol = c.volume || 0;
+      if (!Number.isFinite(vol) || vol <= 0) continue;
 
       cumPriceVolume += typicalPrice * vol;
       cumVolume += vol;
