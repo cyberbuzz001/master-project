@@ -78,6 +78,7 @@ final class UserController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:120'],
             'mobile' => ['sometimes', 'nullable', 'string', 'max:20', Rule::unique('users', 'mobile')->ignore($user->id)],
+            'preferred_language' => ['sometimes', Rule::in(['en', 'hi', 'both'])],
             'designation' => ['sometimes', 'nullable', 'string', 'max:120'],
             'team_id' => ['sometimes', 'nullable', 'integer', 'exists:teams,id'],
             'reports_to_employee_id' => ['sometimes', 'nullable', 'integer', 'exists:employees,id'],

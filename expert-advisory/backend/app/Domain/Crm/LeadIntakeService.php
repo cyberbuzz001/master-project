@@ -44,6 +44,8 @@ final class LeadIntakeService
             $email = isset($data['email']) ? mb_strtolower(trim($data['email'])) : null;
             $duplicate = $this->findDuplicate($mobile, $email);
             if ($duplicate !== null) {
+                $this->audit->record('lead.duplicate_rejected', $duplicate, new: ['mobile_sha256' => $mobile === null ? null : hash('sha256', $mobile), 'email_sha256' => $email === null ? null : hash('sha256', $email)], actorType: 'system');
+
                 return $duplicate;
             }
             $attribution = $data['attribution'] ?? [];
@@ -147,7 +149,9 @@ final class LeadIntakeService
 
         return DB::transaction(function () use ($actor, $data, $mobile): Lead {
             $email = filled($data['email'] ?? null) ? mb_strtolower(trim($data['email'])) : null;
-            if ($this->findDuplicate($mobile, $email) !== null) {
+            $duplicate = $this->findDuplicate($mobile, $email);
+            if ($duplicate !== null) {
+                $this->audit->record('lead.duplicate_rejected', $duplicate, new: ['mobile_sha256' => hash('sha256', $mobile)], actor: $actor);
                 throw ApiException::unprocessable('DUPLICATE_LEAD', 'A lead with this mobile number or email already exists.', [
                     'mobile' => ['This lead already exists in the CRM.'],
                 ]);

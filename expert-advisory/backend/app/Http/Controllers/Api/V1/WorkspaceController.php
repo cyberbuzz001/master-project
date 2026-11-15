@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Audit\AuditLogger;
 use App\Domain\Crm\LeadIntakeService;
 use App\Domain\Crm\PhoneNormalizer;
 use App\Http\Controllers\Controller;
@@ -22,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class WorkspaceController extends Controller
 {
-    public function __construct(private readonly LeadIntakeService $leadIntake) {}
+    public function __construct(private readonly LeadIntakeService $leadIntake, private readonly AuditLogger $audit) {}
 
     public function employeeDashboard(Request $request): JsonResponse
     {
@@ -182,6 +183,29 @@ final class WorkspaceController extends Controller
         $record->delete();
 
         return ApiResponse::success(['deleted' => true]);
+    }
+
+    public function mergeEmployeeLead(Request $request, string $lead): JsonResponse
+    {
+        $source = $this->resolveLead($lead);
+        $data = $request->validate(['target_id' => ['required', 'string']]);
+        $target = $this->resolveLead($data['target_id']);
+        abort_unless($request->user()->can('update', $source) && $request->user()->can('update', $target), 403);
+        abort_if($source->is($target), 422, 'A lead cannot be merged into itself.');
+
+        return DB::transaction(function () use ($source, $target, $request): JsonResponse {
+            foreach (['full_name', 'email', 'city', 'state', 'capital_range', 'message'] as $field) {
+                if (blank($target->{$field}) && filled($source->{$field})) {
+                    $target->{$field} = $source->{$field};
+                }
+            }
+            $target->save();
+            $source->forceFill(['duplicate_of_lead_id' => $target->id])->saveQuietly();
+            $source->delete();
+            $this->audit->record('lead.merged', $target, old: ['source_lead_id' => $source->id], new: ['target_lead_id' => $target->id], actor: $request->user());
+
+            return ApiResponse::success(['merged' => true, 'lead' => $this->leadPayload($target->fresh())]);
+        });
     }
 
     private function resolveLead(string $identifier): Lead

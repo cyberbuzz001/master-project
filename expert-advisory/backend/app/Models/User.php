@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'mobile', 'password', 'user_type', 'status', 'is_demo'])]
+#[Fillable(['name', 'email', 'mobile', 'preferred_language', 'password', 'user_type', 'status', 'is_demo'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret'])]
 class User extends Authenticatable implements FilamentUser
 {

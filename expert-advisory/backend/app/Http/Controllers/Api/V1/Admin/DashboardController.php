@@ -8,6 +8,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\AuditLog;
 use App\Models\Lead;
 use App\Models\LoginHistory;
+use App\Models\MessageLog;
 use App\Models\PolicyDocumentVersion;
 use App\Models\RegulatoryProfileVersion;
 use App\Models\User;
@@ -60,6 +61,11 @@ final class DashboardController extends Controller
             'security' => [
                 'failed_logins_24h' => LoginHistory::query()->whereIn('outcome', [LoginHistory::FAILED, LoginHistory::TWO_FACTOR_FAILED])->where('created_at', '>=', now()->subDay())->count(),
                 'audit_events_24h' => AuditLog::query()->where('created_at', '>=', now()->subDay())->count(),
+            ],
+            'messaging' => [
+                'whatsapp_last_24h' => MessageLog::query()->where('channel', 'whatsapp')->where('created_at', '>=', now()->subDay())->select('status', DB::raw('count(*) as total'))->groupBy('status')->pluck('total', 'status'),
+                'failed_last_24h' => MessageLog::query()->where('channel', 'whatsapp')->where('status', 'failed')->where('created_at', '>=', now()->subDay())->count(),
+                'pending_retries' => MessageLog::query()->where('channel', 'whatsapp')->whereIn('status', ['queued', 'failed'])->count(),
             ],
             'compliance' => [
                 'publication_ready' => collect($readiness)->every(fn ($c) => $c['passed']),

@@ -11,7 +11,7 @@ class ObjectionLibrarySeeder extends Seeder
     public function run(): void
     {
         $superAdmin = User::query()->where('user_type', User::TYPE_STAFF)->first();
-        $adminId = $superAdmin?->id ?? 1;
+        $adminId = $superAdmin?->id;
 
         $scripts = [
             [
@@ -296,7 +296,7 @@ class ObjectionLibrarySeeder extends Seeder
                 array_merge($s, $translation, [
                     'response_ba_hi' => $translation['response_hi'] ?? null,
                     'response_sba_hi' => $translation['response_hi'] ?? null,
-                    'status' => ObjectionScript::APPROVED,
+                    'status' => $adminId === null ? ObjectionScript::DRAFT : ObjectionScript::APPROVED,
                     'created_by' => $adminId,
                     'approved_by' => $adminId,
                     'approved_at' => now(),

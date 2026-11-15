@@ -181,6 +181,7 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('leads', [WorkspaceController::class, 'storeEmployeeLead'])->middleware('can:leads.create');
                 Route::patch('leads/{lead}', [WorkspaceController::class, 'updateEmployeeLead']);
                 Route::delete('leads/{lead}', [WorkspaceController::class, 'deleteEmployeeLead'])->middleware('can:leads.delete');
+                Route::post('leads/{lead}/merge', [WorkspaceController::class, 'mergeEmployeeLead']);
             });
 
             // ---- Client portal ----------------------------------------------------------------

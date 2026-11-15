@@ -1,0 +1,49 @@
+name: Expert Advisory CI
+
+on:
+  push:
+    branches: [main, work]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: expert-advisory/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: expert-advisory/backend
+      - name: Check formatting
+        run: vendor/bin/pint --test --format agent
+      - name: Run migrations and seeders
+        env:
+          INITIAL_SUPER_ADMIN_EMAIL: ci-admin@example.test
+          INITIAL_SUPER_ADMIN_PASSWORD: ci-only-password-123!
+        run: php artisan migrate:fresh --seed --force
+      - name: Run PHPUnit
+        run: php artisan test --compact
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: expert-advisory/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: expert-advisory/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run test:security
+      - run: npm run build
