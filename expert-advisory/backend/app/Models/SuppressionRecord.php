@@ -44,7 +44,7 @@ class SuppressionRecord extends Model
             })
             ->where(function ($q) use ($channel) {
                 $q->where('channel', 'all')
-                  ->orWhere('channel', $channel);
+                    ->orWhere('channel', $channel);
             })
             ->exists();
     }

@@ -9,8 +9,8 @@ final class RelativeStrengthIndex
     /**
      * Calculate Relative Strength Index (Wilder's RSI) over closing prices.
      *
-     * @param list<float> $closes
-     * @param int $period Default 14
+     * @param  list<float>  $closes
+     * @param  int  $period  Default 14
      * @return list<float|null>
      */
     public static function calculate(array $closes, int $period = 14): array

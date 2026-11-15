@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Models\Lead;
 use App\Models\ScheduledAction;
-use App\Models\SuppressionRecord;
-use App\Models\WorkflowRun;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

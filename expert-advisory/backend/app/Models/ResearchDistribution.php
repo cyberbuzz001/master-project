@@ -20,13 +20,19 @@ class ResearchDistribution extends Model
     use HasFactory;
 
     public const CHANNEL_PORTAL = 'PORTAL';
+
     public const CHANNEL_EMAIL = 'EMAIL';
+
     public const CHANNEL_WHATSAPP = 'WHATSAPP';
 
     public const STATUS_QUEUED = 'QUEUED';
+
     public const STATUS_DELIVERED = 'DELIVERED';
+
     public const STATUS_FAILED = 'FAILED';
+
     public const STATUS_SKIPPED_SUITABILITY = 'SKIPPED_SUITABILITY';
+
     public const STATUS_SKIPPED_CONSENT = 'SKIPPED_CONSENT';
 
     protected function casts(): array

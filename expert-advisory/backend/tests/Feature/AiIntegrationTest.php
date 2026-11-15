@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Domain\Ai\AiService;
 use App\Domain\Ai\ComplianceGuardian;
-use App\Domain\Ai\Providers\MockAIProvider;
 use App\Domain\Ai\ToolGateway;
 use App\Models\AiModel;
 use App\Models\AiPrompt;
@@ -28,9 +27,9 @@ class AiIntegrationTest extends TestCase
 
     public function test_compliance_guardian_blocks_prohibited_guarantee_claims(): void
     {
-        $guardian = new ComplianceGuardian();
+        $guardian = new ComplianceGuardian;
 
-        $textWithGuarantee = "We recommend buying RELIANCE at 2900 with guaranteed returns of 25% within 1 month.";
+        $textWithGuarantee = 'We recommend buying RELIANCE at 2900 with guaranteed returns of 25% within 1 month.';
         $result = $guardian->screen($textWithGuarantee);
 
         $this->assertFalse($result['passed']);
@@ -40,7 +39,7 @@ class AiIntegrationTest extends TestCase
 
     public function test_compliance_guardian_verifies_sebi_registration_grounding(): void
     {
-        $guardian = new ComplianceGuardian();
+        $guardian = new ComplianceGuardian;
 
         // Create verified regulatory profile with a valid SEBI number
         $creator = User::factory()->create();
@@ -67,21 +66,21 @@ class AiIntegrationTest extends TestCase
         $profile->save();
 
         // Output cites an incorrect/fabricated registration number
-        $fraudulentText = "Report published by SEBI Registered Research Analyst under registration INH999999999.";
+        $fraudulentText = 'Report published by SEBI Registered Research Analyst under registration INH999999999.';
         $result = $guardian->screen($fraudulentText);
 
         $this->assertFalse($result['passed']);
         $this->assertStringContainsString('UNVERIFIED_SEBI_REGISTRATION', $result['violations'][0]);
 
         // Output cites the exact verified registration number
-        $correctText = "Report published by SEBI Registered Research Analyst under registration INH000012345.";
+        $correctText = 'Report published by SEBI Registered Research Analyst under registration INH000012345.';
         $validResult = $guardian->screen($correctText);
         $this->assertTrue($validResult['passed']);
     }
 
     public function test_tool_gateway_retrieves_verified_market_snapshot(): void
     {
-        $gateway = new ToolGateway();
+        $gateway = new ToolGateway;
 
         MarketDataSnapshot::create([
             'provider' => 'mock',
@@ -135,7 +134,7 @@ class AiIntegrationTest extends TestCase
 
         $prompt->update(['active_version_id' => $version->id]);
 
-        $service = new AiService(new ToolGateway(), new ComplianceGuardian());
+        $service = new AiService(new ToolGateway, new ComplianceGuardian);
 
         $run = $service->executeAgent('research_report_drafting', ['symbol' => 'RELIANCE'], $admin);
 

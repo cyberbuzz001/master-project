@@ -5,7 +5,6 @@ namespace App\Domain\Research;
 use App\Domain\Compliance\ComplianceGate;
 use App\Domain\Compliance\RegulatoryProfileService;
 use App\Models\DisclosureBinding;
-use App\Models\RegulatoryProfileVersion;
 use App\Models\ResearchVersion;
 
 class DisclosureEngine

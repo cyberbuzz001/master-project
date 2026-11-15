@@ -35,7 +35,7 @@ class LeadImportBatch extends Model
     {
         static::creating(function (LeadImportBatch $batch): void {
             $batch->uuid ??= (string) Str::uuid7();
-            $batch->batch_code ??= 'LIB-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+            $batch->batch_code ??= 'LIB-'.date('Ymd').'-'.strtoupper(Str::random(5));
         });
     }
 

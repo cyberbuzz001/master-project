@@ -36,7 +36,7 @@ class MarketDataManager
     protected function resolve(string $name): MarketDataProviderInterface
     {
         return match ($name) {
-            'mock' => new MockMarketDataProvider(),
+            'mock' => new MockMarketDataProvider,
             default => throw new InvalidArgumentException("Unsupported market data provider: [{$name}]"),
         };
     }

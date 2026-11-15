@@ -77,10 +77,10 @@ class AiRunResource extends Resource
                     ->numeric(),
                 TextColumn::make('estimated_cost_paise')
                     ->label('Cost')
-                    ->formatStateUsing(fn ($state) => '₹' . number_format($state / 100, 2)),
+                    ->formatStateUsing(fn ($state) => '₹'.number_format($state / 100, 2)),
                 TextColumn::make('latency_ms')
                     ->label('Latency')
-                    ->formatStateUsing(fn ($state) => $state . 'ms'),
+                    ->formatStateUsing(fn ($state) => $state.'ms'),
             ])
             ->filters([
                 SelectFilter::make('status')

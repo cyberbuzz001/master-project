@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Domain\Billing\Money;
 use App\Models\Concerns\HasDemoFlag;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,12 +13,19 @@ class PaymentInstallment extends Model
     use HasDemoFlag, HasFactory;
 
     public const PROMISED = 'promised';
+
     public const DUE = 'due';
+
     public const RECORDED = 'recorded';
+
     public const CONFIRMED = 'confirmed';
+
     public const PARTIALLY_SETTLED = 'partially_settled';
+
     public const SETTLED = 'settled';
+
     public const OVERDUE = 'overdue';
+
     public const FAILED = 'failed';
 
     protected $fillable = [

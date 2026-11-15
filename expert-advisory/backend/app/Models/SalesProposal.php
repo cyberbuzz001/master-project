@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Domain\Billing\Money;
 use App\Models\Concerns\HasDemoFlag;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

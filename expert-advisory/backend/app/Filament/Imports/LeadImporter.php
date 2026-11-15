@@ -4,6 +4,7 @@ namespace App\Filament\Imports;
 
 use App\Domain\Audit\AuditLogger;
 use App\Domain\Compliance\ConsentRecorder;
+use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Domain\Crm\LeadAssignmentService;
 use App\Domain\Crm\PhoneNormalizer;
 use App\Models\Campaign;
@@ -22,6 +23,7 @@ use Filament\Actions\Imports\Models\Import;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 
 class LeadImporter extends Importer
@@ -188,9 +190,9 @@ class LeadImporter extends Importer
         }
 
         try {
-            app(\App\Domain\Crm\AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
+            app(AutomationWorkflowEngine::class)->triggerWorkflow($lead, 'WORKFLOW_A_NEW_IMPORT');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[LeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
+            Log::warning('[LeadImporter] Automation trigger failed:', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
         }
     }
 

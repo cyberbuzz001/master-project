@@ -4,7 +4,9 @@ namespace App\Domain\Billing;
 
 use App\Domain\Audit\AuditLogger;
 use App\Domain\Billing\Gateways\PaymentGateway;
+use App\Domain\Crm\LeadScoringEngine;
 use App\Models\Invoice;
+use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\WebhookEvent;
 use Illuminate\Database\QueryException;
@@ -141,13 +143,13 @@ final class WebhookProcessor
 
             $client = $invoice->client;
             if ($client && $client->lead_id) {
-                $lead = \App\Models\Lead::find($client->lead_id);
+                $lead = Lead::find($client->lead_id);
                 if ($lead) {
                     $lead->update([
                         'status' => 'PAID',
                         'ai_conversation_state' => 'PAYMENT_VERIFIED',
                     ]);
-                    app(\App\Domain\Crm\LeadScoringEngine::class)->scoreLead($lead);
+                    app(LeadScoringEngine::class)->scoreLead($lead);
                 }
             }
         }

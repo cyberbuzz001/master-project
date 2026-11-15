@@ -4,15 +4,11 @@ namespace App\Domain\Crm;
 
 use App\Models\Lead;
 use App\Models\SuppressionRecord;
-use Illuminate\Support\Facades\Log;
 
 class LeadScoringEngine
 {
     /**
      * Calculate and update score, grade, explanation, and conversion probability for a lead.
-     *
-     * @param Lead $lead
-     * @return array
      */
     public function scoreLead(Lead $lead): array
     {
@@ -68,19 +64,19 @@ class LeadScoringEngine
         $explanations = [];
 
         // 3. Contact Data Completeness (Max 25 pts)
-        if (!empty($lead->mobile)) {
+        if (! empty($lead->mobile)) {
             $points += 10;
             $explanations[] = '+10 pts: Valid normalized contact mobile number present.';
         }
-        if (!empty($lead->full_name) && $lead->full_name !== 'Unnamed Lead') {
+        if (! empty($lead->full_name) && $lead->full_name !== 'Unnamed Lead') {
             $points += 5;
             $explanations[] = '+5 pts: Verified lead prospect name present.';
         }
-        if (!empty($lead->city) || !empty($lead->state)) {
+        if (! empty($lead->city) || ! empty($lead->state)) {
             $points += 5;
             $explanations[] = '+5 pts: Geographic market demographic (city/state) identified.';
         }
-        if (!empty($lead->trading_experience) || !empty($lead->demat_status)) {
+        if (! empty($lead->trading_experience) || ! empty($lead->demat_status)) {
             $points += 5;
             $explanations[] = '+5 pts: Trading experience and demat profile declared.';
         }

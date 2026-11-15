@@ -49,7 +49,7 @@ class SalesProposalResource extends Resource
         return $schema->components([
             TextInput::make('proposal_number')
                 ->label('Proposal #')
-                ->default(fn () => 'PROP-' . date('ymd') . '-' . strtoupper(Str::random(4)))
+                ->default(fn () => 'PROP-'.date('ymd').'-'.strtoupper(Str::random(4)))
                 ->required()
                 ->readOnly(),
             Select::make('lead_id')
@@ -66,7 +66,7 @@ class SalesProposalResource extends Resource
                     ->where('status', PlanVersion::PUBLISHED)
                     ->with('plan.service')
                     ->get()
-                    ->mapWithKeys(fn (PlanVersion $v) => [$v->id => ($v->plan?->service?->name ?? 'Advisory') . ' — ' . ($v->plan?->name ?? 'Plan') . ' (' . $v->price()->format() . ')']))
+                    ->mapWithKeys(fn (PlanVersion $v) => [$v->id => ($v->plan?->service?->name ?? 'Advisory').' — '.($v->plan?->name ?? 'Plan').' ('.$v->price()->format().')']))
                 ->searchable(),
             TextInput::make('package_name')
                 ->label('Package title')
@@ -188,6 +188,7 @@ class SalesProposalResource extends Resource
                             $data['final_agreed_amount_paise'] = Money::rupees((float) $data['final_agreed_amount_rupees'])->paise;
                         }
                         unset($data['approved_service_fee_rupees'], $data['registration_amount_rupees'], $data['discount_amount_rupees'], $data['final_agreed_amount_rupees']);
+
                         return $data;
                     }),
                 Action::make('accept')
@@ -255,6 +256,7 @@ class SalesProposalResource extends Resource
                             $data['final_agreed_amount_paise'] = Money::rupees((float) $data['final_agreed_amount_rupees'])->paise;
                         }
                         unset($data['approved_service_fee_rupees'], $data['registration_amount_rupees'], $data['discount_amount_rupees'], $data['final_agreed_amount_rupees']);
+
                         return $data;
                     }),
             ]);

@@ -13,7 +13,7 @@ class AiSeeder extends Seeder
     public function run(): void
     {
         $admin = User::first();
-        if (!$admin) {
+        if (! $admin) {
             return;
         }
 
@@ -57,7 +57,7 @@ class AiSeeder extends Seeder
                 'version_number' => 1,
             ],
             [
-                'system_prompt' => "You are an assistive Research Analyst AI for Expert Stocks Consultancy. Analyze deterministic indicators provided in context. Never promise or guarantee returns. Strictly adhere to SEBI Research Analyst guidelines.",
+                'system_prompt' => 'You are an assistive Research Analyst AI for Expert Stocks Consultancy. Analyze deterministic indicators provided in context. Never promise or guarantee returns. Strictly adhere to SEBI Research Analyst guidelines.',
                 'status' => 'approved',
                 'author_id' => $admin->id,
                 'approved_by_id' => $admin->id,
@@ -84,7 +84,7 @@ class AiSeeder extends Seeder
                 'version_number' => 1,
             ],
             [
-                'system_prompt' => "You are an assistive CRM intelligence agent for Expert Stocks Consultancy. Provide objective summaries of lead timeline and follow-ups.",
+                'system_prompt' => 'You are an assistive CRM intelligence agent for Expert Stocks Consultancy. Provide objective summaries of lead timeline and follow-ups.',
                 'status' => 'approved',
                 'author_id' => $admin->id,
                 'approved_by_id' => $admin->id,

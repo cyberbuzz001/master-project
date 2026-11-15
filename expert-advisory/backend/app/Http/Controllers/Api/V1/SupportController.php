@@ -16,8 +16,7 @@ class SupportController extends Controller
     public function __construct(
         protected GrievanceService $grievanceService,
         protected SupportTicketService $ticketService,
-    ) {
-    }
+    ) {}
 
     /**
      * Public endpoint to submit a SEBI grievance.
@@ -52,7 +51,7 @@ class SupportController extends Controller
     {
         $grievance = Grievance::where('tracking_number', $trackingNumber)->first();
 
-        if (!$grievance) {
+        if (! $grievance) {
             return response()->json(['error' => 'Grievance not found'], 404);
         }
 

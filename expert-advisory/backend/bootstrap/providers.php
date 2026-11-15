@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\OfficePanelProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\OfficePanelProvider::class,
+    AppServiceProvider::class,
+    OfficePanelProvider::class,
 ];

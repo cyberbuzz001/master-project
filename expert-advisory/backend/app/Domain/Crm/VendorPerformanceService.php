@@ -12,13 +12,12 @@ class VendorPerformanceService
     /**
      * Get aggregated performance analytics across all vendors / lead sources.
      *
-     * @param array $filters [start_date, end_date, vendor_id]
-     * @return array
+     * @param  array  $filters  [start_date, end_date, vendor_id]
      */
     public function getVendorMetrics(array $filters = []): array
     {
         $vendors = Vendor::query();
-        if (!empty($filters['vendor_id'])) {
+        if (! empty($filters['vendor_id'])) {
             $vendors->where('id', $filters['vendor_id']);
         }
         $vendorList = $vendors->get();
@@ -28,10 +27,10 @@ class VendorPerformanceService
         foreach ($vendorList as $vendor) {
             $leadQuery = Lead::where('vendor_id', $vendor->id);
 
-            if (!empty($filters['start_date'])) {
+            if (! empty($filters['start_date'])) {
                 $leadQuery->whereDate('created_at', '>=', $filters['start_date']);
             }
-            if (!empty($filters['end_date'])) {
+            if (! empty($filters['end_date'])) {
                 $leadQuery->whereDate('created_at', '<=', $filters['end_date']);
             }
 
@@ -58,6 +57,7 @@ class VendorPerformanceService
                     'total_spend' => 0.0,
                     'roi' => 0.0,
                 ];
+
                 continue;
             }
 
@@ -66,12 +66,12 @@ class VendorPerformanceService
             $repliedCount = (clone $leadQuery)->whereNotNull('last_whatsapp_received_at')->count();
             $demoCount = (clone $leadQuery)->where(function ($q) {
                 $q->whereNotNull('demo_requested_at')
-                  ->orWhereIn('ai_conversation_state', ['DEMO_REQUESTED', 'DEMO_BOOKED']);
+                    ->orWhereIn('ai_conversation_state', ['DEMO_REQUESTED', 'DEMO_BOOKED']);
             })->count();
 
             $appointmentCount = (clone $leadQuery)->where(function ($q) {
                 $q->whereNotNull('appointment_requested_at')
-                  ->orWhereIn('ai_conversation_state', ['APPOINTMENT_REQUESTED', 'APPOINTMENT_BOOKED']);
+                    ->orWhereIn('ai_conversation_state', ['APPOINTMENT_REQUESTED', 'APPOINTMENT_BOOKED']);
             })->count();
 
             $paidCount = (clone $leadQuery)->whereIn('status', ['PAID', 'CONVERTED'])->count();
@@ -129,6 +129,7 @@ class VendorPerformanceService
 
         return $batches->map(function (LeadImportBatch $batch) {
             $total = $batch->total_rows_detected;
+
             return [
                 'batch_id' => $batch->id,
                 'batch_code' => $batch->batch_code,

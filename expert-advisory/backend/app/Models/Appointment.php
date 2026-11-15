@@ -27,7 +27,7 @@ class Appointment extends Model
     {
         static::creating(function (Appointment $appointment): void {
             $appointment->uuid ??= (string) Str::uuid7();
-            $appointment->appointment_code ??= 'APT-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+            $appointment->appointment_code ??= 'APT-'.date('Ymd').'-'.strtoupper(Str::random(5));
         });
     }
 

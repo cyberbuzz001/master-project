@@ -59,7 +59,7 @@ class MessageTemplateSeeder extends Seeder
     }
 
     /**
-     * @param list<string> $variables
+     * @param  list<string>  $variables
      * @return array{key: string, name: string, body: string, variables: list<string>, purpose: string, provider_template_name: string, language_code: string, channel: string}
      */
     private function template(string $key, string $name, string $body, array $variables, string $purpose, ?string $headerFormat = null): array

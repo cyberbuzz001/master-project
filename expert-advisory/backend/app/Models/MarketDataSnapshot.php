@@ -55,6 +55,7 @@ class MarketDataSnapshot extends Model
 
         if ($diff > $maxAge) {
             $this->update(['is_stale' => true]);
+
             return true;
         }
 

@@ -69,6 +69,7 @@ class InstallmentsRelationManager extends RelationManager
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['amount_paise'] = Money::rupees((float) $data['amount_rupees'])->paise;
                         unset($data['amount_rupees']);
+
                         return $data;
                     })
                     ->form([

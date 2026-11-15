@@ -10,7 +10,6 @@ use App\Models\Employee;
 use App\Models\Followup;
 use App\Models\Invoice;
 use App\Models\Lead;
-use App\Models\MarketDataSnapshot;
 use App\Models\Payment;
 use App\Models\ResearchReport;
 use App\Models\RiskProfile;
@@ -36,7 +35,7 @@ class CleanupDemoData extends Command
         $this->info('========================================================================');
         $this->info(' EXPERT STOCKS CRM — PRODUCTION DATA CLEANUP AUDIT & SAFETY TOOL ');
         $this->info('========================================================================');
-        $this->info('Mode: ' . ($isDryRun ? 'DRY-RUN SIMULATION (No records will be deleted)' : 'LIVE DELETION'));
+        $this->info('Mode: '.($isDryRun ? 'DRY-RUN SIMULATION (No records will be deleted)' : 'LIVE DELETION'));
 
         // 1. Module-by-module analysis
         $modules = [
@@ -85,7 +84,7 @@ class CleanupDemoData extends Command
                     'Verified Demo' => 0,
                     'Genuine to Preserve' => 'All',
                     'Proposed Deletion' => 0,
-                    'Status' => 'Error: ' . $e->getMessage(),
+                    'Status' => 'Error: '.$e->getMessage(),
                 ];
             }
         }
@@ -96,7 +95,7 @@ class CleanupDemoData extends Command
         );
 
         $this->newLine();
-        $this->line("Summary:");
+        $this->line('Summary:');
         $this->line("  • Total Verified Demo Records: <comment>{$totalDemoFound}</comment>");
         $this->line("  • Total Genuine Records Preserved: <info>{$totalGenuineFound}</info>");
 
@@ -106,19 +105,21 @@ class CleanupDemoData extends Command
         if ($dbConnection === 'sqlite') {
             $dbFile = config('database.connections.sqlite.database');
             $this->line("  • Database Path: <info>{$dbFile}</info>");
-            $backupPath = storage_path('backups/database_pre_cleanup_' . date('Y_m_d_His') . '.sqlite');
+            $backupPath = storage_path('backups/database_pre_cleanup_'.date('Y_m_d_His').'.sqlite');
         } else {
-            $backupPath = storage_path('backups/mysql_pre_cleanup_' . date('Y_m_d_His') . '.sql');
+            $backupPath = storage_path('backups/mysql_pre_cleanup_'.date('Y_m_d_His').'.sql');
         }
 
         if ($isDryRun) {
             $this->warn('DRY RUN COMPLETE: No data was modified. To execute real deletion, run with --force after explicit confirmation.');
+
             return 0;
         }
 
         // Live execution path
-        if (! $this->confirm('Are you ABSOLUTELY SURE you want to delete these ' . $totalDemoFound . ' verified demo records? Genuine records will be preserved.')) {
+        if (! $this->confirm('Are you ABSOLUTELY SURE you want to delete these '.$totalDemoFound.' verified demo records? Genuine records will be preserved.')) {
             $this->info('Operation cancelled by user.');
+
             return 0;
         }
 
@@ -159,6 +160,7 @@ class CleanupDemoData extends Command
         });
 
         $this->info('Cleanup completed successfully. Genuine data remains 100% intact.');
+
         return 0;
     }
 }

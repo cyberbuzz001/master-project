@@ -13,8 +13,7 @@ class OpenAIProvider implements AIProviderInterface
     public function __construct(
         protected string $apiKey = '',
         protected string $baseUrl = 'https://api.openai.com/v1',
-    ) {
-    }
+    ) {}
 
     public function name(): string
     {
@@ -30,7 +29,7 @@ class OpenAIProvider implements AIProviderInterface
         $startTime = microtime(true);
 
         $messages = [];
-        if (!empty($request->systemPrompt)) {
+        if (! empty($request->systemPrompt)) {
             $messages[] = ['role' => 'system', 'content' => $request->systemPrompt];
         }
         foreach ($request->messages as $msg) {
@@ -44,13 +43,13 @@ class OpenAIProvider implements AIProviderInterface
             'max_tokens' => $request->maxTokens,
         ];
 
-        if (!empty($request->tools)) {
-            $payload['tools'] = array_map(fn($t) => [
+        if (! empty($request->tools)) {
+            $payload['tools'] = array_map(fn ($t) => [
                 'type' => 'function',
                 'function' => [
                     'name' => $t['name'],
                     'description' => $t['description'] ?? '',
-                    'parameters' => $t['parameters'] ?? new \stdClass(),
+                    'parameters' => $t['parameters'] ?? new \stdClass,
                 ],
             ], $request->tools);
         }
@@ -69,8 +68,8 @@ class OpenAIProvider implements AIProviderInterface
             ->timeout(60)
             ->post("{$this->baseUrl}/chat/completions", $payload);
 
-        if (!$response->successful()) {
-            throw new RuntimeException('OpenAI API request failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new RuntimeException('OpenAI API request failed: '.$response->body());
         }
 
         $data = $response->json();
@@ -78,7 +77,7 @@ class OpenAIProvider implements AIProviderInterface
         $message = $choice['message'] ?? [];
 
         $toolCalls = [];
-        if (!empty($message['tool_calls'])) {
+        if (! empty($message['tool_calls'])) {
             foreach ($message['tool_calls'] as $tc) {
                 $toolCalls[] = [
                     'tool' => $tc['function']['name'] ?? '',

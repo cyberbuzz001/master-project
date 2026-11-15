@@ -7,7 +7,6 @@ use App\Models\Grievance;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use InvalidArgumentException;
-use RuntimeException;
 
 class GrievanceService
 {
@@ -15,9 +14,7 @@ class GrievanceService
      * File a new grievance under SEBI Grievance Redressal Mechanism.
      * Sets 21-day statutory SLA countdown automatically.
      *
-     * @param array<string, mixed> $data
-     * @param ?Client $client
-     * @return Grievance
+     * @param  array<string, mixed>  $data
      */
     public function fileGrievance(array $data, ?Client $client = null): Grievance
     {
@@ -32,7 +29,7 @@ class GrievanceService
             throw new InvalidArgumentException('Complainant name, email, subject, and description are required.');
         }
 
-        if (!array_key_exists($category, Grievance::CATEGORIES)) {
+        if (! array_key_exists($category, Grievance::CATEGORIES)) {
             $category = 'other';
         }
 

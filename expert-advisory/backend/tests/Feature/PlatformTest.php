@@ -9,6 +9,8 @@ use App\Models\Lead;
 use App\Models\SystemSetting;
 use Database\Seeders\DemoSeeder;
 use Database\Seeders\SystemSettingsSeeder;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use LogicException;
 use RuntimeException;
 use Tests\TestCase;
@@ -23,7 +25,7 @@ class PlatformTest extends TestCase
 
         $generated = $this->getJson('/api/v1/health', ['X-Request-Id' => "bad\nvalue"])->headers->get('X-Request-Id');
         $this->assertNotSame("bad\nvalue", $generated);
-        $this->assertTrue(\Illuminate\Support\Str::isUuid($generated));
+        $this->assertTrue(Str::isUuid($generated));
     }
 
     public function test_error_envelope_for_not_found_and_request_id_matches_header(): void
@@ -37,7 +39,7 @@ class PlatformTest extends TestCase
     public function test_unexpected_errors_do_not_leak_internals(): void
     {
         config(['app.debug' => true]);
-        \Illuminate\Support\Facades\Route::get('/api/v1/_boom', fn () => throw new RuntimeException('SQLSTATE secret connection string'));
+        Route::get('/api/v1/_boom', fn () => throw new RuntimeException('SQLSTATE secret connection string'));
 
         $response = $this->getJson('/api/v1/_boom');
 

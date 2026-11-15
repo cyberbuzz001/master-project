@@ -9,7 +9,7 @@ final class SimpleMovingAverage
     /**
      * Calculate Simple Moving Average over an array of floats.
      *
-     * @param list<float> $values
+     * @param  list<float>  $values
      * @return list<float|null> Same length as $values, null where index < $period - 1
      */
     public static function calculate(array $values, int $period): array

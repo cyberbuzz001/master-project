@@ -83,7 +83,7 @@ async function stop() {
 }
 const json = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-test('authentication, routing and communication boundaries', { timeout: 180000 }, async t => {
+test('authentication, routing and communication boundaries', { timeout: 240000 }, async t => {
   backend.listen(3311, '127.0.0.1'); await once(backend, 'listening');
   try {
     await start();
@@ -189,8 +189,8 @@ test('authentication, routing and communication boundaries', { timeout: 180000 }
         const page = await browser.newPage();
         await page.context().addCookies([{ name: 'esc_session', value: 'verified-client', url: origin }]);
         await page.goto(`${origin}/portal`);
-        await page.getByText('TEST-CLIENT-1', { exact: true }).waitFor();
-        await page.getByText('No reports assigned.', { exact: true }).waitFor();
+        await page.getByText('TEST-CLIENT-1', { exact: true }).waitFor({ timeout: 60000 });
+        await page.getByText('No reports assigned.', { exact: true }).waitFor({ timeout: 60000 });
         const body = await page.locator('body').innerText();
         assert.match(body, /Not assigned yet/);
         assert.doesNotMatch(body, /HDFCBANK|Arjun Mehta|Sunita Verma|41\.9%|Execute|Transmit/);

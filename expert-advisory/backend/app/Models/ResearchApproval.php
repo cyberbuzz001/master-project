@@ -24,16 +24,25 @@ class ResearchApproval extends Model
     public $timestamps = false;
 
     public const STAGE_SUBMISSION = 'SUBMISSION';
+
     public const STAGE_AI_REVIEW = 'AI_REVIEW';
+
     public const STAGE_COMPLIANCE_REVIEW = 'COMPLIANCE_REVIEW';
+
     public const STAGE_ANALYST_REVIEW = 'ANALYST_REVIEW';
+
     public const STAGE_PUBLICATION = 'PUBLICATION';
 
     public const ACTION_SUBMIT = 'SUBMIT';
+
     public const ACTION_CLEAR = 'CLEAR';
+
     public const ACTION_REQUEST_CHANGES = 'REQUEST_CHANGES';
+
     public const ACTION_REJECT = 'REJECT';
+
     public const ACTION_APPROVE = 'APPROVE';
+
     public const ACTION_PUBLISH = 'PUBLISH';
 
     protected function casts(): array

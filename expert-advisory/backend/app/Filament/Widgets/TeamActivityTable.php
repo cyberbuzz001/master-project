@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\CallLog;
 use App\Models\Employee;
 use App\Models\Followup;
 use Filament\Tables\Columns\TextColumn;
@@ -43,8 +44,8 @@ class TeamActivityTable extends TableWidget
                         'followups as overdue_followups' => fn (Builder $q) => $q->whereIn('status', [Followup::PENDING, Followup::MISSED])->where('due_at', '<', now()),
                     ])
                     ->addSelect([
-                        'calls_today' => \App\Models\CallLog::query()->selectRaw('count(*)')->whereColumn('employee_id', 'employees.id')->where('called_at', '>=', $startOfToday),
-                        'connected_today' => \App\Models\CallLog::query()->selectRaw('count(*)')->whereColumn('employee_id', 'employees.id')->where('called_at', '>=', $startOfToday)->where('outcome', 'connected'),
+                        'calls_today' => CallLog::query()->selectRaw('count(*)')->whereColumn('employee_id', 'employees.id')->where('called_at', '>=', $startOfToday),
+                        'connected_today' => CallLog::query()->selectRaw('count(*)')->whereColumn('employee_id', 'employees.id')->where('called_at', '>=', $startOfToday)->where('outcome', 'connected'),
                     ]);
 
                 if (! $user->can('leads.view_all')) {

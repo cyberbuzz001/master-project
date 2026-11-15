@@ -22,7 +22,7 @@ class TrainingModulesSeeder extends Seeder
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # Employee CRM Master Tutorial — Telecaller & Sales Operations
 
 Welcome to the Expert Stocks advisory CRM workspace (`/office`). This tutorial is your step-by-step operating guide to maximizing your daily telecalling productivity, closing more advisory subscriptions, and maintaining compliance.
@@ -97,7 +97,7 @@ MARKDOWN,
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # 48-Hour Free Trial Playbook — Demonstration & Conversion Engine
 
 A research demonstration is the most effective way to eliminate prospect skepticism regarding trade accuracy and discipline.
@@ -152,7 +152,7 @@ MARKDOWN,
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # Sales Proposals, Negotiation & Objection Handling Matrix
 
 Closing advisory sales requires empathy, clear pricing structure, and decisive objection handling.
@@ -198,7 +198,7 @@ MARKDOWN,
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # Client 360 Onboarding, KYC & Regulatory Compliance
 
 Once a prospect commits to a paid subscription, strict SEBI regulations govern how they are onboarded before any research recommendations can be sent.
@@ -245,7 +245,7 @@ MARKDOWN,
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # Installments, Collections & Financial Separation of Duties
 
 Financial integrity is paramount. In Expert Stocks, sales team recording and finance team verification are strictly separated.
@@ -287,7 +287,7 @@ MARKDOWN,
                 'status' => TrainingModule::PUBLISHED,
                 'published_at' => now(),
                 'version' => 1,
-                'body_markdown' => <<<MARKDOWN
+                'body_markdown' => <<<'MARKDOWN'
 # TradeGrow Platform Architecture & User Demat Journey
 
 TradeGrow (`tradegrow.in`) is the next-generation Demat account and smart execution platform that powers our financial ecosystem.

@@ -27,9 +27,13 @@ class ResearchPerformance extends Model
     public $table = 'research_performance';
 
     public const OUTCOME_PENDING = 'PENDING';
+
     public const OUTCOME_TARGET_HIT = 'TARGET_HIT';
+
     public const OUTCOME_STOP_LOSS_HIT = 'STOP_LOSS_HIT';
+
     public const OUTCOME_EXPIRED = 'EXPIRED';
+
     public const OUTCOME_SCRATCH = 'SCRATCH';
 
     protected function casts(): array

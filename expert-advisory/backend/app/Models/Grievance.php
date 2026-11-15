@@ -59,7 +59,7 @@ class Grievance extends Model
         static::creating(function (Grievance $grievance): void {
             if (empty($grievance->tracking_number)) {
                 $count = static::count() + 1;
-                $grievance->tracking_number = 'GRV-' . date('Y') . '-' . str_pad((string) $count, 5, '0', STR_PAD_LEFT);
+                $grievance->tracking_number = 'GRV-'.date('Y').'-'.str_pad((string) $count, 5, '0', STR_PAD_LEFT);
             }
             if (empty($grievance->sla_due_at)) {
                 // SEBI mandate: 21 calendar days

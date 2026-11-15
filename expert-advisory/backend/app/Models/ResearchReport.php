@@ -26,9 +26,13 @@ class ResearchReport extends Model
     use HasDemoFlag, HasFactory, SoftDeletes;
 
     public const TYPE_FUNDAMENTAL = 'fundamental';
+
     public const TYPE_TECHNICAL = 'technical';
+
     public const TYPE_THEMATIC = 'thematic';
+
     public const TYPE_MACRO = 'macro';
+
     public const TYPE_SECTOR = 'sector';
 
     public const TYPES = [
@@ -40,7 +44,9 @@ class ResearchReport extends Model
     ];
 
     public const CATEGORY_RECOMMENDATION = 'recommendation';
+
     public const CATEGORY_RESEARCH_REPORT = 'research_report';
+
     public const CATEGORY_EDUCATIONAL = 'educational';
 
     public const CATEGORIES = [

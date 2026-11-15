@@ -113,7 +113,7 @@ class DemoSeeder extends Seeder
         if (! $clientModel->riskProfiles()->exists()) {
             $questionnaireVersion = RiskQuestionnaireVersion::query()->first();
             if ($questionnaireVersion) {
-                $rp = new RiskProfile();
+                $rp = new RiskProfile;
                 $rp->forceFill([
                     'client_id' => $clientModel->id,
                     'risk_questionnaire_version_id' => $questionnaireVersion->id,
@@ -207,7 +207,7 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * @param array<string, Employee> $employees
+     * @param  array<string, Employee>  $employees
      */
     private function seedResearchDesk(array $employees, Client $clientModel): void
     {
@@ -313,7 +313,7 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * @param array<string, Employee> $employees
+     * @param  array<string, Employee>  $employees
      */
     private function seedLeads(array $employees): void
     {

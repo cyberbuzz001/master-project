@@ -43,9 +43,9 @@ class SsoHandoffController extends Controller
 
             return redirect('/office');
         } catch (\Throwable $e) {
-            Log::warning('[SSO Handoff] Failed: ' . $e->getMessage());
+            Log::warning('[SSO Handoff] Failed: '.$e->getMessage());
 
-            return redirect(config('platform.frontend_url').'/login?error=' . urlencode($e->getMessage()));
+            return redirect(config('platform.frontend_url').'/login?error='.urlencode($e->getMessage()));
         }
     }
 
@@ -71,7 +71,7 @@ class SsoHandoffController extends Controller
                 'user' => UserPresenter::me($user, $request),
             ]);
         } catch (\Throwable $e) {
-            Log::warning('[SSO API Handoff] Failed: ' . $e->getMessage());
+            Log::warning('[SSO API Handoff] Failed: '.$e->getMessage());
 
             return ApiResponse::error(403, 'SSO_FAILED', $e->getMessage());
         }
@@ -133,7 +133,7 @@ class SsoHandoffController extends Controller
         // Replay attack prevention via unique nonce
         $nonce = $payload['nonce'] ?? null;
         if ($nonce) {
-            $cacheKey = 'sso_nonce:' . $nonce;
+            $cacheKey = 'sso_nonce:'.$nonce;
             if (Cache::has($cacheKey)) {
                 throw new \RuntimeException('SSO ticket has already been consumed.');
             }

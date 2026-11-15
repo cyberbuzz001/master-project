@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Domain\Support\GrievanceService;
 use App\Models\Client;
 use App\Models\Grievance;
-use App\Models\RegulatoryProfileVersion;
-use App\Models\SupportTicket;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,7 +91,7 @@ class GrievanceAndSupportTest extends TestCase
             'sla_due_at' => CarbonImmutable::now()->addDays(21),
         ]);
 
-        $service = new GrievanceService();
+        $service = new GrievanceService;
 
         // 1. Assign to officer
         $service->assignGrievance($grievance, $officer);

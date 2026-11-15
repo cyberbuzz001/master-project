@@ -6,7 +6,6 @@ use App\Filament\Exports\LeadExporter;
 use App\Filament\Imports\LeadImporter;
 use App\Filament\Resources\LeadImportBatches\LeadImportBatchResource;
 use App\Filament\Resources\Leads\LeadResource;
-use App\Models\Lead;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ImportAction;

@@ -6,7 +6,6 @@ use App\Filament\Resources\Followups\FollowupResource;
 use App\Models\Followup;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 

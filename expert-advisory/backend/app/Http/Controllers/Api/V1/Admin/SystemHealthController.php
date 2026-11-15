@@ -37,7 +37,7 @@ class SystemHealthController extends Controller
 
         // 2. Cache check
         try {
-            $cacheKey = 'health_check_' . bin2hex(random_bytes(4));
+            $cacheKey = 'health_check_'.bin2hex(random_bytes(4));
             Cache::put($cacheKey, 'ok', 10);
             $cacheVal = Cache::get($cacheKey);
             Cache::forget($cacheKey);
@@ -56,7 +56,7 @@ class SystemHealthController extends Controller
         // 3. Document Vault Private Storage
         try {
             $disk = Storage::disk(config('onboarding.documents.disk', 'local'));
-            $testFile = '.health_' . bin2hex(random_bytes(4));
+            $testFile = '.health_'.bin2hex(random_bytes(4));
             $disk->put($testFile, 'health');
             $disk->delete($testFile);
 

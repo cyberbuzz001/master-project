@@ -90,7 +90,7 @@ class MockMarketDataProvider implements MarketDataProviderInterface
         for ($i = $limit - 1; $i >= 0; $i--) {
             $date = $now->subDays($i);
             // Deterministic delta using hash
-            $hashVal = hexdec(substr(md5($sym . $date->toDateString()), 0, 4)) % 1000;
+            $hashVal = hexdec(substr(md5($sym.$date->toDateString()), 0, 4)) % 1000;
             $pctFactor = ($hashVal - 490) / 10000; // -0.049 to +0.051
             $close = round($currentClose * (1 + $pctFactor), 2);
             $open = round($currentClose, 2);

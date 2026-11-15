@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Appointments;
 use App\Filament\Resources\Appointments\Pages\ManageAppointments;
 use App\Models\Appointment;
 use App\Models\Employee;
-use App\Models\Lead;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;

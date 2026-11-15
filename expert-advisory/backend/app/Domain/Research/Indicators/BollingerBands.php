@@ -9,7 +9,7 @@ final class BollingerBands
     /**
      * Calculate Bollinger Bands over closing prices.
      *
-     * @param list<float> $closes
+     * @param  list<float>  $closes
      * @return list<array{middle: float|null, upper: float|null, lower: float|null}>
      */
     public static function calculate(array $closes, int $period = 20, float $multiplier = 2.0): array
@@ -25,6 +25,7 @@ final class BollingerBands
         for ($i = 0; $i < $count; $i++) {
             if ($smas[$i] === null) {
                 $result[] = ['middle' => null, 'upper' => null, 'lower' => null];
+
                 continue;
             }
 

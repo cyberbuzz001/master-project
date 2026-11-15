@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Domain\MarketData\MarketDataManager;
 use App\Domain\MarketData\MarketDataSnapshotService;
 use App\Domain\MarketData\Providers\MockMarketDataProvider;
 use App\Domain\Shared\ApiException;
@@ -14,7 +13,7 @@ class MarketDataTest extends TestCase
 {
     public function test_mock_provider_returns_quote_and_bars(): void
     {
-        $provider = new MockMarketDataProvider();
+        $provider = new MockMarketDataProvider;
         $quote = $provider->fetchQuote('RELIANCE');
 
         $this->assertSame('RELIANCE', $quote->symbol);

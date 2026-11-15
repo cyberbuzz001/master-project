@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Testing\TestResponse;
 use PragmaRX\Google2FA\Google2FA;
 
 abstract class TestCase extends BaseTestCase
@@ -70,7 +71,7 @@ abstract class TestCase extends BaseTestCase
         return $this->actingAs($user)->withSession([RequireTwoFactor::SESSION_KEY => now()->getTimestamp()]);
     }
 
-    protected function assertApiError(\Illuminate\Testing\TestResponse $response, int $status, string $code): void
+    protected function assertApiError(TestResponse $response, int $status, string $code): void
     {
         $response->assertStatus($status)
             ->assertJsonPath('success', false)

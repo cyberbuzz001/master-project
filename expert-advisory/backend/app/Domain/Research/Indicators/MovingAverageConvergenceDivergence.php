@@ -7,7 +7,7 @@ final class MovingAverageConvergenceDivergence
     /**
      * Calculate MACD (MACD line, Signal line, Histogram).
      *
-     * @param list<float> $closes
+     * @param  list<float>  $closes
      * @return list<array{macd: float|null, signal: float|null, histogram: float|null}>
      */
     public static function calculate(array $closes, int $fast = 12, int $slow = 26, int $signal = 9): array

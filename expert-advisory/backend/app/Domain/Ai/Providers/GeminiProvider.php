@@ -13,8 +13,7 @@ class GeminiProvider implements AIProviderInterface
     public function __construct(
         protected string $apiKey = '',
         protected string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta',
-    ) {
-    }
+    ) {}
 
     public function name(): string
     {
@@ -46,7 +45,7 @@ class GeminiProvider implements AIProviderInterface
             ],
         ];
 
-        if (!empty($request->systemPrompt)) {
+        if (! empty($request->systemPrompt)) {
             $payload['systemInstruction'] = [
                 'parts' => [['text' => $request->systemPrompt]],
             ];
@@ -56,8 +55,8 @@ class GeminiProvider implements AIProviderInterface
         $response = Http::timeout(60)
             ->post("{$this->baseUrl}/models/{$model}:generateContent?key={$this->apiKey}", $payload);
 
-        if (!$response->successful()) {
-            throw new RuntimeException('Gemini API request failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new RuntimeException('Gemini API request failed: '.$response->body());
         }
 
         $data = $response->json();

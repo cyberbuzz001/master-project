@@ -15,8 +15,7 @@ class ToolGateway
 {
     public function __construct(
         protected ?MarketDataSnapshotService $marketDataService = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, array{name: string, description: string, parameters: array<string, mixed>}>
@@ -64,7 +63,7 @@ class ToolGateway
      * Execute a tool call on behalf of the requesting user.
      * Enforces strict authorization so an assistant cannot read data the user cannot see.
      *
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
     public function execute(string $toolName, array $arguments, ?User $user = null): array
@@ -78,7 +77,7 @@ class ToolGateway
     }
 
     /**
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
     protected function getMarketSnapshot(array $arguments, ?User $user): array
@@ -92,7 +91,7 @@ class ToolGateway
             ->latest('as_of')
             ->first();
 
-        if (!$snapshot) {
+        if (! $snapshot) {
             return [
                 'symbol' => $symbol,
                 'status' => 'not_found',
@@ -117,7 +116,7 @@ class ToolGateway
     }
 
     /**
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
     protected function getLeadSummary(array $arguments, ?User $user): array
@@ -125,11 +124,11 @@ class ToolGateway
         $leadId = (int) ($arguments['lead_id'] ?? 0);
         $lead = Lead::find($leadId);
 
-        if (!$lead) {
+        if (! $lead) {
             return ['error' => 'Lead not found'];
         }
 
-        if ($user && !Gate::forUser($user)->check('view', $lead) && !Gate::forUser($user)->check('leads.view_all')) {
+        if ($user && ! Gate::forUser($user)->check('view', $lead) && ! Gate::forUser($user)->check('leads.view_all')) {
             throw new RuntimeException('Unauthorized: You do not have permission to access this lead.');
         }
 
@@ -144,7 +143,7 @@ class ToolGateway
     }
 
     /**
-     * @param array<string, mixed> $arguments
+     * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
     protected function getClientSummary(array $arguments, ?User $user): array
@@ -152,11 +151,11 @@ class ToolGateway
         $clientId = (int) ($arguments['client_id'] ?? 0);
         $client = Client::with(['currentRiskProfile', 'activeSubscription.plan'])->find($clientId);
 
-        if (!$client) {
+        if (! $client) {
             return ['error' => 'Client not found'];
         }
 
-        if ($user && !Gate::forUser($user)->check('clients.view_all') && $client->user_id !== $user->id) {
+        if ($user && ! Gate::forUser($user)->check('clients.view_all') && $client->user_id !== $user->id) {
             throw new RuntimeException('Unauthorized: You do not have permission to access this client.');
         }
 

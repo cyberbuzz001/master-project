@@ -14,9 +14,7 @@ class SupportTicketService
     /**
      * Create a new support ticket for a client.
      *
-     * @param Client $client
-     * @param array<string, mixed> $data
-     * @return SupportTicket
+     * @param  array<string, mixed>  $data
      */
     public function createTicket(Client $client, array $data): SupportTicket
     {
@@ -28,7 +26,7 @@ class SupportTicketService
             throw new InvalidArgumentException('Subject and initial message are required.');
         }
 
-        if (!array_key_exists($category, SupportTicket::CATEGORIES)) {
+        if (! array_key_exists($category, SupportTicket::CATEGORIES)) {
             $category = 'general';
         }
 

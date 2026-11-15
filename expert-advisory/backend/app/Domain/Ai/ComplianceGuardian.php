@@ -30,9 +30,8 @@ class ComplianceGuardian
     /**
      * Run full compliance and grounding screen on AI generated text and structured outputs.
      *
-     * @param string $content
-     * @param array<string, mixed> $toolResults
-     * @param array<string, mixed>|null $structuredOutput
+     * @param  array<string, mixed>  $toolResults
+     * @param  array<string, mixed>|null  $structuredOutput
      * @return array{passed: bool, violations: array<int, string>, findings: array<int, string>}
      */
     public function screen(string $content, array $toolResults = [], ?array $structuredOutput = null): array
@@ -70,10 +69,10 @@ class ComplianceGuardian
             if ($entry && $stopLoss && $target) {
                 $direction = strtoupper($rec['direction'] ?? 'BUY');
                 if ($direction === 'BUY' && $stopLoss >= $entry) {
-                    $violations[] = "INVALID_RISK_REWARD: BUY recommendation has stop loss (₹" . ($stopLoss / 100) . ") >= entry (₹" . ($entry / 100) . ").";
+                    $violations[] = 'INVALID_RISK_REWARD: BUY recommendation has stop loss (₹'.($stopLoss / 100).') >= entry (₹'.($entry / 100).').';
                 }
                 if ($direction === 'BUY' && $target <= $entry) {
-                    $violations[] = "INVALID_RISK_REWARD: BUY recommendation has target (₹" . ($target / 100) . ") <= entry (₹" . ($entry / 100) . ").";
+                    $violations[] = 'INVALID_RISK_REWARD: BUY recommendation has target (₹'.($target / 100).') <= entry (₹'.($entry / 100).').';
                 }
             }
         }

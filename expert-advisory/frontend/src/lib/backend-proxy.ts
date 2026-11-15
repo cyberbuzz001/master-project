@@ -38,8 +38,10 @@ export async function proxyBackend(request: NextRequest, path: string): Promise<
     }
 
     // Purge host-only legacy cookies so wildcard domain (.expertstocks.in) cookies take precedence
-    responseHeaders.append("set-cookie", "esc_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
-    responseHeaders.append("set-cookie", "XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Secure; SameSite=Lax");
+    if (host.includes("expertstocks.in")) {
+      responseHeaders.append("set-cookie", "esc_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
+      responseHeaders.append("set-cookie", "XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Secure; SameSite=Lax");
+    }
 
     for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append("set-cookie", cookie);
     if (upstream.status >= 300 && upstream.status < 400) {

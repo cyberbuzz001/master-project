@@ -9,9 +9,9 @@ final class AverageTrueRange
     /**
      * Calculate Average True Range (ATR) given arrays of highs, lows, and closes.
      *
-     * @param list<float> $highs
-     * @param list<float> $lows
-     * @param list<float> $closes
+     * @param  list<float>  $highs
+     * @param  list<float>  $lows
+     * @param  list<float>  $closes
      * @return list<float|null>
      */
     public static function calculate(array $highs, array $lows, array $closes, int $period = 14): array

@@ -30,26 +30,41 @@ class ResearchRecommendation extends Model
     use HasFactory;
 
     public const DIRECTION_BUY = 'BUY';
+
     public const DIRECTION_SELL = 'SELL';
+
     public const DIRECTION_HOLD = 'HOLD';
+
     public const DIRECTION_ACCUMULATE = 'ACCUMULATE';
 
     public const SEGMENT_CASH = 'EQUITY_CASH';
+
     public const SEGMENT_FUTURES = 'EQUITY_FUTURES';
+
     public const SEGMENT_OPTIONS = 'EQUITY_OPTIONS';
+
     public const SEGMENT_COMMODITY = 'COMMODITY';
+
     public const SEGMENT_CURRENCY = 'CURRENCY';
 
     public const RISK_LOW = 'LOW';
+
     public const RISK_MODERATE = 'MODERATE';
+
     public const RISK_HIGH = 'HIGH';
+
     public const RISK_VERY_HIGH = 'VERY_HIGH';
 
     public const STATUS_ACTIVE = 'ACTIVE';
+
     public const STATUS_TARGET_HIT = 'TARGET_HIT';
+
     public const STATUS_STOP_LOSS_HIT = 'STOP_LOSS_HIT';
+
     public const STATUS_EXPIRED = 'EXPIRED';
+
     public const STATUS_CLOSED = 'CLOSED';
+
     public const STATUS_CANCELLED = 'CANCELLED';
 
     protected function casts(): array

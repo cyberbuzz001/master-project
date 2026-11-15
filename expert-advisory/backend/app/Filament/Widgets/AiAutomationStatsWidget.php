@@ -26,8 +26,8 @@ class AiAutomationStatsWidget extends StatsOverviewWidget
         $activeConversations = $leads()->whereNotNull('last_whatsapp_received_at')->count();
         $demoAppointments = $leads()->where(function ($q) {
             $q->whereNotNull('demo_requested_at')
-              ->orWhereNotNull('appointment_requested_at')
-              ->orWhereIn('ai_conversation_state', ['DEMO_REQUESTED', 'DEMO_BOOKED', 'APPOINTMENT_REQUESTED', 'APPOINTMENT_BOOKED']);
+                ->orWhereNotNull('appointment_requested_at')
+                ->orWhereIn('ai_conversation_state', ['DEMO_REQUESTED', 'DEMO_BOOKED', 'APPOINTMENT_REQUESTED', 'APPOINTMENT_BOOKED']);
         })->count();
         $humanTakeover = $leads()->where('is_ai_paused', true)->count();
 

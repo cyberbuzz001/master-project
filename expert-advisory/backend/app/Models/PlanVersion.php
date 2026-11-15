@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
 #[Fillable([
-    'plan_id', 'version', 'base_price_paise', 'currency', 'tax_code', 'price_includes_tax', 
-    'status', 'effective_from', 'inclusions', 'created_by', 'published_by', 'published_at'
+    'plan_id', 'version', 'base_price_paise', 'currency', 'tax_code', 'price_includes_tax',
+    'status', 'effective_from', 'inclusions', 'created_by', 'published_by', 'published_at',
 ])]
 class PlanVersion extends Model
 {

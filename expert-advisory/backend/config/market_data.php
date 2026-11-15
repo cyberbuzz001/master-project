@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\MarketData\Providers\MockMarketDataProvider;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -24,7 +26,7 @@ return [
 
     'providers' => [
         'mock' => [
-            'class' => \App\Domain\MarketData\Providers\MockMarketDataProvider::class,
+            'class' => MockMarketDataProvider::class,
         ],
         'nse' => [
             'base_url' => env('NSE_BASE_URL', 'https://www.nseindia.com'),

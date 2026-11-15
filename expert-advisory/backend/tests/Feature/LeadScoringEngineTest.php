@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Domain\Crm\LeadScoringEngine;
 use App\Models\Lead;
-use App\Models\SuppressionRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

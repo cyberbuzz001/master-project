@@ -7,9 +7,9 @@ final class Supertrend
     /**
      * Calculate Supertrend indicator.
      *
-     * @param list<float> $highs
-     * @param list<float> $lows
-     * @param list<float> $closes
+     * @param  list<float>  $highs
+     * @param  list<float>  $lows
+     * @param  list<float>  $closes
      * @return list<array{supertrend: float|null, direction: int|null}> 1 for Bullish, -1 for Bearish
      */
     public static function calculate(array $highs, array $lows, array $closes, int $period = 10, float $multiplier = 3.0): array
@@ -27,6 +27,7 @@ final class Supertrend
             $atr = $atrs[$i];
             if ($atr === null) {
                 $result[] = ['supertrend' => null, 'direction' => null];
+
                 continue;
             }
 

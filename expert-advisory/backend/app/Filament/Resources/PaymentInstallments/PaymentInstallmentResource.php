@@ -134,6 +134,7 @@ class PaymentInstallmentResource extends Resource
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['amount_paise'] = Money::rupees($data['amount_rupees'])->paise;
                         unset($data['amount_rupees']);
+
                         return $data;
                     }),
             ]);

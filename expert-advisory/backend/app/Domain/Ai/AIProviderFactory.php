@@ -7,7 +7,6 @@ use App\Domain\Ai\Providers\AnthropicProvider;
 use App\Domain\Ai\Providers\GeminiProvider;
 use App\Domain\Ai\Providers\MockAIProvider;
 use App\Domain\Ai\Providers\OpenAIProvider;
-use InvalidArgumentException;
 
 class AIProviderFactory
 {
@@ -28,8 +27,8 @@ class AIProviderFactory
                 apiKey: config('ai.providers.gemini.key', ''),
                 baseUrl: config('ai.providers.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta')
             ),
-            'mock', 'local' => new MockAIProvider(),
-            default => new MockAIProvider(),
+            'mock', 'local' => new MockAIProvider,
+            default => new MockAIProvider,
         };
     }
 }

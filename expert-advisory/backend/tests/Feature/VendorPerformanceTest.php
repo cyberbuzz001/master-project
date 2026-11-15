@@ -68,7 +68,7 @@ class VendorPerformanceTest extends TestCase
         ]);
 
         $invoice = new Invoice([
-            'client_id' => $client->id, 
+            'client_id' => $client->id,
             'invoice_date' => now(),
             'due_date' => now()->addDays(7),
         ]);

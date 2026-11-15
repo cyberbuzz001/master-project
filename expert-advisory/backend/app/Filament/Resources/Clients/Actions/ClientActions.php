@@ -3,16 +3,19 @@
 namespace App\Filament\Resources\Clients\Actions;
 
 use App\Domain\Billing\InvoiceService;
+use App\Domain\Billing\PaymentService;
 use App\Domain\Billing\SubscriptionService;
 use App\Domain\Onboarding\AgreementService;
 use App\Domain\Onboarding\DocumentVault;
 use App\Domain\Onboarding\OnboardingService;
 use App\Domain\Onboarding\RiskProfileService;
+use App\Filament\Resources\Payments\Actions\PaymentActions;
 use App\Filament\Support\DomainAction;
 use App\Models\Agreement;
 use App\Models\AgreementVersion;
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\Invoice;
 use App\Models\PlanVersion;
 use App\Models\RiskQuestion;
 use App\Models\RiskQuestionnaireVersion;
@@ -50,7 +53,7 @@ final class ClientActions
             ->modalDescription('Record an installment or payment received. This enters the system as PENDING VERIFICATION. It counts as confirmed collections only once authorized finance staff verifies it.')
             ->schema(function (Client $record) {
                 $openInvoices = $record->invoices()
-                    ->whereIn('status', [\App\Models\Invoice::ISSUED, \App\Models\Invoice::PARTIALLY_PAID])
+                    ->whereIn('status', [Invoice::ISSUED, Invoice::PARTIALLY_PAID])
                     ->pluck('invoice_number', 'id');
 
                 $invoiceSelect = Select::make('invoice_id')
@@ -60,14 +63,14 @@ final class ClientActions
                     ->helperText('Select an open invoice to settle, or leave blank to record as on-account installment.')
                     ->native(false);
 
-                return array_merge([$invoiceSelect], \App\Filament\Resources\Payments\Actions\PaymentActions::fields($record));
+                return array_merge([$invoiceSelect], PaymentActions::fields($record));
             })
             ->action(fn (array $data, Client $record, Action $action) => DomainAction::run(
                 $action,
-                fn () => app(\App\Domain\Billing\PaymentService::class)->record(
+                fn () => app(PaymentService::class)->record(
                     auth()->user(),
                     $record,
-                    \App\Filament\Resources\Payments\Actions\PaymentActions::payload($data, $data['invoice_id'] ?? null)
+                    PaymentActions::payload($data, $data['invoice_id'] ?? null)
                 ),
                 'Payment installment recorded — awaiting finance verification'
             ));

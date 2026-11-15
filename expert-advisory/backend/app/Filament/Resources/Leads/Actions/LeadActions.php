@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Leads\Actions;
 
 use App\Domain\Billing\Money;
 use App\Domain\Compliance\ConsentRecorder;
+use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Domain\Crm\LeadAssignmentService;
+use App\Domain\Crm\LeadScoringEngine;
 use App\Domain\Crm\LeadStatus;
 use App\Domain\Crm\LeadWorkflowService;
 use App\Domain\Onboarding\ClientConversionService;
@@ -28,6 +30,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -256,7 +259,7 @@ final class LeadActions
             ])
             ->action(function (array $data, Lead $record, Action $action) {
                 FreeTrial::create([
-                    'trial_code' => 'TR-' . strtoupper(Str::random(6)),
+                    'trial_code' => 'TR-'.strtoupper(Str::random(6)),
                     'lead_id' => $record->id,
                     'employee_id' => auth()->user()->employee?->id,
                     'trial_type' => $data['trial_type'],
@@ -273,9 +276,9 @@ final class LeadActions
                 $record->update(['status' => 'FREE_TRIAL']);
 
                 try {
-                    app(\App\Domain\Crm\AutomationWorkflowEngine::class)->triggerWorkflow($record, 'WORKFLOW_C_DEMO_NURTURING');
+                    app(AutomationWorkflowEngine::class)->triggerWorkflow($record, 'WORKFLOW_C_DEMO_NURTURING');
                 } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('[FreeTrial] Automation trigger failed:', ['lead_id' => $record->id, 'error' => $e->getMessage()]);
+                    Log::warning('[FreeTrial] Automation trigger failed:', ['lead_id' => $record->id, 'error' => $e->getMessage()]);
                 }
 
                 Notification::make()->success()->title('48-hour free trial activated! Demo nurturing automation enrolled.')->send();
@@ -300,7 +303,7 @@ final class LeadActions
             ->action(function (array $data, Lead $record, Action $action) {
                 $finalPaise = Money::rupees((float) $data['final_agreed_amount_rupees'])->paise;
                 SalesProposal::create([
-                    'proposal_number' => 'PROP-' . date('ymd') . '-' . strtoupper(Str::random(4)),
+                    'proposal_number' => 'PROP-'.date('ymd').'-'.strtoupper(Str::random(4)),
                     'lead_id' => $record->id,
                     'employee_id' => auth()->user()->employee?->id,
                     'package_name' => $data['package_name'],
@@ -359,7 +362,7 @@ final class LeadActions
                 ? 'Resume AI sales assistant conversation for this lead. Automated AI responses will be enabled.'
                 : 'Pause AI sales assistant to prevent automated responses while a human agent interacts with the customer on WhatsApp.')
             ->action(function (Lead $record) {
-                $record->update(['is_ai_paused' => !$record->is_ai_paused]);
+                $record->update(['is_ai_paused' => ! $record->is_ai_paused]);
                 Notification::make()
                     ->title($record->is_ai_paused ? 'Human Takeover Activated' : 'AI Assistant Resumed')
                     ->body($record->is_ai_paused ? 'AI responses are paused. You now have full manual control.' : 'AI assistant is now active for this lead.')
@@ -375,7 +378,7 @@ final class LeadActions
             ->icon(Heroicon::OutlinedSparkles)
             ->color('info')
             ->action(function (Lead $record) {
-                $result = app(\App\Domain\Crm\LeadScoringEngine::class)->scoreLead($record);
+                $result = app(LeadScoringEngine::class)->scoreLead($record);
                 Notification::make()
                     ->title("AI Score: {$result['score']}/100 ({$result['grade']})")
                     ->body(implode(' ', $result['explanation']))

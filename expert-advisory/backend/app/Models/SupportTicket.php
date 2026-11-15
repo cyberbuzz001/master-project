@@ -48,7 +48,7 @@ class SupportTicket extends Model
         static::creating(function (SupportTicket $ticket): void {
             if (empty($ticket->ticket_number)) {
                 $count = static::count() + 1;
-                $ticket->ticket_number = 'TKT-' . date('Y') . '-' . str_pad((string) $count, 5, '0', STR_PAD_LEFT);
+                $ticket->ticket_number = 'TKT-'.date('Y').'-'.str_pad((string) $count, 5, '0', STR_PAD_LEFT);
             }
         });
     }

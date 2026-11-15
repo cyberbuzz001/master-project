@@ -5,7 +5,7 @@ namespace App\Domain\Ai\DTOs;
 readonly class AICompletionResult
 {
     /**
-     * @param array<int, array{tool: string, arguments: array<string, mixed>}> $toolCalls
+     * @param  array<int, array{tool: string, arguments: array<string, mixed>}>  $toolCalls
      */
     public function __construct(
         public string $content,
@@ -15,6 +15,5 @@ readonly class AICompletionResult
         public ?string $providerRequestId = null,
         public string $finishReason = 'stop',
         public int $latencyMs = 0,
-    ) {
-    }
+    ) {}
 }

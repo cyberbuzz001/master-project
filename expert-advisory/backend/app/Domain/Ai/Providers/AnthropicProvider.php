@@ -13,8 +13,7 @@ class AnthropicProvider implements AIProviderInterface
     public function __construct(
         protected string $apiKey = '',
         protected string $baseUrl = 'https://api.anthropic.com/v1',
-    ) {
-    }
+    ) {}
 
     public function name(): string
     {
@@ -36,15 +35,15 @@ class AnthropicProvider implements AIProviderInterface
             'temperature' => $request->temperature,
         ];
 
-        if (!empty($request->systemPrompt)) {
+        if (! empty($request->systemPrompt)) {
             $payload['system'] = $request->systemPrompt;
         }
 
-        if (!empty($request->tools)) {
-            $payload['tools'] = array_map(fn($t) => [
+        if (! empty($request->tools)) {
+            $payload['tools'] = array_map(fn ($t) => [
                 'name' => $t['name'],
                 'description' => $t['description'] ?? '',
-                'input_schema' => $t['parameters'] ?? new \stdClass(),
+                'input_schema' => $t['parameters'] ?? new \stdClass,
             ], $request->tools);
         }
 
@@ -56,8 +55,8 @@ class AnthropicProvider implements AIProviderInterface
             ->timeout(60)
             ->post("{$this->baseUrl}/messages", $payload);
 
-        if (!$response->successful()) {
-            throw new RuntimeException('Anthropic API request failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new RuntimeException('Anthropic API request failed: '.$response->body());
         }
 
         $data = $response->json();

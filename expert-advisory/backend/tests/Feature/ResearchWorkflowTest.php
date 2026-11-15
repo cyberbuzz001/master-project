@@ -11,7 +11,6 @@ use App\Models\PolicyDocument;
 use App\Models\PolicyDocumentVersion;
 use App\Models\RegulatoryProfileVersion;
 use App\Models\ResearchApproval;
-use App\Models\ResearchRecommendation;
 use App\Models\ResearchReport;
 use App\Models\ResearchVersion;
 use App\Models\User;

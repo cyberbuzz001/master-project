@@ -11,7 +11,7 @@ final class ExponentialMovingAverage
      * Initial seed is the SMA of the first $period elements.
      * Multiplier = 2 / ($period + 1).
      *
-     * @param list<float> $values
+     * @param  list<float>  $values
      * @return list<float|null>
      */
     public static function calculate(array $values, int $period): array

@@ -14,11 +14,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
@@ -129,7 +127,7 @@ class GrievanceResource extends Resource
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (Grievance $record): bool => !$record->is_escalated_scores && (auth()->user()?->can('complaints.manage') ?? false))
+                    ->visible(fn (Grievance $record): bool => ! $record->is_escalated_scores && (auth()->user()?->can('complaints.manage') ?? false))
                     ->form([
                         TextInput::make('scores_registration_number')
                             ->label('SEBI SCORES Registration / Case Reference')
