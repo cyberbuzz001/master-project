@@ -49,6 +49,8 @@ def generate(snapshot, now=None):
     # Upstream exact-decimal stop/target planner; exchange tick rounding follows it.
     plan = exit_planner.compute(entry, "price", stop, "r", Decimal("2"))
     target = rounded(plan["target"], True)
+    if snapshot.lower_circuit is not None and (stop < snapshot.lower_circuit or target > snapshot.upper_circuit):
+        raise ValueError('Trading plan extends beyond exchange circuit limits')
     risk = entry - stop
     tags, indicators = scanner.find_setups([float(b.close) for b in bars])
     quantity = int(snapshot.risk_budget / (risk * snapshot.lot_size)) * snapshot.lot_size

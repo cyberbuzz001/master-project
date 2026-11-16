@@ -11,8 +11,12 @@ export function validateResearchData(token: string, tick: MarketTick | null, can
       now - tick.timestamp < 0 || now - tick.timestamp > 60_000) {
     throw new Error('A fresh Dhan quote for the exact instrument is unavailable');
   }
-  if (!(tick.bid > 0 && tick.ask >= tick.bid) || !Number.isFinite(tick.bid) || !Number.isFinite(tick.ask) ||
+  if (!tick.depthVerified || !(tick.bid > 0 && tick.ask >= tick.bid) || !Number.isFinite(tick.bid) || !Number.isFinite(tick.ask) ||
       (tick.ask - tick.bid) / tick.ltp > .05) throw new Error('Bid/ask is missing, crossed, or wider than 5%');
+  if (!Number.isFinite(tick.lowerCircuit) || !Number.isFinite(tick.upperCircuit) ||
+      !(tick.lowerCircuit! > 0 && tick.upperCircuit! > tick.lowerCircuit!) ||
+      tick.ltp < tick.lowerCircuit! || tick.ltp > tick.upperCircuit! ||
+      tick.bid < tick.lowerCircuit! || tick.ask > tick.upperCircuit!) throw new Error('Authoritative circuit limits are missing or quote is outside limits');
   const bars = candles.filter(c => c.time * 1000 + 300_000 <= tick.timestamp);
   if (bars.length < 30) throw new Error('At least 30 completed five-minute Dhan bars are required');
   for (let i = 0; i < bars.length; i++) {
@@ -56,11 +60,12 @@ export async function buildResearchSnapshot(token: string) {
   const engine = MarketDataEngine.getInstance();
   if (engine.getActiveProviderName().toUpperCase() !== 'DHAN') throw new Error('Dhan is not the active data provider');
   const candles = await engine.getResearchCandles(token);
-  const quote = await engine.getQuote(token);
+  const quote = await engine.getResearchQuote(token);
   const bars = validateResearchData(token, quote, candles);
   return { symbol: instrument.trading_symbol, token, asset_type: option ? 'option' : 'stock', source: 'dhan',
     as_of: new Date(quote!.timestamp).toISOString(), last_price: String(quote!.ltp), tick_size: String(tickSize),
-    lot_size: lot, risk_budget: '1000', ...(option ? { underlying: mapping.symbolName, expires_at: expiresAt } : {}),
+    lot_size: lot, risk_budget: '1000', lower_circuit: String(quote!.lowerCircuit), upper_circuit: String(quote!.upperCircuit),
+    ...(option ? { underlying: mapping.symbolName, expires_at: expiresAt } : {}),
     bars: bars.map(b => ({ timestamp: new Date(b.time*1000).toISOString(), open: String(b.open), high: String(b.high),
       low: String(b.low), close: String(b.close), volume: String(b.volume) })) };
 }

@@ -7,12 +7,20 @@ const assert = require('node:assert/strict');
     const errors = [];
     const submitted = [];
     let unavailable = false;
+    let scheduled = false;
     const id = '12345678-1234-1234-1234-123456789abc';
     page.on('pageerror', e => errors.push(e.message));
     await page.route('**/api/v1/admin/research/**', async route => {
       if (unavailable) return route.fulfill({ status: 503, json: { error: 'Research service is not configured' } });
       const request = route.request();
       const pathname = new URL(request.url()).pathname;
+      if (pathname.includes('/schedules')) {
+        if (request.method() === 'POST') scheduled = true;
+        if (request.method() === 'DELETE') scheduled = false;
+        return route.fulfill({ json: request.method() === 'GET' ? { configured:true,
+          schedules: scheduled ? [{ id:'watchlist-1', token:'NSE_RELIANCE', next_run:Date.now()/1000,
+            last_job:id, config:{ interval_seconds:900, include_ai:false } }] : [] } : { id:'watchlist-1' } });
+      }
       if (pathname.endsWith('/instruments')) return route.fulfill({ json: { instruments: [{ token:'NSE_RELIANCE', symbol:'RELIANCE', exchange:'NSE', expiry:null }] } });
       if (pathname.endsWith('/snapshot')) return route.fulfill({ json: { ...snapshot, as_of: new Date().toISOString() } });
       if (request.method() === 'POST') {
@@ -49,6 +57,8 @@ const assert = require('node:assert/strict');
     await page.getByLabel('Find stock or option contract').fill('RELIANCE');
     await page.getByRole('button', { name:'Search instruments', exact:true }).click();
     await page.getByRole('button', { name:/RELIANCE.*Load snapshot/ }).click();
+    await page.getByRole('button', { name:'Add to automated watchlist', exact:true }).click();
+    await page.getByRole('button', { name:'Remove schedule for NSE_RELIANCE', exact:true }).waitFor();
     await page.getByRole('button', { name: 'Generate research', exact: true }).click();
     await page.getByText('EXPIRED LEVELS', { exact: true }).waitFor();
     await page.getByText('Company research content.', { exact: true }).waitFor();
@@ -62,6 +72,8 @@ const assert = require('node:assert/strict');
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export JSON', exact: true }).click();
     assert.equal((await download).suggestedFilename(), `research-${id}.json`);
+    await page.getByRole('button', { name:'Remove schedule for NSE_RELIANCE', exact:true }).click();
+    await page.getByText('No automatic research scheduled.', { exact:true }).waitFor();
     unavailable = true;
     await page.getByRole('button', { name: 'Refresh research jobs' }).click();
     await page.getByText('Service unavailable', { exact: true }).waitFor();

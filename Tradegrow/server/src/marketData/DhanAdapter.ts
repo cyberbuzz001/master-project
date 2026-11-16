@@ -899,6 +899,29 @@ export class DhanAdapter implements IMarketDataProvider {
     }
   }
 
+  /** Private research path: never reuse inferred bid/ask from the streaming cache. */
+  public async getResearchQuote(token: string): Promise<MarketTick | null> {
+    const { InstrumentMasterService } = require('./InstrumentMasterService');
+    const rec = InstrumentMasterService.getInstance().getDhanScripByToken(token);
+    if (!rec) return null;
+    const response = await fetch(`${this.baseUrl}/v2/marketfeed/quote`, {
+      method: 'POST', signal: AbortSignal.timeout(5000),
+      headers: { 'access-token': this.accessToken, 'client-id': this.clientId, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [rec.segment]: [Number(rec.securityId)] })
+    });
+    if (!response.ok) return null;
+    const json: any = await response.json();
+    const item = json.status === 'success' ? json.data?.[rec.segment]?.[rec.securityId] : null;
+    if (!item) return null;
+    return { instrumentToken: token, exchange: rec.exchange, symbol: rec.symbolName,
+      ltp: Number(item.last_price), open: Number(item.ohlc?.open), high: Number(item.ohlc?.high),
+      low: Number(item.ohlc?.low), close: Number(item.ohlc?.close), volume: Number(item.volume),
+      change: 0, changePercent: 0, bid: Number(item.depth?.buy?.[0]?.price), ask: Number(item.depth?.sell?.[0]?.price),
+      bidQty: Number(item.depth?.buy?.[0]?.quantity), askQty: Number(item.depth?.sell?.[0]?.quantity),
+      depthVerified: true, lowerCircuit: Number(item.lower_circuit_limit), upperCircuit: Number(item.upper_circuit_limit),
+      timestamp: Date.now(), source: 'dhan', isSynthetic: false };
+  }
+
   public async getQuote(instrumentToken: string): Promise<MarketTick | null> {
     SafetyLock.assertSimulationOnly('DhanAdapter.getQuote');
 

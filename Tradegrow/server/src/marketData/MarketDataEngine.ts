@@ -493,6 +493,11 @@ export class MarketDataEngine {
     return this.activeProvider.getHistoricalCandles(token, '5m', 100, false);
   }
 
+  public async getResearchQuote(token: string): Promise<MarketTick | null> {
+    if (!(this.activeProvider instanceof DhanAdapter)) throw new Error('Dhan is not the active data provider');
+    return this.activeProvider.getResearchQuote(token);
+  }
+
   /**
    * Option Chain — routed primarily to Dhan HQ API with fallback to Angel One
    */

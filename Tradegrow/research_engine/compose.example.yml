@@ -8,6 +8,7 @@ services:
     environment:
       RESEARCH_API_KEY: ${RESEARCH_API_KEY:?Set a random secret of at least 32 characters}
       RESEARCH_DB: /data/research.sqlite
+      RESEARCH_NODE_URL: ${RESEARCH_NODE_URL:?Set internal Node URL e.g. http://app-1:5001}
     volumes:
       - research_data:/data
     networks:

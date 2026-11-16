@@ -9,6 +9,8 @@ type Result = { symbol: string; as_of: string; valid_until: number; basis: strin
   risk_status: string; ai_research?: Record<string, string>; [key: string]: unknown };
 type Detail = { id: string; status: string; result: Result | null; error: string | null };
 type Instrument = { token: string; symbol: string; exchange: string; expiry: string | null };
+type WatchSchedule = { id: string; token: string; next_run: number; last_error: string | null;
+  last_job: string | null; config: { interval_seconds: number; include_ai: boolean } };
 const API = '/api/v1/admin/research';
 const money = (value: unknown) => value == null ? '—' : Number(value).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const date = (value: string | number) => new Date(typeof value === 'number' ? value * 1000 : value).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -34,6 +36,10 @@ export function ResearchDashboard({ token }: { token: string }) {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [searching, setSearching] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [schedules, setSchedules] = useState<WatchSchedule[]>([]);
+  const [schedulerReady, setSchedulerReady] = useState(false);
+  const [interval, setIntervalMinutes] = useState('15');
+  const [savingSchedule, setSavingSchedule] = useState(false);
   const alive = useRef(true);
   const requestKey = useRef<{ payload: string; key: string } | null>(null);
   const controllers = useRef(new Set<AbortController>());
@@ -53,8 +59,9 @@ export function ResearchDashboard({ token }: { token: string }) {
 
   const refresh = useCallback(async () => {
     try {
-      const data = await request('/jobs');
-      if (alive.current) { setJobs(data.jobs); setCounts(data.counts); setService('online'); setError(''); }
+      const [data, automation] = await Promise.all([request('/jobs'), request('/schedules')]);
+      if (alive.current) { setJobs(data.jobs); setCounts(data.counts); setSchedules(automation.schedules);
+        setSchedulerReady(automation.configured); setService('online'); }
     } catch (e) {
       if (alive.current && (e as Error).name !== 'AbortError') { setService('unavailable'); setError((e as Error).message); }
     }
@@ -134,6 +141,22 @@ export function ResearchDashboard({ token }: { token: string }) {
     finally { if (alive.current) setBusy(false); }
   }
 
+  async function saveSchedule() {
+    if (!snapshot) return;
+    setSavingSchedule(true); setError('');
+    try {
+      await request('/schedules', { method:'POST', body:JSON.stringify({ token:snapshot.token,
+        interval_seconds:Number(interval)*60, risk_budget:risk, include_ai:ai, research_ticker:ticker || null }) });
+      if (alive.current) await refresh();
+    } catch (e) { if (alive.current && (e as Error).name !== 'AbortError') setError((e as Error).message); }
+    finally { if (alive.current) setSavingSchedule(false); }
+  }
+
+  async function removeSchedule(id: string) {
+    try { await request(`/schedules/${id}`, { method:'DELETE' }); if (alive.current) await refresh(); }
+    catch (e) { if (alive.current && (e as Error).name !== 'AbortError') setError((e as Error).message); }
+  }
+
   const result = detail?.result;
   const stale = snapshot && (now - Date.parse(snapshot.as_of) > 60000 || Date.parse(snapshot.as_of) > now);
   const expired = result && now / 1000 >= result.valid_until;
@@ -177,9 +200,16 @@ export function ResearchDashboard({ token }: { token: string }) {
         {ai && <><label className="block text-xs space-y-2"><span>Underlying provider ticker</span><input required className={input} value={ticker} onChange={e => setTicker(e.target.value.toUpperCase())} placeholder="e.g. RELIANCE.NS" /></label>
           <p className="text-xs text-[var(--text-muted)]">Requires configured model credentials. Company research is separate from option premium levels and may take several minutes.</p></>}
         <button disabled={!snapshot || Boolean(stale) || busy || service !== 'online'} className="w-full min-h-11 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-sm flex justify-center items-center gap-2 disabled:opacity-40"><Play size={16} />{busy ? 'Submitting…' : 'Generate research'}</button>
+        <label className="block text-xs space-y-2"><span>Automatic research interval</span><select className={input} value={interval} onChange={e => setIntervalMinutes(e.target.value)}><option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option><option value="30">Every 30 minutes</option><option value="60">Every hour</option></select></label>
+        <button type="button" onClick={() => void saveSchedule()} disabled={!snapshot || !schedulerReady || savingSchedule || (ai && !ticker) || !Number.isFinite(Number(risk)) || Number(risk) <= 0} className="w-full min-h-11 rounded-lg border border-emerald-500 text-emerald-400 text-sm disabled:opacity-40">{savingSchedule ? 'Saving…' : 'Add to automated watchlist'}</button>
+        {!schedulerReady && <p className="text-xs text-amber-400">Scheduling is unavailable until the server connection is configured.</p>}
         <p className="text-xs text-[var(--text-muted)]">Draft research only. No orders or client messages are sent.</p>
       </form>
       <div className="min-w-0 space-y-5">
+        <section className={panel} aria-label="Automated watchlist"><h2 className="font-semibold mb-2">Automated watchlist</h2><p className="text-xs text-[var(--text-muted)] mb-3">Market hours only · Up to 10 instruments · Fresh data required for every report</p>
+          {!schedules.length && <p className="text-sm text-[var(--text-muted)]">No automatic research scheduled.</p>}
+          {schedules.map(item => <div key={item.id} className="border-t border-[var(--border-color)] py-3 flex gap-3 justify-between items-start"><div className="min-w-0"><p className="text-sm font-semibold break-all">{item.token}</p><p className="text-xs text-[var(--text-muted)]">Every {item.config.interval_seconds/60} min{item.config.include_ai ? ' · AI enabled' : ''} · Next eligible: {date(item.next_run)} IST</p>{item.last_error && <p className="text-xs text-amber-400 mt-1">{item.last_error}</p>}{item.last_job && <button type="button" className="text-xs text-emerald-400 min-h-11" onClick={() => setSelected(item.last_job!)}>View latest job</button>}</div><button type="button" className="text-xs text-red-400 min-h-11 shrink-0" aria-label={`Remove schedule for ${item.token}`} onClick={() => void removeSchedule(item.id)}>Remove</button></div>)}
+        </section>
         <section className={panel} aria-label="Research job history"><h2 className="font-semibold mb-3">Recent research <span className="text-xs font-normal text-[var(--text-muted)]">Latest 50 jobs</span></h2>
           {!jobs.length && <p className="text-sm text-[var(--text-muted)] py-5">{service === 'online' ? 'No reports yet. Load an instrument snapshot to create your first research job.' : 'Connect the research service to load reports.'}</p>}
           <div className="max-h-72 overflow-y-auto space-y-2">{jobs.map(job => <button key={job.id} onClick={() => setSelected(job.id)} aria-pressed={selected === job.id}

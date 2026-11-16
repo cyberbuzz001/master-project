@@ -8,7 +8,7 @@ from pathlib import Path
 import main
 from fastapi import HTTPException
 from levels import generate
-from models import Snapshot
+from models import Snapshot, Schedule
 
 
 def fixture():
@@ -94,6 +94,29 @@ class ResearchTests(unittest.TestCase):
                 self.assertEqual(history.status_code, 200)
                 self.assertEqual(history.json()['jobs'][0]['id'], response.json()['id'])
                 self.assertNotIn('payload', history.json()['jobs'][0])
+
+    def test_scheduled_watchlist_fetches_once_and_persists_job(self):
+        import os
+        from unittest.mock import patch, MagicMock
+        main.save_schedule(Schedule(token='2885', risk_budget='1000'))
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = fixture().model_dump_json().encode()
+        at = datetime.fromisoformat('2026-11-16T10:00:00+05:30')
+        with patch.dict(os.environ, {'RESEARCH_NODE_URL':'http://node:5001', 'RESEARCH_API_KEY':'a'*32}), \
+                patch('urllib.request.urlopen', return_value=response) as fetch:
+            main.process_schedule(at=at)
+            main.process_schedule(at=at)
+        self.assertEqual(fetch.call_count, 1)
+        self.assertEqual(len(main.list_jobs()['jobs']), 1)
+        row = main.list_schedules()['schedules'][0]
+        self.assertIsNotNone(row['last_job'])
+        main.remove_schedule(row['id'])
+        self.assertEqual(main.list_schedules()['schedules'], [])
+
+    def test_circuit_plan_rejection(self):
+        s = fixture()
+        with self.assertRaises(ValueError):
+            generate(s.model_copy(update={'lower_circuit': Decimal('1339'), 'upper_circuit':Decimal('1340')}))
 
 
 if __name__ == '__main__':

@@ -75,6 +75,17 @@ research. Upstream broker execution tools are not invoked.
 
 ## Scheduled generation
 
+The dashboard includes a persistent automated watchlist (up to ten instruments).
+Set `RESEARCH_NODE_URL` on the research container to the verified internal Node
+service URL. The service scheduler claims one due instrument every 30 seconds,
+requests `/internal/research/snapshot` with the shared research API key, then
+submits a fresh idempotent job. The Node endpoint enforces sessions, holiday
+calendar and feed validation. The watchlist runs on weekdays 09:15–15:25 IST.
+Remove a schedule in the dashboard to stop future runs; existing jobs continue.
+No host cron is required for this watchlist.
+
+An optional legacy batch integration is also available:
+
 `scheduled_batch.py` fetches a server-configured `RESEARCH_SNAPSHOT_URL` with
 `RESEARCH_SNAPSHOT_TOKEN`. The producer must respond with
 `{"market_open": true, "snapshots": [...]}` using fresh Dhan data and authoritative
@@ -108,9 +119,10 @@ Before enabling scheduled production use:
    Dhan-only quotes/history, regular sessions, a populated holiday calendar,
    fresh quotes, ordered completed five-minute bars and valid bid/ask within 5%.
    Research history explicitly disables the adapter's generated candle fallback.
-   Exchange circuit limits still need authoritative fields from the feed; the
-   current MarketTick interface does not expose them. Scheduled watchlist/batch
-   production remains separate from this staff-requested snapshot endpoint.
+   A research-only REST quote path reads real depth and upper/lower circuit fields;
+   missing limits or plans outside bands are rejected. Verify the actual authenticated
+   provider payload in staging before enabling production. Generated streaming
+   bid/ask values are not used by the research snapshot connector.
 2. Add reviewer approval/history and distribution into the advisory CRM. The
    dashboard displays drafts; no automatic WhatsApp publishing is configured.
 3. Configure provider credentials, validate Indian ticker/news coverage and
@@ -124,3 +136,6 @@ short options, spreads, OI analytics, portfolio exposure, and probability claims
 are not implemented. Price levels expire after five minutes (or contract expiry),
 and AI may finish after that validity window. Consumers must honor `valid_until`.
 No predictive accuracy or complete production readiness has been established.
+
+See [PRODUCTION_HANDOFF.md](PRODUCTION_HANDOFF.md) for the VPS deployment sequence,
+rollback guidance and the explicit live-access/credential verification blockers.

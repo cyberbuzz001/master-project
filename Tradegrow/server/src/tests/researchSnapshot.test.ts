@@ -9,7 +9,8 @@ import { InstrumentMasterService } from '../marketData/InstrumentMasterService';
 import { MarketTick, Candle } from '../marketData/types';
 
 const now = Date.now();
-const quote = { instrumentToken: 'NSE_RELIANCE', source: 'dhan', timestamp: now, ltp: 100, bid: 99.9, ask: 100.1 } as MarketTick;
+const quote = { instrumentToken: 'NSE_RELIANCE', source: 'dhan', timestamp: now, ltp: 100, bid: 99.9, ask: 100.1,
+  depthVerified: true, lowerCircuit:50, upperCircuit:200 } as MarketTick;
 const bars: Candle[] = Array.from({ length: 31 }, (_, i) => ({ time: Math.floor(now / 1000)- (31-i)*300, open:100, high:102, low:99, close:101, volume:100 }));
 
 test('only completed, ordered, real-price bars enter research', () => {
@@ -22,6 +23,7 @@ test('only completed, ordered, real-price bars enter research', () => {
 test.each([
   { timestamp: now-61000 }, { instrumentToken: 'OTHER' }, { source: 'synthetic_skew' },
   { isSynthetic: true }, { ask: 99 }, { bid: 0 }, { ask: 120 },
+  { depthVerified:false }, { lowerCircuit: undefined }, { upperCircuit:99 },
 ])('rejects unsafe quote %j', change => {
   expect(() => validateResearchData(quote.instrumentToken, { ...quote, ...change } as MarketTick, bars, now)).toThrow();
 });
@@ -31,7 +33,7 @@ test('builds a snapshot from exact server metadata and Dhan data', async () => {
     exchange: 'NSE', instrument_type: 'EQ', lot_size: 1, tick_size: .05 }).mockResolvedValueOnce({ configured: 10, today: 0 });
   (InstrumentMasterService.getInstance as jest.Mock).mockReturnValue({ getDhanScripByToken: () => ({ lotSize:1 }) });
   (MarketDataEngine.getInstance as jest.Mock).mockReturnValue({ getActiveProviderName: () => 'DHAN',
-    getResearchCandles: async () => bars, getQuote: async () => quote });
+    getResearchCandles: async () => bars, getResearchQuote: async () => quote });
   const result = await buildResearchSnapshot(quote.instrumentToken);
   expect(result.last_price).toBe('100');
   expect(result.source).toBe('dhan');

@@ -3,10 +3,25 @@ import rateLimit from 'express-rate-limit';
 import { authenticateToken, checkRole } from '../middleware/auth';
 import { query } from '../db/schema';
 import { buildResearchSnapshot } from '../services/ResearchSnapshotService';
+import { timingSafeEqual } from 'crypto';
+
+export const internalResearchRouter = Router();
+internalResearchRouter.post('/snapshot', rateLimit({ windowMs: 60_000, limit: 20 }), async (req, res) => {
+  const key = process.env.RESEARCH_API_KEY;
+  const actual = Buffer.from(req.get('Authorization') || '');
+  const expected = Buffer.from(`Bearer ${key || ''}`);
+  if (!key || key.length < 32 || actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+    res.status(401).json({ error: 'Unauthorized' }); return;
+  }
+  if (typeof req.body.token !== 'string' || req.body.token.length > 100) { res.status(400).json({ error: 'Invalid token' }); return; }
+  try { res.json(await buildResearchSnapshot(req.body.token)); }
+  catch { res.status(422).json({ error: 'Fresh verified snapshot unavailable; check session, feed, metadata and circuit limits' }); }
+});
 
 const router = Router();
 router.use(authenticateToken, checkRole(['SUPER_ADMIN', 'ADMIN', 'ANALYST']));
-router.use(rateLimit({ windowMs: 60_000, limit: 20 }));
+router.use(rateLimit({ windowMs: 60_000, limit: 120 }));
+router.use(rateLimit({ windowMs: 60_000, limit: 20, skip: req => req.method === 'GET' }));
 
 async function proxy(req: any, res: any, path: string, method = 'GET') {
   const endpoint = process.env.RESEARCH_SERVICE_URL;
@@ -47,6 +62,9 @@ router.post('/snapshot', async (req, res) => {
   catch (error) { res.status(422).json({ error: error instanceof Error ? error.message : 'Dhan snapshot unavailable' }); }
 });
 router.get('/jobs', (req, res) => proxy(req, res, '/jobs'));
+router.get('/schedules', (req, res) => proxy(req, res, '/schedules'));
+router.post('/schedules', (req, res) => proxy(req, res, '/schedules', 'POST'));
+router.delete('/schedules/:id', (req, res) => proxy(req, res, `/schedules/${encodeURIComponent(String(req.params.id))}`, 'DELETE'));
 router.post('/jobs', (req, res) => proxy(req, res, '/jobs', 'POST'));
 router.get('/jobs/:id', (req, res) => {
   if (!/^[0-9a-f-]{36}$/i.test(String(req.params.id))) {

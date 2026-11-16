@@ -1,6 +1,9 @@
 export type TickSource = 'live' | 'guard_feed' | 'synthetic_skew' | 'cached_stale' | 'market_closed' | 'dhan' | 'fyers' | 'angelone' | 'position_broadcast';
 
 export interface MarketTick {
+  depthVerified?: boolean;
+  lowerCircuit?: number;
+  upperCircuit?: number;
   instrumentToken: string;
   exchange: string;
   symbol: string;
