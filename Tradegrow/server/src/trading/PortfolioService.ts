@@ -518,8 +518,8 @@ export class PortfolioService {
           dbLtp: oldLtp
         });
 
-        // Broadcast live tick for open position so subscribers receive real-time updates
-        if (ltp > 0) {
+        // Broadcast live tick for open position so subscribers receive real-time updates (only authoritative live ticks)
+        if (ltp > 0 && priceSource === 'live') {
           const tickObj: MarketTick = {
             instrumentToken: instToken,
             exchange: r.exchange,
@@ -538,7 +538,7 @@ export class PortfolioService {
             change: Number((ltp - avgPrice).toFixed(2)),
             changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
             timestamp: Date.now(),
-            source: priceSource === 'live' ? 'live' : 'position_broadcast'
+            source: 'live'
           };
 
           // Cache in memory and fan out to all Redis cluster nodes

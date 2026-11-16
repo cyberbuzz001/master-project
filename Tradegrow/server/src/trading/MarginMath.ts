@@ -300,7 +300,7 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
   let ltp = tick && tick.ltp > 0 ? tick.ltp : 0;
   let priceSource: UnrealizedPnlResult['priceSource'] = tick && tick.ltp > 0 ? 'live' : 'stale_db';
 
-  // 3. Fallback: Query OptionChainEngine for live contract price or dynamic spot-anchored BS price
+  // 3. Fallback: Query OptionChainEngine for live contract price (authoritative live feed only)
   if (ltp <= 0) {
     try {
       const { OptionChainEngine } = require('../marketData/OptionChainEngine');
@@ -310,48 +310,12 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
         const strike = parseFloat(mOpt[2]);
         const isCe = mOpt[3].toUpperCase() === 'CE';
         const optRes = OptionChainEngine.getLiveOptionLtp(underlying, strike, isCe);
-        if (optRes && optRes.ltp > 0) {
+        if (optRes && optRes.source === 'live' && optRes.ltp > 0) {
           ltp = optRes.ltp;
-          priceSource = optRes.source;
+          priceSource = 'live';
         }
       }
     } catch (_) {}
-  }
-
-  // 4. Fallback: Black-Scholes estimate anchored to live spot tick
-  if (ltp <= 0) {
-    const mOpt = symbol.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
-    if (mOpt) {
-      const symName = mOpt[1].toUpperCase();
-      const strike = parseFloat(mOpt[2]);
-      const isCall = mOpt[3].toUpperCase() === 'CE';
-      const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : symName === 'MIDCPNIFTY' ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
-      const spotTick = engine.getCachedTick(spotToken) ||
-                       (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||
-                       engine.getCachedTick(symName);
-      if (spotTick && spotTick.ltp > 0) {
-        const now = new Date();
-        const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-        const dayOfWeek = istNow.getUTCDay();
-        let targetDay = 2; // Default Tuesday (NIFTY/FINNIFTY)
-        if (symName === 'BANKNIFTY') targetDay = 3;
-        else if (symName === 'SENSEX') targetDay = 5;
-
-        let daysAhead = (targetDay - dayOfWeek + 7) % 7;
-        if (daysAhead === 0 && istNow.getUTCHours() >= 10) daysAhead = 7;
-        const diffDays = Math.max(0.1, daysAhead || 0.5);
-        const timeToExpiryYears = diffDays / 365.0;
-
-        const distance = Math.abs(strike - spotTick.ltp);
-        const baseIv = symName === 'SENSEX' ? 0.16 : symName === 'BANKNIFTY' ? 0.15 : 0.13;
-        const iv = Math.max(0.05, baseIv + (distance * 0.00005));
-        const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, timeToExpiryYears, isCall, iv);
-        if (bsPrice > 0) {
-          ltp = Number(bsPrice.toFixed(2));
-          priceSource = 'bs_estimate';
-        }
-      }
-    }
   }
 
   if (ltp <= 0) {

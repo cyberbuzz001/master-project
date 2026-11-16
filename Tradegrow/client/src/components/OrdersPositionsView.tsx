@@ -11,7 +11,6 @@ import { PortfolioNav } from './PortfolioNav';
 import { pnlColorClass, formatPnl, formatPnlPct } from '../utils/pnl';
 import { getLotSizeForSymbol } from '../utils/lotSize';
 import { normalizeToken } from '../utils/symbology';
-import { estimateLiveOptionPrice } from '../utils/blackScholes';
 import { ContractNoteModal } from './ContractNoteModal';
 import { useToast } from '../context/ToastContext';
 
@@ -190,21 +189,12 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       }
     }
 
-    // If direct tick is fresh from live exchange/broker feed or SSE stream (< 30s), use it directly
-    if (directTick && directTick.ltp > 0 && (!directTick.timestamp || Date.now() - directTick.timestamp < 30000)) {
-      if (directTick.source !== 'synthetic_skew') {
-        return directTick.ltp;
-      }
+    // Direct tick from real-time live broker/exchange feed (no synthetic fallbacks)
+    if (directTick && directTick.ltp > 0) {
+      return directTick.ltp;
     }
 
-    // 3. Dynamic spot-anchored estimate: recalculates option price live from the index spot tick (NSE_NIFTY50, etc.)
-    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, 0, ticks);
-    if (dynamicPrice > 0) return dynamicPrice;
-
-    // 4. Exact tick fallback if present
-    if (directTick && directTick.ltp > 0) return directTick.ltp;
-
-    // 5. Server-provided LTP from positions query (already updated by Dhan/BS)
+    // If no tick has arrived yet, use position record's own price
     if (itemLtp > 0) return itemLtp;
 
     return avgPrice;

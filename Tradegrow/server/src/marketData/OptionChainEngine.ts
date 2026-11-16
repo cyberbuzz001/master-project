@@ -157,37 +157,7 @@ export class OptionChainEngine {
       }
     }
 
-    // 3. Dynamic Black-Scholes anchored to live Spot Tick
-    const spotToken = cleanSym === 'SENSEX' ? 'BSE_SENSEX' : cleanSym === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : cleanSym === 'FINNIFTY' ? 'NSE_FINNIFTY' : cleanSym === 'MIDCPNIFTY' ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
-    const spotTick = engine.getCachedTick(spotToken) ||
-                     (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||
-                     engine.getCachedTick(cleanSym);
-
-    const defaultFallbackSpot = cleanSym === 'SENSEX' ? 81850 : cleanSym === 'BANKNIFTY' ? 60800 : cleanSym === 'FINNIFTY' ? 27670 : cleanSym === 'MIDCPNIFTY' ? 14160 : 25240;
-    const spotPrice = (spotTick && spotTick.ltp > 0) ? spotTick.ltp : (OptionChainEngine.lastKnownSpotPrices.get(spotToken) || defaultFallbackSpot);
-
-    if (spotPrice > 0) {
-      const distance = Math.abs(strike - spotPrice);
-      const skewIvDecimal = Math.max(0.05, (cleanSym === 'SENSEX' ? 0.212 : cleanSym === 'BANKNIFTY' ? 0.165 : cleanSym === 'FINNIFTY' ? 0.148 : 0.123) + (distance * 0.00008));
-      
-      const now = new Date();
-      const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-      const dayOfWeek = istNow.getUTCDay();
-      let targetDay = 2; // Default Tuesday
-      if (cleanSym === 'BANKNIFTY') targetDay = 3;
-      else if (cleanSym === 'SENSEX') targetDay = 5;
-
-      let daysAhead = (targetDay - dayOfWeek + 7) % 7;
-      if (daysAhead === 0 && istNow.getUTCHours() >= 10) daysAhead = 7;
-      const diffDays = Math.max(0.1, daysAhead || 0.5);
-      const timeToExpiryYears = diffDays / 365.0;
-
-      const bsPrice = GreeksEngine.calculateOptionPrice(spotPrice, strike, timeToExpiryYears, isCall, skewIvDecimal);
-      if (bsPrice > 0) {
-        return { ltp: Math.max(0.05, Number(bsPrice.toFixed(2))), source: 'bs_estimate' };
-      }
-    }
-
+    // No synthetic/fallback estimate — only return authoritative live broker price
     return null;
   }
 
