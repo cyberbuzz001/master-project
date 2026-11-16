@@ -90,6 +90,10 @@ class ResearchTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 202)
                 result = client.get('/jobs/'+response.json()['id'], headers=headers)
                 self.assertEqual(result.status_code, 200)
+                history = client.get('/jobs', headers=headers)
+                self.assertEqual(history.status_code, 200)
+                self.assertEqual(history.json()['jobs'][0]['id'], response.json()['id'])
+                self.assertNotIn('payload', history.json()['jobs'][0])
 
 
 if __name__ == '__main__':

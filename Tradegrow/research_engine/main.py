@@ -145,3 +145,16 @@ def get_job(job_id: str):
     result = dict(row)
     result["result"] = json.loads(result["result"]) if result["result"] else None
     return result
+
+
+@app.get("/jobs")
+def list_jobs():
+    with connect() as db:
+        rows = db.execute("SELECT id,status,error,created,payload FROM jobs ORDER BY created DESC LIMIT 50").fetchall()
+        counts = dict(db.execute("SELECT status,count(*) FROM jobs GROUP BY status").fetchall())
+    jobs = []
+    for row in rows:
+        payload = json.loads(row['payload'])
+        jobs.append({key: row[key] for key in ('id', 'status', 'error', 'created')} |
+                    {key: payload.get(key) for key in ('symbol', 'token', 'asset_type', 'include_ai')})
+    return {'jobs': jobs, 'counts': counts}

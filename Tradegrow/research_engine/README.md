@@ -92,13 +92,18 @@ Snapshot freshness is checked again by the worker, so queued stale jobs fail.
 
 ## Production work still required
 
-This implements an API/worker integration, not a completed research dashboard.
+The admin panel now includes a Research Desk under Daily Operations with snapshot
+import, risk settings, optional AI research, persistent job history, report viewing,
+expiry warnings and JSON export. It uses the private service through the Node API;
+ADMIN, SUPER_ADMIN and ANALYST roles can access the backend. The service must be
+deployed/configured for this dashboard to generate reports.
+
 Before enabling scheduled production use:
 
 1. Implement the trusted Dhan snapshot producer and its instrument allowlist,
    exchange calendar, feed freshness, bid/ask/circuit checks and rate budget.
-2. Add the research review UI, reviewer approval/history and distribution into
-   the advisory CRM. No automatic WhatsApp publishing is configured.
+2. Add reviewer approval/history and distribution into the advisory CRM. The
+   dashboard displays drafts; no automatic WhatsApp publishing is configured.
 3. Configure provider credentials, validate Indian ticker/news coverage and
    benchmark research against historical sessions without lookahead bias.
 4. Install the compose service on the actual VPS, add monitoring/backups and

@@ -27,6 +27,7 @@ async function proxy(req: any, res: any, path: string, method = 'GET') {
 }
 
 router.get('/health', (req, res) => proxy(req, res, '/health'));
+router.get('/jobs', (req, res) => proxy(req, res, '/jobs'));
 router.post('/jobs', (req, res) => proxy(req, res, '/jobs', 'POST'));
 router.get('/jobs/:id', (req, res) => {
   if (!/^[0-9a-f-]{36}$/i.test(String(req.params.id))) {

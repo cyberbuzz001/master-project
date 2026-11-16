@@ -29,6 +29,7 @@ import { EmailAdmin } from './admin/EmailAdmin';
 import { WarRoomDashboard } from './admin/WarRoomDashboard';
 import { WhatsAppConsoleDashboard } from './admin/WhatsAppConsoleDashboard';
 import { StaffDeskSwitcher } from './admin/StaffDeskSwitcher';
+import { ResearchDashboard } from './admin/ResearchDashboard';
 import { QrCode as QrCodeIcon, ShieldCheck, Landmark, Volume2, Mail, Target, MessageSquare } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -38,6 +39,7 @@ interface AdminPanelProps {
 }
 
 type AdminPage =
+  | 'RESEARCH'
   | 'WAR_ROOM' | 'DASHBOARD' | 'CUSTOMERS' | 'CUSTOMER_360' | 'PERMISSIONS' | 'KYC' | 'ORDERS'
   | 'RISK' | 'KILL_SWITCH' | 'BROKER' | 'FUNDS' | 'BANK_MANAGEMENT' | 'LEDGER' | 'SYSTEM' | 'AUDIT' | 'MARKET_DATA' | 'SUPPORT' | 'MANAGERS' | 'LIVE_CHAT' | 'WHATSAPP_CONSOLE' | 'SOUND_ADMIN' | 'EMAIL_ADMIN';
 
@@ -84,6 +86,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ token, theme, onToggleTh
     // Top: Executive Dashboard (OVERVIEW)
     { key: 'WAR_ROOM', label: '1,000 Users War Room', icon: <Target className="w-4 h-4 text-emerald-400" />, section: 'OVERVIEW', badge: 'GROWTH' },
     { key: 'DASHBOARD', label: 'Executive Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, section: 'OVERVIEW' },
+    { key: 'RESEARCH', label: 'Research Desk', icon: <BookOpen className="w-4 h-4" />, section: 'DAILY OPERATIONS' },
 
     // DAILY OPERATIONS (Always expanded)
     { key: 'WHATSAPP_CONSOLE', label: 'WhatsApp Console', icon: <MessageSquare className="w-4 h-4 text-emerald-400" />, section: 'DAILY OPERATIONS', badge: 'LIVE' },
@@ -133,6 +136,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ token, theme, onToggleTh
   const renderContent = () => {
     switch (activePage) {
       case 'WAR_ROOM': return <WarRoomDashboard token={token} />;
+      case 'RESEARCH': return <ResearchDashboard token={token} />;
       case 'DASHBOARD': return <AdminDashboard token={token} onNavigate={handleNavigate} />;
       case 'CUSTOMERS': return <CustomerList token={token} initialFilter={initialCustomerFilter} onSelectCustomer={handleSelectCustomer} />;
       case 'CUSTOMER_360': return selectedCustomerId ? <Customer360 token={token} customerId={selectedCustomerId} onBack={handleBackFromCustomer} /> : null;
