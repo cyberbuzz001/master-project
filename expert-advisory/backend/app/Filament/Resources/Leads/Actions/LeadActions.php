@@ -3,12 +3,14 @@
 namespace App\Filament\Resources\Leads\Actions;
 
 use App\Domain\Billing\Money;
+use App\Domain\Communications\WhatsAppService;
 use App\Domain\Compliance\ConsentRecorder;
 use App\Domain\Crm\AutomationWorkflowEngine;
 use App\Domain\Crm\LeadAssignmentService;
 use App\Domain\Crm\LeadScoringEngine;
 use App\Domain\Crm\LeadStatus;
 use App\Domain\Crm\LeadWorkflowService;
+use App\Domain\Crm\PhoneNormalizer;
 use App\Domain\Onboarding\ClientConversionService;
 use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Support\DomainAction;
@@ -18,6 +20,7 @@ use App\Models\Employee;
 use App\Models\Followup;
 use App\Models\FreeTrial;
 use App\Models\Lead;
+use App\Models\MessageTemplate;
 use App\Models\SalesProposal;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -220,7 +223,7 @@ final class LeadActions
     }
 
     /**
-     * WhatsApp deep link only when WhatsApp consent is on record.
+     * WhatsApp communication action: send approved Meta template or launch direct WhatsApp conversation.
      */
     public static function whatsapp(): Action
     {
@@ -229,7 +232,74 @@ final class LeadActions
             ->icon(Heroicon::OutlinedChatBubbleLeftRight)
             ->color('success')
             ->visible(fn (Lead $record) => filled($record->mobile) && $record->status !== 'DND'
-                && app(ConsentRecorder::class)->hasConsent('lead', $record->id, 'whatsapp'));
+                && app(ConsentRecorder::class)->hasConsent('lead', $record->id, 'whatsapp'))
+            ->modalHeading(fn (Lead $record) => 'WhatsApp Outreach — '.$record->full_name)
+            ->modalDescription('Send an approved Meta template message or launch a direct WhatsApp conversation.')
+            ->schema([
+                Select::make('method')
+                    ->label('Outreach Method')
+                    ->options([
+                        'template' => 'Send Approved Meta Template (Official API)',
+                        'web' => 'Open in WhatsApp Web / App (Direct Chat)',
+                    ])
+                    ->default('template')
+                    ->native(false)
+                    ->live(),
+                Select::make('template_name')
+                    ->label('Template')
+                    ->visible(fn (Get $get) => $get('method') === 'template')
+                    ->options(fn () => MessageTemplate::query()
+                        ->where('channel', 'whatsapp')
+                        ->where(fn ($q) => $q->where('status', 'approved')->orWhere('provider_status', 'APPROVED'))
+                        ->pluck('name', 'key')
+                        ->all())
+                    ->default('expert_stocks_intro_v1')
+                    ->searchable()
+                    ->required(fn (Get $get) => $get('method') === 'template'),
+                TextInput::make('param_1')
+                    ->label('Parameter 1 (e.g. Full Name)')
+                    ->default(fn (Lead $record) => $record->full_name)
+                    ->visible(fn (Get $get) => $get('method') === 'template'),
+                TextInput::make('param_2')
+                    ->label('Parameter 2 (e.g. Portal Link / Details)')
+                    ->default(rtrim(config('platform.frontend_url', 'https://expertstocks.in'), '/').'/portal')
+                    ->visible(fn (Get $get) => $get('method') === 'template'),
+            ])
+            ->action(function (array $data, Lead $record, Action $action) {
+                if (($data['method'] ?? 'template') === 'web') {
+                    $e164 = PhoneNormalizer::toE164($record->mobile);
+                    $clean = $e164 ? ltrim($e164, '+') : preg_replace('/\D+/', '', $record->mobile);
+                    $action->redirect('https://wa.me/'.$clean);
+
+                    return;
+                }
+
+                $params = array_values(array_filter([
+                    $data['param_1'] ?? $record->full_name,
+                    $data['param_2'] ?? null,
+                ], fn ($val) => $val !== null && $val !== ''));
+
+                $result = app(WhatsAppService::class)->sendTemplate(
+                    $record->mobile,
+                    $data['template_name'],
+                    $params,
+                    $record
+                );
+
+                if ($result['success'] ?? false) {
+                    Notification::make()
+                        ->success()
+                        ->title('WhatsApp Template Sent')
+                        ->body("Message queued for delivery to {$record->mobile} via Meta Cloud API.")
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->warning()
+                        ->title('WhatsApp Status: '.($result['status'] ?? 'refused'))
+                        ->body($result['error'] ?? 'Could not dispatch template.')
+                        ->send();
+                }
+            });
     }
 
     public static function startFreeTrial(): Action

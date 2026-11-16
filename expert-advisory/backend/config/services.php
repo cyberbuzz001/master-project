@@ -15,13 +15,13 @@ return [
     */
 
     'whatsapp' => [
-        'automation_enabled' => (bool) env('WHATSAPP_AUTOMATION_ENABLED', false),
-        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'automation_enabled' => (bool) env('WHATSAPP_AUTOMATION_ENABLED', true),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN', env('WHATSAPP_TOKEN')),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
-        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
+        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID', env('WHATSAPP_WABA_ID')),
         'app_secret' => env('WHATSAPP_APP_SECRET'),
-        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
-        'graph_version' => env('WHATSAPP_GRAPH_VERSION'),
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN', env('WHATSAPP_WEBHOOK_VERIFY_TOKEN')),
+        'graph_version' => env('WHATSAPP_GRAPH_VERSION', 'v21.0'),
         'outreach_start_hour' => (int) env('WHATSAPP_OUTREACH_START_HOUR', 9),
         'outreach_end_hour' => (int) env('WHATSAPP_OUTREACH_END_HOUR', 20),
     ],

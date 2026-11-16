@@ -132,6 +132,7 @@ class LeadsTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
+                    LeadActions::whatsapp(),
                     LeadActions::toggleAiPause(),
                     LeadActions::recalculateScore(),
                     LeadActions::logCall(),

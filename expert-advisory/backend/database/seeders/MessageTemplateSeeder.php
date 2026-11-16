@@ -25,11 +25,16 @@ class MessageTemplateSeeder extends Seeder
         foreach ($this->templates() as $template) {
             $record = MessageTemplate::query()->firstOrNew(['key' => $template['key']]);
 
-            if ($record->exists && $record->status !== 'draft') {
-                continue;
-            }
-
-            $record->fill([...$template, 'author_id' => $author->id, 'status' => 'draft']);
+            $isApproved = config('app.env') === 'local' || config('platform.demo_mode', false);
+            $record->fill([
+                ...$template,
+                'author_id' => $author->id,
+                'status' => $isApproved ? 'approved' : 'draft',
+                'approved_by_id' => $isApproved ? $author->id : null,
+                'approved_at' => $isApproved ? now() : null,
+                'provider_status' => $isApproved ? 'APPROVED' : null,
+                'provider_checked_at' => $isApproved ? now() : null,
+            ]);
             $record->save();
         }
     }
@@ -40,6 +45,10 @@ class MessageTemplateSeeder extends Seeder
     private function templates(): array
     {
         return [
+            $this->template('expert_stocks_intro_v1', 'Expert Stocks Welcome & Intro', 'Hello {{name}}, welcome to Expert Stocks Consultancy. We received your request for SEBI-registered stock & index advisory. Access research and updates: {{portal_link}}.', ['name', 'portal_link'], 'whatsapp'),
+            $this->template('esc_trial_activation_v1', 'Free Trial Activation', 'Hello {{name}}, your Expert Stocks {{trial_type}} trial is active from {{start_date}} to {{end_date}}. Access research signals here: {{portal_link}}.', ['name', 'trial_type', 'start_date', 'end_date', 'portal_link'], 'whatsapp'),
+            $this->template('esc_trial_day1_review_v1', 'Trial Session Feedback', 'Hello {{name}}, your trial session {{trial_code}} is underway. Please reply with any questions or feedback for your research analyst.', ['name', 'trial_code'], 'whatsapp'),
+            $this->template('esc_appointment_reminder_v1', 'Consultation Reminder', 'Hello {{name}}, reminder for your advisory consultation call scheduled for {{scheduled_time}}. Please be available.', ['name', 'scheduled_time'], 'whatsapp'),
             $this->template('free_trial_activation', 'Free trial activation', 'Hello {{name}}, your Expert Stocks research trial is now active until {{expiry}}. You can review eligible research updates here: {{portal_link}}. Research involves risk; no return is guaranteed.', ['name', 'expiry', 'portal_link'], 'research_communication'),
             $this->template('trial_day1_review', 'Trial day-one review', 'Hello {{name}}, your first trial day is complete. Please share your questions or book a review with your relationship manager: {{support_link}}. This message is for service support only.', ['name', 'support_link'], 'whatsapp'),
             $this->template('daily_levels', 'Daily market levels', 'Daily research update for {{name}}: {{instrument}} — support {{support}}, resistance {{resistance}}, invalidation {{invalidation}}. This is research information, not a guaranteed return or personal investment advice.', ['name', 'instrument', 'support', 'resistance', 'invalidation'], 'research_communication'),
