@@ -50,7 +50,14 @@ export function ResearchDashboard({ token }: { token: string }) {
     try {
       const response = await fetch(`${API}${path}`, { ...init, signal: controller.signal,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...init.headers } });
-      const body = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let body: any = {};
+      if (contentType.includes('application/json')) {
+        body = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text();
+        throw new Error(response.status >= 500 ? 'Research service temporarily unavailable. Please retry shortly.' : (text.slice(0, 100) || `Request failed with status ${response.status}`));
+      }
       if (!response.ok) throw new Error(typeof body.detail === 'string' ? body.detail :
         typeof body.error === 'string' ? body.error : body.error?.message || 'Request failed. Check the snapshot and service configuration.');
       return body;

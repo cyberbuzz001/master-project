@@ -37,8 +37,16 @@ async function proxy(req: any, res: any, path: string, method = 'GET') {
         ...(method === 'POST' ? { 'Idempotency-Key': req.get('Idempotency-Key') || '' } : {}) },
       ...(method === 'POST' ? { body: JSON.stringify(req.body) } : {}),
     });
-    res.status(response.status).json(await response.json());
-  } catch {
+    const text = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text || 'Invalid research service response' };
+    }
+    res.status(response.status).json(data);
+  } catch (err: any) {
+    console.error(`[ResearchAPI] Proxy error to ${path}:`, err?.message || err);
     res.status(502).json({ error: 'Research service unavailable' });
   }
 }

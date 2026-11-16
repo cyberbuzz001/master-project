@@ -16,6 +16,7 @@ volumes:
   pg_data:
   redis_data:
   kyc_uploads:
+  research_data:
 
 services:
   # ── 1. PostgreSQL 16 Primary Database (TimescaleDB) ─────────────────────────
@@ -107,6 +108,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+      RESEARCH_API_KEY:             ${RESEARCH_API_KEY}
+      RESEARCH_SERVICE_URL:         ${RESEARCH_SERVICE_URL:-http://tradegrow_research_engine:8088}
     ports:
       - "5001:5001"
     depends_on:
@@ -158,6 +161,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+      RESEARCH_API_KEY:             ${RESEARCH_API_KEY}
+      RESEARCH_SERVICE_URL:         ${RESEARCH_SERVICE_URL:-http://tradegrow_research_engine:8088}
     ports:
       - "5002:5002"
     depends_on:
@@ -209,6 +214,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+      RESEARCH_API_KEY:             ${RESEARCH_API_KEY}
+      RESEARCH_SERVICE_URL:         ${RESEARCH_SERVICE_URL:-http://tradegrow_research_engine:8088}
     ports:
       - "5003:5003"
     depends_on:
@@ -260,6 +267,8 @@ services:
       PG_POOL_MIN:                  "2"
       REDIS_URL:                    redis://redis:6379
       NODE_OPTIONS:                 "--max-old-space-size=2560 --expose-gc"
+      RESEARCH_API_KEY:             ${RESEARCH_API_KEY}
+      RESEARCH_SERVICE_URL:         ${RESEARCH_SERVICE_URL:-http://tradegrow_research_engine:8088}
     ports:
       - "5004:5004"
     depends_on:
@@ -288,4 +297,24 @@ services:
         limits:
           cpus: '1.5'
           memory: 3g
+
+  # ── 8. Python 3.11+ Research Engine (Day Trader & TradingAgents) ───────────
+  research-engine:
+    image: tradegrow-research-engine:latest
+    container_name: tradegrow_research_engine
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8088", "--workers", "1"]
+    environment:
+      PORT: 8088
+      RESEARCH_API_KEY: ${RESEARCH_API_KEY}
+      RESEARCH_NODE_URL: http://app-1:5001
+      RESEARCH_DB: /data/research.sqlite
+    volumes:
+      - research_data:/data
+    networks:
+      - trading-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
 
