@@ -100,8 +100,17 @@ deployed/configured for this dashboard to generate reports.
 
 Before enabling scheduled production use:
 
-1. Implement the trusted Dhan snapshot producer and its instrument allowlist,
-   exchange calendar, feed freshness, bid/ask/circuit checks and rate budget.
+1. Validate the integrated Dhan snapshot connector against the live deployment.
+   The dashboard now searches exact database instruments through
+   `GET /api/v1/admin/research/instruments?q=...` and loads snapshots through
+   `POST /api/v1/admin/research/snapshot` with `{ "token": "..." }`.
+   The connector requires active stock/option metadata, matched option expiry,
+   Dhan-only quotes/history, regular sessions, a populated holiday calendar,
+   fresh quotes, ordered completed five-minute bars and valid bid/ask within 5%.
+   Research history explicitly disables the adapter's generated candle fallback.
+   Exchange circuit limits still need authoritative fields from the feed; the
+   current MarketTick interface does not expose them. Scheduled watchlist/batch
+   production remains separate from this staff-requested snapshot endpoint.
 2. Add reviewer approval/history and distribution into the advisory CRM. The
    dashboard displays drafts; no automatic WhatsApp publishing is configured.
 3. Configure provider credentials, validate Indian ticker/news coverage and

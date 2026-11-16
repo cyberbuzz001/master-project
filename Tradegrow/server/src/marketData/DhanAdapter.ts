@@ -940,7 +940,7 @@ export class DhanAdapter implements IMarketDataProvider {
     return null;
   }
 
-  public async getHistoricalCandles(instrumentToken: string, timeframe: string, count: number): Promise<Candle[]> {
+  public async getHistoricalCandles(instrumentToken: string, timeframe: string, count: number, allowFallback = true): Promise<Candle[]> {
     SafetyLock.assertSimulationOnly('DhanAdapter.getHistoricalCandles');
 
     const { InstrumentMasterService } = require('./InstrumentMasterService');
@@ -1081,6 +1081,7 @@ export class DhanAdapter implements IMarketDataProvider {
       }
     }
 
+    if (!allowFallback) return [];
     // Fallback Generator: Smooth backwards random-walk anchored at current price (ZERO price spike)
     const { MarketDataEngine } = require('./MarketDataEngine');
     const cachedLiveTick = MarketDataEngine.getInstance().getCachedTick(instrumentToken);

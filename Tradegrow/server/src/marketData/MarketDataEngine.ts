@@ -487,6 +487,12 @@ export class MarketDataEngine {
     return [];
   }
 
+  /** Research must never consume generated fallback candles. */
+  public async getResearchCandles(token: string): Promise<Candle[]> {
+    if (!(this.activeProvider instanceof DhanAdapter)) throw new Error('Dhan is not the active data provider');
+    return this.activeProvider.getHistoricalCandles(token, '5m', 100, false);
+  }
+
   /**
    * Option Chain — routed primarily to Dhan HQ API with fallback to Angel One
    */

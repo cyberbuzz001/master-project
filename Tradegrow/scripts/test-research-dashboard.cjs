@@ -12,6 +12,9 @@ const assert = require('node:assert/strict');
     await page.route('**/api/v1/admin/research/**', async route => {
       if (unavailable) return route.fulfill({ status: 503, json: { error: 'Research service is not configured' } });
       const request = route.request();
+      const pathname = new URL(request.url()).pathname;
+      if (pathname.endsWith('/instruments')) return route.fulfill({ json: { instruments: [{ token:'NSE_RELIANCE', symbol:'RELIANCE', exchange:'NSE', expiry:null }] } });
+      if (pathname.endsWith('/snapshot')) return route.fulfill({ json: { ...snapshot, as_of: new Date().toISOString() } });
       if (request.method() === 'POST') {
         submitted.push({ body: request.postDataJSON(), key: request.headers()['idempotency-key'] });
         return route.fulfill({ status: 202, json: { id } });
@@ -43,7 +46,9 @@ const assert = require('node:assert/strict');
     const snapshot = { symbol: 'RELIANCE', token: 'NSE_RELIANCE', source: 'dhan', asset_type: 'stock',
       as_of: new Date().toISOString(), last_price: '1339.70', tick_size: '.05', lot_size: 1,
       risk_budget: '1000', bars: Array.from({ length: 30 }, (_, i) => ({ timestamp: new Date(Date.now()-(31-i)*60000).toISOString(), open: 1300+i, high:1302+i, low:1298+i, close:1301+i, volume:100 })) };
-    await page.getByLabel('Import Dhan snapshot JSON').setInputFiles({ name:'snapshot.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(snapshot)) });
+    await page.getByLabel('Find stock or option contract').fill('RELIANCE');
+    await page.getByRole('button', { name:'Search instruments', exact:true }).click();
+    await page.getByRole('button', { name:/RELIANCE.*Load snapshot/ }).click();
     await page.getByRole('button', { name: 'Generate research', exact: true }).click();
     await page.getByText('EXPIRED LEVELS', { exact: true }).waitFor();
     await page.getByText('Company research content.', { exact: true }).waitFor();

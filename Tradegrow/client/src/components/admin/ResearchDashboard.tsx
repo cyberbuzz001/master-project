@@ -8,6 +8,7 @@ type Job = { id: string; symbol: string; asset_type: string; status: string; cre
 type Result = { symbol: string; as_of: string; valid_until: number; basis: string; notes: string[];
   risk_status: string; ai_research?: Record<string, string>; [key: string]: unknown };
 type Detail = { id: string; status: string; result: Result | null; error: string | null };
+type Instrument = { token: string; symbol: string; exchange: string; expiry: string | null };
 const API = '/api/v1/admin/research';
 const money = (value: unknown) => value == null ? '—' : Number(value).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const date = (value: string | number) => new Date(typeof value === 'number' ? value * 1000 : value).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -29,6 +30,10 @@ export function ResearchDashboard({ token }: { token: string }) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [search, setSearch] = useState('');
+  const [instruments, setInstruments] = useState<Instrument[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const alive = useRef(true);
   const requestKey = useRef<{ payload: string; key: string } | null>(null);
   const controllers = useRef(new Set<AbortController>());
@@ -98,6 +103,24 @@ export function ResearchDashboard({ token }: { token: string }) {
     } catch (e) { if (alive.current) { setSnapshot(null); setError((e as Error).message); } }
   }
 
+  async function searchInstruments() {
+    setSearching(true); setError('');
+    try {
+      const data = await request(`/instruments?q=${encodeURIComponent(search.trim())}`);
+      if (alive.current) { setInstruments(data.instruments); if (!data.instruments.length) setError('No active stocks or options match this search.'); }
+    } catch (e) { if (alive.current && (e as Error).name !== 'AbortError') setError((e as Error).message); }
+    finally { if (alive.current) setSearching(false); }
+  }
+
+  async function fetchSnapshot(instrument: Instrument) {
+    setFetching(true); setSnapshot(null); setError('');
+    try {
+      const data = await request('/snapshot', { method: 'POST', body: JSON.stringify({ token: instrument.token }) });
+      if (alive.current) { setSnapshot(data); setNow(Date.now()); setInstruments([]); requestKey.current = null; }
+    } catch (e) { if (alive.current && (e as Error).name !== 'AbortError') setError((e as Error).message); }
+    finally { if (alive.current) setFetching(false); }
+  }
+
   async function generate(event: React.FormEvent) {
     event.preventDefault();
     if (!snapshot || busy) return;
@@ -134,11 +157,15 @@ export function ResearchDashboard({ token }: { token: string }) {
     <div className="grid xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] gap-5">
       <form onSubmit={generate} className={`${panel} space-y-4 self-start`}>
         <h2 className="font-semibold">Generate research</h2>
-        <p className="text-xs leading-relaxed text-[var(--text-muted)]">Import a fresh Dhan snapshot. The live snapshot connector is still being configured; this screen does not fetch broker data automatically.</p>
-        <label className="block rounded-lg border border-dashed border-[var(--border-color)] p-4 cursor-pointer hover:border-emerald-500">
+        <p className="text-xs leading-relaxed text-[var(--text-muted)]">Search an exact stock or option contract, then load its Dhan quote and completed five-minute candles during market hours.</p>
+        <label className="block text-xs space-y-2"><span>Find stock or option contract</span><input className={input} value={search} onChange={e => setSearch(e.target.value)} placeholder="RELIANCE or NIFTY" minLength={2} maxLength={64} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (search.trim().length >= 2 && !searching) void searchInstruments(); } }} /></label>
+        <button type="button" onClick={() => void searchInstruments()} disabled={search.trim().length < 2 || searching || fetching} className="min-h-11 w-full rounded-lg border border-[var(--border-color)] text-sm disabled:opacity-40">{searching ? 'Searching…' : 'Search instruments'}</button>
+        {fetching && <p role="status" className="text-xs text-emerald-400">Loading verified Dhan data…</p>}
+        {!!instruments.length && <div className="max-h-64 overflow-y-auto space-y-2" aria-label="Instrument search results">{instruments.map(instrument => <button type="button" key={instrument.token} disabled={fetching} onClick={() => void fetchSnapshot(instrument)} className="w-full text-left border border-[var(--border-color)] rounded-lg p-3 disabled:opacity-40"><span className="block text-sm font-semibold break-words">{instrument.symbol}</span><span className="block text-xs text-[var(--text-muted)]">{instrument.exchange}{instrument.expiry ? ` · ${instrument.expiry}` : ''} · Load snapshot</span></button>)}</div>}
+        <details><summary className="cursor-pointer text-xs text-[var(--text-muted)] py-2">Advanced: import snapshot file</summary><label className="block rounded-lg border border-dashed border-[var(--border-color)] p-4 cursor-pointer hover:border-emerald-500">
           <span className="flex items-center gap-2 text-sm"><Upload size={17} />Import snapshot JSON</span>
           <input aria-label="Import Dhan snapshot JSON" type="file" accept=".json,application/json" className="mt-3 w-full text-xs" onChange={e => { void importSnapshot(e.target.files?.[0]); e.target.value = ''; }} />
-        </label>
+        </label></details>
         {snapshot && <dl className="text-xs space-y-2 break-words">{[
           ['Instrument', `${snapshot.symbol} · ${snapshot.asset_type}`], ['Token', snapshot.token],
           ['Quote', `₹${money(snapshot.last_price)}`], ['Lot / tick', `${snapshot.lot_size} / ₹${snapshot.tick_size}`],
@@ -154,7 +181,7 @@ export function ResearchDashboard({ token }: { token: string }) {
       </form>
       <div className="min-w-0 space-y-5">
         <section className={panel} aria-label="Research job history"><h2 className="font-semibold mb-3">Recent research <span className="text-xs font-normal text-[var(--text-muted)]">Latest 50 jobs</span></h2>
-          {!jobs.length && <p className="text-sm text-[var(--text-muted)] py-5">{service === 'online' ? 'No reports yet. Import a snapshot to create your first research job.' : 'Connect the research service to load reports.'}</p>}
+          {!jobs.length && <p className="text-sm text-[var(--text-muted)] py-5">{service === 'online' ? 'No reports yet. Load an instrument snapshot to create your first research job.' : 'Connect the research service to load reports.'}</p>}
           <div className="max-h-72 overflow-y-auto space-y-2">{jobs.map(job => <button key={job.id} onClick={() => setSelected(job.id)} aria-pressed={selected === job.id}
             className={`w-full text-left p-3 rounded-lg border flex flex-wrap items-center justify-between gap-2 ${selected === job.id ? 'border-emerald-500 bg-emerald-500/10' : 'border-[var(--border-color)]'}`}>
             <span><span className="font-semibold text-sm">{job.symbol}</span><span className="ml-2 text-xs text-[var(--text-muted)]">{job.asset_type}{job.include_ai ? ' + AI' : ''}</span><span className="block text-xs text-[var(--text-muted)] mt-1">{date(job.created)} IST</span></span>
