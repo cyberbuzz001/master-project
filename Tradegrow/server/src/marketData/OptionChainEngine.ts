@@ -169,7 +169,19 @@ export class OptionChainEngine {
     if (spotPrice > 0) {
       const distance = Math.abs(strike - spotPrice);
       const skewIvDecimal = Math.max(0.05, (cleanSym === 'SENSEX' ? 0.212 : cleanSym === 'BANKNIFTY' ? 0.165 : cleanSym === 'FINNIFTY' ? 0.148 : 0.123) + (distance * 0.00008));
-      const timeToExpiryYears = 5.0 / 365.0;
+      
+      const now = new Date();
+      const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+      const dayOfWeek = istNow.getUTCDay();
+      let targetDay = 2; // Default Tuesday
+      if (cleanSym === 'BANKNIFTY') targetDay = 3;
+      else if (cleanSym === 'SENSEX') targetDay = 5;
+
+      let daysAhead = (targetDay - dayOfWeek + 7) % 7;
+      if (daysAhead === 0 && istNow.getUTCHours() >= 10) daysAhead = 7;
+      const diffDays = Math.max(0.1, daysAhead || 0.5);
+      const timeToExpiryYears = diffDays / 365.0;
+
       const bsPrice = GreeksEngine.calculateOptionPrice(spotPrice, strike, timeToExpiryYears, isCall, skewIvDecimal);
       if (bsPrice > 0) {
         return { ltp: Math.max(0.05, Number(bsPrice.toFixed(2))), source: 'bs_estimate' };

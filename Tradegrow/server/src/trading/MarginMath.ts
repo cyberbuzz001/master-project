@@ -330,8 +330,21 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
                        (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||
                        engine.getCachedTick(symName);
       if (spotTick && spotTick.ltp > 0) {
-        const timeToExpiryYears = 5.0 / 365.0;
-        const iv = symName === 'SENSEX' ? 0.14 : symName === 'BANKNIFTY' ? 0.15 : 0.13;
+        const now = new Date();
+        const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+        const dayOfWeek = istNow.getUTCDay();
+        let targetDay = 2; // Default Tuesday (NIFTY/FINNIFTY)
+        if (symName === 'BANKNIFTY') targetDay = 3;
+        else if (symName === 'SENSEX') targetDay = 5;
+
+        let daysAhead = (targetDay - dayOfWeek + 7) % 7;
+        if (daysAhead === 0 && istNow.getUTCHours() >= 10) daysAhead = 7;
+        const diffDays = Math.max(0.1, daysAhead || 0.5);
+        const timeToExpiryYears = diffDays / 365.0;
+
+        const distance = Math.abs(strike - spotTick.ltp);
+        const baseIv = symName === 'SENSEX' ? 0.16 : symName === 'BANKNIFTY' ? 0.15 : 0.13;
+        const iv = Math.max(0.05, baseIv + (distance * 0.00005));
         const bsPrice = GreeksEngine.calculateOptionPrice(spotTick.ltp, strike, timeToExpiryYears, isCall, iv);
         if (bsPrice > 0) {
           ltp = Number(bsPrice.toFixed(2));

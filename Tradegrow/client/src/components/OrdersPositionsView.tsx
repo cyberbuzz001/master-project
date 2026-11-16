@@ -198,7 +198,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     }
 
     // 3. Dynamic spot-anchored estimate: recalculates option price live from the index spot tick (NSE_NIFTY50, etc.)
-    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, directTick?.ltp || itemLtp, ticks);
+    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, 0, ticks);
     if (dynamicPrice > 0) return dynamicPrice;
 
     // 4. Exact tick fallback if present
