@@ -246,7 +246,12 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
   let tick: MarketTick | undefined = undefined;
 
   const isAuthoritativeTick = (t: MarketTick | undefined): boolean => {
-    return !!(t && t.ltp > 0);
+    if (!t || t.ltp <= 0) return false;
+    // Reject self-broadcasted position ticks and synthetic skew ticks from acting as upstream exchange ticks
+    if (t.source === 'position_broadcast' || t.source === 'synthetic_skew') return false;
+    // Reject stale ticks older than 20 seconds
+    if (t.timestamp && Date.now() - t.timestamp > 20000) return false;
+    return true;
   };
 
   // 1. Prioritize authoritative Dhan option ticks (with underscores, e.g. NFO_NIFTY_23050_CE)
@@ -295,27 +300,19 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
   let ltp = tick && tick.ltp > 0 ? tick.ltp : 0;
   let priceSource: UnrealizedPnlResult['priceSource'] = tick && tick.ltp > 0 ? 'live' : 'stale_db';
 
-  // 3. Fallback: Query Dhan option chain cache synchronously
+  // 3. Fallback: Query OptionChainEngine for live contract price or dynamic spot-anchored BS price
   if (ltp <= 0) {
     try {
-      const { DhanAdapter } = require('../marketData/DhanAdapter');
-      const mOpt = symbol.match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
-      if (mOpt && DhanAdapter.optionChainCache) {
+      const { OptionChainEngine } = require('../marketData/OptionChainEngine');
+      const mOpt = symbol.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+      if (mOpt) {
         const underlying = mOpt[1].toUpperCase();
         const strike = parseFloat(mOpt[2]);
         const isCe = mOpt[3].toUpperCase() === 'CE';
-        for (const [key, cached] of DhanAdapter.optionChainCache.entries()) {
-          if (key.startsWith(underlying) && cached.rows) {
-            const row = cached.rows.find((r: any) => r.strikePrice === strike);
-            if (row) {
-              const leg = isCe ? row.ce : row.pe;
-              if (leg && leg.ltp > 0) {
-                ltp = leg.ltp;
-                priceSource = 'live';
-                break;
-              }
-            }
-          }
+        const optRes = OptionChainEngine.getLiveOptionLtp(underlying, strike, isCe);
+        if (optRes && optRes.ltp > 0) {
+          ltp = optRes.ltp;
+          priceSource = optRes.source;
         }
       }
     } catch (_) {}
@@ -323,13 +320,15 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
 
   // 4. Fallback: Black-Scholes estimate anchored to live spot tick
   if (ltp <= 0) {
-    const mOpt = symbol.match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
+    const mOpt = symbol.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
     if (mOpt) {
       const symName = mOpt[1].toUpperCase();
       const strike = parseFloat(mOpt[2]);
       const isCall = mOpt[3].toUpperCase() === 'CE';
-      const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : 'NSE_NIFTY50';
-      const spotTick = engine.getCachedTick(spotToken);
+      const spotToken = symName === 'SENSEX' ? 'BSE_SENSEX' : symName === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : symName === 'FINNIFTY' ? 'NSE_FINNIFTY' : symName === 'MIDCPNIFTY' ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
+      const spotTick = engine.getCachedTick(spotToken) ||
+                       (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||
+                       engine.getCachedTick(symName);
       if (spotTick && spotTick.ltp > 0) {
         const timeToExpiryYears = 5.0 / 365.0;
         const iv = symName === 'SENSEX' ? 0.14 : symName === 'BANKNIFTY' ? 0.15 : 0.13;

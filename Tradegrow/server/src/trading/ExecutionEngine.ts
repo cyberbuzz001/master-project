@@ -267,24 +267,17 @@ export class ExecutionEngine {
         // Fallback for options / market orders if direct tick is missing or stale
         if (!tick || isStale) {
           let fallbackLtp = 0;
+          // Query OptionChainEngine for live option chain price or dynamic spot-anchored BS estimate
           try {
-            const { DhanAdapter } = require('../marketData/DhanAdapter');
-            const mOpt = (order.symbol || '').match(/(NIFTY|BANKNIFTY|FINNIFTY|SENSEX)\s*(\d+)\s*(CE|PE)/i);
-            if (mOpt && DhanAdapter.optionChainCache) {
+            const { OptionChainEngine } = require('../marketData/OptionChainEngine');
+            const mOpt = (order.symbol || '').match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
+            if (mOpt) {
               const underlying = mOpt[1].toUpperCase();
               const strike = parseFloat(mOpt[2]);
               const isCe = mOpt[3].toUpperCase() === 'CE';
-              for (const [key, cached] of DhanAdapter.optionChainCache.entries()) {
-                if (key.startsWith(underlying) && cached.rows) {
-                  const row = cached.rows.find((r: any) => r.strikePrice === strike);
-                  if (row) {
-                    const leg = isCe ? row.ce : row.pe;
-                    if (leg && leg.ltp > 0) {
-                      fallbackLtp = leg.ltp;
-                      break;
-                    }
-                  }
-                }
+              const optRes = OptionChainEngine.getLiveOptionLtp(underlying, strike, isCe);
+              if (optRes && optRes.ltp > 0) {
+                fallbackLtp = optRes.ltp;
               }
             }
           } catch (_) {}

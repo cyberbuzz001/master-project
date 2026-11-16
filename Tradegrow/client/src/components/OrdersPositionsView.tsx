@@ -149,7 +149,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
     // 1. Authoritative real market exchange ticks (e.g. NFO_NIFTY_23100_PE, BFO_SENSEX_74400_CE)
     const mOpt = sym.match(/^(?:(?:NSE|BSE|NFO|BFO)_)?([A-Z]+)[_\s-]*(\d+(?:\.\d+)?)[_\s-]*(CE|PE)/i);
-    let exactTick: any = null;
+    let directTick: any = null;
     if (mOpt) {
       const u = mOpt[1].toUpperCase();
       const st = mOpt[2];
@@ -164,32 +164,44 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       ];
       for (const k of exactKeys) {
         const t = ticks.get(k);
-        if (t && t.ltp > 0) return t.ltp;
+        if (t && t.ltp > 0) {
+          directTick = t;
+          break;
+        }
       }
     }
 
     // 2. Check candidate aliases
-    const candidates = [
-      instToken,
-      sym,
-      ...(instToken ? normalizeToken(instToken) : []),
-      ...(sym ? normalizeToken(sym) : [])
-    ];
+    if (!directTick) {
+      const candidates = [
+        instToken,
+        sym,
+        ...(instToken ? normalizeToken(instToken) : []),
+        ...(sym ? normalizeToken(sym) : [])
+      ];
 
-    for (const c of candidates) {
-      if (!c) continue;
-      const tick = ticks.get(c);
-      if (tick && tick.ltp > 0) {
-        return tick.ltp;
+      for (const c of candidates) {
+        if (!c) continue;
+        const tick = ticks.get(c);
+        if (tick && tick.ltp > 0) {
+          directTick = tick;
+          break;
+        }
       }
     }
 
+    // If direct tick is fresh from live exchange/broker feed, use it directly
+    const isDirectFreshBroker = directTick && directTick.ltp > 0 && directTick.source !== 'position_broadcast' && directTick.source !== 'synthetic_skew' && (!directTick.timestamp || Date.now() - directTick.timestamp < 15000);
+    if (isDirectFreshBroker) {
+      return directTick.ltp;
+    }
+
     // 3. Dynamic spot-anchored estimate: recalculates option price live from the index spot tick (NSE_NIFTY50, etc.)
-    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, itemLtp, ticks);
+    const dynamicPrice = estimateLiveOptionPrice(sym || instToken, directTick?.ltp || itemLtp, ticks);
     if (dynamicPrice > 0) return dynamicPrice;
 
     // 4. Exact tick fallback if present
-    if (exactTick && exactTick.ltp > 0) return exactTick.ltp;
+    if (directTick && directTick.ltp > 0) return directTick.ltp;
 
     // 5. Server-provided LTP from positions query (already updated by Dhan/BS)
     if (itemLtp > 0) return itemLtp;

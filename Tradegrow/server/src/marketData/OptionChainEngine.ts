@@ -19,6 +19,152 @@ export class OptionChainEngine {
   private static pendingRequests: Map<string, Promise<any>> = new Map();
 
   /**
+   * Broadcasts and caches all active strikes in memory, Redis, and WebSocket fan-out,
+   * guaranteeing consistent token resolution under exchange tokens, canonical tokens, and plain symbols.
+   */
+  public static broadcastChainTicks(items: OptionChainItem[], underlying: string, exchange: string, segment: string): void {
+    try {
+      const mde = MarketDataEngine.getInstance();
+      const visibleTokens: string[] = [];
+
+      items.forEach(item => {
+        const ceToken = `${segment}_${underlying}_${item.strikePrice}_CE`;
+        const peToken = `${segment}_${underlying}_${item.strikePrice}_PE`;
+        visibleTokens.push(ceToken, peToken);
+
+        if (item.ce?.ltp && item.ce.ltp > 0) {
+          const ceTick: MarketTick = {
+            instrumentToken: ceToken,
+            exchange,
+            symbol: `${underlying} ${item.strikePrice} CE`,
+            tradingSymbol: item.ce.tradingSymbol || ceToken,
+            ltp: item.ce.ltp,
+            open: item.ce.ltp,
+            high: item.ce.ltp,
+            low: item.ce.ltp,
+            close: item.ce.ltp,
+            bid: item.ce.bid || Number((item.ce.ltp * 0.995).toFixed(2)),
+            ask: item.ce.ask || Number((item.ce.ltp * 1.005).toFixed(2)),
+            bidQty: 100,
+            askQty: 100,
+            volume: item.ce.volume || 10000,
+            change: item.ce.change || 0,
+            changePercent: item.ce.changePercent || 0,
+            timestamp: Date.now(),
+            source: (item.ce.source as any) || 'live'
+          };
+          mde.setCachedTick(ceTick);
+          mde.broadcastTick(ceTick);
+          mde.setCachedTick({ ...ceTick, instrumentToken: `${underlying} ${item.strikePrice} CE` });
+          mde.setCachedTick({ ...ceTick, instrumentToken: `${segment}_${underlying}${item.strikePrice}CE` });
+          if (item.ce.instrumentToken && item.ce.instrumentToken !== ceToken) {
+            mde.setCachedTick({ ...ceTick, instrumentToken: item.ce.instrumentToken });
+          }
+        }
+
+        if (item.pe?.ltp && item.pe.ltp > 0) {
+          const peTick: MarketTick = {
+            instrumentToken: peToken,
+            exchange,
+            symbol: `${underlying} ${item.strikePrice} PE`,
+            tradingSymbol: item.pe.tradingSymbol || peToken,
+            ltp: item.pe.ltp,
+            open: item.pe.ltp,
+            high: item.pe.ltp,
+            low: item.pe.ltp,
+            close: item.pe.ltp,
+            bid: item.pe.bid || Number((item.pe.ltp * 0.995).toFixed(2)),
+            ask: item.pe.ask || Number((item.pe.ltp * 1.005).toFixed(2)),
+            bidQty: 100,
+            askQty: 100,
+            volume: item.pe.volume || 10000,
+            change: item.pe.change || 0,
+            changePercent: item.pe.changePercent || 0,
+            timestamp: Date.now(),
+            source: (item.pe.source as any) || 'live'
+          };
+          mde.setCachedTick(peTick);
+          mde.broadcastTick(peTick);
+          mde.setCachedTick({ ...peTick, instrumentToken: `${underlying} ${item.strikePrice} PE` });
+          mde.setCachedTick({ ...peTick, instrumentToken: `${segment}_${underlying}${item.strikePrice}PE` });
+          if (item.pe.instrumentToken && item.pe.instrumentToken !== peToken) {
+            mde.setCachedTick({ ...peTick, instrumentToken: item.pe.instrumentToken });
+          }
+        }
+      });
+
+      if (visibleTokens.length > 0) {
+        mde.subscribe(visibleTokens);
+      }
+    } catch (_) {}
+  }
+
+  /**
+   * Retrieves the live option contract LTP from the latest cached option chains
+   * (sourced from Dhan, Angel One, or NSE) or evaluates Black-Scholes dynamically against the live spot index.
+   */
+  public static getLiveOptionLtp(underlying: string, strike: number, isCall: boolean): { ltp: number; source: 'live' | 'bs_estimate' } | null {
+    const rawSym = (underlying || 'NIFTY').toUpperCase().trim();
+    const cleanSym = rawSym === 'SENSEX' || rawSym === 'BSE SENSEX' ? 'SENSEX' :
+                     rawSym === 'BANKNIFTY' ? 'BANKNIFTY' :
+                     rawSym === 'FINNIFTY' ? 'FINNIFTY' :
+                     rawSym === 'MIDCPNIFTY' ? 'MIDCPNIFTY' : 'NIFTY';
+
+    // 1. Search OptionChainEngine responseCache
+    for (const [key, entry] of OptionChainEngine.responseCache.entries()) {
+      if (key.startsWith(cleanSym) && entry.data?.chain && Array.isArray(entry.data.chain)) {
+        const row = entry.data.chain.find((r: any) => Math.abs(r.strikePrice - strike) < 0.01);
+        if (row) {
+          const leg = isCall ? row.ce : row.pe;
+          if (leg && typeof leg.ltp === 'number' && leg.ltp > 0) {
+            return { ltp: leg.ltp, source: leg.source === 'synthetic_skew' ? 'bs_estimate' : 'live' };
+          }
+        }
+      }
+    }
+
+    // 2. Search DhanAdapter optionChainCache
+    try {
+      const { DhanAdapter } = require('./DhanAdapter');
+      if (DhanAdapter.optionChainCache) {
+        for (const [key, entry] of DhanAdapter.optionChainCache.entries()) {
+          if (key.startsWith(cleanSym) && entry.rows && Array.isArray(entry.rows)) {
+            const row = entry.rows.find((r: any) => Math.abs(r.strikePrice - strike) < 0.01);
+            if (row) {
+              const leg = isCall ? row.ce : row.pe;
+              if (leg && typeof leg.ltp === 'number' && leg.ltp > 0) {
+                return { ltp: leg.ltp, source: 'live' };
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Dynamic Black-Scholes anchored to live Spot Tick
+    const engine = MarketDataEngine.getInstance();
+    const spotToken = cleanSym === 'SENSEX' ? 'BSE_SENSEX' : cleanSym === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : cleanSym === 'FINNIFTY' ? 'NSE_FINNIFTY' : cleanSym === 'MIDCPNIFTY' ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
+    const spotTick = engine.getCachedTick(spotToken) ||
+                     (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||
+                     engine.getCachedTick(cleanSym);
+
+    const defaultFallbackSpot = cleanSym === 'SENSEX' ? 81850 : cleanSym === 'BANKNIFTY' ? 60800 : cleanSym === 'FINNIFTY' ? 27670 : cleanSym === 'MIDCPNIFTY' ? 14160 : 25240;
+    const spotPrice = (spotTick && spotTick.ltp > 0) ? spotTick.ltp : (OptionChainEngine.lastKnownSpotPrices.get(spotToken) || defaultFallbackSpot);
+
+    if (spotPrice > 0) {
+      const distance = Math.abs(strike - spotPrice);
+      const skewIvDecimal = Math.max(0.05, (cleanSym === 'SENSEX' ? 0.212 : cleanSym === 'BANKNIFTY' ? 0.165 : cleanSym === 'FINNIFTY' ? 0.148 : 0.123) + (distance * 0.00008));
+      const timeToExpiryYears = 5.0 / 365.0;
+      const bsPrice = GreeksEngine.calculateOptionPrice(spotPrice, strike, timeToExpiryYears, isCall, skewIvDecimal);
+      if (bsPrice > 0) {
+        return { ltp: Math.max(0.05, Number(bsPrice.toFixed(2))), source: 'bs_estimate' };
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Generates deterministic, structurally consistent Open Interest and Volume
    * following real-world empirical NSE/BSE options distribution (Gaussian moneyness bell curve + round strike accumulation).
    */
@@ -323,64 +469,7 @@ export class OptionChainEngine {
         const liveAtmStrike = Math.round(liveSpot / step) * step;
 
         const filteredDhanChain = filterAndSanitizeChain(dhanChain, liveSpot, liveAtmStrike);
-
-        // Proactively subscribe and broadcast all active strike tokens
-        try {
-          const mde = MarketDataEngine.getInstance();
-          const visibleTokens: string[] = [];
-          filteredDhanChain.forEach(item => {
-            if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
-            if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
-
-            if (item.ce?.instrumentToken && item.ce.ltp > 0) {
-              mde.broadcastTick({
-                instrumentToken: item.ce.instrumentToken,
-                exchange,
-                symbol: `${underlying} ${item.strikePrice} CE`,
-                tradingSymbol: item.ce.instrumentToken,
-                ltp: item.ce.ltp,
-                open: item.ce.ltp,
-                high: item.ce.ltp,
-                low: item.ce.ltp,
-                close: item.ce.ltp,
-                bid: item.ce.bid || item.ce.ltp,
-                ask: item.ce.ask || item.ce.ltp,
-                bidQty: 0,
-                askQty: 0,
-                volume: item.ce.volume || 0,
-                change: item.ce.change || 0,
-                changePercent: item.ce.changePercent || 0,
-                timestamp: Date.now(),
-                source: 'dhan'
-              });
-            }
-            if (item.pe?.instrumentToken && item.pe.ltp > 0) {
-              mde.broadcastTick({
-                instrumentToken: item.pe.instrumentToken,
-                exchange,
-                symbol: `${underlying} ${item.strikePrice} PE`,
-                tradingSymbol: item.pe.instrumentToken,
-                ltp: item.pe.ltp,
-                open: item.pe.ltp,
-                high: item.pe.ltp,
-                low: item.pe.ltp,
-                close: item.pe.ltp,
-                bid: item.pe.bid || item.pe.ltp,
-                ask: item.pe.ask || item.pe.ltp,
-                bidQty: 0,
-                askQty: 0,
-                volume: item.pe.volume || 0,
-                change: item.pe.change || 0,
-                changePercent: item.pe.changePercent || 0,
-                timestamp: Date.now(),
-                source: 'dhan'
-              });
-            }
-          });
-          if (visibleTokens.length > 0) {
-            mde.subscribe(visibleTokens);
-          }
-        } catch (_) {}
+        OptionChainEngine.broadcastChainTicks(filteredDhanChain, underlying, exchange, segment);
 
         let totalCallOI = 0;
         let totalPutOI = 0;
@@ -425,19 +514,7 @@ export class OptionChainEngine {
           const liveAtmStrike = Math.round(liveSpot / step) * step;
 
           const filteredAngelChain = filterAndSanitizeChain(angelChain, liveSpot, liveAtmStrike);
-
-          // Proactively register active strike tokens with market data engine
-          try {
-            const mde = MarketDataEngine.getInstance();
-            const visibleTokens: string[] = [];
-            filteredAngelChain.forEach(item => {
-              if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
-              if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
-            });
-            if (visibleTokens.length > 0) {
-              mde.subscribe(visibleTokens);
-            }
-          } catch (_) {}
+          OptionChainEngine.broadcastChainTicks(filteredAngelChain, underlying, exchange, segment);
 
           let totalCallOI = 0;
           let totalPutOI = 0;
@@ -716,17 +793,8 @@ export class OptionChainEngine {
       });
     }
 
-    // Proactively subscribe all active strike tokens to Dhan WebSocket tick stream
-    try {
-      const visibleTokens: string[] = [];
-      chain.forEach(item => {
-        if (item.ce?.instrumentToken) visibleTokens.push(item.ce.instrumentToken);
-        if (item.pe?.instrumentToken) visibleTokens.push(item.pe.instrumentToken);
-      });
-      if (visibleTokens.length > 0) {
-        MarketDataEngine.getInstance().subscribe(visibleTokens);
-      }
-    } catch (_) {}
+    // Proactively broadcast and cache all active strike tokens
+    OptionChainEngine.broadcastChainTicks(chain, underlying, exchange, segment);
 
     return {
       underlying,

@@ -107,18 +107,49 @@ export function estimateLiveOptionPrice(
     return baseLtp > 0 ? baseLtp : 0;
   }
 
-  // Look up live spot tick in ticks map (checking token and aliases)
-  const spotTick = ticks.get(parsed.spotToken) ||
-                   ticks.get(parsed.spotToken.replace(/^(NSE_|BSE_)/, '')) ||
-                   ticks.get(parsed.underlying);
+  // Look up live spot tick in ticks map with all standard aliases
+  const spotAliases = [
+    parsed.spotToken,
+    parsed.spotToken.replace(/^(NSE_|BSE_)/, ''),
+    parsed.underlying,
+    ...(parsed.underlying === 'NIFTY' ? ['NIFTY 50', 'NIFTY50', 'NSE_NIFTY'] : []),
+    ...(parsed.underlying === 'SENSEX' ? ['BSE SENSEX', 'SENSEX 30'] : []),
+    ...(parsed.underlying === 'BANKNIFTY' ? ['BANK NIFTY', 'NSE_BANK_NIFTY'] : []),
+  ];
+
+  let spotTick: any = null;
+  for (const alias of spotAliases) {
+    const t = ticks.get(alias);
+    if (t && t.ltp > 0) {
+      spotTick = t;
+      break;
+    }
+  }
 
   if (!spotTick || !spotTick.ltp || spotTick.ltp <= 0) {
     return baseLtp > 0 ? baseLtp : 0;
   }
 
   const currentSpot = spotTick.ltp;
-  const iv = parsed.underlying === 'SENSEX' ? 0.145 : parsed.underlying === 'BANKNIFTY' ? 0.155 : 0.125;
-  const bsPrice = calculateOptionPrice(currentSpot, parsed.strike, 5.0 / 365.0, parsed.isCall, iv);
+
+  // Dynamic days to nearest weekly expiry (Tuesday for NIFTY/FINNIFTY, Wed for BANKNIFTY, Fri for SENSEX)
+  const now = new Date();
+  const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  const dayOfWeek = istNow.getUTCDay(); // 0 = Sun, 1 = Mon, 2 = Tue, etc.
+  let targetDay = 2; // Default Tuesday
+  if (parsed.underlying === 'BANKNIFTY') targetDay = 3;
+  else if (parsed.underlying === 'SENSEX') targetDay = 5;
+
+  let daysAhead = (targetDay - dayOfWeek + 7) % 7;
+  if (daysAhead === 0 && istNow.getUTCHours() >= 10) daysAhead = 7;
+  const diffDays = Math.max(0.1, daysAhead || 0.5);
+  const timeToExpiryYears = diffDays / 365.0;
+
+  const distance = Math.abs(parsed.strike - currentSpot);
+  const baseIv = parsed.underlying === 'SENSEX' ? 0.16 : parsed.underlying === 'BANKNIFTY' ? 0.15 : 0.13;
+  const iv = Math.max(0.05, baseIv + (distance * 0.00005));
+
+  const bsPrice = calculateOptionPrice(currentSpot, parsed.strike, timeToExpiryYears, parsed.isCall, iv);
 
   if (bsPrice > 0) {
     return bsPrice;
