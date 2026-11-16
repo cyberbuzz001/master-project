@@ -70,6 +70,7 @@ php artisan filament:optimize || true
 
 # 5. Atomic Symlink Switch
 echo "--> [6/8] Switching active release symlink..."
+chown -R expertstocks:expertstocks "${NEW_RELEASE}"
 cd "${APP_DIR}"
 ln -sfn "${NEW_RELEASE}" "${CURRENT_LINK}.tmp"
 mv -Tf "${CURRENT_LINK}.tmp" "${CURRENT_LINK}"
@@ -77,8 +78,7 @@ mv -Tf "${CURRENT_LINK}.tmp" "${CURRENT_LINK}"
 # 6. Reload Services
 echo "--> [7/8] Reloading PHP-FPM and Laravel workers..."
 systemctl reload php8.3-fpm || true
-supervisorctl restart esc-queue-* || true
-supervisorctl restart esc-scheduler || true
+supervisorctl restart 'esc-queue-critical:*' 'esc-queue-default:*' 'esc-queue-background:*' esc-scheduler || supervisorctl restart all || true
 
 # 7. Smoke Test & Health Check
 echo "--> [8/8] Performing post-deployment smoke test..."
@@ -103,6 +103,6 @@ fi
 # 8. Clean Up Old Releases
 echo "--> Cleaning up old releases (keeping latest ${KEEP_RELEASES})..."
 cd "${RELEASES_DIR}"
-ls -dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
+ls -d [0-9]*/ 2>/dev/null | sort -n | head -n -${KEEP_RELEASES} | xargs -r rm -rf
 
 echo "Deployment complete."
