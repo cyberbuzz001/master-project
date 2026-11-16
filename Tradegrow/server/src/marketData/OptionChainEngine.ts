@@ -141,8 +141,23 @@ export class OptionChainEngine {
       }
     } catch (_) {}
 
-    // 3. Dynamic Black-Scholes anchored to live Spot Tick
+    // 2b. Check direct authoritative broker/exchange ticks from MarketDataEngine cache
     const engine = MarketDataEngine.getInstance();
+    const segment = cleanSym === 'SENSEX' ? 'BFO' : 'NFO';
+    const optAliases = [
+      `${segment}_${cleanSym}_${strike}_${isCall ? 'CE' : 'PE'}`,
+      `${segment}_${cleanSym}${strike}${isCall ? 'CE' : 'PE'}`,
+      `${cleanSym} ${strike} ${isCall ? 'CE' : 'PE'}`,
+      `${cleanSym}_${strike}_${isCall ? 'CE' : 'PE'}`
+    ];
+    for (const alias of optAliases) {
+      const dt = engine.getCachedTick(alias);
+      if (dt && dt.ltp > 0 && dt.source !== 'position_broadcast' && dt.source !== 'synthetic_skew' && (!dt.timestamp || Date.now() - dt.timestamp < 30000)) {
+        return { ltp: dt.ltp, source: 'live' };
+      }
+    }
+
+    // 3. Dynamic Black-Scholes anchored to live Spot Tick
     const spotToken = cleanSym === 'SENSEX' ? 'BSE_SENSEX' : cleanSym === 'BANKNIFTY' ? 'NSE_BANKNIFTY' : cleanSym === 'FINNIFTY' ? 'NSE_FINNIFTY' : cleanSym === 'MIDCPNIFTY' ? 'NSE_MIDCPNIFTY' : 'NSE_NIFTY50';
     const spotTick = engine.getCachedTick(spotToken) ||
                      (spotToken === 'NSE_NIFTY50' ? engine.getCachedTick('NSE_NIFTY') : null) ||

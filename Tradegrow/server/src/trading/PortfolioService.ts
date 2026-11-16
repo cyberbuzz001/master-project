@@ -538,7 +538,7 @@ export class PortfolioService {
             change: Number((ltp - avgPrice).toFixed(2)),
             changePercent: avgPrice > 0 ? Number((((ltp - avgPrice) / avgPrice) * 100).toFixed(2)) : 0,
             timestamp: Date.now(),
-            source: 'position_broadcast'
+            source: priceSource === 'live' ? 'live' : 'position_broadcast'
           };
 
           // Cache in memory and fan out to all Redis cluster nodes

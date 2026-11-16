@@ -385,6 +385,14 @@ export class MarketDataEngine {
     if (existing && existing.timestamp && tick.timestamp && tick.timestamp < existing.timestamp) {
       return false; // Reject out-of-order stale tick
     }
+    // Prevent position_broadcast or synthetic ticks from stomping fresh authoritative broker feed ticks
+    const isExistingAuthoritative = existing && existing.ltp > 0 && (existing.source === 'live' || existing.source === 'dhan' || existing.source === 'angelone' || (existing.source as any) === 'ANGEL_ONE');
+    const isIncomingSynthetic = tick.source === 'position_broadcast' || tick.source === 'synthetic_skew';
+    if (isExistingAuthoritative && isIncomingSynthetic) {
+      if (!existing.timestamp || Date.now() - existing.timestamp < 30000) {
+        return false;
+      }
+    }
     this.tickCache.set(tick.instrumentToken, tick);
     try {
       const { SymbologyNormalizer } = require('./SymbologyNormalizer');

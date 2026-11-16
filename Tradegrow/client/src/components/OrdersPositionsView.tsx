@@ -5,7 +5,7 @@ import {
   History, SlidersHorizontal, CheckCircle2, ChevronUp, ChevronDown, Layers, Timer,
   FileText
 } from 'lucide-react';
-import { useMarketSocket, useSubscribeTokens } from '../hooks/useMarketSocket';
+import { useMarketSocket, useSubscribeTokens, globalTickStore } from '../hooks/useMarketSocket';
 import { Card, Badge, DataTable, DataTableColumn, Button, Dialog, LivePriceCell } from './ui';
 import { PortfolioNav } from './PortfolioNav';
 import { pnlColorClass, formatPnl, formatPnlPct } from '../utils/pnl';
@@ -190,10 +190,11 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       }
     }
 
-    // If direct tick is fresh from live exchange/broker feed, use it directly
-    const isDirectFreshBroker = directTick && directTick.ltp > 0 && directTick.source !== 'position_broadcast' && directTick.source !== 'synthetic_skew' && (!directTick.timestamp || Date.now() - directTick.timestamp < 15000);
-    if (isDirectFreshBroker) {
-      return directTick.ltp;
+    // If direct tick is fresh from live exchange/broker feed or SSE stream (< 30s), use it directly
+    if (directTick && directTick.ltp > 0 && (!directTick.timestamp || Date.now() - directTick.timestamp < 30000)) {
+      if (directTick.source !== 'synthetic_skew') {
+        return directTick.ltp;
+      }
     }
 
     // 3. Dynamic spot-anchored estimate: recalculates option price live from the index spot tick (NSE_NIFTY50, etc.)
@@ -234,12 +235,12 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   useEffect(() => {
     fetchData();
-    // Optimized fallback interval: 15 seconds when active, paused in background
+    // Fast refresh interval: 3.5 seconds when tab is active
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         fetchData();
       }
-    }, 15000);
+    }, 3500);
 
     const handleVisibility = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
@@ -276,6 +277,64 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     underlyings.forEach(sym => {
       try {
         const es = new EventSource(`/api/v1/market/option-chain/stream?symbol=${sym}&strikeRange=20`);
+        es.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data?.chain && Array.isArray(data.chain)) {
+              const newTicks = new Map<string, any>();
+              const segment = sym === 'SENSEX' ? 'BFO' : 'NFO';
+              const exch = sym === 'SENSEX' ? 'BSE' : 'NSE';
+              data.chain.forEach((row: any) => {
+                const strike = row.strikePrice;
+                if (row.ce?.ltp && row.ce.ltp > 0) {
+                  const t = {
+                    instrumentToken: `${segment}_${sym}_${strike}_CE`,
+                    exchange: exch,
+                    symbol: `${sym} ${strike} CE`,
+                    tradingSymbol: `${sym} ${strike} CE`,
+                    ltp: row.ce.ltp,
+                    open: row.ce.ltp,
+                    high: row.ce.ltp,
+                    low: row.ce.ltp,
+                    close: row.ce.ltp,
+                    change: row.ce.change || 0,
+                    changePercent: row.ce.changePercent || 0,
+                    timestamp: Date.now(),
+                    source: 'live'
+                  };
+                  newTicks.set(`${segment}_${sym}_${strike}_CE`, t);
+                  newTicks.set(`${segment}_${sym}${strike}CE`, t);
+                  newTicks.set(`${sym} ${strike} CE`, t);
+                  newTicks.set(`${sym}_${strike}_CE`, t);
+                }
+                if (row.pe?.ltp && row.pe.ltp > 0) {
+                  const t = {
+                    instrumentToken: `${segment}_${sym}_${strike}_PE`,
+                    exchange: exch,
+                    symbol: `${sym} ${strike} PE`,
+                    tradingSymbol: `${sym} ${strike} PE`,
+                    ltp: row.pe.ltp,
+                    open: row.pe.ltp,
+                    high: row.pe.ltp,
+                    low: row.pe.ltp,
+                    close: row.pe.ltp,
+                    change: row.pe.change || 0,
+                    changePercent: row.pe.changePercent || 0,
+                    timestamp: Date.now(),
+                    source: 'live'
+                  };
+                  newTicks.set(`${segment}_${sym}_${strike}_PE`, t);
+                  newTicks.set(`${segment}_${sym}${strike}PE`, t);
+                  newTicks.set(`${sym} ${strike} PE`, t);
+                  newTicks.set(`${sym}_${strike}_PE`, t);
+                }
+              });
+              if (newTicks.size > 0) {
+                globalTickStore.updateTicks(newTicks);
+              }
+            }
+          } catch (_) {}
+        };
         sources.push(es);
       } catch (_) { }
     });
@@ -697,6 +756,16 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   const openPositions = useMemo(() => positions.filter((p) => getNetQty(p) !== 0), [positions]);
 
+  // Fine-grained 1-second ticker when open positions exist to keep real-time UI flashing smoothly
+  const [, setTickCounter] = useState(0);
+  useEffect(() => {
+    if (openPositions.length === 0) return;
+    const timer = setInterval(() => {
+      setTickCounter((c) => (c + 1) % 10000);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [openPositions.length]);
+
   const totalUnrealizedPnl = useMemo(() => {
     return openPositions.reduce((acc, pos) => {
       const netQty = getNetQty(pos);
@@ -815,16 +884,28 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     },
     {
       key: 'ltp',
-      header: 'LTP',
+      header: (
+        <div className="flex items-center justify-end gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Market Price (LTP)</span>
+        </div>
+      ),
       align: 'right',
       render: (p) => {
         const ltp = getLiveLtp(p);
         const avg = parseFloat(p.averagePrice || p.average_price || 0);
         const diff = ltp - avg;
         return (
-          <div className="font-mono tabular-nums flex items-center justify-end gap-1">
-            <LivePriceCell value={ltp} prefix="₹" decimals={2} className="!text-xs font-bold" />
-            <span className={`text-[10px] ${pnlColorClass(diff)}`}>
+          <div className="font-mono tabular-nums flex items-center justify-end gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live real-time feed" />
+            <LivePriceCell
+              value={ltp}
+              prefix="₹"
+              decimals={2}
+              highlightTicks={true}
+              className="!text-xs font-black"
+            />
+            <span className={`text-[10px] font-bold ${pnlColorClass(diff)}`}>
               ({diff >= 0 ? '+' : ''}{diff.toFixed(2)})
             </span>
           </div>
@@ -833,7 +914,12 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
     },
     {
       key: 'pnl',
-      header: 'Unrealized P&L',
+      header: (
+        <div className="flex items-center justify-end gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Unrealized P&L</span>
+        </div>
+      ),
       align: 'right',
       render: (p) => {
         const netQty = getNetQty(p);
@@ -842,13 +928,16 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         const ltp = getLiveLtp(p);
         const upnl = netQty > 0 ? (ltp - avgPrice) * netQty : absQty * (avgPrice - ltp);
         return (
-          <LivePriceCell
-            value={upnl}
-            prefix="₹"
-            showSign
-            colorBySign
-            className="!text-xs font-black"
-          />
+          <div className="flex items-center justify-end gap-1">
+            <LivePriceCell
+              value={upnl}
+              prefix="₹"
+              showSign
+              colorBySign
+              highlightTicks={true}
+              className="!text-xs font-black"
+            />
+          </div>
         );
       },
     },
@@ -1334,11 +1423,14 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                         </span>
                       </div>
                       <div className="text-right flex-shrink-0 flex items-center gap-1.5">
-                        <div
-                          className={`font-mono text-[14px] font-black tabular-nums ${isGain ? 'text-[var(--gain)]' : 'text-[var(--loss)]'}`}
-                        >
-                          {isGain ? '+' : ''}₹{uPnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
+                        <LivePriceCell
+                          value={uPnl}
+                          prefix="₹"
+                          showSign
+                          colorBySign
+                          highlightTicks={true}
+                          className="!text-[14px] !font-black !p-0"
+                        />
                         <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase ${isGain ? 'bg-[var(--gain-light)] text-[var(--gain)]' : 'bg-[var(--loss-light)] text-[var(--loss)]'}`}>
                           {isGain ? 'Profit' : 'Loss'}
                         </span>
@@ -1358,10 +1450,17 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="text-right font-mono">
-                        <span className="text-[var(--text-muted)]">LTP </span>
-                        <span className="font-bold text-[var(--text-main)]">₹{ltp.toFixed(2)} </span>
-                        <span className={`font-bold ${isGain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                      <div className="text-right font-mono flex items-center justify-end gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[var(--text-muted)] text-[10px]">LTP </span>
+                        <LivePriceCell
+                          value={ltp}
+                          prefix="₹"
+                          decimals={2}
+                          highlightTicks={true}
+                          className="!text-xs font-black !p-0"
+                        />
+                        <span className={`text-[10px] font-bold ${isGain ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                           ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
                         </span>
                       </div>
