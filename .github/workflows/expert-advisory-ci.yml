@@ -37,11 +37,8 @@ jobs:
           INITIAL_SUPER_ADMIN_PASSWORD: ci-only-password-123!
         run: php artisan migrate:fresh --seed --force
       - name: Run PHPUnit
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
         run: php artisan test --compact
-
+ 
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -55,7 +52,7 @@ jobs:
           cache: npm
           cache-dependency-path: expert-advisory/frontend/package-lock.json
       - run: npm ci
+      - run: npm run build
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - run: npm run test:security
-      - run: npm run build

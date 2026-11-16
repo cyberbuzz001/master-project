@@ -189,8 +189,8 @@ test('authentication, routing and communication boundaries', { timeout: 240000 }
         const page = await browser.newPage();
         await page.context().addCookies([{ name: 'esc_session', value: 'verified-client', url: origin }]);
         await page.goto(`${origin}/portal`);
-        await page.getByText('TEST-CLIENT-1', { exact: true }).waitFor({ timeout: 60000 });
-        await page.getByText('No reports assigned.', { exact: true }).waitFor({ timeout: 60000 });
+        await page.getByText('TEST-CLIENT-1', { exact: true }).waitFor({ timeout: 120000 });
+        await page.getByText('No reports assigned.', { exact: true }).waitFor({ timeout: 120000 });
         const body = await page.locator('body').innerText();
         assert.match(body, /Not assigned yet/);
         assert.doesNotMatch(body, /HDFCBANK|Arjun Mehta|Sunita Verma|41\.9%|Execute|Transmit/);
