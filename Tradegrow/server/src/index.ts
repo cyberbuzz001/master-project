@@ -19,6 +19,7 @@ import { ExecutionEngine } from './trading/ExecutionEngine';
 import { setupWebSocketServer } from './websocket/server';
 import apiRouter from './routes/api';
 import adminApiRouter from './routes/adminApi';
+import researchApiRouter from './routes/researchApi';
 import { warRoomRouter } from './routes/warRoomRoutes';
 import { ssoRouter } from './routes/ssoRoutes';
 import { internalAdvisoryRouter } from './routes/internalAdvisoryRoutes';
@@ -118,6 +119,7 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 // Register REST API Routes
 app.use('/api/v1', apiRouter);
 app.use('/api/v1/admin', adminApiRouter);
+app.use('/api/v1/admin/research', researchApiRouter);
 app.use('/api/v1', warRoomRouter);
 app.use('/api/v1/auth/sso', ssoRouter);
 app.use('/api/v1', ssoRouter);

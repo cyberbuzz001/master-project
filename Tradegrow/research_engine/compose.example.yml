@@ -1,0 +1,24 @@
+# Merge into the VPS compose after verifying its actual service names/networks.
+services:
+  research-engine:
+    build:
+      context: ./research_engine
+      args:
+        ENABLE_TRADINGAGENTS: "false"
+    environment:
+      RESEARCH_API_KEY: ${RESEARCH_API_KEY:?Set a random secret of at least 32 characters}
+      RESEARCH_DB: /data/research.sqlite
+    volumes:
+      - research_data:/data
+    networks:
+      - trading-net
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 650s
+    mem_limit: 2g
+    cpus: 1
+    # Internal only. Set RESEARCH_SERVICE_URL=http://research-engine:8010 on app replicas.
+volumes:
+  research_data:
+networks:
+  trading-net:

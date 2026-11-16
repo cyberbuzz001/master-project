@@ -1,0 +1,6 @@
+[submodule "Tradegrow/research_engine/upstream/day-trader-skill"]
+	path = Tradegrow/research_engine/upstream/day-trader-skill
+	url = https://github.com/jakeschincariol/day-trader-skill.git
+[submodule "Tradegrow/research_engine/upstream/tradingagents"]
+	path = Tradegrow/research_engine/upstream/tradingagents
+	url = https://github.com/tauricresearch/tradingagents.git
