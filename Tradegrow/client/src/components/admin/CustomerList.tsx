@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Eye, Lock, Unlock, KeyRound, X, Check, Copy, RefreshCw, CheckCircle2, AlertTriangle, UserPlus, ShieldAlert, Phone, Mail, MoreVertical, UserX, UserCheck, Ban, ShieldOff, Edit2, ChevronLeft, ChevronRight, Users, Trash2, Bell, BellOff, Send, MailCheck } from 'lucide-react';
+import { Search, Eye, Lock, Unlock, KeyRound, X, Check, Copy, RefreshCw, CheckCircle2, AlertTriangle, UserPlus, ShieldAlert, Phone, Mail, MoreVertical, UserX, UserCheck, Ban, ShieldOff, Edit2, ChevronLeft, ChevronRight, Users, Trash2, Bell, BellOff, Send, MailCheck, ShieldCheck, Power, PowerOff } from 'lucide-react';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
 
 interface CustomerListProps { 
@@ -89,7 +89,89 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
   const [emailMsg, setEmailMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [togglingEmailPref, setTogglingEmailPref] = useState<string | null>(null);
 
+  // Manual User Login & Platform Global Login Controls
+  const [togglingLoginId, setTogglingLoginId] = useState<string | null>(null);
+  const [globalLoginEnabled, setGlobalLoginEnabled] = useState<boolean>(true);
+  const [togglingGlobalLogin, setTogglingGlobalLogin] = useState<boolean>(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const fetchGlobalLoginStatus = () => {
+    fetch('/api/v1/admin/system/global-login-status', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && typeof d.loginEnabled === 'boolean') {
+          setGlobalLoginEnabled(d.loginEnabled);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchGlobalLoginStatus();
+  }, [token]);
+
+  const handleToggleGlobalLogin = async () => {
+    const nextState = !globalLoginEnabled;
+    const confirmPrompt = nextState
+      ? 'Are you sure you want to ALLOW user logins platform-wide?'
+      : '⚠️ Are you sure you want to PAUSE all user logins platform-wide? Non-staff users will not be able to log in (Maintenance Mode).';
+    if (!window.confirm(confirmPrompt)) return;
+
+    setTogglingGlobalLogin(true);
+    try {
+      const res = await adminAction('/api/v1/admin/system/toggle-global-login', 'POST', {
+        enabled: nextState,
+        reason: nextState ? 'Admin resumed platform user logins' : 'Admin paused platform logins for maintenance'
+      });
+      if (res.success) {
+        setGlobalLoginEnabled(res.loginEnabled);
+      } else {
+        alert(res.error?.message || 'Failed to update global login status');
+      }
+    } catch {
+      alert('Network error while toggling global login');
+    } finally {
+      setTogglingGlobalLogin(false);
+    }
+  };
+
+  const handleToggleUserLogin = async (c: any, targetEnabled?: boolean) => {
+    const currentEnabled = c.login_enabled !== false;
+    const nextEnabled = targetEnabled !== undefined ? targetEnabled : !currentEnabled;
+    const promptMessage = nextEnabled
+      ? `Enable login access for ${c.username} (${c.email || c.client_id})?`
+      : `⚠️ Disable login access for ${c.username} (${c.email || c.client_id})? The user will be blocked from logging in immediately.`;
+
+    if (!window.confirm(promptMessage)) return;
+
+    setTogglingLoginId(c.id);
+    try {
+      const res = await adminAction(`/api/v1/admin/customers/${c.id}/toggle-login`, 'POST', {
+        enabled: nextEnabled,
+        reason: nextEnabled ? 'Manual admin login enable' : 'Manual admin login disable'
+      });
+      if (res.success) {
+        setCustomers((prev) =>
+          prev.map((item) =>
+            item.id === c.id
+              ? {
+                  ...item,
+                  login_enabled: res.loginEnabled,
+                  status: nextEnabled && (item.status === 'SUSPENDED' || item.status === 'LOCKED') ? 'ACTIVE' : item.status
+                }
+              : item
+          )
+        );
+      } else {
+        alert(res.error?.message || 'Failed to toggle login access');
+      }
+    } catch {
+      alert('Network error while updating login access');
+    } finally {
+      setTogglingLoginId(null);
+    }
+  };
 
   const fetchCustomers = () => {
     setLoading(true);
@@ -674,6 +756,19 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
               <span>{c.email_notifications_enabled !== false ? 'Turn Off Email Notifs' : 'Turn On Email Notifs'}</span>
             </button>
             <div className="my-1 border-t border-[var(--border-color)]" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleUserLogin(c);
+              }}
+              className={`w-full text-left px-3.5 py-2 flex items-center gap-2 cursor-pointer font-bold ${
+                c.login_enabled !== false ? 'text-rose-400 hover:bg-rose-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
+              }`}
+            >
+              {c.login_enabled !== false ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
+              <span>{c.login_enabled !== false ? 'Disable User Login' : 'Enable User Login'}</span>
+            </button>
+            <div className="my-1 border-t border-[var(--border-color)]" />
             {c.status !== 'ACTIVE' && c.status !== 'CLOSED' && (
               <button
                 onClick={(e) => {
@@ -851,6 +946,40 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
       ),
     },
     {
+      key: 'loginAccess',
+      header: 'Login Access',
+      className: 'min-w-[130px]',
+      render: (c) => {
+        const isLoginEnabled = c.login_enabled !== false;
+        const isBusy = togglingLoginId === c.id;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleUserLogin(c);
+            }}
+            disabled={isBusy}
+            title={isLoginEnabled ? `Click to Disable Login for ${c.username}` : `Click to Enable Login for ${c.username}`}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition cursor-pointer flex items-center gap-1.5 shadow-xs ${
+              isLoginEnabled
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
+            }`}
+          >
+            {isBusy ? (
+              <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+            ) : isLoginEnabled ? (
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            ) : (
+              <PowerOff className="w-3 h-3 text-rose-400" />
+            )}
+            <span>{isLoginEnabled ? 'LOGIN ENABLED' : 'LOGIN DISABLED'}</span>
+          </button>
+        );
+      },
+    },
+    {
       key: 'kyc',
       header: 'KYC Status',
       className: 'min-w-[110px]',
@@ -994,6 +1123,27 @@ export const CustomerList: React.FC<CustomerListProps> = ({ token, initialFilter
               {kycPendingCount}
             </span>
           )}
+        </button>
+
+        {/* Global User Login Control (Platform-wide Maintenance Toggle) */}
+        <button
+          onClick={handleToggleGlobalLogin}
+          disabled={togglingGlobalLogin}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border ${
+            globalLoginEnabled
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+              : 'bg-rose-500/15 text-rose-400 border-rose-500/40 hover:bg-rose-500/25 animate-pulse'
+          }`}
+          title={globalLoginEnabled ? 'Click to Pause all customer logins (Global Maintenance Mode)' : 'Click to Resume customer logins'}
+        >
+          {togglingGlobalLogin ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          ) : globalLoginEnabled ? (
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <PowerOff className="w-3.5 h-3.5 text-rose-400" />
+          )}
+          <span>Global Logins: {globalLoginEnabled ? 'ALLOWED' : 'PAUSED'}</span>
         </button>
 
         {/* Duplicate Identity Scanner Button */}

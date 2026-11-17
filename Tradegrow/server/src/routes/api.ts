@@ -501,10 +501,37 @@ router.post('/auth/login', authLimiter, validateBody(LoginSchema), async (req: R
       return;
     }
 
-    // Check account lockout
+    // 0. Global User Login Killswitch check
+    const globalLoginRow = await queryOne<any>("SELECT value FROM system_config WHERE key = 'GLOBAL_USER_LOGIN_ENABLED'");
+    const isGlobalLoginDisabled = globalLoginRow && globalLoginRow.value === 'false';
+    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATIONS_MANAGER', 'FINANCE_MANAGER', 'KYC_OFFICER', 'COMPLIANCE_OFFICER', 'RISK_MANAGER', 'DEALER', 'SUPPORT_AGENT'].includes(user.role);
+    if (isGlobalLoginDisabled && !isStaff) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: 'MAINTENANCE_MODE',
+          message: 'Client login is temporarily paused by platform administrator. Please try again shortly.'
+        }
+      });
+      return;
+    }
+
+    // 1. Check account lockout
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
       const until = new Date(user.locked_until).toISOString();
       res.status(423).json({ success: false, error: { code: 'ACCOUNT_LOCKED', message: `Account locked until ${until}` } });
+      return;
+    }
+
+    // 2. Check manual user login toggle (admin manually disabled this user's login)
+    if (user.login_enabled === false) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: 'LOGIN_DISABLED',
+          message: 'Your account login has been manually disabled by administrator. Please contact TradeGrow support.'
+        }
+      });
       return;
     }
 

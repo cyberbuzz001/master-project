@@ -266,6 +266,7 @@ router.get('/customers', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'),
 
   const users = await query(
     `SELECT u.id, u.client_id, u.username, u.email, u.full_name, u.phone_number, u.role, u.status, u.created_at, u.last_login_at, u.failed_login_attempts, u.is_kyc_completed,
+            COALESCE(u.login_enabled, true) as login_enabled,
             COALESCE(u.email_notifications_enabled, true) as email_notifications_enabled,
             w.cash_balance, w.used_margin,
             ${kycStatusExpr} as kyc_status
@@ -586,6 +587,7 @@ router.get('/customers/:id', authenticateToken, checkPermission('ADMIN_BROAD_VIE
         `SELECT id, username, email, role, status, created_at, last_login_at, failed_login_attempts, 
                 full_name, phone_number, city, address, date_of_birth, is_kyc_completed, 
                 bank_name, bank_account_number, bank_account_name, bank_ifsc, onboarding_completed, risk_restriction,
+                COALESCE(login_enabled, true) as login_enabled,
                 COALESCE(email_notifications_enabled, true) as email_notifications_enabled
          FROM users WHERE id = $1`, 
         [customerId]
@@ -3597,6 +3599,131 @@ const handleUnblockOrUnlockCustomer = async (req: AuthenticatedRequest, res: Res
 
 router.post('/customers/:id/unlock', authenticateToken, checkPermission('USER_LOCK_UNLOCK'), restrictManagerToOwnCustomer, handleUnblockOrUnlockCustomer);
 router.post('/customers/:id/unblock', authenticateToken, checkPermission('USER_LOCK_UNLOCK'), restrictManagerToOwnCustomer, handleUnblockOrUnlockCustomer);
+
+// ============================================================
+// 22b. MANUAL USER LOGIN TOGGLE (Enable / Disable User Login)
+// ============================================================
+router.post('/customers/:id/toggle-login', authenticateToken, checkPermission('USER_LOCK_UNLOCK'), restrictManagerToOwnCustomer, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const customerId = req.params.id as string;
+    const { enabled, reason } = req.body || {};
+
+    const user = await queryOne<any>(
+      'SELECT id, username, full_name, email, status, COALESCE(login_enabled, true) as login_enabled FROM users WHERE id = $1',
+      [customerId]
+    );
+    if (!user) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Customer not found' } });
+      return;
+    }
+
+    const nextLoginEnabled = typeof enabled === 'boolean' ? enabled : !user.login_enabled;
+
+    if (nextLoginEnabled) {
+      // Enabling login: set login_enabled = TRUE, and ensure status is ACTIVE if suspended/locked
+      await execute(
+        `UPDATE users SET 
+           login_enabled = TRUE, 
+           status = CASE WHEN status IN ('SUSPENDED', 'LOCKED') THEN 'ACTIVE' ELSE status END,
+           failed_login_attempts = 0,
+           locked_until = NULL,
+           locked_reason = NULL,
+           suspended_reason = NULL,
+           updated_at = NOW() 
+         WHERE id = $1`,
+        [customerId]
+      );
+      await logAuditAction(
+        req.user!.userId, req.user!.role,
+        'ADMIN_ENABLED_USER_LOGIN', 'USER', customerId,
+        { login_enabled: user.login_enabled, status: user.status },
+        { login_enabled: true, status: 'ACTIVE', reason: reason || 'Manual Admin Enable Login' },
+        getClientIp(req)
+      );
+      adminEventBus.emitUserEvent('USER_STATUS_UPDATED', customerId, {
+        status: 'ACTIVE', login_enabled: true, unlockedBy: req.user!.userId
+      });
+      res.json({
+        success: true,
+        login_enabled: true,
+        message: `Login successfully ENABLED for ${user.username || user.email}.`
+      });
+    } else {
+      // Disabling login: set login_enabled = FALSE
+      await execute(
+        `UPDATE users SET 
+           login_enabled = FALSE, 
+           locked_reason = COALESCE($1, 'Login disabled manually by admin'),
+           updated_at = NOW() 
+         WHERE id = $2`,
+        [reason?.trim() || 'Login disabled manually by admin', customerId]
+      );
+      await logAuditAction(
+        req.user!.userId, req.user!.role,
+        'ADMIN_DISABLED_USER_LOGIN', 'USER', customerId,
+        { login_enabled: user.login_enabled },
+        { login_enabled: false, reason: reason || 'Manual Admin Disable Login' },
+        getClientIp(req)
+      );
+      adminEventBus.emitUserEvent('USER_STATUS_UPDATED', customerId, {
+        login_enabled: false, lockedBy: req.user!.userId
+      });
+      res.json({
+        success: true,
+        login_enabled: false,
+        message: `Login successfully DISABLED for ${user.username || user.email}.`
+      });
+    }
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// ============================================================
+// 22c. GLOBAL USER LOGIN CONTROL (Platform-Wide Maintenance Killswitch)
+// ============================================================
+router.get('/system/global-login-status', authenticateToken, checkPermission('ADMIN_BROAD_VIEW'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const row = await queryOne<any>("SELECT value FROM system_config WHERE key = 'GLOBAL_USER_LOGIN_ENABLED'");
+    const isEnabled = !row || row.value !== 'false';
+    res.json({ success: true, globalLoginEnabled: isEnabled });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+router.post('/system/toggle-global-login', authenticateToken, checkPermission('CUSTOMERS_LOCK'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { enabled, reason } = req.body || {};
+    const currentRow = await queryOne<any>("SELECT value FROM system_config WHERE key = 'GLOBAL_USER_LOGIN_ENABLED'");
+    const currentEnabled = !currentRow || currentRow.value !== 'false';
+    const nextEnabled = typeof enabled === 'boolean' ? enabled : !currentEnabled;
+
+    await execute(
+      `INSERT INTO system_config (key, value, updated_at)
+       VALUES ('GLOBAL_USER_LOGIN_ENABLED', $1, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+      [nextEnabled ? 'true' : 'false']
+    );
+
+    await logAuditAction(
+      req.user!.userId, req.user!.role,
+      nextEnabled ? 'ADMIN_ENABLED_GLOBAL_LOGIN' : 'ADMIN_DISABLED_GLOBAL_LOGIN',
+      'SYSTEM', 'GLOBAL_USER_LOGIN_ENABLED',
+      { globalLoginEnabled: currentEnabled },
+      { globalLoginEnabled: nextEnabled, reason: reason || 'Manual Admin Toggle' },
+      getClientIp(req)
+    );
+
+    res.json({
+      success: true,
+      globalLoginEnabled: nextEnabled,
+      message: nextEnabled ? 'Platform-wide user logins are now ENABLED.' : 'Platform-wide user logins are now PAUSED (Maintenance Mode).'
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
 
 
 // ============================================================

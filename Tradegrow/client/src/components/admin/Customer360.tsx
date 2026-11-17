@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertTriangle, Wifi, WifiOff, Shield, CheckCircle, User, Phone, Mail,
   MapPin, Activity, Clock, ThumbsUp, ThumbsDown, RotateCcw, Briefcase, ListOrdered,
   Landmark, BookOpen, FileText, KeySquare, Zap, Sparkles, ExternalLink, Download,
-  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock, ShoppingCart, Upload
+  ShieldCheck, Building2, Trash2, ShieldAlert, Bell, BellOff, Send, Unlock, ShoppingCart, Upload, Power, PowerOff
 } from 'lucide-react';
 import { useMarketSocket, useAdminSubscribeUser, useSubscribeTokens } from '../../hooks/useMarketSocket';
 import { DataTable, DataTableColumn } from '../ui/DataTable';
@@ -84,6 +84,53 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
     } catch (_) {}
     finally {
       setTogglingEmail(false);
+    }
+  };
+
+  const [togglingLogin, setTogglingLogin] = useState(false);
+
+  const handleToggleLogin = async () => {
+    if (!data?.profile) return;
+    const currentEnabled = data.profile.login_enabled !== false;
+    const nextEnabled = !currentEnabled;
+    const confirmPrompt = nextEnabled
+      ? `Enable login access for ${data.profile.username}?`
+      : `⚠️ Disable login access for ${data.profile.username}? The user will be blocked from logging in immediately.`;
+
+    if (!window.confirm(confirmPrompt)) return;
+
+    setTogglingLogin(true);
+    setActionMsg(null);
+    try {
+      const res = await fetch(`/api/v1/admin/customers/${customerId}/toggle-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          enabled: nextEnabled,
+          reason: nextEnabled ? 'Admin enabled login from Customer 360' : 'Admin disabled login from Customer 360'
+        })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setData((prev: any) => prev ? {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            login_enabled: d.loginEnabled,
+            status: nextEnabled && (prev.profile.status === 'SUSPENDED' || prev.profile.status === 'LOCKED') ? 'ACTIVE' : prev.profile.status
+          }
+        } : prev);
+        setActionMsg({
+          type: 'success',
+          text: `Login access ${d.loginEnabled ? 'ENABLED' : 'DISABLED'} for ${data.profile.username}.`
+        });
+      } else {
+        setActionMsg({ type: 'error', text: d.error?.message || 'Failed to toggle login access' });
+      }
+    } catch {
+      setActionMsg({ type: 'error', text: 'Network error while updating login access' });
+    } finally {
+      setTogglingLogin(false);
     }
   };
 
@@ -723,6 +770,36 @@ export const Customer360: React.FC<Customer360Props> = ({ token, customerId, onB
               <span>{unblockingAccount ? 'Unblocking...' : 'Unblock Account'}</span>
             </button>
           )}
+
+          {/* Manual Enable / Disable User Login Button */}
+          <button
+            onClick={handleToggleLogin}
+            disabled={togglingLogin}
+            className={`font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer border ${
+              data.profile.login_enabled !== false
+                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+            }`}
+            title={data.profile.login_enabled !== false ? 'Click to Disable Login for this user' : 'Click to Enable Login for this user'}
+          >
+            {togglingLogin ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : data.profile.login_enabled !== false ? (
+              <PowerOff className="w-3.5 h-3.5 text-rose-400" />
+            ) : (
+              <Power className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span>{data.profile.login_enabled !== false ? 'Disable Login' : 'Enable Login'}</span>
+          </button>
+
+          <span className={`px-2.5 py-1 rounded text-xs font-bold border flex items-center gap-1.5 ${
+            data.profile.login_enabled !== false
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${data.profile.login_enabled !== false ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+            {data.profile.login_enabled !== false ? 'LOGIN ACTIVE' : 'LOGIN BLOCKED'}
+          </span>
 
           <span className={`px-3 py-1 rounded text-xs font-bold ${
             data.profile.status === 'ACTIVE' ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]' :
