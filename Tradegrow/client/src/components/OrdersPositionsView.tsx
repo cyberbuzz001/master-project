@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   RefreshCw, Target, ShieldAlert, AlertTriangle, X, Search, Send, Zap, Clock,
@@ -138,6 +138,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
   const { ticks } = useMarketSocket();
   useSubscribeTokens(subscribedTokens);
+  const lastKnownLtpRef = useRef<Map<string, number>>(new Map());
 
   const getLiveLtp = (item: any): number => {
     if (!item) return 0;
@@ -162,7 +163,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
         `${u}${st}${ty}`,
       ];
       for (const k of exactKeys) {
-        const t = ticks.get(k);
+        const t = ticks.get(k) || globalTickStore.getSnapshot(k);
         if (t && t.ltp > 0) {
           directTick = t;
           break;
@@ -181,7 +182,7 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
 
       for (const c of candidates) {
         if (!c) continue;
-        const tick = ticks.get(c);
+        const tick = ticks.get(c) || globalTickStore.getSnapshot(c);
         if (tick && tick.ltp > 0) {
           directTick = tick;
           break;
@@ -189,9 +190,15 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       }
     }
 
-    // Direct tick from real-time live broker/exchange feed (no synthetic fallbacks)
+    // Direct tick from real-time live broker/exchange feed
     if (directTick && directTick.ltp > 0) {
+      if (sym) lastKnownLtpRef.current.set(sym, directTick.ltp);
       return directTick.ltp;
+    }
+
+    // If live tick arrived earlier in session, preserve it without reverting to old DB snapshot
+    if (sym && lastKnownLtpRef.current.has(sym)) {
+      return lastKnownLtpRef.current.get(sym)!;
     }
 
     // If no tick has arrived yet, use position record's own price
@@ -213,7 +220,13 @@ export const OrdersPositionsView: React.FC<OrdersPositionsViewProps> = ({
       fetch('/api/v1/portfolio/positions?todayOnly=true', { headers })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data?.success && Array.isArray(data.positions)) setPositions(data.positions);
+          if (data?.success && Array.isArray(data.positions)) {
+            const merged = data.positions.map((p: any) => {
+              const live = lastKnownLtpRef.current.get(p.symbol);
+              return live && live > 0 ? { ...p, ltp: live } : p;
+            });
+            setPositions(merged);
+          }
         }),
       fetch('/api/v1/portfolio/closed-trades?todayOnly=true', { headers })
         .then((res) => (res.ok ? res.json() : null))

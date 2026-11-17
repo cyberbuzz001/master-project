@@ -29,7 +29,7 @@ ENV PORT=5000
 
 # Install Python 3 and SmartApi dependencies for Angel One SmartConnect ticker
 RUN apk add --no-cache python3 py3-pip && \
-    pip install --no-cache-dir SmartApi-python websocket-client requests pyotp logzero --break-system-packages
+    pip install --no-cache-dir SmartApi-python websocket-client requests pyotp logzero redis --break-system-packages
 
 COPY package.json package-lock.json ./
 RUN npm install --only=production

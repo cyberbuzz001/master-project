@@ -249,8 +249,6 @@ export function resolveUnrealizedPnlForPosition(pos: UnrealizedPnlInput): Unreal
     if (!t || t.ltp <= 0) return false;
     // Reject self-broadcasted position ticks and synthetic skew ticks from acting as upstream exchange ticks
     if (t.source === 'position_broadcast' || t.source === 'synthetic_skew') return false;
-    // Reject stale ticks older than 20 seconds
-    if (t.timestamp && Date.now() - t.timestamp > 20000) return false;
     return true;
   };
 
