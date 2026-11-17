@@ -52,8 +52,9 @@ export class MarketDataEngine {
     this.providers.set(this.mockProvider.name, this.mockProvider);
     this.providers.set('MOCK', this.mockProvider);
 
-    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'DHAN').toUpperCase();
-    if (configured.includes('ANGEL')) {
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGEL_ONE').toUpperCase();
+    const isDhanDisabled = process.env.DHAN_DISABLED === 'true';
+    if (configured.includes('ANGEL') || isDhanDisabled) {
       this.configuredProviderName = 'ANGEL_ONE';
       this.activeProvider = this.angelOneProvider;
     } else if (configured === 'FYERS') {
@@ -127,8 +128,9 @@ export class MarketDataEngine {
   }
 
   public async initialize(): Promise<void> {
-    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'DHAN').toUpperCase();
-    if (configured.includes('ANGEL')) {
+    const configured = (process.env.PRIMARY_MARKET_DATA_PROVIDER || 'ANGEL_ONE').toUpperCase();
+    const isDhanDisabled = process.env.DHAN_DISABLED === 'true';
+    if (configured.includes('ANGEL') || isDhanDisabled) {
       this.configuredProviderName = 'ANGEL_ONE';
       this.activeProvider = this.angelOneProvider;
     } else if (configured === 'FYERS') {

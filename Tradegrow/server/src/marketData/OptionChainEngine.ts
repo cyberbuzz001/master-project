@@ -272,8 +272,8 @@ export class OptionChainEngine {
 
     if (!spotTick || spotTick.ltp <= 0) {
       try {
-        const dhan = MarketDataEngine.getInstance().getDhanAdapter();
-        spotTick = await dhan.getQuote(spotToken);
+        const angel = MarketDataEngine.getInstance().getAngelOneAdapter();
+        spotTick = await angel.getQuote(spotToken);
       } catch (_) {}
     }
 
@@ -431,64 +431,67 @@ export class OptionChainEngine {
 
 
 
-    // Tier 0: Query Primary Dhan HQ Option Chain Matrix (Dedicated Option Chain Provider)
-    try {
-      const dhanAdapter = MarketDataEngine.getInstance().getDhanAdapter();
-      let dhanChain: OptionChainItem[] = [];
-      if (!dhanAdapter.isDataApiBlocked()) {
-        dhanChain = await dhanAdapter.getOptionChain(underlying, expiry);
+    // Tier 0: Query Primary Dhan HQ Option Chain Matrix (only if Dhan is enabled)
+    const isDhanDisabled = process.env.DHAN_DISABLED === 'true' || (process.env.PRIMARY_MARKET_DATA_PROVIDER || '').toUpperCase().includes('ANGEL');
+    if (!isDhanDisabled) {
+      try {
+        const dhanAdapter = MarketDataEngine.getInstance().getDhanAdapter();
+        let dhanChain: OptionChainItem[] = [];
+        if (!dhanAdapter.isDataApiBlocked()) {
+          dhanChain = await dhanAdapter.getOptionChain(underlying, expiry);
 
-        // If empty, check if system_config has a newer token and retry once if not blocked
-        if ((!dhanChain || dhanChain.length === 0) && !dhanAdapter.isDataApiBlocked()) {
-          try {
-            const { loadPersistedDhanToken } = require('../utils/dhanTokenRefresh');
-            const dbToken = await loadPersistedDhanToken();
-            if (dbToken && dbToken !== dhanAdapter.getAccessToken()) {
-              await dhanAdapter.setAccessToken(dbToken);
-              dhanChain = await dhanAdapter.getOptionChain(underlying, expiry);
-            }
-          } catch (_) {}
+          // If empty, check if system_config has a newer token and retry once if not blocked
+          if ((!dhanChain || dhanChain.length === 0) && !dhanAdapter.isDataApiBlocked()) {
+            try {
+              const { loadPersistedDhanToken } = require('../utils/dhanTokenRefresh');
+              const dbToken = await loadPersistedDhanToken();
+              if (dbToken && dbToken !== dhanAdapter.getAccessToken()) {
+                await dhanAdapter.setAccessToken(dbToken);
+                dhanChain = await dhanAdapter.getOptionChain(underlying, expiry);
+              }
+            } catch (_) {}
+          }
         }
-      }
 
-      if (dhanChain && dhanChain.length > 0) {
-        const liveSpotTick = MarketDataEngine.getInstance().getCachedTick(spotToken);
-        const liveSpot = (liveSpotTick && liveSpotTick.ltp > 0) ? liveSpotTick.ltp : spotPrice;
-        if (liveSpot > 0) {
-          OptionChainEngine.lastKnownSpotPrices.set(spotToken, liveSpot);
+        if (dhanChain && dhanChain.length > 0) {
+          const liveSpotTick = MarketDataEngine.getInstance().getCachedTick(spotToken);
+          const liveSpot = (liveSpotTick && liveSpotTick.ltp > 0) ? liveSpotTick.ltp : spotPrice;
+          if (liveSpot > 0) {
+            OptionChainEngine.lastKnownSpotPrices.set(spotToken, liveSpot);
+          }
+          const liveAtmStrike = Math.round(liveSpot / step) * step;
+
+          const filteredDhanChain = filterAndSanitizeChain(dhanChain, liveSpot, liveAtmStrike);
+          OptionChainEngine.broadcastChainTicks(filteredDhanChain, underlying, exchange, segment);
+
+          let totalCallOI = 0;
+          let totalPutOI = 0;
+          filteredDhanChain.forEach(item => {
+            totalCallOI += item.ce?.openInterest || 0;
+            totalPutOI += item.pe?.openInterest || 0;
+          });
+          const pcrRatio = totalCallOI > 0 ? Number((totalPutOI / totalCallOI).toFixed(2)) : 1.0;
+          return {
+            underlying,
+            exchange,
+            spotPrice: liveSpot,
+            futuresPrice: liveSpot + (isBanknifty ? 140 : isSensex ? 210 : 65),
+            atmStrike: liveAtmStrike,
+            expiry,
+            lotSize,
+            spotSource: liveSpotTick?.source || 'dhan',
+            spotChange: liveSpotTick?.change ?? 0,
+            spotChangePercent: liveSpotTick?.changePercent ?? 0,
+            pcrRatio,
+            maxPainStrike: liveAtmStrike,
+            totalCallOI,
+            totalPutOI,
+            chain: filteredDhanChain
+          };
         }
-        const liveAtmStrike = Math.round(liveSpot / step) * step;
-
-        const filteredDhanChain = filterAndSanitizeChain(dhanChain, liveSpot, liveAtmStrike);
-        OptionChainEngine.broadcastChainTicks(filteredDhanChain, underlying, exchange, segment);
-
-        let totalCallOI = 0;
-        let totalPutOI = 0;
-        filteredDhanChain.forEach(item => {
-          totalCallOI += item.ce?.openInterest || 0;
-          totalPutOI += item.pe?.openInterest || 0;
-        });
-        const pcrRatio = totalCallOI > 0 ? Number((totalPutOI / totalCallOI).toFixed(2)) : 1.0;
-        return {
-          underlying,
-          exchange,
-          spotPrice: liveSpot,
-          futuresPrice: liveSpot + (isBanknifty ? 140 : isSensex ? 210 : 65),
-          atmStrike: liveAtmStrike,
-          expiry,
-          lotSize,
-          spotSource: liveSpotTick?.source || 'dhan',
-          spotChange: liveSpotTick?.change ?? 0,
-          spotChangePercent: liveSpotTick?.changePercent ?? 0,
-          pcrRatio,
-          maxPainStrike: liveAtmStrike,
-          totalCallOI,
-          totalPutOI,
-          chain: filteredDhanChain
-        };
+      } catch (err: any) {
+        console.warn('[OptionChainEngine] Dhan primary option chain fetch fallback:', err.message);
       }
-    } catch (err: any) {
-      console.warn('[OptionChainEngine] Dhan primary option chain fetch fallback:', err.message);
     }
 
     // Tier 1: Query Angel One Option Chain Feed (Fallback Provider)
