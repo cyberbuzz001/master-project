@@ -431,8 +431,54 @@ export class OptionChainEngine {
 
 
 
-    // Tier 0: Query Primary Dhan HQ Option Chain Matrix (only if Dhan is enabled)
-    const isDhanDisabled = process.env.DHAN_DISABLED === 'true' || (process.env.PRIMARY_MARKET_DATA_PROVIDER || '').toUpperCase().includes('ANGEL');
+    // Tier 0: Query Angel One Option Chain Feed (Primary Option Chain Provider per configuration)
+    try {
+      const angelAdapter = MarketDataEngine.getInstance().getAngelOneAdapter();
+      if (angelAdapter) {
+        const angelChain = await angelAdapter.getOptionChain(underlying, expiry);
+        if (angelChain && angelChain.length > 0) {
+          const liveSpotTick = MarketDataEngine.getInstance().getCachedTick(spotToken);
+          const liveSpot = (liveSpotTick && liveSpotTick.ltp > 0) ? liveSpotTick.ltp : spotPrice;
+          if (liveSpot > 0) {
+            OptionChainEngine.lastKnownSpotPrices.set(spotToken, liveSpot);
+          }
+          const liveAtmStrike = Math.round(liveSpot / step) * step;
+
+          const filteredAngelChain = filterAndSanitizeChain(angelChain, liveSpot, liveAtmStrike);
+          OptionChainEngine.broadcastChainTicks(filteredAngelChain, underlying, exchange, segment);
+
+          let totalCallOI = 0;
+          let totalPutOI = 0;
+          filteredAngelChain.forEach(item => {
+            totalCallOI += item.ce?.openInterest || 0;
+            totalPutOI += item.pe?.openInterest || 0;
+          });
+          const pcrRatio = totalCallOI > 0 ? Number((totalPutOI / totalCallOI).toFixed(2)) : 1.0;
+          return {
+            underlying,
+            exchange,
+            spotPrice: liveSpot,
+            futuresPrice: liveSpot + (isBanknifty ? 140 : isSensex ? 210 : 65),
+            atmStrike: liveAtmStrike,
+            expiry,
+            lotSize,
+            spotSource: liveSpotTick?.source || 'angelone',
+            spotChange: liveSpotTick?.change ?? 0,
+            spotChangePercent: liveSpotTick?.changePercent ?? 0,
+            pcrRatio,
+            maxPainStrike: liveAtmStrike,
+            totalCallOI,
+            totalPutOI,
+            chain: filteredAngelChain
+          };
+        }
+      }
+    } catch (err: any) {
+      console.warn('[OptionChainEngine] Angel One primary option chain warning:', err.message);
+    }
+
+    // Tier 1: Query Dhan HQ Option Chain Matrix (Fallback Option Chain Provider)
+    const isDhanDisabled = process.env.DHAN_DISABLED === 'true';
     if (!isDhanDisabled) {
       try {
         const dhanAdapter = MarketDataEngine.getInstance().getDhanAdapter();
@@ -490,54 +536,8 @@ export class OptionChainEngine {
           };
         }
       } catch (err: any) {
-        console.warn('[OptionChainEngine] Dhan primary option chain fetch fallback:', err.message);
+        console.warn('[OptionChainEngine] Dhan fallback option chain fetch warning:', err.message);
       }
-    }
-
-    // Tier 1: Query Angel One Option Chain Feed (Fallback Provider)
-    try {
-      const angelAdapter = MarketDataEngine.getInstance().getAngelOneAdapter();
-      if (angelAdapter) {
-        const angelChain = await angelAdapter.getOptionChain(underlying, expiry);
-        if (angelChain && angelChain.length > 0) {
-          const liveSpotTick = MarketDataEngine.getInstance().getCachedTick(spotToken);
-          const liveSpot = (liveSpotTick && liveSpotTick.ltp > 0) ? liveSpotTick.ltp : spotPrice;
-          if (liveSpot > 0) {
-            OptionChainEngine.lastKnownSpotPrices.set(spotToken, liveSpot);
-          }
-          const liveAtmStrike = Math.round(liveSpot / step) * step;
-
-          const filteredAngelChain = filterAndSanitizeChain(angelChain, liveSpot, liveAtmStrike);
-          OptionChainEngine.broadcastChainTicks(filteredAngelChain, underlying, exchange, segment);
-
-          let totalCallOI = 0;
-          let totalPutOI = 0;
-          filteredAngelChain.forEach(item => {
-            totalCallOI += item.ce?.openInterest || 0;
-            totalPutOI += item.pe?.openInterest || 0;
-          });
-          const pcrRatio = totalCallOI > 0 ? Number((totalPutOI / totalCallOI).toFixed(2)) : 1.0;
-          return {
-            underlying,
-            exchange,
-            spotPrice: liveSpot,
-            futuresPrice: liveSpot + (isBanknifty ? 140 : isSensex ? 210 : 65),
-            atmStrike: liveAtmStrike,
-            expiry,
-            lotSize,
-            spotSource: liveSpotTick?.source || 'angelone',
-            spotChange: liveSpotTick?.change ?? 0,
-            spotChangePercent: liveSpotTick?.changePercent ?? 0,
-            pcrRatio,
-            maxPainStrike: liveAtmStrike,
-            totalCallOI,
-            totalPutOI,
-            chain: filteredAngelChain
-          };
-        }
-      }
-    } catch (err: any) {
-      console.warn('[OptionChainEngine] Angel One option chain fallback warning:', err.message);
     }
 
     // Tier 2: Fetch database instruments WITH STRICT EXPIRY FILTER to avoid cross-expiry token mismatch

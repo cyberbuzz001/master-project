@@ -174,7 +174,7 @@ export class DhanAdapter implements IMarketDataProvider {
   }
 
   private isDhanDisabled(): boolean {
-    return process.env.DHAN_DISABLED === 'true' || (process.env.PRIMARY_MARKET_DATA_PROVIDER || '').toUpperCase().includes('ANGEL');
+    return process.env.DHAN_DISABLED === 'true';
   }
 
   public async initialize(): Promise<void> {

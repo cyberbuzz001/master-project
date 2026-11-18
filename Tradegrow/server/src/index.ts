@@ -172,11 +172,12 @@ async function startServer() {
       process.env.PRIMARY_MARKET_DATA_PROVIDER = 'ANGEL_ONE';
     }
 
-    const isDhanDisabled = process.env.DHAN_DISABLED === 'true' || process.env.PRIMARY_MARKET_DATA_PROVIDER.includes('ANGEL');
+    const isDhanDisabled = process.env.DHAN_DISABLED === 'true';
 
     if (isDhanDisabled) {
       console.log(`[Startup] 📊 Market Data Provider: ANGEL_ONE EXCLUSIVE (Dhan API disabled per configuration).`);
     } else {
+      console.log(`[Startup] 🚀 Hybrid Architecture: Dhan HQ (Live Positions & Feeds) + Angel One (Option Chain & Equity Search).`);
       // Seed the most recently auto-renewed Dhan token from system_config,
       // if it's fresher than the static value docker-compose's env_file just loaded.
       try {
@@ -307,7 +308,7 @@ async function startServer() {
           }
         }
 
-        console.log('[Startup] 🚀 Market Data Pipeline: Angel One SmartAPI EXCLUSIVE (WebSocket V2 + Real-Time Option Feeds).');
+        console.log('[Startup] 🚀 Hybrid Market Data Pipeline: Dhan HQ (Live Positions & Feeds) + Angel One SmartAPI (Option Chain & Equity Search).');
         console.log('[Startup] ✅ All background market data engines & WebSocket services initialized cleanly.');
       } catch (bgErr: any) {
         console.error('[Startup Background Warning]', bgErr.message || bgErr);

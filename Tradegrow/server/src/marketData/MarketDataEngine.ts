@@ -194,6 +194,22 @@ export class MarketDataEngine {
           this.broadcastTick(tick);
         }
       }
+
+      // Concurrently initialize Dhan adapter if active provider is Angel One, enabling live position ticks
+      if (!isDhanDisabled && this.activeProvider !== this.dhanProvider) {
+        try {
+          console.log('[MarketDataEngine] 🔗 Initializing Dhan HQ WebSocket feed for live position streaming...');
+          this.dhanProvider.subscribe(Array.from(this.subscribedTokens), this.handleProviderTick);
+          await this.dhanProvider.initialize();
+          if (typeof (this.dhanProvider as any).getAllCachedTicks === 'function') {
+            for (const tick of (this.dhanProvider as any).getAllCachedTicks()) {
+              this.broadcastTick(tick);
+            }
+          }
+        } catch (dhanErr: any) {
+          console.warn('[MarketDataEngine] Dhan position feed initialization warning:', dhanErr.message);
+        }
+      }
     } catch (err: any) {
       console.warn(`[MarketDataEngine] ${this.configuredProviderName} initialization warning:`, err.message);
     }
@@ -272,12 +288,13 @@ export class MarketDataEngine {
     const now = Date.now();
     const activeName = this.getActiveProviderName();
     return {
-      mode: 'HYBRID_ANGEL_STOCKS_COMMODITY_DHAN_OPTIONS',
+      mode: 'HYBRID_ANGEL_STOCKS_OPTION_CHAIN_DHAN_POSITIONS',
       stocksAndCommoditiesProvider: activeName,
-      optionChainProvider: 'DHAN',
+      optionChainProvider: 'ANGEL_ONE',
+      positionsLiveFeedProvider: 'DHAN',
       primaryLiveStream: activeName,
       historicalCandlesProvider: activeName,
-      optionGreeksProvider: 'DHAN / OptionChainEngine',
+      optionGreeksProvider: 'ANGEL_ONE / OptionChainEngine',
       failoverActive: false,
       lastTickMsAgo: this.lastTickTime > 0 ? now - this.lastTickTime : -1,
       subscribedTokenCount: this.subscribedTokens.size
@@ -426,6 +443,18 @@ export class MarketDataEngine {
     const cached = this.getCachedTick(instrumentToken);
     if (cached) return cached;
 
+    // For derivatives / options / positions, query Dhan first for live position accuracy
+    const isOptionOrPosition = /[\s_-](CE|PE)$/i.test(instrumentToken) || instrumentToken.startsWith('NFO_') || instrumentToken.startsWith('BFO_');
+    if (isOptionOrPosition && process.env.DHAN_DISABLED !== 'true' && this.dhanProvider) {
+      try {
+        const tick = await this.dhanProvider.getQuote(instrumentToken);
+        if (tick) {
+          this.setCachedTick(tick);
+          return tick;
+        }
+      } catch (_) {}
+    }
+
     try {
       const tick = await this.activeProvider.getQuote(instrumentToken);
       if (tick) {
@@ -433,6 +462,17 @@ export class MarketDataEngine {
         return tick;
       }
     } catch (_) {}
+
+    // Fallback to Dhan if activeProvider was Angel and didn't find quote
+    if (!isOptionOrPosition && process.env.DHAN_DISABLED !== 'true' && this.dhanProvider && this.activeProvider !== this.dhanProvider) {
+      try {
+        const tick = await this.dhanProvider.getQuote(instrumentToken);
+        if (tick) {
+          this.setCachedTick(tick);
+          return tick;
+        }
+      } catch (_) {}
+    }
 
     return null;
   }
@@ -463,6 +503,11 @@ export class MarketDataEngine {
       try {
         this.activeProvider.subscribe(newTokens, this.handleProviderTick);
       } catch (_) {}
+      try {
+        if (process.env.DHAN_DISABLED !== 'true' && this.dhanProvider && this.activeProvider !== this.dhanProvider) {
+          this.dhanProvider.subscribe(newTokens, this.handleProviderTick);
+        }
+      } catch (_) {}
     }
   }
 
@@ -471,6 +516,11 @@ export class MarketDataEngine {
     tokens.forEach(t => this.subscribedTokens.delete(t));
     try {
       this.activeProvider.unsubscribe(tokens);
+    } catch (_) {}
+    try {
+      if (process.env.DHAN_DISABLED !== 'true' && this.dhanProvider && this.activeProvider !== this.dhanProvider) {
+        this.dhanProvider.unsubscribe(tokens);
+      }
     } catch (_) {}
   }
 
